@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link href="https://lf-code-agent.coze.cn/obj/x-ai-cn/fonts/google/google-all-fonts.css" rel="stylesheet"/>
+
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/jquery/jquery-3.7.1.min.js"></script>
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/lucide/lucide-1.11.0.min.js"></script>
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/tailwindcss/tailwindcss-browser-4.2.4.min.js"></script>
+
+  <style type="text/tailwindcss">
+    @theme {
+      /* === 品牌色 === */
+      --color-primary:              #2978B5;
+      --color-primary-container:    #D4E8F5;
+      --color-on-primary:           #ffffff;
+      /* === 背景 / 表面 === */
+      --color-background:                 #F8F6F0;
+      --color-surface-container-lowest:   #FAFAF5;
+      --color-surface:                    #FFFFFF;
+      --color-surface-container:          #F0EDE5;
+      --color-surface-container-high:     #E8E4DB;
+      --color-surface-container-highest:  #DDD8CE;
+      /* === 文字 === */
+      --color-on-surface:           #1D2733;
+      --color-on-surface-variant:   #667085;
+      /* === 功能色 === */
+      --color-success:  #22c55e;
+      --color-error:    #ef4444;
+      --color-warning:  #f59e0b;
+      /* === 边框 === */
+      --color-outline:          #D4CFC4;
+      --color-outline-variant:  #E6E1D8;
+      /* === 圆角 === */
+      --radius-sm:   0.375rem;
+      --radius-md:   0.5rem;
+      --radius-lg:   0.75rem;
+      --radius-xl:   1rem;
+      --radius-2xl:  1.5rem;
+      --radius-full: 9999px;
+      /* === 阴影 === */
+      --shadow-card:   0 2px 8px rgba(0,0,0,0.08);
+      --shadow-float:  0 10px 25px rgba(0,0,0,0.1);
+      --shadow-dialog: 0 25px 50px rgba(0,0,0,0.15);
+      /* === 字体 === */
+      --font-sans: "Noto Sans SC", system-ui, sans-serif;
+    }
+  </style>
+
+  <!-- 图片兜底 -->
+  <script>
+    document.addEventListener('error', function (e) {
+      const img = e.target;
+      if (img.tagName !== 'IMG' || img.dataset.fallback) return;
+      img.dataset.fallback = '1';
+      const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const cat = img.getAttribute('data-category') || '其他';
+      const alt = img.getAttribute('alt') || '';
+      const label = esc(alt.length > 8 ? alt.slice(0, 8) + '…' : alt);
+      const icons = { '人物': '👤', '自然风景': '🏞', '动物': '🐾', '建筑城市': '🏙', '运动体育': '⚽', '交通工具': '🚗', '食物': '🍽', '服饰时尚': '👗', '商业科技': '💼', '游戏娱乐': '🎮', '艺术': '🎨', '其他': '🖼' };
+      const icon = icons[cat] || '🖼';
+      const w = img.width || 400, h = img.height || 300;
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="45%" text-anchor="middle" font-size="${Math.min(w, h) * 0.18}" dominant-baseline="central">${icon}</text><text x="50%" y="68%" text-anchor="middle" font-size="${Math.min(w, h) * 0.07}" fill="%239ca3af" font-family="system-ui,sans-serif" dominant-baseline="central">${label}</text></svg>`;
+      img.src = 'data:image/svg+xml,' + svg;
+    }, true);
+  </script>
+</head>
+
+<body class="bg-background text-on-surface font-sans">
+
+  <!-- @nav:start 导航组件，不需要的页面则不要复制此段（从 @nav:start 到 @nav:end） -->
+  <header class="bg-surface sticky top-0 z-40 h-14 flex items-center justify-between px-6 border-b border-outline-variant/20">
+    <div class="flex items-center gap-2">
+      <i data-lucide="heart-pulse" class="text-primary w-5 h-5"></i>
+      <span class="font-bold text-base text-on-surface">百芝堂赋能系统</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="text-sm text-on-surface-variant">培训负责人</span>
+      <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-medium">初</div>
+    </div>
+  </header>
+  <div class="flex" style="height: calc(100vh - 3.5rem)">
+    <aside class="w-52 shrink-0 bg-surface-container-lowest overflow-y-auto border-r border-outline-variant/15">
+      <div class="p-3 space-y-0.5">
+        <p class="px-3 py-1 text-xs font-medium text-on-surface-variant/60 uppercase tracking-wider">工作台</p>
+        <a href="home.html" class="flex items-center gap-3 px-3 py-2 rounded-md bg-primary/10 text-primary font-medium text-sm" aria-current="page">
+          <i data-lucide="layout-dashboard" class="w-4 h-4"></i>首页
+        </a>
+        <p class="px-3 py-1 mt-3 text-xs font-medium text-on-surface-variant/60 uppercase tracking-wider">学习</p>
+        <a href="learning.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="trophy" class="w-4 h-4"></i>闯关学习
+        </a>
+        <a href="growth.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="user-check" class="w-4 h-4"></i>成长档案
+        </a>
+        <a href="resources.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="book-open" class="w-4 h-4"></i>资料中心
+        </a>
+        <p class="px-3 py-1 mt-3 text-xs font-medium text-on-surface-variant/60 uppercase tracking-wider">管理</p>
+        <a href="trainee-board.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="users" class="w-4 h-4"></i>新人看板
+        </a>
+        <a href="diagnosis.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="scan-search" class="w-4 h-4"></i>双轨诊断
+        </a>
+        <a href="empowerment.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="zap" class="w-4 h-4"></i>赋能中心
+        </a>
+        <a href="qc-review.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="mic" class="w-4 h-4"></i>质检审核
+        </a>
+        <a href="assessment.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="clipboard-check" class="w-4 h-4"></i>日常考核
+        </a>
+        <p class="px-3 py-1 mt-3 text-xs font-medium text-on-surface-variant/60 uppercase tracking-wider">数据</p>
+        <a href="dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="chart-bar" class="w-4 h-4"></i>数据看板
+        </a>
+        <a href="overview.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="activity" class="w-4 h-4"></i>全局概览
+        </a>
+        <a href="scrm-import.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="database" class="w-4 h-4"></i>业务数据
+        </a>
+        <p class="px-3 py-1 mt-3 text-xs font-medium text-on-surface-variant/60 uppercase tracking-wider">配置</p>
+        <a href="question-bank.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="file-question" class="w-4 h-4"></i>题库管理
+        </a>
+        <a href="settings.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="settings" class="w-4 h-4"></i>系统设置
+        </a>
+      </div>
+    </aside>
+  <!-- @nav:end 导航组件，不需要的页面则不要复制此段 -->
+
+  <!--
+    ⚠️ <main> 的 class 由主 Agent 根据步骤 4.5 的布局决策与实际设计需要填写，约束如下：
+      - 有侧边栏布局：必须用 flex-1（可加 min-w-0 / overflow-y-auto 等），禁止使用 max-w
+      - 无侧边栏布局：必须用 max-w-4xl ~ max-w-7xl 之一 + mx-auto
+      - 其他样式按实际设计需要自由组合
+    如无特殊需求，禁止使用  小于 max-w-4xl 的设置（过窄，桌面端会大量留白）。
+  -->
+  <main class="flex-1 min-w-0 overflow-y-auto bg-background p-6">
+    <!-- @main-content:start -->
+    <!-- @main-content:end -->
+  </main>
+  </div>
+
+  <script>lucide.createIcons();</script>
+</body>
+
+</html>

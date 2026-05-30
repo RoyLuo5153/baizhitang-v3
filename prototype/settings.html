@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link href="https://lf-code-agent.coze.cn/obj/x-ai-cn/fonts/google/google-all-fonts.css" rel="stylesheet"/>
+
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/jquery/jquery-3.7.1.min.js"></script>
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/lucide/lucide-1.11.0.min.js"></script>
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/tailwindcss/tailwindcss-browser-4.2.4.min.js"></script>
+
+  <style type="text/tailwindcss">
+    @theme {
+      /* === 品牌色 === */
+      --color-primary:              #2978B5;
+      --color-primary-container:    #D4E8F5;
+      --color-on-primary:           #ffffff;
+      /* === 背景 / 表面 === */
+      --color-background:                 #F8F6F0;
+      --color-surface-container-lowest:   #FAFAF5;
+      --color-surface:                    #FFFFFF;
+      --color-surface-container:          #F0EDE5;
+      --color-surface-container-high:     #E8E4DB;
+      --color-surface-container-highest:  #DDD8CE;
+      /* === 文字 === */
+      --color-on-surface:           #1D2733;
+      --color-on-surface-variant:   #667085;
+      /* === 功能色 === */
+      --color-success:  #22c55e;
+      --color-error:    #ef4444;
+      --color-warning:  #f59e0b;
+      /* === 边框 === */
+      --color-outline:          #D4CFC4;
+      --color-outline-variant:  #E6E1D8;
+      /* === 圆角 === */
+      --radius-sm:   0.375rem;
+      --radius-md:   0.5rem;
+      --radius-lg:   0.75rem;
+      --radius-xl:   1rem;
+      --radius-2xl:  1.5rem;
+      --radius-full: 9999px;
+      /* === 阴影 === */
+      --shadow-card:   0 2px 8px rgba(0,0,0,0.08);
+      --shadow-float:  0 10px 25px rgba(0,0,0,0.1);
+      --shadow-dialog: 0 25px 50px rgba(0,0,0,0.15);
+      /* === 字体 === */
+      --font-sans: "Noto Sans SC", system-ui, sans-serif;
+    }
+  </style>
+
+  <!-- 图片兜底 -->
+  <script>
+    document.addEventListener('error', function (e) {
+      const img = e.target;
+      if (img.tagName !== 'IMG' || img.dataset.fallback) return;
+      img.dataset.fallback = '1';
+      const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const cat = img.getAttribute('data-category') || '其他';
+      const alt = img.getAttribute('alt') || '';
+      const label = esc(alt.length > 8 ? alt.slice(0, 8) + '…' : alt);
+      const icons = { '人物': '👤', '自然风景': '🏞', '动物': '🐾', '建筑城市': '🏙', '运动体育': '⚽', '交通工具': '🚗', '食物': '🍽', '服饰时尚': '👗', '商业科技': '💼', '游戏娱乐': '🎮', '艺术': '🎨', '其他': '🖼' };
+      const icon = icons[cat] || '🖼';
+      const w = img.width || 400, h = img.height || 300;
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="45%" text-anchor="middle" font-size="${Math.min(w, h) * 0.18}" dominant-baseline="central">${icon}</text><text x="50%" y="68%" text-anchor="middle" font-size="${Math.min(w, h) * 0.07}" fill="%239ca3af" font-family="system-ui,sans-serif" dominant-baseline="central">${label}</text></svg>`;
+      img.src = 'data:image/svg+xml,' + svg;
+    }, true);
+  </script>
+</head>
+
+<body class="bg-background text-on-surface font-sans">
+
+  <!-- @nav:start -->
+  <header class="bg-surface sticky top-0 z-40 h-14 flex items-center justify-between px-6 border-b border-outline-variant/20">
+    <div class="flex items-center gap-2">
+      <i data-lucide="heart-pulse" class="text-primary w-5 h-5"></i>
+      <span class="font-bold text-base text-on-surface">百芝堂赋能系统</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="text-sm text-on-surface-variant">培训负责人</span>
+      <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-medium">初</div>
+    </div>
+  </header>
+  <div class="flex" style="height: calc(100vh - 3.5rem)">
+    <aside class="w-52 shrink-0 bg-surface-container-lowest overflow-y-auto border-r border-outline-variant/15">
+      <div class="p-3 space-y-0.5">
+        <p class="px-3 py-1 text-xs font-medium text-on-surface-variant/60 uppercase tracking-wider">工作台</p>
+        <a href="home.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="layout-dashboard" class="w-4 h-4"></i>首页
+        </a>
+        <p class="px-3 py-1 mt-3 text-xs font-medium text-on-surface-variant/60 uppercase tracking-wider">学习</p>
+        <a href="learning.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="trophy" class="w-4 h-4"></i>闯关学习
+        </a>
+        <a href="growth.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="user-check" class="w-4 h-4"></i>成长档案
+        </a>
+        <a href="resources.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="book-open" class="w-4 h-4"></i>资料中心
+        </a>
+        <p class="px-3 py-1 mt-3 text-xs font-medium text-on-surface-variant/60 uppercase tracking-wider">管理</p>
+        <a href="trainee-board.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="users" class="w-4 h-4"></i>新人看板
+        </a>
+        <a href="diagnosis.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="scan-search" class="w-4 h-4"></i>双轨诊断
+        </a>
+        <a href="empowerment.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="zap" class="w-4 h-4"></i>赋能中心
+        </a>
+        <a href="qc-review.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="mic" class="w-4 h-4"></i>质检审核
+        </a>
+        <a href="assessment.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="clipboard-check" class="w-4 h-4"></i>日常考核
+        </a>
+        <p class="px-3 py-1 mt-3 text-xs font-medium text-on-surface-variant/60 uppercase tracking-wider">数据</p>
+        <a href="dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="chart-bar" class="w-4 h-4"></i>数据看板
+        </a>
+        <a href="overview.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="activity" class="w-4 h-4"></i>全局概览
+        </a>
+        <a href="scrm-import.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="database" class="w-4 h-4"></i>业务数据
+        </a>
+        <p class="px-3 py-1 mt-3 text-xs font-medium text-on-surface-variant/60 uppercase tracking-wider">配置</p>
+        <a href="question-bank.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="file-question" class="w-4 h-4"></i>题库管理
+        </a>
+        <a href="settings.html" class="flex items-center gap-3 px-3 py-2 rounded-md bg-primary/10 text-primary font-medium text-sm" aria-current="page">
+          <i data-lucide="settings" class="w-4 h-4"></i>系统设置
+        </a>
+      </div>
+    </aside>
+  <!-- @nav:end -->
+
+  <main class="flex-1 min-w-0 overflow-y-auto bg-background p-6">
+    <!-- @main-content:start -->
+
+    <!-- 页面标题 -->
+    <div class="mb-6">
+      <h1 class="text-2xl font-bold text-on-surface">系统设置</h1>
+      <p class="text-sm text-on-surface-variant mt-1">管理系统阈值、用户和阶段规则配置</p>
+    </div>
+
+    <!-- 左侧Tab + 右侧内容 -->
+    <div class="flex gap-6">
+
+      <!-- 左侧垂直Tab -->
+      <div class="w-44 shrink-0">
+        <div class="bg-surface rounded-lg shadow-card p-2 space-y-0.5">
+          <button id="tab-threshold" class="tab-btn flex items-center gap-2.5 w-full px-3 py-2.5 rounded-md text-sm font-medium bg-primary/10 text-primary transition-colors">
+            <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>阈值配置
+          </button>
+          <button id="tab-users" class="tab-btn flex items-center gap-2.5 w-full px-3 py-2.5 rounded-md text-sm font-medium text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors">
+            <i data-lucide="users" class="w-4 h-4"></i>用户管理
+          </button>
+          <button id="tab-stages" class="tab-btn flex items-center gap-2.5 w-full px-3 py-2.5 rounded-md text-sm font-medium text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors">
+            <i data-lucide="git-branch" class="w-4 h-4"></i>阶段规则
+          </button>
+        </div>
+      </div>
+
+      <!-- 右侧内容区 -->
+      <div class="flex-1 min-w-0">
+
+        <!-- ========== Tab1: 阈值配置 ========== -->
+        <div id="panel-threshold" class="tab-panel">
+          <div class="space-y-8">
+
+            <!-- 过程线阈值 -->
+            <div class="bg-surface rounded-lg shadow-card p-5">
+              <div class="flex items-center gap-2 mb-5">
+                <i data-lucide="route" class="w-5 h-5 text-primary"></i>
+                <h2 class="text-base font-semibold text-on-surface">过程线阈值配置</h2>
+              </div>
+
+              <div class="space-y-5">
+                <!-- 闯关成绩 -->
+                <div>
+                  <h3 class="text-sm font-semibold text-on-surface mb-3 flex items-center gap-2">
+                    <i data-lucide="trophy" class="w-4 h-4 text-warning"></i>闯关成绩
+                  </h3>
+                  <div class="grid grid-cols-3 gap-4">
+                    <div>
+                      <label class="block text-xs text-on-surface-variant mb-1.5">合格</label>
+                      <input id="threshold-quiz-pass" type="number" value="70" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+                    </div>
+                    <div>
+                      <label class="block text-xs text-on-surface-variant mb-1.5">良好</label>
+                      <input id="threshold-quiz-good" type="number" value="85" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+                    </div>
+                    <div>
+                      <label class="block text-xs text-on-surface-variant mb-1.5">优秀</label>
+                      <input id="threshold-quiz-excellent" type="number" value="95" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 录音质检4维度 -->
+                <div>
+                  <h3 class="text-sm font-semibold text-on-surface mb-3 flex items-center gap-2">
+                    <i data-lucide="mic" class="w-4 h-4 text-error"></i>录音质检
+                  </h3>
+                  <div class="space-y-4">
+                    <!-- 维度-业务专业 -->
+                    <div class="bg-surface-container/50 rounded-md p-3">
+                      <p class="text-xs font-medium text-on-surface mb-2">业务专业</p>
+                      <div class="grid grid-cols-3 gap-4">
+                        <div>
+                          <label class="block text-xs text-on-surface-variant mb-1.5">合格</label>
+                          <input id="threshold-qc-biz-pass" type="number" value="70" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+                        </div>
+                        <div>
+                          <label class="block text-xs text-on-surface-variant mb-1.5">良好</label>
+                          <input id="threshold-qc-biz-good" type="number" value="85" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+                        </div>
+                        <div>
+                          <label class="block text-xs text-on-surface-variant mb-1.5">优秀</label>
+                          <input id="threshold-qc-biz-excellent" type="number" value="95" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+                        </div>
+                      </div>
+                    </div>
+                    <!-- 维度-服务规范 -->
+                    <div class="bg-surface-container/50 rounded-md p-3">
+                      <p class="text-xs font-medium text-on-surface mb-2">服务规范</p>
+                      <div class="grid grid-cols-3 gap-4">
+                        <div>
+                          <label class="block text-xs text-on-surface-variant mb-1.5">合格</label>
+                          <input id="threshold-qc-service-pass" type="number" value="70" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+                        </div>
+                        <div>
+                          <label class="block text-xs text-on-surface-variant mb-1.5">良好</label>
+                          <input id="threshold-qc-service-good" type="number" value="85" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+                        </div>
+                        <div>
+                          <label class="block text-xs text-on-surface-variant mb-1.5">优秀</label>
+                          <input id="threshold-qc-service-excellent" type="number" value="95" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+                        </div>
+                      </div>
+                    </div>
+                    <!-- 维度-沟通技巧 -->
+                    <div class="bg-surface-container/50 rounded-md p-3">
+                      <p class="text-xs font-medium text-on-surface mb-2">沟通技巧</p>
+                      <div class="grid grid-cols-3 gap-4">
+                        <div>
+                          <label class="block text-xs text-on-surface-variant mb-1.5">合格</label>
+                          <input id="threshold-qc-comm-pass" type="number" value="70" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+                        </div>
+                        <div>
+                          <label class="block text-xs text-on-surface-variant mb-1.5">良好</label>
+                          <input id="threshold-qc-comm-good" type="number" value="85" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+                        </div>
+                        <div>
+                          <label class="block text-xs text-on-surface-variant mb-1.5">优秀</label>
+                          <input id="threshold-qc-comm-excellent" type="number" value="95" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+                        </div>
+                      </div>
+                    </div>
+                    <!-- 维度-流程执行 -->
+                    <div class="bg-surface-container/50 rounded-md p-3">
+                      <p class="text-xs font-medium text-on-surface mb-2">流程执行</p>
+                      <div class="grid grid-cols-3 gap-4">
+                        <div>
+                          <label class="block text-xs text-on-surface-variant mb-1.5">合格</label>
+                          <input id="threshold-qc-process-pass" type="number" value="70" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+                        </div>
+                        <div>
+                          <label class="block text-xs text-on-surface-variant mb-1.5">良好</label>
+                          <input id="threshold-qc-process-good" type="number" value="85" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+                        </div>
+                        <div>
+                          <label class="block text-xs text-on-surface-variant mb-1.5">优秀</label>
+                          <input id="threshold-qc-process-excellent" type="number" value="95" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 日常考核 -->
+                <div>
+                  <h3 class="text-sm font-semibold text-on-surface mb-3 flex items-center gap-2">
+                    <i data-lucide="clipboard-check" class="w-4 h-4 text-success"></i>日常考核
+                  </h3>
+                  <div class="grid grid-cols-3 gap-4">
+                    <div>
+                      <label class="block text-xs text-on-surface-variant mb-1.5">合格</label>
+                      <input id="threshold-daily-pass" type="number" value="70" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+                    </div>
+                    <div>
+                      <label class="block text-xs text-on-surface-variant mb-1.5">良好</label>
+                      <input id="threshold-daily-good" type="number" value="85" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+                    </div>
+                    <div>
+                      <label class="block text-xs text-on-surface-variant mb-1.5">优秀</label>
+                      <input id="threshold-daily-excellent" type="number" value="95" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 结果线阈值 -->
+            <div class="bg-surface rounded-lg shadow-card p-5">
+              <div class="flex items-center gap-2 mb-5">
+                <i data-lucide="target" class="w-5 h-5 text-primary"></i>
+                <h2 class="text-base font-semibold text-on-surface">结果线阈值配置</h2>
+                <span class="text-xs text-on-surface-variant ml-1">单位：%</span>
+              </div>
+
+              <div class="space-y-4">
+                <!-- 加V率 -->
+                <div class="bg-surface-container/50 rounded-md p-3">
+                  <p class="text-xs font-medium text-on-surface mb-2">加V率</p>
+                  <div class="grid grid-cols-3 gap-4">
+                    <div>
+                      <label class="block text-xs text-on-surface-variant mb-1.5">合格</label>
+                      <input id="threshold-addv-pass" type="number" value="90" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+                    </div>
+                    <div>
+                      <label class="block text-xs text-on-surface-variant mb-1.5">良好</label>
+                      <input id="threshold-addv-good" type="number" value="95" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+                    </div>
+                    <div>
+                      <label class="block text-xs text-on-surface-variant mb-1.5">优秀</label>
+                      <input id="threshold-addv-excellent" type="number" value="98" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+                    </div>
+                  </div>
+                </div>
+                <!-- 面诊率 -->
+                <div class="bg-surface-container/50 rounded-md p-3">
+                  <p class="text-xs font-medium text-on-surface mb-2">面诊率</p>
+                  <div class="grid grid-cols-3 gap-4">
+                    <div>
+                      <label class="block text-xs text-on-surface-variant mb-1.5">合格</label>
+                      <input id="threshold-consult-pass" type="number" value="85" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+                    </div>
+                    <div>
+                      <label class="block text-xs text-on-surface-variant mb-1.5">良好</label>
+                      <input id="threshold-consult-good" type="number" value="92" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+                    </div>
+                    <div>
+                      <label class="block text-xs text-on-surface-variant mb-1.5">优秀</label>
+                      <input id="threshold-consult-excellent" type="number" value="96" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+                    </div>
+                  </div>
+                </div>
+                <!-- 接诊率 -->
+                <div class="bg-surface-container/50 rounded-md p-3">
+                  <p class="text-xs font-medium text-on-surface mb-2">接诊率</p>
+                  <div class="grid grid-cols-3 gap-4">
+                    <div>
+                      <label class="block text-xs text-on-surface-variant mb-1.5">合格</label>
+                      <input id="threshold-reception-pass" type="number" value="80" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+                    </div>
+                    <div>
+                      <label class="block text-xs text-on-surface-variant mb-1.5">良好</label>
+                      <input id="threshold-reception-good" type="number" value="88" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+                    </div>
+                    <div>
+                      <label class="block text-xs text-on-surface-variant mb-1.5">优秀</label>
+                      <input id="threshold-reception-excellent" type="number" value="93" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+                    </div>
+                  </div>
+                </div>
+                <!-- 签收率 -->
+                <div class="bg-surface-container/50 rounded-md p-3">
+                  <p class="text-xs font-medium text-on-surface mb-2">签收率</p>
+                  <div class="grid grid-cols-3 gap-4">
+                    <div>
+                      <label class="block text-xs text-on-surface-variant mb-1.5">合格</label>
+                      <input id="threshold-sign-pass" type="number" value="85" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+                    </div>
+                    <div>
+                      <label class="block text-xs text-on-surface-variant mb-1.5">良好</label>
+                      <input id="threshold-sign-good" type="number" value="92" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+                    </div>
+                    <div>
+                      <label class="block text-xs text-on-surface-variant mb-1.5">优秀</label>
+                      <input id="threshold-sign-excellent" type="number" value="96" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+                    </div>
+                  </div>
+                </div>
+                <!-- 用药率 -->
+                <div class="bg-surface-container/50 rounded-md p-3">
+                  <p class="text-xs font-medium text-on-surface mb-2">用药率</p>
+                  <div class="grid grid-cols-3 gap-4">
+                    <div>
+                      <label class="block text-xs text-on-surface-variant mb-1.5">合格</label>
+                      <input id="threshold-med-pass" type="number" value="90" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+                    </div>
+                    <div>
+                      <label class="block text-xs text-on-surface-variant mb-1.5">良好</label>
+                      <input id="threshold-med-good" type="number" value="95" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+                    </div>
+                    <div>
+                      <label class="block text-xs text-on-surface-variant mb-1.5">优秀</label>
+                      <input id="threshold-med-excellent" type="number" value="98" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+                    </div>
+                  </div>
+                </div>
+                <!-- 挂号率 -->
+                <div class="bg-surface-container/50 rounded-md p-3">
+                  <p class="text-xs font-medium text-on-surface mb-2">挂号率</p>
+                  <div class="grid grid-cols-3 gap-4">
+                    <div>
+                      <label class="block text-xs text-on-surface-variant mb-1.5">合格</label>
+                      <input id="threshold-reg-pass" type="number" value="80" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+                    </div>
+                    <div>
+                      <label class="block text-xs text-on-surface-variant mb-1.5">良好</label>
+                      <input id="threshold-reg-good" type="number" value="88" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+                    </div>
+                    <div>
+                      <label class="block text-xs text-on-surface-variant mb-1.5">优秀</label>
+                      <input id="threshold-reg-excellent" type="number" value="93" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 底部操作按钮 -->
+            <div class="flex items-center justify-end gap-3">
+              <button id="btn-threshold-reset" class="bg-surface-container text-on-surface px-4 py-2 rounded-md text-sm font-medium hover:bg-surface-container-high active:scale-[0.98] transition-all">重置默认</button>
+              <button id="btn-threshold-save" class="bg-primary text-on-primary px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all inline-flex items-center gap-2">
+                <i data-lucide="save" class="w-3.5 h-3.5"></i>保存配置
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========== Tab2: 用户管理 ========== -->
+        <div id="panel-users" class="tab-panel hidden">
+          <div class="bg-surface rounded-lg shadow-card overflow-hidden">
+            <!-- 表格顶部 -->
+            <div class="flex items-center justify-between px-5 py-4">
+              <div>
+                <h2 class="text-base font-semibold text-on-surface">用户列表</h2>
+                <p class="text-xs text-on-surface-variant mt-0.5">共 6 位用户</p>
+              </div>
+              <button id="btn-add-user" class="bg-primary text-on-primary px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all inline-flex items-center gap-2">
+                <i data-lucide="plus" class="w-3.5 h-3.5"></i>添加用户
+              </button>
+            </div>
+            <!-- 表头 -->
+            <div class="grid grid-cols-6 px-5 py-3 bg-surface-container text-xs font-semibold text-on-surface-variant uppercase tracking-wide">
+              <span>姓名</span><span>用户名</span><span>角色</span><span>阶段</span><span>状态</span><span>操作</span>
+            </div>
+            <!-- 表体 -->
+            <div class="divide-y divide-outline-variant/50">
+              <!-- 列表-用户1 -->
+              <div class="grid grid-cols-6 px-5 py-3.5 hover:bg-surface-container/50 transition-colors items-center">
+                <span class="text-sm font-medium text-on-surface">张小美</span>
+                <span class="text-sm text-on-surface-variant">zhangxm</span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-primary/15 text-primary w-fit">新人</span>
+                <span class="text-sm text-on-surface-variant">阶段一</span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success w-fit">在职</span>
+                <div class="flex gap-3">
+                  <button id="btn-edit-user-1" class="text-primary text-sm font-medium hover:underline btn-edit-user" data-id="1">编辑</button>
+                  <button id="btn-reset-pwd-1" class="text-on-surface-variant text-sm hover:underline btn-reset-pwd" data-id="1">重置密码</button>
+                </div>
+              </div>
+              <!-- 列表-用户2 -->
+              <div class="grid grid-cols-6 px-5 py-3.5 hover:bg-surface-container/50 transition-colors items-center">
+                <span class="text-sm font-medium text-on-surface">李晓华</span>
+                <span class="text-sm text-on-surface-variant">lixh</span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-primary/15 text-primary w-fit">新人</span>
+                <span class="text-sm text-on-surface-variant">阶段二</span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success w-fit">在职</span>
+                <div class="flex gap-3">
+                  <button id="btn-edit-user-2" class="text-primary text-sm font-medium hover:underline btn-edit-user" data-id="2">编辑</button>
+                  <button id="btn-reset-pwd-2" class="text-on-surface-variant text-sm hover:underline btn-reset-pwd" data-id="2">重置密码</button>
+                </div>
+              </div>
+              <!-- 列表-用户3 -->
+              <div class="grid grid-cols-6 px-5 py-3.5 hover:bg-surface-container/50 transition-colors items-center">
+                <span class="text-sm font-medium text-on-surface">王大明</span>
+                <span class="text-sm text-on-surface-variant">wangdm</span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-warning/15 text-warning w-fit">带教</span>
+                <span class="text-sm text-on-surface-variant">—</span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success w-fit">在职</span>
+                <div class="flex gap-3">
+                  <button id="btn-edit-user-3" class="text-primary text-sm font-medium hover:underline btn-edit-user" data-id="3">编辑</button>
+                  <button id="btn-reset-pwd-3" class="text-on-surface-variant text-sm hover:underline btn-reset-pwd" data-id="3">重置密码</button>
+                </div>
+              </div>
+              <!-- 列表-用户4 -->
+              <div class="grid grid-cols-6 px-5 py-3.5 hover:bg-surface-container/50 transition-colors items-center">
+                <span class="text-sm font-medium text-on-surface">赵老师</span>
+                <span class="text-sm text-on-surface-variant">zhaols</span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success w-fit">培训老师</span>
+                <span class="text-sm text-on-surface-variant">—</span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success w-fit">在职</span>
+                <div class="flex gap-3">
+                  <button id="btn-edit-user-4" class="text-primary text-sm font-medium hover:underline btn-edit-user" data-id="4">编辑</button>
+                  <button id="btn-reset-pwd-4" class="text-on-surface-variant text-sm hover:underline btn-reset-pwd" data-id="4">重置密码</button>
+                </div>
+              </div>
+              <!-- 列表-用户5 -->
+              <div class="grid grid-cols-6 px-5 py-3.5 hover:bg-surface-container/50 transition-colors items-center">
+                <span class="text-sm font-medium text-on-surface">刘管理</span>
+                <span class="text-sm text-on-surface-variant">liugl</span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-error/15 text-error w-fit">管理者</span>
+                <span class="text-sm text-on-surface-variant">—</span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success w-fit">在职</span>
+                <div class="flex gap-3">
+                  <button id="btn-edit-user-5" class="text-primary text-sm font-medium hover:underline btn-edit-user" data-id="5">编辑</button>
+                  <button id="btn-reset-pwd-5" class="text-on-surface-variant text-sm hover:underline btn-reset-pwd" data-id="5">重置密码</button>
+                </div>
+              </div>
+              <!-- 列表-用户6 -->
+              <div class="grid grid-cols-6 px-5 py-3.5 hover:bg-surface-container/50 transition-colors items-center">
+                <span class="text-sm font-medium text-on-surface">孙总</span>
+                <span class="text-sm text-on-surface-variant">sunz</span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-surface-container-highest text-on-surface-variant w-fit">老板</span>
+                <span class="text-sm text-on-surface-variant">—</span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success w-fit">在职</span>
+                <div class="flex gap-3">
+                  <button id="btn-edit-user-6" class="text-primary text-sm font-medium hover:underline btn-edit-user" data-id="6">编辑</button>
+                  <button id="btn-reset-pwd-6" class="text-on-surface-variant text-sm hover:underline btn-reset-pwd" data-id="6">重置密码</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========== Tab3: 阶段规则 ========== -->
+        <div id="panel-stages" class="tab-panel hidden">
+          <div class="space-y-6">
+
+            <!-- 阶段一 → 阶段二 -->
+            <div class="bg-surface rounded-lg shadow-card p-5">
+              <div class="flex items-center gap-3 mb-5">
+                <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-bold">1</div>
+                <div>
+                  <h2 class="text-base font-semibold text-on-surface">阶段一 → 阶段二</h2>
+                  <p class="text-xs text-on-surface-variant mt-0.5">理论学习阶段进入实战演练阶段的启用条件</p>
+                </div>
+              </div>
+              <div class="space-y-3">
+                <!-- 条件1 -->
+                <div class="bg-surface-container/50 rounded-md p-4 flex items-start gap-3">
+                  <div class="mt-0.5">
+                    <i data-lucide="check-circle-2" class="w-4 h-4 text-success"></i>
+                  </div>
+                  <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-1.5">
+                      <span class="text-sm font-medium text-on-surface">闯关通过条件</span>
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已启用</span>
+                    </div>
+                    <p class="text-xs text-on-surface-variant mb-3">闯关21关全部通过后可进入阶段二</p>
+                    <div class="grid grid-cols-2 gap-4">
+                      <div>
+                        <label class="block text-xs text-on-surface-variant mb-1.5">总关卡数</label>
+                        <input id="stage1-total-levels" type="number" value="21" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+                      </div>
+                      <div>
+                        <label class="block text-xs text-on-surface-variant mb-1.5">通过标准</label>
+                        <input id="stage1-pass-criteria" type="text" value="全部通过" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 阶段二 → 阶段三 -->
+            <div class="bg-surface rounded-lg shadow-card p-5">
+              <div class="flex items-center gap-3 mb-5">
+                <div class="w-8 h-8 rounded-full bg-warning/10 flex items-center justify-center text-warning text-sm font-bold">2</div>
+                <div>
+                  <h2 class="text-base font-semibold text-on-surface">阶段二 → 阶段三</h2>
+                  <p class="text-xs text-on-surface-variant mt-0.5">实战演练阶段进入达标下组阶段的启用条件</p>
+                </div>
+              </div>
+              <div class="space-y-3">
+                <!-- 条件1 -->
+                <div class="bg-surface-container/50 rounded-md p-4 flex items-start gap-3">
+                  <div class="mt-0.5">
+                    <i data-lucide="check-circle-2" class="w-4 h-4 text-success"></i>
+                  </div>
+                  <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-1.5">
+                      <span class="text-sm font-medium text-on-surface">连续A类条件</span>
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已启用</span>
+                    </div>
+                    <p class="text-xs text-on-surface-variant mb-3">连续达到A类评定后可进入阶段三</p>
+                    <div class="grid grid-cols-2 gap-4">
+                      <div>
+                        <label class="block text-xs text-on-surface-variant mb-1.5">连续周数</label>
+                        <input id="stage2-consecutive-weeks" type="number" value="4" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+                      </div>
+                      <div>
+                        <label class="block text-xs text-on-surface-variant mb-1.5">评定等级</label>
+                        <input id="stage2-grade" type="text" value="A类" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 复训触发 -->
+            <div class="bg-surface rounded-lg shadow-card p-5">
+              <div class="flex items-center gap-3 mb-5">
+                <div class="w-8 h-8 rounded-full bg-error/10 flex items-center justify-center text-error text-sm font-bold">!</div>
+                <div>
+                  <h2 class="text-base font-semibold text-on-surface">复训触发规则</h2>
+                  <p class="text-xs text-on-surface-variant mt-0.5">不达标时自动触发复训的条件设置</p>
+                </div>
+              </div>
+              <div class="space-y-3">
+                <!-- 条件1 -->
+                <div class="bg-surface-container/50 rounded-md p-4 flex items-start gap-3">
+                  <div class="mt-0.5">
+                    <i data-lucide="alert-triangle" class="w-4 h-4 text-error"></i>
+                  </div>
+                  <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-1.5">
+                      <span class="text-sm font-medium text-on-surface">连续D类触发复训</span>
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-error/15 text-error">高风险</span>
+                    </div>
+                    <p class="text-xs text-on-surface-variant mb-3">连续被评为D类后自动触发复训流程</p>
+                    <div class="grid grid-cols-2 gap-4">
+                      <div>
+                        <label class="block text-xs text-on-surface-variant mb-1.5">连续周数</label>
+                        <input id="stage3-consecutive-weeks" type="number" value="2" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+                      </div>
+                      <div>
+                        <label class="block text-xs text-on-surface-variant mb-1.5">评定等级</label>
+                        <input id="stage3-grade" type="text" value="D类" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 底部操作按钮 -->
+            <div class="flex items-center justify-end gap-3">
+              <button id="btn-stage-reset" class="bg-surface-container text-on-surface px-4 py-2 rounded-md text-sm font-medium hover:bg-surface-container-high active:scale-[0.98] transition-all">重置默认</button>
+              <button id="btn-stage-save" class="bg-primary text-on-primary px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all inline-flex items-center gap-2">
+                <i data-lucide="save" class="w-3.5 h-3.5"></i>保存规则
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ========== 模态框：编辑用户角色 ========== -->
+    <div id="modal-edit-user" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 hidden">
+      <div class="bg-surface rounded-xl shadow-dialog max-w-md w-full max-h-[90vh] overflow-y-auto p-6">
+        <div class="flex items-center justify-between mb-5">
+          <h3 id="modal-edit-title" class="text-base font-semibold text-on-surface">编辑用户</h3>
+          <button id="btn-close-edit-modal" class="text-on-surface-variant hover:text-on-surface transition-colors">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs text-on-surface-variant mb-1.5">姓名</label>
+            <input id="edit-user-name" type="text" value="张小美" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+          </div>
+          <div>
+            <label class="block text-xs text-on-surface-variant mb-1.5">用户名</label>
+            <input id="edit-user-username" type="text" value="zhangxm" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+          </div>
+          <div>
+            <label class="block text-xs text-on-surface-variant mb-1.5">角色</label>
+            <select id="edit-user-role" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors">
+              <option value="trainee">新人</option>
+              <option value="mentor">带教</option>
+              <option value="teacher">培训老师</option>
+              <option value="manager">管理者</option>
+              <option value="boss">老板</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-on-surface-variant mb-1.5">阶段</label>
+            <select id="edit-user-stage" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors">
+              <option value="1">阶段一</option>
+              <option value="2">阶段二</option>
+              <option value="3">阶段三</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-on-surface-variant mb-1.5">状态</label>
+            <select id="edit-user-status" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors">
+              <option value="active">在职</option>
+              <option value="paused">暂停</option>
+              <option value="graduated">毕业</option>
+            </select>
+          </div>
+        </div>
+        <div class="flex justify-end gap-3 mt-6">
+          <button id="btn-cancel-edit" class="bg-surface-container text-on-surface px-4 py-2 rounded-md text-sm font-medium hover:bg-surface-container-high active:scale-[0.98] transition-all">取消</button>
+          <button id="btn-save-edit" class="bg-primary text-on-primary px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all">保存</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== 模态框：添加用户 ========== -->
+    <div id="modal-add-user" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 hidden">
+      <div class="bg-surface rounded-xl shadow-dialog max-w-md w-full max-h-[90vh] overflow-y-auto p-6">
+        <div class="flex items-center justify-between mb-5">
+          <h3 class="text-base font-semibold text-on-surface">添加用户</h3>
+          <button id="btn-close-add-modal" class="text-on-surface-variant hover:text-on-surface transition-colors">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs text-on-surface-variant mb-1.5">姓名</label>
+            <input id="add-user-name" type="text" placeholder="请输入姓名" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+          </div>
+          <div>
+            <label class="block text-xs text-on-surface-variant mb-1.5">用户名</label>
+            <input id="add-user-username" type="text" placeholder="请输入用户名" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+          </div>
+          <div>
+            <label class="block text-xs text-on-surface-variant mb-1.5">角色</label>
+            <select id="add-user-role" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors">
+              <option value="trainee">新人</option>
+              <option value="mentor">带教</option>
+              <option value="teacher">培训老师</option>
+              <option value="manager">管理者</option>
+              <option value="boss">老板</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-on-surface-variant mb-1.5">阶段</label>
+            <select id="add-user-stage" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors">
+              <option value="1">阶段一</option>
+              <option value="2">阶段二</option>
+              <option value="3">阶段三</option>
+            </select>
+          </div>
+        </div>
+        <div class="flex justify-end gap-3 mt-6">
+          <button id="btn-cancel-add" class="bg-surface-container text-on-surface px-4 py-2 rounded-md text-sm font-medium hover:bg-surface-container-high active:scale-[0.98] transition-all">取消</button>
+          <button id="btn-save-add" class="bg-primary text-on-primary px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all">创建</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== Toast 提示 ========== -->
+    <div id="toast" class="fixed top-20 right-6 z-50 hidden">
+      <div class="bg-surface rounded-lg shadow-float px-4 py-3 flex items-center gap-2 border border-outline-variant/20">
+        <i data-lucide="check-circle" class="w-4 h-4 text-success"></i>
+        <span id="toast-message" class="text-sm font-medium text-on-surface">保存成功</span>
+      </div>
+    </div>
+
+    <!-- @main-content:end -->
+  </main>
+  </div>
+
+  <script>
+  $(function() {
+
+    // === Tab 切换 ===
+    var tabMap = {
+      'tab-threshold': 'panel-threshold',
+      'tab-users': 'panel-users',
+      'tab-stages': 'panel-stages'
+    };
+
+    $('.tab-btn').on('click', function() {
+      var tabId = $(this).attr('id');
+      var panelId = tabMap[tabId];
+
+      // 切换按钮样式
+      $('.tab-btn').removeClass('bg-primary/10 text-primary').addClass('text-on-surface-variant');
+      $(this).removeClass('text-on-surface-variant').addClass('bg-primary/10 text-primary');
+
+      // 切换面板
+      $('.tab-panel').addClass('hidden');
+      $('#' + panelId).removeClass('hidden');
+    });
+
+    // === Toast 提示 ===
+    function showToast(msg) {
+      $('#toast-message').text(msg);
+      $('#toast').removeClass('hidden');
+      setTimeout(function() {
+        $('#toast').addClass('hidden');
+      }, 2000);
+    }
+
+    // === 阈值配置 - 保存 ===
+    $('#btn-threshold-save').on('click', function() {
+      // 保存阈值配置 - 后续应实现：
+      // 1. 收集所有阈值输入框的值
+      // 2. 验证每个指标的 合格 < 良好 < 优秀
+      // 3. 提交到后端保存
+      // 4. 保存成功后重新计算所有人的逐项对标和四象限分类
+      showToast('阈值配置已保存');
+    });
+
+    // === 阈值配置 - 重置默认 ===
+    $('#btn-threshold-reset').on('click', function() {
+      // 重置默认阈值 - 后续应实现：
+      // 1. 将所有输入框恢复为默认值（闯关70/85/95，录音各维度70/85/95，日常70/85/95，结果线各指标如PRD默认值）
+      // 2. 提示用户确认是否重置
+      // 3. 确认后提交后端保存
+      var defaults = {
+        'threshold-quiz-pass': 70, 'threshold-quiz-good': 85, 'threshold-quiz-excellent': 95,
+        'threshold-qc-biz-pass': 70, 'threshold-qc-biz-good': 85, 'threshold-qc-biz-excellent': 95,
+        'threshold-qc-service-pass': 70, 'threshold-qc-service-good': 85, 'threshold-qc-service-excellent': 95,
+        'threshold-qc-comm-pass': 70, 'threshold-qc-comm-good': 85, 'threshold-qc-comm-excellent': 95,
+        'threshold-qc-process-pass': 70, 'threshold-qc-process-good': 85, 'threshold-qc-process-excellent': 95,
+        'threshold-daily-pass': 70, 'threshold-daily-good': 85, 'threshold-daily-excellent': 95,
+        'threshold-addv-pass': 90, 'threshold-addv-good': 95, 'threshold-addv-excellent': 98,
+        'threshold-consult-pass': 85, 'threshold-consult-good': 92, 'threshold-consult-excellent': 96,
+        'threshold-reception-pass': 80, 'threshold-reception-good': 88, 'threshold-reception-excellent': 93,
+        'threshold-sign-pass': 85, 'threshold-sign-good': 92, 'threshold-sign-excellent': 96,
+        'threshold-med-pass': 90, 'threshold-med-good': 95, 'threshold-med-excellent': 98,
+        'threshold-reg-pass': 80, 'threshold-reg-good': 88, 'threshold-reg-excellent': 93
+      };
+      $.each(defaults, function(id, val) {
+        $('#' + id).val(val);
+      });
+      showToast('已重置为默认值');
+    });
+
+    // === 用户管理 - 添加用户 ===
+    $('#btn-add-user').on('click', function() {
+      // 清空表单
+      $('#add-user-name').val('');
+      $('#add-user-username').val('');
+      $('#add-user-role').val('trainee');
+      $('#add-user-stage').val('1');
+      $('#modal-add-user').removeClass('hidden');
+    });
+
+    $('#btn-close-add-modal, #btn-cancel-add').on('click', function() {
+      $('#modal-add-user').addClass('hidden');
+    });
+
+    $('#btn-save-add').on('click', function() {
+      // 添加用户 - 后续应实现：
+      // 1. 验证姓名和用户名不为空
+      // 2. 验证用户名不重复
+      // 3. 提交到后端创建用户
+      // 4. 成功后刷新用户列表
+      var name = $('#add-user-name').val();
+      var username = $('#add-user-username').val();
+      if (!name || !username) {
+        showToast('请填写完整信息');
+        return;
+      }
+      $('#modal-add-user').addClass('hidden');
+      showToast('用户已创建');
+    });
+
+    // === 用户管理 - 编辑用户 ===
+    var userData = {
+      1: { name: '张小美', username: 'zhangxm', role: 'trainee', stage: '1', status: 'active' },
+      2: { name: '李晓华', username: 'lixh', role: 'trainee', stage: '2', status: 'active' },
+      3: { name: '王大明', username: 'wangdm', role: 'mentor', stage: '', status: 'active' },
+      4: { name: '赵老师', username: 'zhaols', role: 'teacher', stage: '', status: 'active' },
+      5: { name: '刘管理', username: 'liugl', role: 'manager', stage: '', status: 'active' },
+      6: { name: '孙总', username: 'sunz', role: 'boss', stage: '', status: 'active' }
+    };
+
+    $('#panel-users').on('click', '.btn-edit-user', function() {
+      var userId = $(this).data('id');
+      var user = userData[userId];
+      if (user) {
+        $('#edit-user-name').val(user.name);
+        $('#edit-user-username').val(user.username);
+        $('#edit-user-role').val(user.role);
+        $('#edit-user-stage').val(user.stage || '1');
+        $('#edit-user-status').val(user.status);
+        $('#modal-edit-title').text('编辑用户 - ' + user.name);
+      }
+      $('#modal-edit-user').removeClass('hidden');
+    });
+
+    $('#btn-close-edit-modal, #btn-cancel-edit').on('click', function() {
+      $('#modal-edit-user').addClass('hidden');
+    });
+
+    $('#btn-save-edit').on('click', function() {
+      // 编辑用户 - 后续应实现：
+      // 1. 收集表单数据
+      // 2. 提交到后端更新用户信息
+      // 3. 成功后刷新用户列表中对应行的显示
+      // 4. 如果角色变更，需同步更新权限
+      $('#modal-edit-user').addClass('hidden');
+      showToast('用户信息已更新');
+    });
+
+    // === 用户管理 - 重置密码 ===
+    $('#panel-users').on('click', '.btn-reset-pwd', function() {
+      var userId = $(this).data('id');
+      var userName = userData[userId] ? userData[userId].name : '';
+      // 重置密码 - 后续应实现：
+      // 1. 弹出确认弹窗："确定要重置【xxx】的密码吗？"
+      // 2. 确认后调用后端接口重置密码
+      // 3. 成功后提示新密码或发送邮件通知
+      if (confirm('确定要重置【' + userName + '】的密码吗？')) {
+        showToast('密码已重置');
+      }
+    });
+
+    // === 阶段规则 - 保存 ===
+    $('#btn-stage-save').on('click', function() {
+      // 保存阶段规则 - 后续应实现：
+      // 1. 收集各阶段条件的参数
+      // 2. 验证参数合理性（如连续周数 > 0）
+      // 3. 提交到后端保存
+      // 4. 保存成功后影响所有新人的阶段流转判断
+      showToast('阶段规则已保存');
+    });
+
+    // === 阶段规则 - 重置默认 ===
+    $('#btn-stage-reset').on('click', function() {
+      // 重置阶段规则为默认值
+      $('#stage1-total-levels').val(21);
+      $('#stage1-pass-criteria').val('全部通过');
+      $('#stage2-consecutive-weeks').val(4);
+      $('#stage2-grade').val('A类');
+      $('#stage3-consecutive-weeks').val(2);
+      $('#stage3-grade').val('D类');
+      showToast('已重置为默认值');
+    });
+
+    // === 点击模态框遮罩关闭 ===
+    $('#modal-edit-user, #modal-add-user').on('click', function(e) {
+      if ($(e.target).is('#modal-edit-user')) {
+        $('#modal-edit-user').addClass('hidden');
+      }
+      if ($(e.target).is('#modal-add-user')) {
+        $('#modal-add-user').addClass('hidden');
+      }
+    });
+
+  });
+  </script>
+
+  <script>lucide.createIcons();</script>
+</body>
+
+</html>

@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link href="https://lf-code-agent.coze.cn/obj/x-ai-cn/fonts/google/google-all-fonts.css" rel="stylesheet"/>
+
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/jquery/jquery-3.7.1.min.js"></script>
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/lucide/lucide-1.11.0.min.js"></script>
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/tailwindcss/tailwindcss-browser-4.2.4.min.js"></script>
+
+  <style type="text/tailwindcss">
+    @theme {
+      /* === 品牌色 === */
+      --color-primary:              #2978B5;
+      --color-primary-container:    #D4E8F5;
+      --color-on-primary:           #ffffff;
+      /* === 背景 / 表面 === */
+      --color-background:                 #F8F6F0;
+      --color-surface-container-lowest:   #FAFAF5;
+      --color-surface:                    #FFFFFF;
+      --color-surface-container:          #F0EDE5;
+      --color-surface-container-high:     #E8E4DB;
+      --color-surface-container-highest:  #DDD8CE;
+      /* === 文字 === */
+      --color-on-surface:           #1D2733;
+      --color-on-surface-variant:   #667085;
+      /* === 功能色 === */
+      --color-success:  #22c55e;
+      --color-error:    #ef4444;
+      --color-warning:  #f59e0b;
+      /* === 边框 === */
+      --color-outline:          #D4CFC4;
+      --color-outline-variant:  #E6E1D8;
+      /* === 圆角 === */
+      --radius-sm:   0.375rem;
+      --radius-md:   0.5rem;
+      --radius-lg:   0.75rem;
+      --radius-xl:   1rem;
+      --radius-2xl:  1.5rem;
+      --radius-full: 9999px;
+      /* === 阴影 === */
+      --shadow-card:   0 2px 8px rgba(0,0,0,0.08);
+      --shadow-float:  0 10px 25px rgba(0,0,0,0.1);
+      --shadow-dialog: 0 25px 50px rgba(0,0,0,0.15);
+      /* === 字体 === */
+      --font-sans: "Noto Sans SC", system-ui, sans-serif;
+    }
+  </style>
+
+  <!-- 图片兜底 -->
+  <script>
+    document.addEventListener('error', function (e) {
+      const img = e.target;
+      if (img.tagName !== 'IMG' || img.dataset.fallback) return;
+      img.dataset.fallback = '1';
+      const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const cat = img.getAttribute('data-category') || '其他';
+      const alt = img.getAttribute('alt') || '';
+      const label = esc(alt.length > 8 ? alt.slice(0, 8) + '…' : alt);
+      const icons = { '人物': '👤', '自然风景': '🏞', '动物': '🐾', '建筑城市': '🏙', '运动体育': '⚽', '交通工具': '🚗', '食物': '🍽', '服饰时尚': '👗', '商业科技': '💼', '游戏娱乐': '🎮', '艺术': '🎨', '其他': '🖼' };
+      const icon = icons[cat] || '🖼';
+      const w = img.width || 400, h = img.height || 300;
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="45%" text-anchor="middle" font-size="${Math.min(w, h) * 0.18}" dominant-baseline="central">${icon}</text><text x="50%" y="68%" text-anchor="middle" font-size="${Math.min(w, h) * 0.07}" fill="%239ca3af" font-family="system-ui,sans-serif" dominant-baseline="central">${label}</text></svg>`;
+      img.src = 'data:image/svg+xml,' + svg;
+    }, true);
+  </script>
+
+  <style>
+    /* 环形进度图动画 */
+    @keyframes ring-fill {
+      from { stroke-dashoffset: 408.41; }
+    }
+    .ring-progress {
+      animation: ring-fill 1.2s ease-out forwards;
+    }
+    /* 折线图绘制动画 */
+    @keyframes draw-line {
+      from { stroke-dashoffset: 600; }
+      to { stroke-dashoffset: 0; }
+    }
+    .chart-line {
+      stroke-dasharray: 600;
+      animation: draw-line 1.5s ease-out forwards;
+    }
+    /* 数字渐入 */
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up {
+      animation: fade-up 0.6s ease-out forwards;
+    }
+  </style>
+</head>
+
+<body class="bg-background text-on-surface font-sans">
+
+  <!-- @nav:start 导航组件，不需要的页面则不要复制此段（从 @nav:start 到 @nav:end） -->
+  <header class="bg-surface sticky top-0 z-40 h-14 flex items-center justify-between px-6 border-b border-outline-variant/20">
+    <div class="flex items-center gap-2">
+      <i data-lucide="heart-pulse" class="text-primary w-5 h-5"></i>
+      <span class="font-bold text-base text-on-surface">百芝堂赋能系统</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="text-sm text-on-surface-variant">总经理</span>
+      <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-medium">初</div>
+    </div>
+  </header>
+  <div class="flex" style="height: calc(100vh - 3.5rem)">
+    <aside class="w-52 shrink-0 bg-surface-container-lowest overflow-y-auto border-r border-outline-variant/15">
+      <div class="p-3 space-y-0.5">
+        <p class="px-3 py-1 text-xs font-medium text-on-surface-variant/60 uppercase tracking-wider">工作台</p>
+        <a href="home.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="layout-dashboard" class="w-4 h-4"></i>首页
+        </a>
+        <p class="px-3 py-1 mt-3 text-xs font-medium text-on-surface-variant/60 uppercase tracking-wider">学习</p>
+        <a href="learning.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="trophy" class="w-4 h-4"></i>闯关学习
+        </a>
+        <a href="growth.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="user-check" class="w-4 h-4"></i>成长档案
+        </a>
+        <a href="resources.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="book-open" class="w-4 h-4"></i>资料中心
+        </a>
+        <p class="px-3 py-1 mt-3 text-xs font-medium text-on-surface-variant/60 uppercase tracking-wider">管理</p>
+        <a href="trainee-board.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="users" class="w-4 h-4"></i>新人看板
+        </a>
+        <a href="diagnosis.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="scan-search" class="w-4 h-4"></i>双轨诊断
+        </a>
+        <a href="empowerment.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="zap" class="w-4 h-4"></i>赋能中心
+        </a>
+        <a href="qc-review.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="mic" class="w-4 h-4"></i>质检审核
+        </a>
+        <a href="assessment.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="clipboard-check" class="w-4 h-4"></i>日常考核
+        </a>
+        <p class="px-3 py-1 mt-3 text-xs font-medium text-on-surface-variant/60 uppercase tracking-wider">数据</p>
+        <a href="dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="chart-bar" class="w-4 h-4"></i>数据看板
+        </a>
+        <a href="overview.html" class="flex items-center gap-3 px-3 py-2 rounded-md bg-primary/10 text-primary font-medium text-sm" aria-current="page">
+          <i data-lucide="activity" class="w-4 h-4"></i>全局概览
+        </a>
+        <a href="scrm-import.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="database" class="w-4 h-4"></i>业务数据
+        </a>
+        <p class="px-3 py-1 mt-3 text-xs font-medium text-on-surface-variant/60 uppercase tracking-wider">配置</p>
+        <a href="question-bank.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="file-question" class="w-4 h-4"></i>题库管理
+        </a>
+        <a href="settings.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="settings" class="w-4 h-4"></i>系统设置
+        </a>
+      </div>
+    </aside>
+  <!-- @nav:end 导航组件，不需要的页面则不要复制此段 -->
+
+  <main class="flex-1 min-w-0 overflow-y-auto bg-background p-6">
+    <!-- @main-content:start -->
+
+    <!-- 页面标题 -->
+    <div class="mb-8">
+      <h1 class="text-2xl font-bold text-on-surface">全局概览</h1>
+      <p class="text-sm text-on-surface-variant mt-1">培训赋能一页掌握，回答"培训到底有没有用"</p>
+    </div>
+
+    <!-- ===== 顶部：全局健康度 ===== -->
+    <div id="health-card" class="bg-surface rounded-xl shadow-card p-8 mb-8 cursor-pointer hover:shadow-float transition-shadow">
+      <div class="flex items-center justify-center gap-16">
+        <!-- 环形进度图 -->
+        <div class="relative flex-shrink-0">
+          <svg width="200" height="200" viewBox="0 0 200 200">
+            <!-- 背景圆环 -->
+            <circle cx="100" cy="100" r="65" fill="none" stroke-width="14" class="stroke-surface-container-high" />
+            <!-- 进度圆环 78% = 408.41 * 0.78 = 318.56, 周长 = 2 * π * 65 ≈ 408.41 -->
+            <circle cx="100" cy="100" r="65" fill="none" stroke-width="14" stroke-linecap="round"
+                    class="ring-progress stroke-primary"
+                    stroke-dasharray="408.41"
+                    stroke-dashoffset="89.85"
+                    transform="rotate(-90 100 100)" />
+          </svg>
+          <!-- 中心数字 -->
+          <div class="absolute inset-0 flex flex-col items-center justify-center">
+            <span class="text-4xl font-bold text-primary fade-up">78</span>
+            <span class="text-xs text-on-surface-variant mt-0.5">健康度</span>
+          </div>
+        </div>
+
+        <!-- 右侧解读 -->
+        <div class="flex flex-col justify-center">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="text-3xl font-bold text-on-surface">全局健康度 78 分</span>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-warning/15 text-warning">
+              <i data-lucide="trending-up" class="w-3 h-3"></i>较上月 +4
+            </span>
+          </div>
+          <p class="text-base text-on-surface-variant leading-relaxed">
+            8 名新人中 <span class="text-success font-semibold">3 人达标</span>、<span class="text-warning font-semibold">2 人预警</span>、<span class="text-error font-semibold">1 人复训中</span>、2 人成长中
+          </p>
+          <p class="text-sm text-on-surface-variant/70 mt-2">点击查看构成详情</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 健康度构成详情（默认隐藏） ===== -->
+    <div id="health-detail" class="bg-surface rounded-xl shadow-card p-6 mb-8 hidden">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-base font-semibold text-on-surface">健康度构成详情</h2>
+        <button id="btn-close-detail" class="text-on-surface-variant hover:text-on-surface transition-colors">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <div class="grid grid-cols-2 gap-6">
+        <!-- 过程线 -->
+        <div>
+          <h3 class="text-sm font-semibold text-on-surface mb-3 flex items-center gap-2">
+            <i data-lucide="git-branch" class="w-4 h-4 text-primary"></i>过程线（合格率 82%）
+          </h3>
+          <div class="space-y-2.5">
+            <!-- 过程线-闯关成绩 -->
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-on-surface-variant">闯关成绩</span>
+              <div class="flex items-center gap-2">
+                <div class="w-24 h-2 bg-surface-container-high rounded-full overflow-hidden">
+                  <div class="h-full bg-success rounded-full" style="width:88%"></div>
+                </div>
+                <span class="text-sm font-medium text-on-surface w-10 text-right">88%</span>
+              </div>
+            </div>
+            <!-- 过程线-业务专业 -->
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-on-surface-variant">业务专业</span>
+              <div class="flex items-center gap-2">
+                <div class="w-24 h-2 bg-surface-container-high rounded-full overflow-hidden">
+                  <div class="h-full bg-success rounded-full" style="width:85%"></div>
+                </div>
+                <span class="text-sm font-medium text-on-surface w-10 text-right">85%</span>
+              </div>
+            </div>
+            <!-- 过程线-服务规范 -->
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-on-surface-variant">服务规范</span>
+              <div class="flex items-center gap-2">
+                <div class="w-24 h-2 bg-surface-container-high rounded-full overflow-hidden">
+                  <div class="h-full bg-success rounded-full" style="width:92%"></div>
+                </div>
+                <span class="text-sm font-medium text-on-surface w-10 text-right">92%</span>
+              </div>
+            </div>
+            <!-- 过程线-沟通技巧 -->
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-on-surface-variant">沟通技巧</span>
+              <div class="flex items-center gap-2">
+                <div class="w-24 h-2 bg-surface-container-high rounded-full overflow-hidden">
+                  <div class="h-full bg-warning rounded-full" style="width:72%"></div>
+                </div>
+                <span class="text-sm font-medium text-on-surface w-10 text-right">72%</span>
+              </div>
+            </div>
+            <!-- 过程线-流程执行 -->
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-on-surface-variant">流程执行</span>
+              <div class="flex items-center gap-2">
+                <div class="w-24 h-2 bg-surface-container-high rounded-full overflow-hidden">
+                  <div class="h-full bg-warning rounded-full" style="width:75%"></div>
+                </div>
+                <span class="text-sm font-medium text-on-surface w-10 text-right">75%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 结果线 -->
+        <div>
+          <h3 class="text-sm font-semibold text-on-surface mb-3 flex items-center gap-2">
+            <i data-lucide="target" class="w-4 h-4 text-primary"></i>结果线（合格率 74%）
+          </h3>
+          <div class="space-y-2.5">
+            <!-- 结果线-加V率 -->
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-on-surface-variant">加V率</span>
+              <div class="flex items-center gap-2">
+                <div class="w-24 h-2 bg-surface-container-high rounded-full overflow-hidden">
+                  <div class="h-full bg-warning rounded-full" style="width:78%"></div>
+                </div>
+                <span class="text-sm font-medium text-on-surface w-10 text-right">78%</span>
+              </div>
+            </div>
+            <!-- 结果线-用药率 -->
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-on-surface-variant">用药率</span>
+              <div class="flex items-center gap-2">
+                <div class="w-24 h-2 bg-surface-container-high rounded-full overflow-hidden">
+                  <div class="h-full bg-success rounded-full" style="width:91%"></div>
+                </div>
+                <span class="text-sm font-medium text-on-surface w-10 text-right">91%</span>
+              </div>
+            </div>
+            <!-- 结果线-面诊率 -->
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-on-surface-variant">面诊率</span>
+              <div class="flex items-center gap-2">
+                <div class="w-24 h-2 bg-surface-container-high rounded-full overflow-hidden">
+                  <div class="h-full bg-warning rounded-full" style="width:68%"></div>
+                </div>
+                <span class="text-sm font-medium text-on-surface w-10 text-right">68%</span>
+              </div>
+            </div>
+            <!-- 结果线-接诊率 -->
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-on-surface-variant">接诊率</span>
+              <div class="flex items-center gap-2">
+                <div class="w-24 h-2 bg-surface-container-high rounded-full overflow-hidden">
+                  <div class="h-full bg-success rounded-full" style="width:82%"></div>
+                </div>
+                <span class="text-sm font-medium text-on-surface w-10 text-right">82%</span>
+              </div>
+            </div>
+            <!-- 结果线-签收率 -->
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-on-surface-variant">签收率</span>
+              <div class="flex items-center gap-2">
+                <div class="w-24 h-2 bg-surface-container-high rounded-full overflow-hidden">
+                  <div class="h-full bg-error rounded-full" style="width:55%"></div>
+                </div>
+                <span class="text-sm font-medium text-on-surface w-10 text-right">55%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 中部：3个横向指标条 ===== -->
+    <div class="grid grid-cols-3 gap-5 mb-8">
+
+      <!-- 指标条1：培训投入 -->
+      <div class="bg-surface rounded-xl shadow-card p-5">
+        <div class="flex items-center gap-2 mb-4">
+          <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+            <i data-lucide="clock" class="w-4 h-4 text-primary"></i>
+          </div>
+          <h3 class="text-base font-semibold text-on-surface">培训投入</h3>
+        </div>
+        <div class="space-y-3">
+          <div class="flex items-end justify-between">
+            <span class="text-sm text-on-surface-variant">本月培训时长</span>
+            <div class="flex items-baseline gap-1">
+              <span class="text-2xl font-bold text-on-surface">126</span>
+              <span class="text-xs text-on-surface-variant">小时</span>
+            </div>
+          </div>
+          <div class="w-full h-2 bg-surface-container-high rounded-full overflow-hidden">
+            <div class="h-full bg-primary rounded-full" style="width:84%"></div>
+          </div>
+          <div class="flex items-end justify-between">
+            <span class="text-sm text-on-surface-variant">本月考核次数</span>
+            <div class="flex items-baseline gap-1">
+              <span class="text-2xl font-bold text-on-surface">12</span>
+              <span class="text-xs text-on-surface-variant">次</span>
+            </div>
+          </div>
+          <div class="w-full h-2 bg-surface-container-high rounded-full overflow-hidden">
+            <div class="h-full bg-primary/70 rounded-full" style="width:60%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 指标条2：赋能成效 -->
+      <div class="bg-surface rounded-xl shadow-card p-5">
+        <div class="flex items-center gap-2 mb-4">
+          <div class="w-8 h-8 rounded-lg bg-success/10 flex items-center justify-center">
+            <i data-lucide="zap" class="w-4 h-4 text-success"></i>
+          </div>
+          <h3 class="text-base font-semibold text-on-surface">赋能成效</h3>
+        </div>
+        <div class="space-y-3">
+          <div class="flex items-end justify-between">
+            <span class="text-sm text-on-surface-variant">本月推送方案</span>
+            <div class="flex items-baseline gap-1">
+              <span class="text-2xl font-bold text-on-surface">5</span>
+              <span class="text-xs text-on-surface-variant">个</span>
+            </div>
+          </div>
+          <div class="w-full h-2 bg-surface-container-high rounded-full overflow-hidden">
+            <div class="h-full bg-success rounded-full" style="width:100%"></div>
+          </div>
+          <div class="flex items-end justify-between">
+            <span class="text-sm text-on-surface-variant">已验证 / 平均改善</span>
+            <div class="flex items-baseline gap-1">
+              <span class="text-2xl font-bold text-on-surface">3</span>
+              <span class="text-xs text-on-surface-variant">个 /</span>
+              <span class="text-2xl font-bold text-success">23%</span>
+            </div>
+          </div>
+          <div class="w-full h-2 bg-surface-container-high rounded-full overflow-hidden">
+            <div class="h-full bg-success/70 rounded-full" style="width:60%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 指标条3：业务影响 -->
+      <div class="bg-surface rounded-xl shadow-card p-5">
+        <div class="flex items-center gap-2 mb-4">
+          <div class="w-8 h-8 rounded-lg bg-warning/10 flex items-center justify-center">
+            <i data-lucide="trending-up" class="w-4 h-4 text-warning"></i>
+          </div>
+          <h3 class="text-base font-semibold text-on-surface">业务影响</h3>
+        </div>
+        <div class="space-y-3">
+          <div class="flex items-end justify-between">
+            <span class="text-sm text-on-surface-variant">加V率提升</span>
+            <div class="flex items-baseline gap-1">
+              <span class="text-2xl font-bold text-success">+8%</span>
+            </div>
+          </div>
+          <div class="w-full h-2 bg-surface-container-high rounded-full overflow-hidden">
+            <div class="h-full bg-success rounded-full" style="width:80%"></div>
+          </div>
+          <div class="flex items-end justify-between">
+            <span class="text-sm text-on-surface-variant">用药率提升</span>
+            <div class="flex items-baseline gap-1">
+              <span class="text-2xl font-bold text-success">+5%</span>
+            </div>
+          </div>
+          <div class="w-full h-2 bg-surface-container-high rounded-full overflow-hidden">
+            <div class="h-full bg-success/70 rounded-full" style="width:50%"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ===== 底部：月度趋势折线图 ===== -->
+    <div class="bg-surface rounded-xl shadow-card p-6">
+      <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center gap-2">
+          <h2 class="text-base font-semibold text-on-surface">月度健康度趋势</h2>
+          <span class="text-xs text-on-surface-variant">近3个月</span>
+        </div>
+        <div class="flex items-center gap-1 text-xs text-success font-medium">
+          <i data-lucide="arrow-up-right" class="w-3.5 h-3.5"></i>
+          持续上升
+        </div>
+      </div>
+      <!-- SVG 折线图 -->
+      <div class="w-full" style="height: 220px;">
+        <svg id="trend-chart" viewBox="0 0 700 200" class="w-full h-full">
+          <!-- 网格横线 -->
+          <line x1="60" y1="20" x2="680" y2="20" stroke="#E6E1D8" stroke-width="0.5" stroke-dasharray="4,4"/>
+          <line x1="60" y1="65" x2="680" y2="65" stroke="#E6E1D8" stroke-width="0.5" stroke-dasharray="4,4"/>
+          <line x1="60" y1="110" x2="680" y2="110" stroke="#E6E1D8" stroke-width="0.5" stroke-dasharray="4,4"/>
+          <line x1="60" y1="155" x2="680" y2="155" stroke="#E6E1D8" stroke-width="0.5" stroke-dasharray="4,4"/>
+
+          <!-- Y 轴标签 -->
+          <text x="45" y="24" text-anchor="end" font-size="11" fill="#667085">100</text>
+          <text x="45" y="69" text-anchor="end" font-size="11" fill="#667085">80</text>
+          <text x="45" y="114" text-anchor="end" font-size="11" fill="#667085">60</text>
+          <text x="45" y="159" text-anchor="end" font-size="11" fill="#667085">40</text>
+
+          <!-- 渐变填充区域 -->
+          <defs>
+            <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#2978B5" stop-opacity="0.2"/>
+              <stop offset="100%" stop-color="#2978B5" stop-opacity="0.02"/>
+            </linearGradient>
+          </defs>
+          <path d="M160,110 L370,83 L580,52 L580,180 L160,180 Z" fill="url(#areaGradient)"/>
+
+          <!-- 折线 -->
+          <polyline
+            class="chart-line"
+            points="160,110 370,83 580,52"
+            fill="none"
+            stroke="#2978B5"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"/>
+
+          <!-- 数据点 - 1月 70分 -->
+          <circle cx="160" cy="110" r="5" fill="#FFFFFF" stroke="#2978B5" stroke-width="2.5"/>
+          <!-- 数据点 - 2月 74分 -->
+          <circle cx="370" cy="83" r="5" fill="#FFFFFF" stroke="#2978B5" stroke-width="2.5"/>
+          <!-- 数据点 - 3月(当月) 78分 -->
+          <circle cx="580" cy="52" r="6" fill="#2978B5" stroke="#FFFFFF" stroke-width="2.5"/>
+
+          <!-- X 轴标签 -->
+          <text x="160" y="198" text-anchor="middle" font-size="12" fill="#667085">1月</text>
+          <text x="370" y="198" text-anchor="middle" font-size="12" fill="#667085">2月</text>
+          <text x="580" y="198" text-anchor="middle" font-size="12" font-weight="600" fill="#1D2733">3月</text>
+
+          <!-- 数据标签 -->
+          <text x="160" y="100" text-anchor="middle" font-size="12" font-weight="600" fill="#1D2733">70</text>
+          <text x="370" y="73" text-anchor="middle" font-size="12" font-weight="600" fill="#1D2733">74</text>
+          <text x="580" y="42" text-anchor="middle" font-size="13" font-weight="700" fill="#2978B5">78</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- @main-content:end -->
+  </main>
+  </div>
+
+  <script>
+  $(function() {
+
+    // 健康度卡片点击 → 展开构成详情
+    $('#health-card').on('click', function() {
+      $('#health-detail').removeClass('hidden');
+      $('#health-card').removeClass('cursor-pointer hover:shadow-float');
+      lucide.createIcons();
+    });
+
+    // 关闭构成详情
+    $('#btn-close-detail').on('click', function(e) {
+      e.stopPropagation();
+      $('#health-detail').addClass('hidden');
+      $('#health-card').addClass('cursor-pointer hover:shadow-float');
+    });
+
+    // 健康度构成详情区域的点击不应触发卡片的展开逻辑
+    // （详情区域已在卡片外部，无需额外处理）
+
+  });
+  </script>
+
+  <script>lucide.createIcons();</script>
+</body>
+
+</html>
