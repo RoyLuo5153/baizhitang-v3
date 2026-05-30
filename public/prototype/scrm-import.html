@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link href="https://lf-code-agent.coze.cn/obj/x-ai-cn/fonts/google/google-all-fonts.css" rel="stylesheet"/>
+
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/jquery/jquery-3.7.1.min.js"></script>
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/lucide/lucide-1.11.0.min.js"></script>
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/tailwindcss/tailwindcss-browser-4.2.4.min.js"></script>
+
+  <style type="text/tailwindcss">
+    @theme {
+      /* === 品牌色 === */
+      --color-primary:              #2978B5;
+      --color-primary-container:    #D4E8F5;
+      --color-on-primary:           #ffffff;
+      /* === 背景 / 表面 === */
+      --color-background:                 #F8F6F0;
+      --color-surface-container-lowest:   #FAFAF5;
+      --color-surface:                    #FFFFFF;
+      --color-surface-container:          #F0EDE5;
+      --color-surface-container-high:     #E8E4DB;
+      --color-surface-container-highest:  #DDD8CE;
+      /* === 文字 === */
+      --color-on-surface:           #1D2733;
+      --color-on-surface-variant:   #667085;
+      /* === 功能色 === */
+      --color-success:  #22c55e;
+      --color-error:    #ef4444;
+      --color-warning:  #f59e0b;
+      /* === 边框 === */
+      --color-outline:          #D4CFC4;
+      --color-outline-variant:  #E6E1D8;
+      /* === 圆角 === */
+      --radius-sm:   0.375rem;
+      --radius-md:   0.5rem;
+      --radius-lg:   0.75rem;
+      --radius-xl:   1rem;
+      --radius-2xl:  1.5rem;
+      --radius-full: 9999px;
+      /* === 阴影 === */
+      --shadow-card:   0 2px 8px rgba(0,0,0,0.08);
+      --shadow-float:  0 10px 25px rgba(0,0,0,0.1);
+      --shadow-dialog: 0 25px 50px rgba(0,0,0,0.15);
+      /* === 字体 === */
+      --font-sans: "Noto Sans SC", system-ui, sans-serif;
+    }
+  </style>
+
+  <!-- 图片兜底 -->
+  <script>
+    document.addEventListener('error', function (e) {
+      const img = e.target;
+      if (img.tagName !== 'IMG' || img.dataset.fallback) return;
+      img.dataset.fallback = '1';
+      const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const cat = img.getAttribute('data-category') || '其他';
+      const alt = img.getAttribute('alt') || '';
+      const label = esc(alt.length > 8 ? alt.slice(0, 8) + '…' : alt);
+      const icons = { '人物': '👤', '自然风景': '🏞', '动物': '🐾', '建筑城市': '🏙', '运动体育': '⚽', '交通工具': '🚗', '食物': '🍽', '服饰时尚': '👗', '商业科技': '💼', '游戏娱乐': '🎮', '艺术': '🎨', '其他': '🖼' };
+      const icon = icons[cat] || '🖼';
+      const w = img.width || 400, h = img.height || 300;
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="45%" text-anchor="middle" font-size="${Math.min(w, h) * 0.18}" dominant-baseline="central">${icon}</text><text x="50%" y="68%" text-anchor="middle" font-size="${Math.min(w, h) * 0.07}" fill="%239ca3af" font-family="system-ui,sans-serif" dominant-baseline="central">${label}</text></svg>`;
+      img.src = 'data:image/svg+xml,' + svg;
+    }, true);
+  </script>
+</head>
+
+<body class="bg-background text-on-surface font-sans">
+
+  <!-- @nav:start 导航组件，不需要的页面则不要复制此段（从 @nav:start 到 @nav:end） -->
+  <header class="bg-surface sticky top-0 z-40 h-14 flex items-center justify-between px-6 border-b border-outline-variant/20">
+    <div class="flex items-center gap-2">
+      <i data-lucide="heart-pulse" class="text-primary w-5 h-5"></i>
+      <span class="font-bold text-base text-on-surface">百芝堂赋能系统</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="text-sm text-on-surface-variant">培训负责人</span>
+      <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-medium">初</div>
+    </div>
+  </header>
+  <div class="flex" style="height: calc(100vh - 3.5rem)">
+    <aside class="w-52 shrink-0 bg-surface-container-lowest overflow-y-auto border-r border-outline-variant/15">
+      <div class="p-3 space-y-0.5">
+        <p class="px-3 py-1 text-xs font-medium text-on-surface-variant/60 uppercase tracking-wider">工作台</p>
+        <a href="home.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="layout-dashboard" class="w-4 h-4"></i>首页
+        </a>
+        <p class="px-3 py-1 mt-3 text-xs font-medium text-on-surface-variant/60 uppercase tracking-wider">学习</p>
+        <a href="learning.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="trophy" class="w-4 h-4"></i>闯关学习
+        </a>
+        <a href="growth.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="user-check" class="w-4 h-4"></i>成长档案
+        </a>
+        <a href="resources.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="book-open" class="w-4 h-4"></i>资料中心
+        </a>
+        <p class="px-3 py-1 mt-3 text-xs font-medium text-on-surface-variant/60 uppercase tracking-wider">管理</p>
+        <a href="trainee-board.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="users" class="w-4 h-4"></i>新人看板
+        </a>
+        <a href="diagnosis.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="scan-search" class="w-4 h-4"></i>双轨诊断
+        </a>
+        <a href="empowerment.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="zap" class="w-4 h-4"></i>赋能中心
+        </a>
+        <a href="qc-review.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="mic" class="w-4 h-4"></i>质检审核
+        </a>
+        <a href="assessment.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="clipboard-check" class="w-4 h-4"></i>日常考核
+        </a>
+        <p class="px-3 py-1 mt-3 text-xs font-medium text-on-surface-variant/60 uppercase tracking-wider">数据</p>
+        <a href="dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="chart-bar" class="w-4 h-4"></i>数据看板
+        </a>
+        <a href="overview.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="activity" class="w-4 h-4"></i>全局概览
+        </a>
+        <a href="scrm-import.html" class="flex items-center gap-3 px-3 py-2 rounded-md bg-primary/10 text-primary font-medium text-sm" aria-current="page">
+          <i data-lucide="database" class="w-4 h-4"></i>业务数据
+        </a>
+        <p class="px-3 py-1 mt-3 text-xs font-medium text-on-surface-variant/60 uppercase tracking-wider">配置</p>
+        <a href="question-bank.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="file-question" class="w-4 h-4"></i>题库管理
+        </a>
+        <a href="settings.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="settings" class="w-4 h-4"></i>系统设置
+        </a>
+      </div>
+    </aside>
+  <!-- @nav:end 导航组件，不需要的页面则不要复制此段 -->
+
+  <main class="flex-1 min-w-0 overflow-y-auto bg-background p-6">
+    <!-- @main-content:start -->
+
+    <!-- 页面标题区 -->
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-on-surface">业务数据</h1>
+        <p class="text-sm text-on-surface-variant mt-1">SCRM漏斗数据录入与管理</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <button id="btn-import-table" class="bg-surface-container text-on-surface px-4 py-2 rounded-md text-sm font-medium hover:bg-surface-container-high active:scale-[0.98] transition-all inline-flex items-center gap-2">
+          <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>导入表格
+        </button>
+        <button id="btn-upload-screenshot" class="bg-surface-container text-on-surface px-4 py-2 rounded-md text-sm font-medium hover:bg-surface-container-high active:scale-[0.98] transition-all inline-flex items-center gap-2">
+          <i data-lucide="camera" class="w-4 h-4"></i>上传截图
+        </button>
+      </div>
+    </div>
+
+    <!-- 顶部说明条 -->
+    <div id="info-banner" class="bg-primary-container/60 rounded-lg px-4 py-3 mb-6 flex items-start gap-3">
+      <i data-lucide="info" class="w-4 h-4 text-primary mt-0.5 shrink-0"></i>
+      <p class="text-sm text-on-surface">数据来源：内部SCRM系统，支持<span class="font-medium text-primary">手动录入</span> / <span class="font-medium text-primary">表格导入</span> / <span class="font-medium text-primary">截图识别</span>，后续支持自动对接</p>
+      <button id="btn-close-banner" class="shrink-0 ml-auto text-on-surface-variant hover:text-on-surface transition-colors">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+
+    <!-- 周期选择器 -->
+    <div class="flex items-center gap-4 mb-6">
+      <span class="text-sm font-medium text-on-surface-variant">统计周期</span>
+      <div class="flex items-center bg-surface-container rounded-md p-0.5">
+        <button id="period-week" class="px-3 py-1.5 rounded text-sm font-medium bg-primary text-on-primary transition-all">按周</button>
+        <button id="period-month" class="px-3 py-1.5 rounded text-sm font-medium text-on-surface-variant hover:text-on-surface transition-all">按月</button>
+      </div>
+      <div class="flex items-center gap-2 ml-auto">
+        <i data-lucide="chevron-left" class="w-4 h-4 text-on-surface-variant cursor-pointer hover:text-on-surface transition-colors"></i>
+        <span class="text-sm font-medium text-on-surface">2024年第3周 (1/15 - 1/21)</span>
+        <i data-lucide="chevron-right" class="w-4 h-4 text-on-surface-variant cursor-pointer hover:text-on-surface transition-colors"></i>
+      </div>
+    </div>
+
+    <!-- 漏斗数据录入卡片区 -->
+    <div class="grid grid-cols-6 gap-3 mb-8">
+      <!-- 录入卡片1-加V率 -->
+      <div class="bg-surface rounded-lg shadow-card p-4">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center">
+            <i data-lucide="user-plus" class="w-3.5 h-3.5 text-primary"></i>
+          </div>
+          <span class="text-sm font-semibold text-on-surface">加V率</span>
+        </div>
+        <div class="mb-2">
+          <label class="text-xs text-on-surface-variant mb-1 block">当前值</label>
+          <input id="input-add-wechat-rate" type="text" value="92.5%" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm font-semibold text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+        </div>
+        <div class="flex items-center justify-between text-xs text-on-surface-variant">
+          <span>上期 88.3%</span>
+          <span class="inline-flex items-center gap-0.5 text-success font-medium">
+            <i data-lucide="trending-up" class="w-3 h-3"></i>+4.2%
+          </span>
+        </div>
+      </div>
+
+      <!-- 录入卡片2-面诊率 -->
+      <div class="bg-surface rounded-lg shadow-card p-4">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center">
+            <i data-lucide="stethoscope" class="w-3.5 h-3.5 text-primary"></i>
+          </div>
+          <span class="text-sm font-semibold text-on-surface">面诊率</span>
+        </div>
+        <div class="mb-2">
+          <label class="text-xs text-on-surface-variant mb-1 block">当前值</label>
+          <input id="input-consultation-rate" type="text" value="83.2%" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm font-semibold text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+        </div>
+        <div class="flex items-center justify-between text-xs text-on-surface-variant">
+          <span>上期 85.6%</span>
+          <span class="inline-flex items-center gap-0.5 text-error font-medium">
+            <i data-lucide="trending-down" class="w-3 h-3"></i>-2.4%
+          </span>
+        </div>
+      </div>
+
+      <!-- 录入卡片3-接诊率 -->
+      <div class="bg-surface rounded-lg shadow-card p-4">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center">
+            <i data-lucide="clipboard-list" class="w-3.5 h-3.5 text-primary"></i>
+          </div>
+          <span class="text-sm font-semibold text-on-surface">接诊率</span>
+        </div>
+        <div class="mb-2">
+          <label class="text-xs text-on-surface-variant mb-1 block">当前值</label>
+          <input id="input-reception-rate" type="text" value="78.6%" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm font-semibold text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+        </div>
+        <div class="flex items-center justify-between text-xs text-on-surface-variant">
+          <span>上期 80.1%</span>
+          <span class="inline-flex items-center gap-0.5 text-error font-medium">
+            <i data-lucide="trending-down" class="w-3 h-3"></i>-1.5%
+          </span>
+        </div>
+      </div>
+
+      <!-- 录入卡片4-签收率 -->
+      <div class="bg-surface rounded-lg shadow-card p-4">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center">
+            <i data-lucide="package-check" class="w-3.5 h-3.5 text-primary"></i>
+          </div>
+          <span class="text-sm font-semibold text-on-surface">签收率</span>
+        </div>
+        <div class="mb-2">
+          <label class="text-xs text-on-surface-variant mb-1 block">当前值</label>
+          <input id="input-signing-rate" type="text" value="90.1%" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm font-semibold text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+        </div>
+        <div class="flex items-center justify-between text-xs text-on-surface-variant">
+          <span>上期 86.8%</span>
+          <span class="inline-flex items-center gap-0.5 text-success font-medium">
+            <i data-lucide="trending-up" class="w-3 h-3"></i>+3.3%
+          </span>
+        </div>
+      </div>
+
+      <!-- 录入卡片5-用药率 -->
+      <div class="bg-surface rounded-lg shadow-card p-4">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center">
+            <i data-lucide="pill" class="w-3.5 h-3.5 text-primary"></i>
+          </div>
+          <span class="text-sm font-semibold text-on-surface">用药率</span>
+        </div>
+        <div class="mb-2">
+          <label class="text-xs text-on-surface-variant mb-1 block">当前值</label>
+          <input id="input-medication-rate" type="text" value="94.8%" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm font-semibold text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+        </div>
+        <div class="flex items-center justify-between text-xs text-on-surface-variant">
+          <span>上期 91.2%</span>
+          <span class="inline-flex items-center gap-0.5 text-success font-medium">
+            <i data-lucide="trending-up" class="w-3 h-3"></i>+3.6%
+          </span>
+        </div>
+      </div>
+
+      <!-- 录入卡片6-挂号率 -->
+      <div class="bg-surface rounded-lg shadow-card p-4">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center">
+            <i data-lucide="calendar-check" class="w-3.5 h-3.5 text-primary"></i>
+          </div>
+          <span class="text-sm font-semibold text-on-surface">挂号率</span>
+        </div>
+        <div class="mb-2">
+          <label class="text-xs text-on-surface-variant mb-1 block">当前值</label>
+          <input id="input-registration-rate" type="text" value="76.3%" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm font-semibold text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+        </div>
+        <div class="flex items-center justify-between text-xs text-on-surface-variant">
+          <span>上期 79.5%</span>
+          <span class="inline-flex items-center gap-0.5 text-error font-medium">
+            <i data-lucide="trending-down" class="w-3 h-3"></i>-3.2%
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 保存按钮 -->
+    <div class="flex items-center gap-3 mb-8">
+      <button id="btn-save-funnel" class="bg-primary text-on-primary px-5 py-2 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all inline-flex items-center gap-2">
+        <i data-lucide="save" class="w-4 h-4"></i>保存录入数据
+      </button>
+      <span class="text-xs text-on-surface-variant">保存后将自动计算转化率并更新结果线评分</span>
+    </div>
+
+    <!-- 历史数据表格 -->
+    <div class="mb-8">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-base font-semibold text-on-surface">历史数据</h2>
+        <span class="text-xs text-on-surface-variant">最近8周各环节数据，点击数值可编辑</span>
+      </div>
+      <div class="bg-surface rounded-lg shadow-card overflow-hidden">
+        <!-- 表头 -->
+        <div class="grid grid-cols-8 px-4 py-3 bg-surface-container text-xs font-semibold text-on-surface-variant">
+          <span>周期</span>
+          <span>加V率</span>
+          <span>面诊率</span>
+          <span>接诊率</span>
+          <span>签收率</span>
+          <span>用药率</span>
+          <span>挂号率</span>
+          <span>操作</span>
+        </div>
+        <!-- 列表-第3周(当前) -->
+        <div class="grid grid-cols-8 px-4 py-3 hover:bg-surface-container/50 transition-colors border-t border-outline-variant/30 bg-primary/5">
+          <span class="text-sm font-medium text-primary">第3周</span>
+          <span class="text-sm text-on-surface editable-cell" data-metric="add_wechat" data-week="3">92.5%</span>
+          <span class="text-sm text-on-surface editable-cell" data-metric="consultation" data-week="3">83.2%</span>
+          <span class="text-sm text-on-surface editable-cell" data-metric="reception" data-week="3">78.6%</span>
+          <span class="text-sm text-on-surface editable-cell" data-metric="signing" data-week="3">90.1%</span>
+          <span class="text-sm text-on-surface editable-cell" data-metric="medication" data-week="3">94.8%</span>
+          <span class="text-sm text-on-surface editable-cell" data-metric="registration" data-week="3">76.3%</span>
+          <button class="text-primary text-sm font-medium hover:underline w-fit" id="btn-edit-week-3">编辑</button>
+        </div>
+        <!-- 列表-第2周 -->
+        <div class="grid grid-cols-8 px-4 py-3 hover:bg-surface-container/50 transition-colors border-t border-outline-variant/30">
+          <span class="text-sm font-medium text-on-surface">第2周</span>
+          <span class="text-sm text-on-surface editable-cell" data-metric="add_wechat" data-week="2">88.3%</span>
+          <span class="text-sm text-on-surface editable-cell" data-metric="consultation" data-week="2">85.6%</span>
+          <span class="text-sm text-on-surface editable-cell" data-metric="reception" data-week="2">80.1%</span>
+          <span class="text-sm text-on-surface editable-cell" data-metric="signing" data-week="2">86.8%</span>
+          <span class="text-sm text-on-surface editable-cell" data-metric="medication" data-week="2">91.2%</span>
+          <span class="text-sm text-on-surface editable-cell" data-metric="registration" data-week="2">79.5%</span>
+          <button class="text-primary text-sm font-medium hover:underline w-fit" id="btn-edit-week-2">编辑</button>
+        </div>
+        <!-- 列表-第1周 -->
+        <div class="grid grid-cols-8 px-4 py-3 hover:bg-surface-container/50 transition-colors border-t border-outline-variant/30">
+          <span class="text-sm font-medium text-on-surface">第1周</span>
+          <span class="text-sm text-on-surface editable-cell" data-metric="add_wechat" data-week="1">86.0%</span>
+          <span class="text-sm text-on-surface editable-cell" data-metric="consultation" data-week="1">82.4%</span>
+          <span class="text-sm text-on-surface editable-cell" data-metric="reception" data-week="1">77.3%</span>
+          <span class="text-sm text-on-surface editable-cell" data-metric="signing" data-week="1">84.5%</span>
+          <span class="text-sm text-on-surface editable-cell" data-metric="medication" data-week="1">89.7%</span>
+          <span class="text-sm text-on-surface editable-cell" data-metric="registration" data-week="1">75.8%</span>
+          <button class="text-primary text-sm font-medium hover:underline w-fit" id="btn-edit-week-1">编辑</button>
+        </div>
+        <!-- 列表-第52周(去年) -->
+        <div class="grid grid-cols-8 px-4 py-3 hover:bg-surface-container/50 transition-colors border-t border-outline-variant/30">
+          <span class="text-sm font-medium text-on-surface-variant">第52周</span>
+          <span class="text-sm text-on-surface-variant editable-cell" data-metric="add_wechat" data-week="52">84.2%</span>
+          <span class="text-sm text-on-surface-variant editable-cell" data-metric="consultation" data-week="52">80.1%</span>
+          <span class="text-sm text-on-surface-variant editable-cell" data-metric="reception" data-week="52">76.5%</span>
+          <span class="text-sm text-on-surface-variant editable-cell" data-metric="signing" data-week="52">82.3%</span>
+          <span class="text-sm text-on-surface-variant editable-cell" data-metric="medication" data-week="52">88.4%</span>
+          <span class="text-sm text-on-surface-variant editable-cell" data-metric="registration" data-week="52">73.6%</span>
+          <button class="text-primary text-sm font-medium hover:underline w-fit" id="btn-edit-week-52">编辑</button>
+        </div>
+        <!-- 列表-第51周 -->
+        <div class="grid grid-cols-8 px-4 py-3 hover:bg-surface-container/50 transition-colors border-t border-outline-variant/30">
+          <span class="text-sm font-medium text-on-surface-variant">第51周</span>
+          <span class="text-sm text-on-surface-variant editable-cell" data-metric="add_wechat" data-week="51">85.1%</span>
+          <span class="text-sm text-on-surface-variant editable-cell" data-metric="consultation" data-week="51">81.8%</span>
+          <span class="text-sm text-on-surface-variant editable-cell" data-metric="reception" data-week="51">75.9%</span>
+          <span class="text-sm text-on-surface-variant editable-cell" data-metric="signing" data-week="51">83.7%</span>
+          <span class="text-sm text-on-surface-variant editable-cell" data-metric="medication" data-week="51">87.2%</span>
+          <span class="text-sm text-on-surface-variant editable-cell" data-metric="registration" data-week="51">74.1%</span>
+          <button class="text-primary text-sm font-medium hover:underline w-fit" id="btn-edit-week-51">编辑</button>
+        </div>
+        <!-- 列表-第50周 -->
+        <div class="grid grid-cols-8 px-4 py-3 hover:bg-surface-container/50 transition-colors border-t border-outline-variant/30">
+          <span class="text-sm font-medium text-on-surface-variant">第50周</span>
+          <span class="text-sm text-on-surface-variant editable-cell" data-metric="add_wechat" data-week="50">83.7%</span>
+          <span class="text-sm text-on-surface-variant editable-cell" data-metric="consultation" data-week="50">79.5%</span>
+          <span class="text-sm text-on-surface-variant editable-cell" data-metric="reception" data-week="50">74.2%</span>
+          <span class="text-sm text-on-surface-variant editable-cell" data-metric="signing" data-week="50">81.5%</span>
+          <span class="text-sm text-on-surface-variant editable-cell" data-metric="medication" data-week="50">86.9%</span>
+          <span class="text-sm text-on-surface-variant editable-cell" data-metric="registration" data-week="50">72.8%</span>
+          <button class="text-primary text-sm font-medium hover:underline w-fit" id="btn-edit-week-50">编辑</button>
+        </div>
+        <!-- 列表-第49周 -->
+        <div class="grid grid-cols-8 px-4 py-3 hover:bg-surface-container/50 transition-colors border-t border-outline-variant/30">
+          <span class="text-sm font-medium text-on-surface-variant">第49周</span>
+          <span class="text-sm text-on-surface-variant editable-cell" data-metric="add_wechat" data-week="49">82.4%</span>
+          <span class="text-sm text-on-surface-variant editable-cell" data-metric="consultation" data-week="49">78.6%</span>
+          <span class="text-sm text-on-surface-variant editable-cell" data-metric="reception" data-week="49">73.8%</span>
+          <span class="text-sm text-on-surface-variant editable-cell" data-metric="signing" data-week="49">80.2%</span>
+          <span class="text-sm text-on-surface-variant editable-cell" data-metric="medication" data-week="49">85.3%</span>
+          <span class="text-sm text-on-surface-variant editable-cell" data-metric="registration" data-week="49">71.5%</span>
+          <button class="text-primary text-sm font-medium hover:underline w-fit" id="btn-edit-week-49">编辑</button>
+        </div>
+        <!-- 列表-第48周 -->
+        <div class="grid grid-cols-8 px-4 py-3 hover:bg-surface-container/50 transition-colors border-t border-outline-variant/30">
+          <span class="text-sm font-medium text-on-surface-variant">第48周</span>
+          <span class="text-sm text-on-surface-variant editable-cell" data-metric="add_wechat" data-week="48">81.0%</span>
+          <span class="text-sm text-on-surface-variant editable-cell" data-metric="consultation" data-week="48">77.2%</span>
+          <span class="text-sm text-on-surface-variant editable-cell" data-metric="reception" data-week="48">72.5%</span>
+          <span class="text-sm text-on-surface-variant editable-cell" data-metric="signing" data-week="48">78.9%</span>
+          <span class="text-sm text-on-surface-variant editable-cell" data-metric="medication" data-week="48">84.1%</span>
+          <span class="text-sm text-on-surface-variant editable-cell" data-metric="registration" data-week="48">70.3%</span>
+          <button class="text-primary text-sm font-medium hover:underline w-fit" id="btn-edit-week-48">编辑</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 数据对照区：当前数据 vs 合格标准 -->
+    <div class="mb-6">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-base font-semibold text-on-surface">数据对照</h2>
+        <span class="text-xs text-on-surface-variant">当前值 vs 合格标准</span>
+      </div>
+      <div class="bg-surface rounded-lg shadow-card p-5 space-y-5">
+        <!-- 对照条1-加V率 -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-sm font-medium text-on-surface">加V率</span>
+            <div class="flex items-center gap-3">
+              <span class="text-xs text-on-surface-variant">合格线 90%</span>
+              <span class="text-sm font-semibold text-success">92.5%</span>
+            </div>
+          </div>
+          <div class="relative h-3 bg-surface-container rounded-full overflow-hidden">
+            <!-- 合格标准线 -->
+            <div class="absolute top-0 bottom-0 left-[90%] w-0.5 bg-on-surface-variant/40 z-10"></div>
+            <!-- 当前值条 -->
+            <div class="h-full bg-success/70 rounded-full" style="width: 92.5%"></div>
+          </div>
+        </div>
+        <!-- 对照条2-面诊率 -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-sm font-medium text-on-surface">面诊率</span>
+            <div class="flex items-center gap-3">
+              <span class="text-xs text-on-surface-variant">合格线 85%</span>
+              <span class="text-sm font-semibold text-error">83.2%</span>
+            </div>
+          </div>
+          <div class="relative h-3 bg-surface-container rounded-full overflow-hidden">
+            <div class="absolute top-0 bottom-0 left-[85%] w-0.5 bg-on-surface-variant/40 z-10"></div>
+            <div class="h-full bg-error/70 rounded-full" style="width: 83.2%"></div>
+          </div>
+        </div>
+        <!-- 对照条3-接诊率 -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-sm font-medium text-on-surface">接诊率</span>
+            <div class="flex items-center gap-3">
+              <span class="text-xs text-on-surface-variant">合格线 80%</span>
+              <span class="text-sm font-semibold text-error">78.6%</span>
+            </div>
+          </div>
+          <div class="relative h-3 bg-surface-container rounded-full overflow-hidden">
+            <div class="absolute top-0 bottom-0 left-[80%] w-0.5 bg-on-surface-variant/40 z-10"></div>
+            <div class="h-full bg-error/70 rounded-full" style="width: 78.6%"></div>
+          </div>
+        </div>
+        <!-- 对照条4-签收率 -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-sm font-medium text-on-surface">签收率</span>
+            <div class="flex items-center gap-3">
+              <span class="text-xs text-on-surface-variant">合格线 85%</span>
+              <span class="text-sm font-semibold text-success">90.1%</span>
+            </div>
+          </div>
+          <div class="relative h-3 bg-surface-container rounded-full overflow-hidden">
+            <div class="absolute top-0 bottom-0 left-[85%] w-0.5 bg-on-surface-variant/40 z-10"></div>
+            <div class="h-full bg-success/70 rounded-full" style="width: 90.1%"></div>
+          </div>
+        </div>
+        <!-- 对照条5-用药率 -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-sm font-medium text-on-surface">用药率</span>
+            <div class="flex items-center gap-3">
+              <span class="text-xs text-on-surface-variant">合格线 90%</span>
+              <span class="text-sm font-semibold text-success">94.8%</span>
+            </div>
+          </div>
+          <div class="relative h-3 bg-surface-container rounded-full overflow-hidden">
+            <div class="absolute top-0 bottom-0 left-[90%] w-0.5 bg-on-surface-variant/40 z-10"></div>
+            <div class="h-full bg-success/70 rounded-full" style="width: 94.8%"></div>
+          </div>
+        </div>
+        <!-- 对照条6-挂号率 -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-sm font-medium text-on-surface">挂号率</span>
+            <div class="flex items-center gap-3">
+              <span class="text-xs text-on-surface-variant">合格线 80%</span>
+              <span class="text-sm font-semibold text-error">76.3%</span>
+            </div>
+          </div>
+          <div class="relative h-3 bg-surface-container rounded-full overflow-hidden">
+            <div class="absolute top-0 bottom-0 left-[80%] w-0.5 bg-on-surface-variant/40 z-10"></div>
+            <div class="h-full bg-error/70 rounded-full" style="width: 76.3%"></div>
+          </div>
+        </div>
+        <!-- 图例 -->
+        <div class="flex items-center gap-6 pt-2 border-t border-outline-variant/20">
+          <div class="flex items-center gap-2">
+            <div class="w-3 h-3 rounded-sm bg-success/70"></div>
+            <span class="text-xs text-on-surface-variant">达标（≥合格线）</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="w-3 h-3 rounded-sm bg-error/70"></div>
+            <span class="text-xs text-on-surface-variant">未达标（＜合格线）</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="w-0.5 h-3 bg-on-surface-variant/40"></div>
+            <span class="text-xs text-on-surface-variant">合格标准线</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 导入表格弹窗 -->
+    <div id="modal-import-table" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 hidden">
+      <div class="bg-surface rounded-xl shadow-dialog max-w-md w-full max-h-[90vh] overflow-y-auto p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-base font-semibold text-on-surface">导入表格</h3>
+          <button id="btn-close-import-modal" class="text-on-surface-variant hover:text-on-surface transition-colors">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+        <div class="bg-surface-container rounded-lg p-6 mb-4 text-center">
+          <i data-lucide="file-spreadsheet" class="w-10 h-10 text-primary mx-auto mb-3"></i>
+          <p class="text-sm text-on-surface mb-2">拖拽文件到此处，或点击选择文件</p>
+          <p class="text-xs text-on-surface-variant">支持 .xlsx / .xls / .csv 格式，单次最多导入100行</p>
+        </div>
+        <div class="mb-4">
+          <p class="text-xs font-medium text-on-surface-variant mb-2">模板下载</p>
+          <button id="btn-download-template" class="text-primary text-sm font-medium hover:underline inline-flex items-center gap-1">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i>下载导入模板
+          </button>
+        </div>
+        <div class="flex items-center justify-end gap-3">
+          <button id="btn-cancel-import" class="bg-surface-container text-on-surface px-4 py-2 rounded-md text-sm font-medium hover:bg-surface-container-high active:scale-[0.98] transition-all">取消</button>
+          <button id="btn-confirm-import" class="bg-primary text-on-primary px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all">确认导入</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 上传截图弹窗 -->
+    <div id="modal-upload-screenshot" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 hidden">
+      <div class="bg-surface rounded-xl shadow-dialog max-w-md w-full max-h-[90vh] overflow-y-auto p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-base font-semibold text-on-surface">上传截图</h3>
+          <button id="btn-close-screenshot-modal" class="text-on-surface-variant hover:text-on-surface transition-colors">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+        <div class="bg-surface-container rounded-lg p-6 mb-4 text-center">
+          <i data-lucide="scan" class="w-10 h-10 text-primary mx-auto mb-3"></i>
+          <p class="text-sm text-on-surface mb-2">上传SCRM系统截图，AI自动识别数据</p>
+          <p class="text-xs text-on-surface-variant">支持 .png / .jpg / .jpeg 格式</p>
+        </div>
+        <div id="screenshot-preview-area" class="hidden mb-4">
+          <div class="bg-surface-container rounded-lg p-3 flex items-center gap-3">
+            <i data-lucide="image" class="w-8 h-8 text-on-surface-variant"></i>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm text-on-surface truncate">scrm_screenshot_01.png</p>
+              <p class="text-xs text-on-surface-variant">1.2 MB</p>
+            </div>
+            <button id="btn-remove-screenshot" class="text-error hover:text-error/80 transition-colors">
+              <i data-lucide="trash-2" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+        <div id="ocr-result-area" class="hidden mb-4">
+          <p class="text-xs font-medium text-on-surface-variant mb-2">识别结果</p>
+          <div class="bg-surface-container rounded-lg p-3 space-y-1.5">
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-on-surface-variant">加V率</span>
+              <span class="text-on-surface font-medium">92.5%</span>
+            </div>
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-on-surface-variant">面诊率</span>
+              <span class="text-on-surface font-medium">83.2%</span>
+            </div>
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-on-surface-variant">接诊率</span>
+              <span class="text-on-surface font-medium">78.6%</span>
+            </div>
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-on-surface-variant">签收率</span>
+              <span class="text-on-surface font-medium">90.1%</span>
+            </div>
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-on-surface-variant">用药率</span>
+              <span class="text-on-surface font-medium">94.8%</span>
+            </div>
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-on-surface-variant">挂号率</span>
+              <span class="text-on-surface font-medium">76.3%</span>
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center justify-end gap-3">
+          <button id="btn-cancel-screenshot" class="bg-surface-container text-on-surface px-4 py-2 rounded-md text-sm font-medium hover:bg-surface-container-high active:scale-[0.98] transition-all">取消</button>
+          <button id="btn-confirm-screenshot" class="bg-primary text-on-primary px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all">确认录入</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 保存成功提示 -->
+    <div id="toast-save-success" class="fixed top-20 right-6 z-50 hidden">
+      <div class="bg-surface rounded-lg shadow-float px-4 py-3 flex items-center gap-2 border border-success/20">
+        <i data-lucide="check-circle" class="w-4 h-4 text-success"></i>
+        <span class="text-sm text-on-surface font-medium">保存成功，数据已更新</span>
+      </div>
+    </div>
+
+    <!-- @main-content:end -->
+  </main>
+  </div>
+
+  <script>
+    $(function() {
+      // 关闭顶部说明条
+      $('#btn-close-banner').on('click', function() {
+        $('#info-banner').slideUp(200);
+      });
+
+      // 周期切换
+      $('#period-week').on('click', function() {
+        $(this).addClass('bg-primary text-on-primary').removeClass('text-on-surface-variant');
+        $('#period-month').removeClass('bg-primary text-on-primary').addClass('text-on-surface-variant');
+      });
+      $('#period-month').on('click', function() {
+        $(this).addClass('bg-primary text-on-primary').removeClass('text-on-surface-variant');
+        $('#period-week').removeClass('bg-primary text-on-primary').addClass('text-on-surface-variant');
+      });
+
+      // 保存录入数据
+      $('#btn-save-funnel').on('click', function() {
+        // 后续应实现：1. 收集6个输入框的当前值 2. 校验数据格式（必须为数字+%） 3. 调用API保存 4. 重新计算转化率 5. 更新结果线评分 6. 重算四象限
+        $('#toast-save-success').fadeIn(300);
+        setTimeout(function() {
+          $('#toast-save-success').fadeOut(300);
+        }, 2500);
+      });
+
+      // 导入表格弹窗
+      $('#btn-import-table').on('click', function() {
+        $('#modal-import-table').removeClass('hidden');
+      });
+      $('#btn-close-import-modal, #btn-cancel-import').on('click', function() {
+        $('#modal-import-table').addClass('hidden');
+      });
+      $('#btn-confirm-import').on('click', function() {
+        // 后续应实现：1. 解析上传的Excel/CSV文件 2. 校验列名和数据格式 3. 展示预览数据 4. 确认后批量写入数据库 5. 刷新页面数据
+        $('#modal-import-table').addClass('hidden');
+        $('#toast-save-success').fadeIn(300);
+        setTimeout(function() {
+          $('#toast-save-success').fadeOut(300);
+        }, 2500);
+      });
+      $('#btn-download-template').on('click', function() {
+        // 后续应实现：生成并下载导入模板Excel文件，模板包含列：周期、加V数、总患者数、面诊数、接诊数、签收数、用药数、挂号数
+        console.log('下载导入模板');
+      });
+
+      // 上传截图弹窗
+      $('#btn-upload-screenshot').on('click', function() {
+        $('#modal-upload-screenshot').removeClass('hidden');
+        // 模拟已上传状态
+        $('#screenshot-preview-area').removeClass('hidden');
+        $('#ocr-result-area').removeClass('hidden');
+      });
+      $('#btn-close-screenshot-modal, #btn-cancel-screenshot').on('click', function() {
+        $('#modal-upload-screenshot').addClass('hidden');
+      });
+      $('#btn-confirm-screenshot').on('click', function() {
+        // 后续应实现：1. 将OCR识别结果填入对应输入框 2. 校验识别数据 3. 保存到数据库
+        $('#modal-upload-screenshot').addClass('hidden');
+        $('#toast-save-success').fadeIn(300);
+        setTimeout(function() {
+          $('#toast-save-success').fadeOut(300);
+        }, 2500);
+      });
+      $('#btn-remove-screenshot').on('click', function() {
+        // 后续应实现：清除已上传的截图文件和识别结果
+        $('#screenshot-preview-area').addClass('hidden');
+        $('#ocr-result-area').addClass('hidden');
+      });
+
+      // 编辑按钮 - 点击后应实现内联编辑：
+      // 1. 将该行所有 editable-cell 文字替换为 input 输入框，自动聚焦第一个输入框
+      // 2. 编辑按钮文字变为"保存"
+      // 3. 按 Enter 或点击"保存"后，更新该行数据
+      // 4. 按 ESC 取消编辑，恢复原始值
+      // 5. 保存后重新计算转化率，更新结果线评分和四象限
+      $('[id^="btn-edit-week"]').on('click', function() {
+        var row = $(this).closest('.grid');
+        var cells = row.find('.editable-cell');
+        if ($(this).text() === '编辑') {
+          cells.each(function() {
+            var val = $(this).text().trim();
+            $(this).html('<input type="text" value="' + val + '" class="w-16 bg-surface-container border-none rounded px-2 py-0.5 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30" />');
+          });
+          $(this).text('保存').addClass('text-success').removeClass('text-primary');
+        } else {
+          // 保存逻辑
+          cells.each(function() {
+            var inputVal = $(this).find('input').val();
+            $(this).text(inputVal);
+          });
+          $(this).text('编辑').removeClass('text-success').addClass('text-primary');
+          $('#toast-save-success').fadeIn(300);
+          setTimeout(function() {
+            $('#toast-save-success').fadeOut(300);
+          }, 2500);
+        }
+      });
+
+      // 点击弹窗背景关闭
+      $('#modal-import-table, #modal-upload-screenshot').on('click', function(e) {
+        if ($(e.target).is('#modal-import-table')) {
+          $('#modal-import-table').addClass('hidden');
+        }
+        if ($(e.target).is('#modal-upload-screenshot')) {
+          $('#modal-upload-screenshot').addClass('hidden');
+        }
+      });
+    });
+  </script>
+
+  <script>lucide.createIcons();</script>
+</body>
+
+</html>

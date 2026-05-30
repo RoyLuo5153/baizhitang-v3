@@ -1,0 +1,1630 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link href="https://lf-code-agent.coze.cn/obj/x-ai-cn/fonts/google/google-all-fonts.css" rel="stylesheet"/>
+
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/jquery/jquery-3.7.1.min.js"></script>
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/lucide/lucide-1.11.0.min.js"></script>
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/tailwindcss/tailwindcss-browser-4.2.4.min.js"></script>
+
+  <style type="text/tailwindcss">
+    @theme {
+      /* === 品牌色 === */
+      --color-primary:              #2978B5;
+      --color-primary-container:    #D4E8F5;
+      --color-on-primary:           #ffffff;
+      /* === 背景 / 表面 === */
+      --color-background:                 #F8F6F0;
+      --color-surface-container-lowest:   #FAFAF5;
+      --color-surface:                    #FFFFFF;
+      --color-surface-container:          #F0EDE5;
+      --color-surface-container-high:     #E8E4DB;
+      --color-surface-container-highest:  #DDD8CE;
+      /* === 文字 === */
+      --color-on-surface:           #1D2733;
+      --color-on-surface-variant:   #667085;
+      /* === 功能色 === */
+      --color-success:  #22c55e;
+      --color-error:    #ef4444;
+      --color-warning:  #f59e0b;
+      /* === 边框 === */
+      --color-outline:          #D4CFC4;
+      --color-outline-variant:  #E6E1D8;
+      /* === 圆角 === */
+      --radius-sm:   0.375rem;
+      --radius-md:   0.5rem;
+      --radius-lg:   0.75rem;
+      --radius-xl:   1rem;
+      --radius-2xl:  1.5rem;
+      --radius-full: 9999px;
+      /* === 阴影 === */
+      --shadow-card:   0 2px 8px rgba(0,0,0,0.08);
+      --shadow-float:  0 10px 25px rgba(0,0,0,0.1);
+      --shadow-dialog: 0 25px 50px rgba(0,0,0,0.15);
+      /* === 字体 === */
+      --font-sans: "Noto Sans SC", system-ui, sans-serif;
+    }
+  </style>
+
+  <!-- 图片兜底 -->
+  <script>
+    document.addEventListener('error', function (e) {
+      const img = e.target;
+      if (img.tagName !== 'IMG' || img.dataset.fallback) return;
+      img.dataset.fallback = '1';
+      const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const cat = img.getAttribute('data-category') || '其他';
+      const alt = img.getAttribute('alt') || '';
+      const label = esc(alt.length > 8 ? alt.slice(0, 8) + '…' : alt);
+      const icons = { '人物': '👤', '自然风景': '🏞', '动物': '🐾', '建筑城市': '🏙', '运动体育': '⚽', '交通工具': '🚗', '食物': '🍽', '服饰时尚': '👗', '商业科技': '💼', '游戏娱乐': '🎮', '艺术': '🎨', '其他': '🖼' };
+      const icon = icons[cat] || '🖼';
+      const w = img.width || 400, h = img.height || 300;
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="45%" text-anchor="middle" font-size="${Math.min(w, h) * 0.18}" dominant-baseline="central">${icon}</text><text x="50%" y="68%" text-anchor="middle" font-size="${Math.min(w, h) * 0.07}" fill="%239ca3af" font-family="system-ui,sans-serif" dominant-baseline="central">${label}</text></svg>`;
+      img.src = 'data:image/svg+xml,' + svg;
+    }, true);
+  </script>
+</head>
+
+<body class="bg-background text-on-surface font-sans">
+
+  <!-- @nav:start -->
+  <header class="bg-surface sticky top-0 z-40 h-14 flex items-center justify-between px-6 border-b border-outline-variant/20">
+    <div class="flex items-center gap-2">
+      <i data-lucide="heart-pulse" class="text-primary w-5 h-5"></i>
+      <span class="font-bold text-base text-on-surface">百芝堂赋能系统</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="text-sm text-on-surface-variant">培训负责人</span>
+      <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-medium">初</div>
+    </div>
+  </header>
+  <div class="flex" style="height: calc(100vh - 3.5rem)">
+    <aside class="w-52 shrink-0 bg-surface-container-lowest overflow-y-auto border-r border-outline-variant/15">
+      <div class="p-3 space-y-0.5">
+        <p class="px-3 py-1 text-xs font-medium text-on-surface-variant/60 uppercase tracking-wider">工作台</p>
+        <a href="home.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="layout-dashboard" class="w-4 h-4"></i>首页
+        </a>
+        <p class="px-3 py-1 mt-3 text-xs font-medium text-on-surface-variant/60 uppercase tracking-wider">学习</p>
+        <a href="learning.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="trophy" class="w-4 h-4"></i>闯关学习
+        </a>
+        <a href="growth.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="user-check" class="w-4 h-4"></i>成长档案
+        </a>
+        <a href="resources.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="book-open" class="w-4 h-4"></i>资料中心
+        </a>
+        <p class="px-3 py-1 mt-3 text-xs font-medium text-on-surface-variant/60 uppercase tracking-wider">管理</p>
+        <a href="trainee-board.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="users" class="w-4 h-4"></i>新人看板
+        </a>
+        <a href="diagnosis.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="scan-search" class="w-4 h-4"></i>双轨诊断
+        </a>
+        <a href="empowerment.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="zap" class="w-4 h-4"></i>赋能中心
+        </a>
+        <a href="qc-review.html" class="flex items-center gap-3 px-3 py-2 rounded-md bg-primary/10 text-primary font-medium text-sm" aria-current="page">
+          <i data-lucide="mic" class="w-4 h-4"></i>质检审核
+        </a>
+        <a href="assessment.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="clipboard-check" class="w-4 h-4"></i>日常考核
+        </a>
+        <p class="px-3 py-1 mt-3 text-xs font-medium text-on-surface-variant/60 uppercase tracking-wider">数据</p>
+        <a href="dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="chart-bar" class="w-4 h-4"></i>数据看板
+        </a>
+        <a href="overview.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="activity" class="w-4 h-4"></i>全局概览
+        </a>
+        <a href="scrm-import.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="database" class="w-4 h-4"></i>业务数据
+        </a>
+        <p class="px-3 py-1 mt-3 text-xs font-medium text-on-surface-variant/60 uppercase tracking-wider">配置</p>
+        <a href="question-bank.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="file-question" class="w-4 h-4"></i>题库管理
+        </a>
+        <a href="settings.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="settings" class="w-4 h-4"></i>系统设置
+        </a>
+      </div>
+    </aside>
+  <!-- @nav:end -->
+
+  <main class="flex-1 min-w-0 overflow-y-auto bg-background p-6">
+    <!-- @main-content:start -->
+
+    <!-- 页面标题区 -->
+    <div class="mb-6">
+      <h1 class="text-2xl font-bold text-on-surface">质检审核</h1>
+      <p class="text-sm text-on-surface-variant mt-1">审核录音与微信质检，AI预评分 + 人工终评</p>
+    </div>
+
+    <!-- 顶部Tab -->
+    <div class="flex items-center gap-1 bg-surface-container rounded-lg p-1 w-fit mb-6">
+      <button id="tab-recording" class="px-5 py-2 rounded-md text-sm font-medium bg-primary text-on-primary transition-colors">
+        <i data-lucide="mic" class="w-4 h-4 inline-block mr-1 -mt-0.5"></i>录音质检
+      </button>
+      <button id="tab-wechat" class="px-5 py-2 rounded-md text-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors">
+        <i data-lucide="message-circle" class="w-4 h-4 inline-block mr-1 -mt-0.5"></i>微信质检
+      </button>
+    </div>
+
+    <!-- ==================== 录音质检 Tab 内容 ==================== -->
+    <div id="panel-recording">
+
+      <!-- 统计卡片 -->
+      <div class="grid grid-cols-4 gap-4 mb-6">
+        <div class="bg-surface rounded-lg shadow-card p-4">
+          <p class="text-xs text-on-surface-variant mb-1">待审核</p>
+          <p class="text-2xl font-bold text-on-surface">5</p>
+        </div>
+        <div class="bg-surface rounded-lg shadow-card p-4">
+          <p class="text-xs text-on-surface-variant mb-1">已审核</p>
+          <p class="text-2xl font-bold text-on-surface">23</p>
+        </div>
+        <div class="bg-surface rounded-lg shadow-card p-4">
+          <p class="text-xs text-on-surface-variant mb-1">AI平均分</p>
+          <p class="text-2xl font-bold text-warning">76.5</p>
+        </div>
+        <div class="bg-surface rounded-lg shadow-card p-4">
+          <p class="text-xs text-on-surface-variant mb-1">不达标率</p>
+          <p class="text-2xl font-bold text-error">32%</p>
+        </div>
+      </div>
+
+      <!-- 录音质检列表 -->
+      <div class="space-y-3" id="recording-list">
+
+        <!-- 列表-录音1 -->
+        <div class="recording-item bg-surface rounded-lg shadow-card" data-id="1">
+          <div class="px-5 py-4 cursor-pointer hover:bg-surface-container/50 transition-colors flex items-center gap-5" id="recording-header-1">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-3 mb-2">
+                <span class="text-sm font-semibold text-on-surface">王小萌</span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-error/15 text-error">待评</span>
+                <span class="text-xs text-on-surface-variant ml-auto">2024-12-18 14:30</span>
+              </div>
+              <div class="flex items-center gap-6">
+                <span class="text-xs text-on-surface-variant flex items-center gap-1">
+                  <i data-lucide="clock" class="w-3 h-3"></i>08:32
+                </span>
+                <!-- 4维雷达图缩略图 -->
+                <svg viewBox="0 0 100 100" class="w-12 h-12 shrink-0" aria-label="评分雷达图">
+                  <polygon points="50,10 90,50 50,90 10,50" fill="none" stroke="#E6E1D8" stroke-width="1"/>
+                  <polygon points="50,22 78,50 50,78 22,50" fill="#2978B5" fill-opacity="0.15" stroke="#2978B5" stroke-width="1.5"/>
+                  <circle cx="50" cy="22" r="2.5" fill="#2978B5"/>
+                  <circle cx="78" cy="50" r="2.5" fill="#2978B5"/>
+                  <circle cx="50" cy="78" r="2.5" fill="#ef4444"/>
+                  <circle cx="22" cy="50" r="2.5" fill="#2978B5"/>
+                </svg>
+                <div class="flex-1 min-w-0">
+                  <div class="flex flex-wrap gap-2">
+                    <span class="text-xs px-2 py-0.5 rounded-sm bg-primary/10 text-primary font-medium">业务专业 82</span>
+                    <span class="text-xs px-2 py-0.5 rounded-sm bg-primary/10 text-primary font-medium">服务规范 85</span>
+                    <span class="text-xs px-2 py-0.5 rounded-sm bg-error/15 text-error font-medium">沟通技巧 62-不达标</span>
+                    <span class="text-xs px-2 py-0.5 rounded-sm bg-primary/10 text-primary font-medium">流程执行 79</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-on-surface-variant shrink-0 transition-transform recording-chevron"></i>
+          </div>
+          <!-- 展开审核面板 -->
+          <div class="recording-detail hidden border-t border-outline-variant/15 px-5 py-5 bg-surface-container-lowest/50">
+            <!-- 播放器模拟 -->
+            <div class="mb-5">
+              <p class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">录音播放</p>
+              <div class="bg-surface-container rounded-lg p-4 flex items-center gap-4">
+                <button id="btn-play-1" class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center hover:opacity-90 active:scale-95 transition-all shrink-0">
+                  <i data-lucide="play" class="w-4 h-4 ml-0.5"></i>
+                </button>
+                <div class="flex-1">
+                  <div class="h-2 bg-surface-container-high rounded-full overflow-hidden">
+                    <div class="h-full bg-primary rounded-full" style="width: 0%"></div>
+                  </div>
+                  <div class="flex justify-between mt-1">
+                    <span class="text-xs text-on-surface-variant">00:00</span>
+                    <span class="text-xs text-on-surface-variant">08:32</span>
+                  </div>
+                </div>
+                <span class="text-xs text-on-surface-variant">1x</span>
+              </div>
+            </div>
+            <!-- AI转写摘要 -->
+            <div class="mb-5">
+              <p class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">AI转写摘要</p>
+              <div class="bg-surface-container rounded-lg p-3 text-sm text-on-surface leading-relaxed">
+                新人向患者介绍了降糖方案，说明了用药时间及剂量，但在患者询问不良反应时未能给出清晰回应，沟通节奏偏快，患者多次要求重复。
+              </div>
+            </div>
+            <!-- 4维打分滑块 -->
+            <div class="mb-5">
+              <p class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-3">人工评分</p>
+              <div class="space-y-4">
+                <div>
+                  <div class="flex justify-between mb-1">
+                    <span class="text-sm text-on-surface">业务专业</span>
+                    <span class="text-sm font-semibold text-primary slider-value" data-dimension="business">70</span>
+                  </div>
+                  <input type="range" id="slider-business-1" min="0" max="100" value="70" class="w-full h-2 rounded-full appearance-none bg-surface-container-high accent-primary cursor-pointer" />
+                  <div class="flex justify-between text-xs text-on-surface-variant/50 mt-0.5"><span>0</span><span>70 合格</span><span>85 良好</span><span>100</span></div>
+                </div>
+                <div>
+                  <div class="flex justify-between mb-1">
+                    <span class="text-sm text-on-surface">服务规范</span>
+                    <span class="text-sm font-semibold text-primary slider-value" data-dimension="service">70</span>
+                  </div>
+                  <input type="range" id="slider-service-1" min="0" max="100" value="70" class="w-full h-2 rounded-full appearance-none bg-surface-container-high accent-primary cursor-pointer" />
+                  <div class="flex justify-between text-xs text-on-surface-variant/50 mt-0.5"><span>0</span><span>70 合格</span><span>85 良好</span><span>100</span></div>
+                </div>
+                <div>
+                  <div class="flex justify-between mb-1">
+                    <span class="text-sm text-on-surface">沟通技巧</span>
+                    <span class="text-sm font-semibold text-primary slider-value" data-dimension="communication">70</span>
+                  </div>
+                  <input type="range" id="slider-communication-1" min="0" max="100" value="70" class="w-full h-2 rounded-full appearance-none bg-surface-container-high accent-primary cursor-pointer" />
+                  <div class="flex justify-between text-xs text-on-surface-variant/50 mt-0.5"><span>0</span><span>70 合格</span><span>85 良好</span><span>100</span></div>
+                </div>
+                <div>
+                  <div class="flex justify-between mb-1">
+                    <span class="text-sm text-on-surface">流程执行</span>
+                    <span class="text-sm font-semibold text-primary slider-value" data-dimension="process">70</span>
+                  </div>
+                  <input type="range" id="slider-process-1" min="0" max="100" value="70" class="w-full h-2 rounded-full appearance-none bg-surface-container-high accent-primary cursor-pointer" />
+                  <div class="flex justify-between text-xs text-on-surface-variant/50 mt-0.5"><span>0</span><span>70 合格</span><span>85 良好</span><span>100</span></div>
+                </div>
+              </div>
+            </div>
+            <!-- 评语输入 -->
+            <div class="mb-5">
+              <label class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2 block">评语</label>
+              <textarea id="comment-1" rows="3" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors resize-none" placeholder="请输入审核评语..."></textarea>
+            </div>
+            <!-- 提交按钮 -->
+            <div class="flex items-center gap-3 justify-end">
+              <button id="btn-cancel-1" class="bg-surface-container text-on-surface px-4 py-2 rounded-md text-sm font-medium hover:bg-surface-container-high active:scale-[0.98] transition-all">取消</button>
+              <button id="btn-submit-1" class="bg-primary text-on-primary px-5 py-2 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all inline-flex items-center gap-2">
+                <i data-lucide="check" class="w-3.5 h-3.5"></i>提交评分
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 列表-录音2 -->
+        <div class="recording-item bg-surface rounded-lg shadow-card" data-id="2">
+          <div class="px-5 py-4 cursor-pointer hover:bg-surface-container/50 transition-colors flex items-center gap-5" id="recording-header-2">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-3 mb-2">
+                <span class="text-sm font-semibold text-on-surface">李晓婷</span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-error/15 text-error">待评</span>
+                <span class="text-xs text-on-surface-variant ml-auto">2024-12-18 11:15</span>
+              </div>
+              <div class="flex items-center gap-6">
+                <span class="text-xs text-on-surface-variant flex items-center gap-1">
+                  <i data-lucide="clock" class="w-3 h-3"></i>12:45
+                </span>
+                <svg viewBox="0 0 100 100" class="w-12 h-12 shrink-0" aria-label="评分雷达图">
+                  <polygon points="50,10 90,50 50,90 10,50" fill="none" stroke="#E6E1D8" stroke-width="1"/>
+                  <polygon points="50,34 74,50 50,66 26,50" fill="#2978B5" fill-opacity="0.15" stroke="#2978B5" stroke-width="1.5"/>
+                  <circle cx="50" cy="34" r="2.5" fill="#ef4444"/>
+                  <circle cx="74" cy="50" r="2.5" fill="#ef4444"/>
+                  <circle cx="50" cy="66" r="2.5" fill="#2978B5"/>
+                  <circle cx="26" cy="50" r="2.5" fill="#ef4444"/>
+                </svg>
+                <div class="flex-1 min-w-0">
+                  <div class="flex flex-wrap gap-2">
+                    <span class="text-xs px-2 py-0.5 rounded-sm bg-error/15 text-error font-medium">业务专业 65-不达标</span>
+                    <span class="text-xs px-2 py-0.5 rounded-sm bg-error/15 text-error font-medium">服务规范 58-不达标</span>
+                    <span class="text-xs px-2 py-0.5 rounded-sm bg-primary/10 text-primary font-medium">沟通技巧 80</span>
+                    <span class="text-xs px-2 py-0.5 rounded-sm bg-error/15 text-error font-medium">流程执行 63-不达标</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-on-surface-variant shrink-0 transition-transform recording-chevron"></i>
+          </div>
+          <div class="recording-detail hidden border-t border-outline-variant/15 px-5 py-5 bg-surface-container-lowest/50">
+            <div class="mb-5">
+              <p class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">录音播放</p>
+              <div class="bg-surface-container rounded-lg p-4 flex items-center gap-4">
+                <button id="btn-play-2" class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center hover:opacity-90 active:scale-95 transition-all shrink-0">
+                  <i data-lucide="play" class="w-4 h-4 ml-0.5"></i>
+                </button>
+                <div class="flex-1">
+                  <div class="h-2 bg-surface-container-high rounded-full overflow-hidden">
+                    <div class="h-full bg-primary rounded-full" style="width: 0%"></div>
+                  </div>
+                  <div class="flex justify-between mt-1">
+                    <span class="text-xs text-on-surface-variant">00:00</span>
+                    <span class="text-xs text-on-surface-variant">12:45</span>
+                  </div>
+                </div>
+                <span class="text-xs text-on-surface-variant">1x</span>
+              </div>
+            </div>
+            <div class="mb-5">
+              <p class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">AI转写摘要</p>
+              <div class="bg-surface-container rounded-lg p-3 text-sm text-on-surface leading-relaxed">
+                新人未按标准流程问候患者，直接进入方案介绍，遗漏了患者身份核验环节。用药说明存在信息错误，将每日2次说成每日3次。服务用语不规范，多次使用口语化表达。
+              </div>
+            </div>
+            <div class="mb-5">
+              <p class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-3">人工评分</p>
+              <div class="space-y-4">
+                <div>
+                  <div class="flex justify-between mb-1">
+                    <span class="text-sm text-on-surface">业务专业</span>
+                    <span class="text-sm font-semibold text-primary slider-value" data-dimension="business">70</span>
+                  </div>
+                  <input type="range" id="slider-business-2" min="0" max="100" value="70" class="w-full h-2 rounded-full appearance-none bg-surface-container-high accent-primary cursor-pointer" />
+                  <div class="flex justify-between text-xs text-on-surface-variant/50 mt-0.5"><span>0</span><span>70 合格</span><span>85 良好</span><span>100</span></div>
+                </div>
+                <div>
+                  <div class="flex justify-between mb-1">
+                    <span class="text-sm text-on-surface">服务规范</span>
+                    <span class="text-sm font-semibold text-primary slider-value" data-dimension="service">70</span>
+                  </div>
+                  <input type="range" id="slider-service-2" min="0" max="100" value="70" class="w-full h-2 rounded-full appearance-none bg-surface-container-high accent-primary cursor-pointer" />
+                  <div class="flex justify-between text-xs text-on-surface-variant/50 mt-0.5"><span>0</span><span>70 合格</span><span>85 良好</span><span>100</span></div>
+                </div>
+                <div>
+                  <div class="flex justify-between mb-1">
+                    <span class="text-sm text-on-surface">沟通技巧</span>
+                    <span class="text-sm font-semibold text-primary slider-value" data-dimension="communication">70</span>
+                  </div>
+                  <input type="range" id="slider-communication-2" min="0" max="100" value="70" class="w-full h-2 rounded-full appearance-none bg-surface-container-high accent-primary cursor-pointer" />
+                  <div class="flex justify-between text-xs text-on-surface-variant/50 mt-0.5"><span>0</span><span>70 合格</span><span>85 良好</span><span>100</span></div>
+                </div>
+                <div>
+                  <div class="flex justify-between mb-1">
+                    <span class="text-sm text-on-surface">流程执行</span>
+                    <span class="text-sm font-semibold text-primary slider-value" data-dimension="process">70</span>
+                  </div>
+                  <input type="range" id="slider-process-2" min="0" max="100" value="70" class="w-full h-2 rounded-full appearance-none bg-surface-container-high accent-primary cursor-pointer" />
+                  <div class="flex justify-between text-xs text-on-surface-variant/50 mt-0.5"><span>0</span><span>70 合格</span><span>85 良好</span><span>100</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="mb-5">
+              <label class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2 block">评语</label>
+              <textarea id="comment-2" rows="3" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors resize-none" placeholder="请输入审核评语..."></textarea>
+            </div>
+            <div class="flex items-center gap-3 justify-end">
+              <button id="btn-cancel-2" class="bg-surface-container text-on-surface px-4 py-2 rounded-md text-sm font-medium hover:bg-surface-container-high active:scale-[0.98] transition-all">取消</button>
+              <button id="btn-submit-2" class="bg-primary text-on-primary px-5 py-2 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all inline-flex items-center gap-2">
+                <i data-lucide="check" class="w-3.5 h-3.5"></i>提交评分
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 列表-录音3 -->
+        <div class="recording-item bg-surface rounded-lg shadow-card" data-id="3">
+          <div class="px-5 py-4 cursor-pointer hover:bg-surface-container/50 transition-colors flex items-center gap-5" id="recording-header-3">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-3 mb-2">
+                <span class="text-sm font-semibold text-on-surface">张宇飞</span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已评</span>
+                <span class="text-xs text-on-surface-variant ml-auto">2024-12-17 16:45</span>
+              </div>
+              <div class="flex items-center gap-6">
+                <span class="text-xs text-on-surface-variant flex items-center gap-1">
+                  <i data-lucide="clock" class="w-3 h-3"></i>06:18
+                </span>
+                <svg viewBox="0 0 100 100" class="w-12 h-12 shrink-0" aria-label="评分雷达图">
+                  <polygon points="50,10 90,50 50,90 10,50" fill="none" stroke="#E6E1D8" stroke-width="1"/>
+                  <polygon points="50,18 82,50 50,82 18,50" fill="#22c55e" fill-opacity="0.15" stroke="#22c55e" stroke-width="1.5"/>
+                  <circle cx="50" cy="18" r="2.5" fill="#22c55e"/>
+                  <circle cx="82" cy="50" r="2.5" fill="#22c55e"/>
+                  <circle cx="50" cy="82" r="2.5" fill="#22c55e"/>
+                  <circle cx="18" cy="50" r="2.5" fill="#22c55e"/>
+                </svg>
+                <div class="flex-1 min-w-0">
+                  <div class="flex flex-wrap gap-2">
+                    <span class="text-xs px-2 py-0.5 rounded-sm bg-success/15 text-success font-medium">业务专业 88</span>
+                    <span class="text-xs px-2 py-0.5 rounded-sm bg-success/15 text-success font-medium">服务规范 91</span>
+                    <span class="text-xs px-2 py-0.5 rounded-sm bg-success/15 text-success font-medium">沟通技巧 85</span>
+                    <span class="text-xs px-2 py-0.5 rounded-sm bg-success/15 text-success font-medium">流程执行 90</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-on-surface-variant shrink-0 transition-transform recording-chevron"></i>
+          </div>
+          <div class="recording-detail hidden border-t border-outline-variant/15 px-5 py-5 bg-surface-container-lowest/50">
+            <div class="mb-5">
+              <p class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">录音播放</p>
+              <div class="bg-surface-container rounded-lg p-4 flex items-center gap-4">
+                <button id="btn-play-3" class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center hover:opacity-90 active:scale-95 transition-all shrink-0">
+                  <i data-lucide="play" class="w-4 h-4 ml-0.5"></i>
+                </button>
+                <div class="flex-1">
+                  <div class="h-2 bg-surface-container-high rounded-full overflow-hidden">
+                    <div class="h-full bg-primary rounded-full" style="width: 0%"></div>
+                  </div>
+                  <div class="flex justify-between mt-1">
+                    <span class="text-xs text-on-surface-variant">00:00</span>
+                    <span class="text-xs text-on-surface-variant">06:18</span>
+                  </div>
+                </div>
+                <span class="text-xs text-on-surface-variant">1x</span>
+              </div>
+            </div>
+            <div class="mb-5">
+              <p class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">AI转写摘要</p>
+              <div class="bg-surface-container rounded-lg p-3 text-sm text-on-surface leading-relaxed">
+                新人按照标准流程完成回访，问候语规范，身份核验完整。用药指导准确，能耐心解答患者关于饮食搭配的疑问，复诊邀约话术自然，流程执行流畅。
+              </div>
+            </div>
+            <div class="mb-5">
+              <p class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-3">人工评分（已提交）</p>
+              <div class="grid grid-cols-4 gap-3">
+                <div class="bg-surface-container rounded-lg p-3 text-center">
+                  <p class="text-xs text-on-surface-variant mb-1">业务专业</p>
+                  <p class="text-lg font-bold text-success">88</p>
+                </div>
+                <div class="bg-surface-container rounded-lg p-3 text-center">
+                  <p class="text-xs text-on-surface-variant mb-1">服务规范</p>
+                  <p class="text-lg font-bold text-success">91</p>
+                </div>
+                <div class="bg-surface-container rounded-lg p-3 text-center">
+                  <p class="text-xs text-on-surface-variant mb-1">沟通技巧</p>
+                  <p class="text-lg font-bold text-success">85</p>
+                </div>
+                <div class="bg-surface-container rounded-lg p-3 text-center">
+                  <p class="text-xs text-on-surface-variant mb-1">流程执行</p>
+                  <p class="text-lg font-bold text-success">90</p>
+                </div>
+              </div>
+            </div>
+            <div class="mb-3">
+              <p class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">审核评语</p>
+              <div class="bg-surface-container rounded-lg p-3 text-sm text-on-surface leading-relaxed">
+                整体表现优秀，流程执行到位，沟通自然流畅。建议在用药细节上可以更主动提醒患者注意事项。
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 列表-录音4 -->
+        <div class="recording-item bg-surface rounded-lg shadow-card" data-id="4">
+          <div class="px-5 py-4 cursor-pointer hover:bg-surface-container/50 transition-colors flex items-center gap-5" id="recording-header-4">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-3 mb-2">
+                <span class="text-sm font-semibold text-on-surface">陈思远</span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-error/15 text-error">待评</span>
+                <span class="text-xs text-on-surface-variant ml-auto">2024-12-17 10:20</span>
+              </div>
+              <div class="flex items-center gap-6">
+                <span class="text-xs text-on-surface-variant flex items-center gap-1">
+                  <i data-lucide="clock" class="w-3 h-3"></i>10:05
+                </span>
+                <svg viewBox="0 0 100 100" class="w-12 h-12 shrink-0" aria-label="评分雷达图">
+                  <polygon points="50,10 90,50 50,90 10,50" fill="none" stroke="#E6E1D8" stroke-width="1"/>
+                  <polygon points="50,30 70,50 50,70 30,50" fill="#2978B5" fill-opacity="0.15" stroke="#2978B5" stroke-width="1.5"/>
+                  <circle cx="50" cy="30" r="2.5" fill="#ef4444"/>
+                  <circle cx="70" cy="50" r="2.5" fill="#2978B5"/>
+                  <circle cx="50" cy="70" r="2.5" fill="#2978B5"/>
+                  <circle cx="30" cy="50" r="2.5" fill="#ef4444"/>
+                </svg>
+                <div class="flex-1 min-w-0">
+                  <div class="flex flex-wrap gap-2">
+                    <span class="text-xs px-2 py-0.5 rounded-sm bg-error/15 text-error font-medium">业务专业 68-不达标</span>
+                    <span class="text-xs px-2 py-0.5 rounded-sm bg-primary/10 text-primary font-medium">服务规范 75</span>
+                    <span class="text-xs px-2 py-0.5 rounded-sm bg-primary/10 text-primary font-medium">沟通技巧 78</span>
+                    <span class="text-xs px-2 py-0.5 rounded-sm bg-error/15 text-error font-medium">流程执行 66-不达标</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-on-surface-variant shrink-0 transition-transform recording-chevron"></i>
+          </div>
+          <div class="recording-detail hidden border-t border-outline-variant/15 px-5 py-5 bg-surface-container-lowest/50">
+            <div class="mb-5">
+              <p class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">录音播放</p>
+              <div class="bg-surface-container rounded-lg p-4 flex items-center gap-4">
+                <button id="btn-play-4" class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center hover:opacity-90 active:scale-95 transition-all shrink-0">
+                  <i data-lucide="play" class="w-4 h-4 ml-0.5"></i>
+                </button>
+                <div class="flex-1">
+                  <div class="h-2 bg-surface-container-high rounded-full overflow-hidden">
+                    <div class="h-full bg-primary rounded-full" style="width: 0%"></div>
+                  </div>
+                  <div class="flex justify-between mt-1">
+                    <span class="text-xs text-on-surface-variant">00:00</span>
+                    <span class="text-xs text-on-surface-variant">10:05</span>
+                  </div>
+                </div>
+                <span class="text-xs text-on-surface-variant">1x</span>
+              </div>
+            </div>
+            <div class="mb-5">
+              <p class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">AI转写摘要</p>
+              <div class="bg-surface-container rounded-lg p-3 text-sm text-on-surface leading-relaxed">
+                新人对胰岛素方案介绍不够准确，混淆了长效和短效的用法。回访流程跳过了满意度确认环节，未按标准执行关闭语。但整体语气温和，服务态度尚可。
+              </div>
+            </div>
+            <div class="mb-5">
+              <p class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-3">人工评分</p>
+              <div class="space-y-4">
+                <div>
+                  <div class="flex justify-between mb-1">
+                    <span class="text-sm text-on-surface">业务专业</span>
+                    <span class="text-sm font-semibold text-primary slider-value" data-dimension="business">70</span>
+                  </div>
+                  <input type="range" id="slider-business-4" min="0" max="100" value="70" class="w-full h-2 rounded-full appearance-none bg-surface-container-high accent-primary cursor-pointer" />
+                  <div class="flex justify-between text-xs text-on-surface-variant/50 mt-0.5"><span>0</span><span>70 合格</span><span>85 良好</span><span>100</span></div>
+                </div>
+                <div>
+                  <div class="flex justify-between mb-1">
+                    <span class="text-sm text-on-surface">服务规范</span>
+                    <span class="text-sm font-semibold text-primary slider-value" data-dimension="service">70</span>
+                  </div>
+                  <input type="range" id="slider-service-4" min="0" max="100" value="70" class="w-full h-2 rounded-full appearance-none bg-surface-container-high accent-primary cursor-pointer" />
+                  <div class="flex justify-between text-xs text-on-surface-variant/50 mt-0.5"><span>0</span><span>70 合格</span><span>85 良好</span><span>100</span></div>
+                </div>
+                <div>
+                  <div class="flex justify-between mb-1">
+                    <span class="text-sm text-on-surface">沟通技巧</span>
+                    <span class="text-sm font-semibold text-primary slider-value" data-dimension="communication">70</span>
+                  </div>
+                  <input type="range" id="slider-communication-4" min="0" max="100" value="70" class="w-full h-2 rounded-full appearance-none bg-surface-container-high accent-primary cursor-pointer" />
+                  <div class="flex justify-between text-xs text-on-surface-variant/50 mt-0.5"><span>0</span><span>70 合格</span><span>85 良好</span><span>100</span></div>
+                </div>
+                <div>
+                  <div class="flex justify-between mb-1">
+                    <span class="text-sm text-on-surface">流程执行</span>
+                    <span class="text-sm font-semibold text-primary slider-value" data-dimension="process">70</span>
+                  </div>
+                  <input type="range" id="slider-process-4" min="0" max="100" value="70" class="w-full h-2 rounded-full appearance-none bg-surface-container-high accent-primary cursor-pointer" />
+                  <div class="flex justify-between text-xs text-on-surface-variant/50 mt-0.5"><span>0</span><span>70 合格</span><span>85 良好</span><span>100</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="mb-5">
+              <label class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2 block">评语</label>
+              <textarea id="comment-4" rows="3" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors resize-none" placeholder="请输入审核评语..."></textarea>
+            </div>
+            <div class="flex items-center gap-3 justify-end">
+              <button id="btn-cancel-4" class="bg-surface-container text-on-surface px-4 py-2 rounded-md text-sm font-medium hover:bg-surface-container-high active:scale-[0.98] transition-all">取消</button>
+              <button id="btn-submit-4" class="bg-primary text-on-primary px-5 py-2 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all inline-flex items-center gap-2">
+                <i data-lucide="check" class="w-3.5 h-3.5"></i>提交评分
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 列表-录音5 -->
+        <div class="recording-item bg-surface rounded-lg shadow-card" data-id="5">
+          <div class="px-5 py-4 cursor-pointer hover:bg-surface-container/50 transition-colors flex items-center gap-5" id="recording-header-5">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-3 mb-2">
+                <span class="text-sm font-semibold text-on-surface">赵雪婷</span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已评</span>
+                <span class="text-xs text-on-surface-variant ml-auto">2024-12-16 15:50</span>
+              </div>
+              <div class="flex items-center gap-6">
+                <span class="text-xs text-on-surface-variant flex items-center gap-1">
+                  <i data-lucide="clock" class="w-3 h-3"></i>05:47
+                </span>
+                <svg viewBox="0 0 100 100" class="w-12 h-12 shrink-0" aria-label="评分雷达图">
+                  <polygon points="50,10 90,50 50,90 10,50" fill="none" stroke="#E6E1D8" stroke-width="1"/>
+                  <polygon points="50,22 82,50 50,78 22,50" fill="#22c55e" fill-opacity="0.15" stroke="#22c55e" stroke-width="1.5"/>
+                  <circle cx="50" cy="22" r="2.5" fill="#22c55e"/>
+                  <circle cx="82" cy="50" r="2.5" fill="#22c55e"/>
+                  <circle cx="50" cy="78" r="2.5" fill="#2978B5"/>
+                  <circle cx="22" cy="50" r="2.5" fill="#22c55e"/>
+                </svg>
+                <div class="flex-1 min-w-0">
+                  <div class="flex flex-wrap gap-2">
+                    <span class="text-xs px-2 py-0.5 rounded-sm bg-success/15 text-success font-medium">业务专业 86</span>
+                    <span class="text-xs px-2 py-0.5 rounded-sm bg-success/15 text-success font-medium">服务规范 92</span>
+                    <span class="text-xs px-2 py-0.5 rounded-sm bg-primary/10 text-primary font-medium">沟通技巧 80</span>
+                    <span class="text-xs px-2 py-0.5 rounded-sm bg-success/15 text-success font-medium">流程执行 89</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-on-surface-variant shrink-0 transition-transform recording-chevron"></i>
+          </div>
+          <div class="recording-detail hidden border-t border-outline-variant/15 px-5 py-5 bg-surface-container-lowest/50">
+            <div class="mb-5">
+              <p class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">录音播放</p>
+              <div class="bg-surface-container rounded-lg p-4 flex items-center gap-4">
+                <button id="btn-play-5" class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center hover:opacity-90 active:scale-95 transition-all shrink-0">
+                  <i data-lucide="play" class="w-4 h-4 ml-0.5"></i>
+                </button>
+                <div class="flex-1">
+                  <div class="h-2 bg-surface-container-high rounded-full overflow-hidden">
+                    <div class="h-full bg-primary rounded-full" style="width: 0%"></div>
+                  </div>
+                  <div class="flex justify-between mt-1">
+                    <span class="text-xs text-on-surface-variant">00:00</span>
+                    <span class="text-xs text-on-surface-variant">05:47</span>
+                  </div>
+                </div>
+                <span class="text-xs text-on-surface-variant">1x</span>
+              </div>
+            </div>
+            <div class="mb-5">
+              <p class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">AI转写摘要</p>
+              <div class="bg-surface-container rounded-lg p-3 text-sm text-on-surface leading-relaxed">
+                新人完成了首次回访，问候和身份核验规范，用药指导专业，能够主动关心患者近期血糖监测情况。复诊邀约话术标准，沟通节奏稍快，可适当放慢。
+              </div>
+            </div>
+            <div class="mb-5">
+              <p class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-3">人工评分（已提交）</p>
+              <div class="grid grid-cols-4 gap-3">
+                <div class="bg-surface-container rounded-lg p-3 text-center">
+                  <p class="text-xs text-on-surface-variant mb-1">业务专业</p>
+                  <p class="text-lg font-bold text-success">86</p>
+                </div>
+                <div class="bg-surface-container rounded-lg p-3 text-center">
+                  <p class="text-xs text-on-surface-variant mb-1">服务规范</p>
+                  <p class="text-lg font-bold text-success">92</p>
+                </div>
+                <div class="bg-surface-container rounded-lg p-3 text-center">
+                  <p class="text-xs text-on-surface-variant mb-1">沟通技巧</p>
+                  <p class="text-lg font-bold text-primary">80</p>
+                </div>
+                <div class="bg-surface-container rounded-lg p-3 text-center">
+                  <p class="text-xs text-on-surface-variant mb-1">流程执行</p>
+                  <p class="text-lg font-bold text-success">89</p>
+                </div>
+              </div>
+            </div>
+            <div class="mb-3">
+              <p class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">审核评语</p>
+              <div class="bg-surface-container rounded-lg p-3 text-sm text-on-surface leading-relaxed">
+                表现良好，服务规范执行到位。沟通技巧方面注意倾听患者诉求后再回应，避免抢话。
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ==================== 微信质检 Tab 内容 ==================== -->
+    <div id="panel-wechat" class="hidden">
+
+      <!-- 微信质检统计卡片 -->
+      <div class="grid grid-cols-4 gap-4 mb-6">
+        <div class="bg-surface rounded-lg shadow-card p-4">
+          <p class="text-xs text-on-surface-variant mb-1">待确认</p>
+          <p class="text-2xl font-bold text-on-surface">3</p>
+        </div>
+        <div class="bg-surface rounded-lg shadow-card p-4">
+          <p class="text-xs text-on-surface-variant mb-1">已确认</p>
+          <p class="text-2xl font-bold text-on-surface">18</p>
+        </div>
+        <div class="bg-surface rounded-lg shadow-card p-4">
+          <p class="text-xs text-on-surface-variant mb-1">合规率</p>
+          <p class="text-2xl font-bold text-success">84%</p>
+        </div>
+        <div class="bg-surface rounded-lg shadow-card p-4">
+          <p class="text-xs text-on-surface-variant mb-1">不合规动作</p>
+          <p class="text-2xl font-bold text-error">9</p>
+        </div>
+      </div>
+
+      <!-- 微信质检列表 -->
+      <div class="space-y-3" id="wechat-list">
+
+        <!-- 列表-微信1 -->
+        <div class="wechat-item bg-surface rounded-lg shadow-card" data-id="1">
+          <div class="px-5 py-4 cursor-pointer hover:bg-surface-container/50 transition-colors flex items-center gap-5" id="wechat-header-1">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-3 mb-2">
+                <span class="text-sm font-semibold text-on-surface">王小萌</span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-error/15 text-error">待确认</span>
+                <span class="text-xs text-on-surface-variant ml-auto">2024-12-18 09:30</span>
+              </div>
+              <div class="flex items-center gap-3 text-xs text-on-surface-variant">
+                <span>截图 3 张</span>
+                <span>·</span>
+                <span>合规 15/19 动作</span>
+                <span>·</span>
+                <span class="text-error font-medium">不合规 4 项</span>
+              </div>
+            </div>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-on-surface-variant shrink-0 transition-transform wechat-chevron"></i>
+          </div>
+
+          <!-- 微信质检展开面板 -->
+          <div class="wechat-detail hidden border-t border-outline-variant/15 px-5 py-5 bg-surface-container-lowest/50">
+            <!-- 上传截图区 -->
+            <div class="mb-6">
+              <p class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-3">上传截图</p>
+              <div class="flex gap-3">
+                <div class="w-40 h-28 bg-surface-container rounded-lg flex items-center justify-center border-2 border-dashed border-outline-variant/30 relative overflow-hidden">
+                  <img src="https://images.unsplash.com/photo-1611606063065-ee7946f0787a?w=320&h=224&fit=crop" alt="微信聊天截图1" data-category="商业科技" class="w-full h-full object-cover rounded-lg">
+                </div>
+                <div class="w-40 h-28 bg-surface-container rounded-lg flex items-center justify-center border-2 border-dashed border-outline-variant/30 relative overflow-hidden">
+                  <img src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=320&h=224&fit=crop" alt="微信聊天截图2" data-category="商业科技" class="w-full h-full object-cover rounded-lg">
+                </div>
+                <div class="w-40 h-28 bg-surface-container rounded-lg flex items-center justify-center border-2 border-dashed border-outline-variant/30 relative overflow-hidden">
+                  <img src="https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?w=320&h=224&fit=crop" alt="微信聊天截图3" data-category="商业科技" class="w-full h-full object-cover rounded-lg">
+                </div>
+              </div>
+            </div>
+
+            <!-- AI识别结果：4节点19动作 -->
+            <div class="mb-5">
+              <p class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-3">AI识别结果</p>
+
+              <!-- 节点1：加V沟通 -->
+              <div class="mb-4">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">1</span>
+                  <span class="text-sm font-semibold text-on-surface">加V沟通</span>
+                  <span class="text-xs text-on-surface-variant ml-auto">5/6 合规</span>
+                </div>
+                <div class="ml-7 space-y-1.5">
+                  <!-- 动作1-合规 -->
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">自我介绍（姓名+公司+岗位）</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                  <!-- 动作2-合规 -->
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">表明来意（说明回访目的）</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                  <!-- 动作3-合规 -->
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">确认患者身份信息</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                  <!-- 动作4-不合规 -->
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-error/5 rounded-md">
+                    <i data-lucide="x-circle" class="w-3.5 h-3.5 text-error shrink-0"></i>
+                    <span class="text-sm text-on-surface">隐私保护声明</span>
+                    <span class="text-xs text-error font-medium ml-auto">不合规</span>
+                  </div>
+                  <!-- 动作5-合规 -->
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">发送公司资质证明</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                  <!-- 动作6-合规 -->
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">引导患者关注公众号</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 节点2：用药关怀 -->
+              <div class="mb-4">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">2</span>
+                  <span class="text-sm font-semibold text-on-surface">用药关怀</span>
+                  <span class="text-xs text-on-surface-variant ml-auto">4/5 合规</span>
+                </div>
+                <div class="ml-7 space-y-1.5">
+                  <!-- 动作1-合规 -->
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">确认当前用药方案</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                  <!-- 动作2-合规 -->
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">询问用药依从性</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                  <!-- 动作3-不合规 -->
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-error/5 rounded-md">
+                    <i data-lucide="x-circle" class="w-3.5 h-3.5 text-error shrink-0"></i>
+                    <span class="text-sm text-on-surface">不良反应提醒</span>
+                    <span class="text-xs text-error font-medium ml-auto">不合规</span>
+                  </div>
+                  <!-- 动作4-合规 -->
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">用药时间提醒</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                  <!-- 动作5-合规 -->
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">饮食搭配建议</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 节点3：复诊邀约 -->
+              <div class="mb-4">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">3</span>
+                  <span class="text-sm font-semibold text-on-surface">复诊邀约</span>
+                  <span class="text-xs text-on-surface-variant ml-auto">4/4 合规</span>
+                </div>
+                <div class="ml-7 space-y-1.5">
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">说明复诊必要性</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">提供可选时间段</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">预约确认及提醒</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">告知就诊准备事项</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 节点4：续方确认 -->
+              <div class="mb-4">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">4</span>
+                  <span class="text-sm font-semibold text-on-surface">续方确认</span>
+                  <span class="text-xs text-on-surface-variant ml-auto">2/4 合规</span>
+                </div>
+                <div class="ml-7 space-y-1.5">
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">确认续方意愿</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-error/5 rounded-md">
+                    <i data-lucide="x-circle" class="w-3.5 h-3.5 text-error shrink-0"></i>
+                    <span class="text-sm text-on-surface">核对用药信息</span>
+                    <span class="text-xs text-error font-medium ml-auto">不合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-error/5 rounded-md">
+                    <i data-lucide="x-circle" class="w-3.5 h-3.5 text-error shrink-0"></i>
+                    <span class="text-sm text-on-surface">费用说明及支付引导</span>
+                    <span class="text-xs text-error font-medium ml-auto">不合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">配送信息确认</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 人工确认按钮 -->
+            <div class="flex items-center gap-3 justify-end">
+              <button id="btn-wechat-reject-1" class="bg-surface-container text-on-surface px-4 py-2 rounded-md text-sm font-medium hover:bg-surface-container-high active:scale-[0.98] transition-all">驳回</button>
+              <button id="btn-wechat-confirm-1" class="bg-primary text-on-primary px-5 py-2 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all inline-flex items-center gap-2">
+                <i data-lucide="check" class="w-3.5 h-3.5"></i>确认合规
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 列表-微信2 -->
+        <div class="wechat-item bg-surface rounded-lg shadow-card" data-id="2">
+          <div class="px-5 py-4 cursor-pointer hover:bg-surface-container/50 transition-colors flex items-center gap-5" id="wechat-header-2">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-3 mb-2">
+                <span class="text-sm font-semibold text-on-surface">李晓婷</span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-error/15 text-error">待确认</span>
+                <span class="text-xs text-on-surface-variant ml-auto">2024-12-17 14:20</span>
+              </div>
+              <div class="flex items-center gap-3 text-xs text-on-surface-variant">
+                <span>截图 4 张</span>
+                <span>·</span>
+                <span>合规 12/19 动作</span>
+                <span>·</span>
+                <span class="text-error font-medium">不合规 7 项</span>
+              </div>
+            </div>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-on-surface-variant shrink-0 transition-transform wechat-chevron"></i>
+          </div>
+          <div class="wechat-detail hidden border-t border-outline-variant/15 px-5 py-5 bg-surface-container-lowest/50">
+            <div class="mb-6">
+              <p class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-3">上传截图</p>
+              <div class="flex gap-3">
+                <div class="w-40 h-28 bg-surface-container rounded-lg overflow-hidden">
+                  <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=320&h=224&fit=crop" alt="微信聊天截图1" data-category="商业科技" class="w-full h-full object-cover">
+                </div>
+                <div class="w-40 h-28 bg-surface-container rounded-lg overflow-hidden">
+                  <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=320&h=224&fit=crop" alt="微信聊天截图2" data-category="商业科技" class="w-full h-full object-cover">
+                </div>
+                <div class="w-40 h-28 bg-surface-container rounded-lg overflow-hidden">
+                  <img src="https://images.unsplash.com/photo-1553877522-43269d4ea984?w=320&h=224&fit=crop" alt="微信聊天截图3" data-category="商业科技" class="w-full h-full object-cover">
+                </div>
+                <div class="w-40 h-28 bg-surface-container rounded-lg overflow-hidden">
+                  <img src="https://images.unsplash.com/photo-1504868584819-f8e0b4f8dc31?w=320&h=224&fit=crop" alt="微信聊天截图4" data-category="商业科技" class="w-full h-full object-cover">
+                </div>
+              </div>
+            </div>
+            <div class="mb-5">
+              <p class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-3">AI识别结果</p>
+              <!-- 节点1：加V沟通 -->
+              <div class="mb-4">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">1</span>
+                  <span class="text-sm font-semibold text-on-surface">加V沟通</span>
+                  <span class="text-xs text-error font-medium ml-auto">3/6 合规</span>
+                </div>
+                <div class="ml-7 space-y-1.5">
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-error/5 rounded-md">
+                    <i data-lucide="x-circle" class="w-3.5 h-3.5 text-error shrink-0"></i>
+                    <span class="text-sm text-on-surface">自我介绍（姓名+公司+岗位）</span>
+                    <span class="text-xs text-error font-medium ml-auto">不合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">表明来意（说明回访目的）</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">确认患者身份信息</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-error/5 rounded-md">
+                    <i data-lucide="x-circle" class="w-3.5 h-3.5 text-error shrink-0"></i>
+                    <span class="text-sm text-on-surface">隐私保护声明</span>
+                    <span class="text-xs text-error font-medium ml-auto">不合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">发送公司资质证明</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-error/5 rounded-md">
+                    <i data-lucide="x-circle" class="w-3.5 h-3.5 text-error shrink-0"></i>
+                    <span class="text-sm text-on-surface">引导患者关注公众号</span>
+                    <span class="text-xs text-error font-medium ml-auto">不合规</span>
+                  </div>
+                </div>
+              </div>
+              <!-- 节点2：用药关怀 -->
+              <div class="mb-4">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">2</span>
+                  <span class="text-sm font-semibold text-on-surface">用药关怀</span>
+                  <span class="text-xs text-on-surface-variant ml-auto">4/5 合规</span>
+                </div>
+                <div class="ml-7 space-y-1.5">
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">确认当前用药方案</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">询问用药依从性</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">不良反应提醒</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-error/5 rounded-md">
+                    <i data-lucide="x-circle" class="w-3.5 h-3.5 text-error shrink-0"></i>
+                    <span class="text-sm text-on-surface">用药时间提醒</span>
+                    <span class="text-xs text-error font-medium ml-auto">不合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">饮食搭配建议</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                </div>
+              </div>
+              <!-- 节点3：复诊邀约 -->
+              <div class="mb-4">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">3</span>
+                  <span class="text-sm font-semibold text-on-surface">复诊邀约</span>
+                  <span class="text-xs text-on-surface-variant ml-auto">3/4 合规</span>
+                </div>
+                <div class="ml-7 space-y-1.5">
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">说明复诊必要性</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">提供可选时间段</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-error/5 rounded-md">
+                    <i data-lucide="x-circle" class="w-3.5 h-3.5 text-error shrink-0"></i>
+                    <span class="text-sm text-on-surface">预约确认及提醒</span>
+                    <span class="text-xs text-error font-medium ml-auto">不合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">告知就诊准备事项</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                </div>
+              </div>
+              <!-- 节点4：续方确认 -->
+              <div class="mb-4">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">4</span>
+                  <span class="text-sm font-semibold text-on-surface">续方确认</span>
+                  <span class="text-xs text-on-surface-variant ml-auto">2/4 合规</span>
+                </div>
+                <div class="ml-7 space-y-1.5">
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">确认续方意愿</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-error/5 rounded-md">
+                    <i data-lucide="x-circle" class="w-3.5 h-3.5 text-error shrink-0"></i>
+                    <span class="text-sm text-on-surface">核对用药信息</span>
+                    <span class="text-xs text-error font-medium ml-auto">不合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">费用说明及支付引导</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-error/5 rounded-md">
+                    <i data-lucide="x-circle" class="w-3.5 h-3.5 text-error shrink-0"></i>
+                    <span class="text-sm text-on-surface">配送信息确认</span>
+                    <span class="text-xs text-error font-medium ml-auto">不合规</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 justify-end">
+              <button id="btn-wechat-reject-2" class="bg-surface-container text-on-surface px-4 py-2 rounded-md text-sm font-medium hover:bg-surface-container-high active:scale-[0.98] transition-all">驳回</button>
+              <button id="btn-wechat-confirm-2" class="bg-primary text-on-primary px-5 py-2 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all inline-flex items-center gap-2">
+                <i data-lucide="check" class="w-3.5 h-3.5"></i>确认合规
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 列表-微信3 -->
+        <div class="wechat-item bg-surface rounded-lg shadow-card" data-id="3">
+          <div class="px-5 py-4 cursor-pointer hover:bg-surface-container/50 transition-colors flex items-center gap-5" id="wechat-header-3">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-3 mb-2">
+                <span class="text-sm font-semibold text-on-surface">张宇飞</span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已确认</span>
+                <span class="text-xs text-on-surface-variant ml-auto">2024-12-16 11:00</span>
+              </div>
+              <div class="flex items-center gap-3 text-xs text-on-surface-variant">
+                <span>截图 5 张</span>
+                <span>·</span>
+                <span>合规 18/19 动作</span>
+                <span>·</span>
+                <span class="text-warning font-medium">不合规 1 项</span>
+              </div>
+            </div>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-on-surface-variant shrink-0 transition-transform wechat-chevron"></i>
+          </div>
+          <div class="wechat-detail hidden border-t border-outline-variant/15 px-5 py-5 bg-surface-container-lowest/50">
+            <div class="mb-6">
+              <p class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-3">上传截图</p>
+              <div class="flex gap-3">
+                <div class="w-40 h-28 bg-surface-container rounded-lg overflow-hidden">
+                  <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=320&h=224&fit=crop" alt="微信聊天截图1" data-category="商业科技" class="w-full h-full object-cover">
+                </div>
+                <div class="w-40 h-28 bg-surface-container rounded-lg overflow-hidden">
+                  <img src="https://images.unsplash.com/photo-1553028826-f4804a6dba3b?w=320&h=224&fit=crop" alt="微信聊天截图2" data-category="商业科技" class="w-full h-full object-cover">
+                </div>
+                <div class="w-40 h-28 bg-surface-container rounded-lg overflow-hidden">
+                  <img src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=320&h=224&fit=crop" alt="微信聊天截图3" data-category="商业科技" class="w-full h-full object-cover">
+                </div>
+              </div>
+            </div>
+            <div class="mb-5">
+              <p class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-3">AI识别结果</p>
+              <!-- 节点1：加V沟通 -->
+              <div class="mb-4">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">1</span>
+                  <span class="text-sm font-semibold text-on-surface">加V沟通</span>
+                  <span class="text-xs text-success font-medium ml-auto">6/6 合规</span>
+                </div>
+                <div class="ml-7 space-y-1.5">
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">自我介绍（姓名+公司+岗位）</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">表明来意（说明回访目的）</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">确认患者身份信息</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">隐私保护声明</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">发送公司资质证明</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">引导患者关注公众号</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                </div>
+              </div>
+              <!-- 节点2：用药关怀 -->
+              <div class="mb-4">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">2</span>
+                  <span class="text-sm font-semibold text-on-surface">用药关怀</span>
+                  <span class="text-xs text-on-surface-variant ml-auto">4/5 合规</span>
+                </div>
+                <div class="ml-7 space-y-1.5">
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">确认当前用药方案</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">询问用药依从性</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">不良反应提醒</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-error/5 rounded-md">
+                    <i data-lucide="x-circle" class="w-3.5 h-3.5 text-error shrink-0"></i>
+                    <span class="text-sm text-on-surface">用药时间提醒</span>
+                    <span class="text-xs text-error font-medium ml-auto">不合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">饮食搭配建议</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                </div>
+              </div>
+              <!-- 节点3：复诊邀约 -->
+              <div class="mb-4">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">3</span>
+                  <span class="text-sm font-semibold text-on-surface">复诊邀约</span>
+                  <span class="text-xs text-success font-medium ml-auto">4/4 合规</span>
+                </div>
+                <div class="ml-7 space-y-1.5">
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">说明复诊必要性</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">提供可选时间段</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">预约确认及提醒</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">告知就诊准备事项</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                </div>
+              </div>
+              <!-- 节点4：续方确认 -->
+              <div class="mb-4">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">4</span>
+                  <span class="text-sm font-semibold text-on-surface">续方确认</span>
+                  <span class="text-xs text-success font-medium ml-auto">4/4 合规</span>
+                </div>
+                <div class="ml-7 space-y-1.5">
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">确认续方意愿</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">核对用药信息</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">费用说明及支付引导</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">配送信息确认</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- 已确认状态 -->
+            <div class="flex items-center gap-2 justify-end">
+              <span class="inline-flex items-center gap-1.5 text-sm text-success font-medium">
+                <i data-lucide="check-circle-2" class="w-4 h-4"></i>已确认合规
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 列表-微信4 -->
+        <div class="wechat-item bg-surface rounded-lg shadow-card" data-id="4">
+          <div class="px-5 py-4 cursor-pointer hover:bg-surface-container/50 transition-colors flex items-center gap-5" id="wechat-header-4">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-3 mb-2">
+                <span class="text-sm font-semibold text-on-surface">陈思远</span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-error/15 text-error">待确认</span>
+                <span class="text-xs text-on-surface-variant ml-auto">2024-12-16 09:10</span>
+              </div>
+              <div class="flex items-center gap-3 text-xs text-on-surface-variant">
+                <span>截图 2 张</span>
+                <span>·</span>
+                <span>合规 13/19 动作</span>
+                <span>·</span>
+                <span class="text-error font-medium">不合规 6 项</span>
+              </div>
+            </div>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-on-surface-variant shrink-0 transition-transform wechat-chevron"></i>
+          </div>
+          <div class="wechat-detail hidden border-t border-outline-variant/15 px-5 py-5 bg-surface-container-lowest/50">
+            <div class="mb-6">
+              <p class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-3">上传截图</p>
+              <div class="flex gap-3">
+                <div class="w-40 h-28 bg-surface-container rounded-lg overflow-hidden">
+                  <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=320&h=224&fit=crop" alt="微信聊天截图1" data-category="商业科技" class="w-full h-full object-cover">
+                </div>
+                <div class="w-40 h-28 bg-surface-container rounded-lg overflow-hidden">
+                  <img src="https://images.unsplash.com/photo-1557804506-669a67965ba0?w=320&h=224&fit=crop" alt="微信聊天截图2" data-category="商业科技" class="w-full h-full object-cover">
+                </div>
+              </div>
+            </div>
+            <div class="mb-5">
+              <p class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-3">AI识别结果</p>
+              <!-- 节点1：加V沟通 -->
+              <div class="mb-4">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">1</span>
+                  <span class="text-sm font-semibold text-on-surface">加V沟通</span>
+                  <span class="text-xs text-on-surface-variant ml-auto">4/6 合规</span>
+                </div>
+                <div class="ml-7 space-y-1.5">
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">自我介绍（姓名+公司+岗位）</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">表明来意（说明回访目的）</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-error/5 rounded-md">
+                    <i data-lucide="x-circle" class="w-3.5 h-3.5 text-error shrink-0"></i>
+                    <span class="text-sm text-on-surface">确认患者身份信息</span>
+                    <span class="text-xs text-error font-medium ml-auto">不合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">隐私保护声明</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-error/5 rounded-md">
+                    <i data-lucide="x-circle" class="w-3.5 h-3.5 text-error shrink-0"></i>
+                    <span class="text-sm text-on-surface">发送公司资质证明</span>
+                    <span class="text-xs text-error font-medium ml-auto">不合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">引导患者关注公众号</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                </div>
+              </div>
+              <!-- 节点2：用药关怀 -->
+              <div class="mb-4">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">2</span>
+                  <span class="text-sm font-semibold text-on-surface">用药关怀</span>
+                  <span class="text-xs text-on-surface-variant ml-auto">3/5 合规</span>
+                </div>
+                <div class="ml-7 space-y-1.5">
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">确认当前用药方案</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-error/5 rounded-md">
+                    <i data-lucide="x-circle" class="w-3.5 h-3.5 text-error shrink-0"></i>
+                    <span class="text-sm text-on-surface">询问用药依从性</span>
+                    <span class="text-xs text-error font-medium ml-auto">不合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">不良反应提醒</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">用药时间提醒</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-error/5 rounded-md">
+                    <i data-lucide="x-circle" class="w-3.5 h-3.5 text-error shrink-0"></i>
+                    <span class="text-sm text-on-surface">饮食搭配建议</span>
+                    <span class="text-xs text-error font-medium ml-auto">不合规</span>
+                  </div>
+                </div>
+              </div>
+              <!-- 节点3：复诊邀约 -->
+              <div class="mb-4">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">3</span>
+                  <span class="text-sm font-semibold text-on-surface">复诊邀约</span>
+                  <span class="text-xs text-success font-medium ml-auto">4/4 合规</span>
+                </div>
+                <div class="ml-7 space-y-1.5">
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">说明复诊必要性</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">提供可选时间段</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">预约确认及提醒</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">告知就诊准备事项</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                </div>
+              </div>
+              <!-- 节点4：续方确认 -->
+              <div class="mb-4">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">4</span>
+                  <span class="text-sm font-semibold text-on-surface">续方确认</span>
+                  <span class="text-xs text-on-surface-variant ml-auto">2/4 合规</span>
+                </div>
+                <div class="ml-7 space-y-1.5">
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">确认续方意愿</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-error/5 rounded-md">
+                    <i data-lucide="x-circle" class="w-3.5 h-3.5 text-error shrink-0"></i>
+                    <span class="text-sm text-on-surface">核对用药信息</span>
+                    <span class="text-xs text-error font-medium ml-auto">不合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-surface-container rounded-md">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-success shrink-0"></i>
+                    <span class="text-sm text-on-surface">费用说明及支付引导</span>
+                    <span class="text-xs text-success font-medium ml-auto">合规</span>
+                  </div>
+                  <div class="flex items-center gap-2 py-1.5 px-3 bg-error/5 rounded-md">
+                    <i data-lucide="x-circle" class="w-3.5 h-3.5 text-error shrink-0"></i>
+                    <span class="text-sm text-on-surface">配送信息确认</span>
+                    <span class="text-xs text-error font-medium ml-auto">不合规</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 justify-end">
+              <button id="btn-wechat-reject-4" class="bg-surface-container text-on-surface px-4 py-2 rounded-md text-sm font-medium hover:bg-surface-container-high active:scale-[0.98] transition-all">驳回</button>
+              <button id="btn-wechat-confirm-4" class="bg-primary text-on-primary px-5 py-2 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all inline-flex items-center gap-2">
+                <i data-lucide="check" class="w-3.5 h-3.5"></i>确认合规
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- @main-content:end -->
+  </main>
+  </div>
+
+  <!-- Toast通知 -->
+  <div id="toast" class="fixed top-20 right-6 z-50 hidden">
+    <div class="bg-surface rounded-lg shadow-float px-4 py-3 flex items-center gap-3 border border-outline-variant/15">
+      <i data-lucide="check-circle-2" class="w-5 h-5 text-success"></i>
+      <span id="toast-message" class="text-sm font-medium text-on-surface">操作成功</span>
+    </div>
+  </div>
+
+  <script>
+  $(function() {
+
+    // === Tab 切换 ===
+    $('#tab-recording').on('click', function() {
+      $(this).addClass('bg-primary text-on-primary').removeClass('text-on-surface-variant');
+      $('#tab-wechat').removeClass('bg-primary text-on-primary').addClass('text-on-surface-variant');
+      $('#panel-recording').removeClass('hidden');
+      $('#panel-wechat').addClass('hidden');
+    });
+
+    $('#tab-wechat').on('click', function() {
+      $(this).addClass('bg-primary text-on-primary').removeClass('text-on-surface-variant');
+      $('#tab-recording').removeClass('bg-primary text-on-primary').addClass('text-on-surface-variant');
+      $('#panel-wechat').removeClass('hidden');
+      $('#panel-recording').addClass('hidden');
+    });
+
+    // === 录音质检列表展开/收起 ===
+    $('#recording-list').on('click', '.recording-item > div:first-child', function() {
+      var $item = $(this).closest('.recording-item');
+      var $detail = $item.find('.recording-detail');
+      var $chevron = $item.find('.recording-chevron');
+
+      if ($detail.hasClass('hidden')) {
+        // 收起其他
+        $('.recording-detail').addClass('hidden');
+        $('.recording-chevron').css('transform', '');
+        // 展开当前
+        $detail.removeClass('hidden');
+        $chevron.css('transform', 'rotate(180deg)');
+      } else {
+        $detail.addClass('hidden');
+        $chevron.css('transform', '');
+      }
+    });
+
+    // === 微信质检列表展开/收起 ===
+    $('#wechat-list').on('click', '.wechat-item > div:first-child', function() {
+      var $item = $(this).closest('.wechat-item');
+      var $detail = $item.find('.wechat-detail');
+      var $chevron = $item.find('.wechat-chevron');
+
+      if ($detail.hasClass('hidden')) {
+        $('.wechat-detail').addClass('hidden');
+        $('.wechat-chevron').css('transform', '');
+        $detail.removeClass('hidden');
+        $chevron.css('transform', 'rotate(180deg)');
+      } else {
+        $detail.addClass('hidden');
+        $chevron.css('transform', '');
+      }
+    });
+
+    // === 滑块值实时更新 ===
+    $('#recording-list').on('input', 'input[type="range"]', function() {
+      var val = $(this).val();
+      $(this).closest('div').prev().find('.slider-value').text(val);
+    });
+
+    // === 录音播放按钮 ===
+    // 播放按钮 - 点击后应实现音频播放：
+    // 1. 切换 play/pause 图标
+    // 2. 进度条开始动画模拟前进
+    // 3. 时间显示实时更新
+    // 4. 播放结束后自动重置为初始状态
+    $('#recording-list').on('click', '[id^="btn-play-"]', function() {
+      var $btn = $(this);
+      var $icon = $btn.find('i');
+      var $progress = $btn.closest('.flex').find('.bg-primary.rounded-full');
+      var $currentTime = $btn.closest('.flex').find('.text-xs:first');
+
+      if ($icon.attr('data-lucide') === 'play') {
+        // 模拟播放
+        $icon.attr('data-lucide', 'pause');
+        lucide.createIcons();
+        $progress.css('width', '35%');
+        $currentTime.text('02:58');
+      } else {
+        $icon.attr('data-lucide', 'play');
+        lucide.createIcons();
+        $progress.css('width', '35%');
+        $currentTime.text('02:58');
+      }
+    });
+
+    // === 提交评分 ===
+    $('[id^="btn-submit-"]').on('click', function() {
+      var id = $(this).attr('id').replace('btn-submit-', '');
+      showToast('评分提交成功');
+      // 更新状态标签为已评
+      var $item = $(this).closest('.recording-item');
+      $item.find('.bg-error\\/15').first().replaceWith(
+        '<span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已评</span>'
+      );
+      // 收起面板
+      $item.find('.recording-detail').addClass('hidden');
+      $item.find('.recording-chevron').css('transform', '');
+    });
+
+    // === 取消按钮 ===
+    $('[id^="btn-cancel-"]').on('click', function(e) {
+      e.stopPropagation();
+      var $item = $(this).closest('.recording-item');
+      $item.find('.recording-detail').addClass('hidden');
+      $item.find('.recording-chevron').css('transform', '');
+    });
+
+    // === 微信质检确认合规 ===
+    $('[id^="btn-wechat-confirm-"]').on('click', function() {
+      var $item = $(this).closest('.wechat-item');
+      showToast('已确认合规');
+      // 更新状态
+      $item.find('.bg-error\\/15').first().replaceWith(
+        '<span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已确认</span>'
+      );
+      // 替换按钮区域为已确认标识
+      $(this).closest('.flex').html(
+        '<span class="inline-flex items-center gap-1.5 text-sm text-success font-medium"><i data-lucide="check-circle-2" class="w-4 h-4"></i>已确认合规</span>'
+      );
+      lucide.createIcons();
+      // 收起
+      $item.find('.wechat-detail').addClass('hidden');
+      $item.find('.wechat-chevron').css('transform', '');
+    });
+
+    // === 微信质检驳回 ===
+    $('[id^="btn-wechat-reject-"]').on('click', function() {
+      var $item = $(this).closest('.wechat-item');
+      showToast('已驳回，需重新提交');
+      $item.find('.wechat-detail').addClass('hidden');
+      $item.find('.wechat-chevron').css('transform', '');
+    });
+
+    // === Toast 通知 ===
+    function showToast(message) {
+      $('#toast-message').text(message);
+      $('#toast').removeClass('hidden');
+      setTimeout(function() {
+        $('#toast').addClass('hidden');
+      }, 2500);
+    }
+
+  });
+  </script>
+
+  <script>lucide.createIcons();</script>
+</body>
+
+</html>
