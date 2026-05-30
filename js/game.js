@@ -727,6 +727,31 @@ class Game {
 
     // 在世界中生成小机器人
     this.animalManager.spawnAnimals();
+
+    // 直接进入游戏，跳过开始界面
+    this.isRunning = true;
+    this.ui.startScreen.style.display = 'none';
+
+    // 相机从立墙预览切到玩家第一人称
+    this.camera.position.set(this._spawnX, this._spawnY + this.player.eyeHeight, this._spawnZ);
+    const lookDir = new THREE.Vector3(
+      -Math.sin(this.player.yaw) * Math.cos(this.player.pitch),
+      Math.sin(this.player.pitch),
+      -Math.cos(this.player.yaw) * Math.cos(this.player.pitch)
+    );
+    this.camera.lookAt(
+      this.camera.position.x + lookDir.x,
+      this.camera.position.y + lookDir.y,
+      this.camera.position.z + lookDir.z
+    );
+
+    // 桌面端自动请求指针锁定
+    if (!this.isMobile) {
+      this.canvas.requestPointerLock();
+    }
+
+    // 显示游戏HUD
+    this._showGameUI(true);
   }
 
   /** 创建区块 */
@@ -987,48 +1012,13 @@ class Game {
         }
       };
 
-      this.ui.startScreen.addEventListener('click', () => {
-        this.isRunning = true;
-        this.ui.startScreen.style.display = 'none';
-        // 相机从立墙预览切到玩家第一人称
-        this.camera.position.set(this._spawnX, this._spawnY + this.player.eyeHeight, this._spawnZ);
-        const lookDir = new THREE.Vector3(
-          -Math.sin(this.player.yaw) * Math.cos(this.player.pitch),
-          Math.sin(this.player.pitch),
-          -Math.cos(this.player.yaw) * Math.cos(this.player.pitch)
-        );
-        this.camera.lookAt(
-          this.camera.position.x + lookDir.x,
-          this.camera.position.y + lookDir.y,
-          this.camera.position.z + lookDir.z
-        );
-        requestLock();
-      });
-
+      // 暂停界面或画布点击 → 请求指针锁定
       this.ui.pauseScreen.addEventListener('click', requestLock);
       this.canvas.addEventListener('click', requestLock);
     }
 
     // ----- 移动端：直接进入游戏 + 触摸控制 -----
     if (this.isMobile) {
-      this.ui.startScreen.addEventListener('click', () => {
-        this.isRunning = true;
-        this.ui.startScreen.style.display = 'none';
-        // 相机从立墙预览切到玩家第一人称
-        this.camera.position.set(this._spawnX, this._spawnY + this.player.eyeHeight, this._spawnZ);
-        const lookDir = new THREE.Vector3(
-          -Math.sin(this.player.yaw) * Math.cos(this.player.pitch),
-          Math.sin(this.player.pitch),
-          -Math.cos(this.player.yaw) * Math.cos(this.player.pitch)
-        );
-        this.camera.lookAt(
-          this.camera.position.x + lookDir.x,
-          this.camera.position.y + lookDir.y,
-          this.camera.position.z + lookDir.z
-        );
-        this._showGameUI(true);
-      });
-
       this.ui.pauseScreen.addEventListener('click', () => {
         this.isRunning = true;
         this.ui.pauseScreen.style.display = 'none';
