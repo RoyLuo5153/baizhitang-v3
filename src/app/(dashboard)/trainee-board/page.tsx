@@ -1,576 +1,507 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
-  Users, AlertTriangle, Bell, CheckCircle2, XCircle,
-  ArrowUpRight, ArrowDownRight, Minus, Clock,
-  TrendingUp, TrendingDown, Loader2,
+  Users, AlertTriangle, Plus, Save, Loader2, ChevronDown,
 } from 'lucide-react';
 
 // === Types ===
 
-interface Member {
-  id: string;
-  name: string;
-  real_name?: string;
-  stage: number;
-  quadrant: string;
-  processQualified: boolean;
-  resultQualified: boolean;
-  processDetails: Record<string, { label: string; value: number | null; unit?: string; level: string; threshold?: { qualified: number } }>;
-  resultDetails: Record<string, { label: string; value: number | null; unit?: string; level: string; threshold?: { qualified: number } }>;
-  unqualifiedCount?: number;
-  lagDays?: number;
-  lastActive?: string;
+interface MonthlyData {
+  month_key?: string;
+  resource_count?: number;
+  reception_rate?: number;
+  avg_price?: number;
+  is_qualified?: boolean;
+  data_type?: string;
 }
 
-interface DiagnosisData {
-  summary: { total: number; A: number; B: number; C: number; D: number };
-  members: Member[];
+interface TraineeProfile {
+  user_id: string;
+  real_name: string;
+  username: string;
+  hire_date: string;
+  expected_group_date: string;
+  group_date: string | null;
+  department: string;
+  position: string;
+  phone: string;
+  mentor_name: string | null;
+  profile_status: string;
+  remark: string;
+  passed_levels: number;
+  completed_tasks: number;
+  open_weaknesses: number;
+  monthly_data: Record<string, MonthlyData>;
+  user_status: string;
+  created_at: string;
 }
 
-// === Quadrant Configuration ===
-
-const QUADRANT_CONFIG: Record<string, {
-  label: string;
-  desc: string;
-  shortDesc: string;
-  color: string;
-  bgColor: string;
-  borderColor: string;
-  badgeClass: string;
-}> = {
-  A: {
-    label: 'A类 · 达标',
-    desc: '过程线合格 + 结果线合格',
-    shortDesc: '过程✓ 结果✓',
-    color: 'text-[#22c55e]',
-    bgColor: 'bg-[#22c55e]/5',
-    borderColor: 'border-[#22c55e]/20',
-    badgeClass: 'bg-[#22c55e]/15 text-[#22c55e]',
-  },
-  B: {
-    label: 'B类 · 机制问题',
-    desc: '过程线合格 + 结果线不合格',
-    shortDesc: '过程✓ 结果✗',
-    color: 'text-primary',
-    bgColor: 'bg-primary/5',
-    borderColor: 'border-primary/20',
-    badgeClass: 'bg-primary/15 text-primary',
-  },
-  C: {
-    label: 'C类 · 运气型',
-    desc: '过程线不合格 + 结果线合格',
-    shortDesc: '过程✗ 结果✓',
-    color: 'text-[#f59e0b]',
-    bgColor: 'bg-[#f59e0b]/5',
-    borderColor: 'border-[#f59e0b]/20',
-    badgeClass: 'bg-[#f59e0b]/15 text-[#f59e0b]',
-  },
-  D: {
-    label: 'D类 · 能力不足',
-    desc: '过程线不合格 + 结果线不合格',
-    shortDesc: '过程✗ 结果✗',
-    color: 'text-destructive',
-    bgColor: 'bg-destructive/5',
-    borderColor: 'border-destructive/20',
-    badgeClass: 'bg-destructive/15 text-destructive',
-  },
+const STATUS_MAP: Record<string, { label: string; color: string }> = {
+  training: { label: '在培训', color: '#2978B5' },
+  assigned: { label: '下组', color: '#22c55e' },
+  rotating: { label: '轮组', color: '#F59E0B' },
+  resigned: { label: '离职', color: '#94a3b8' },
 };
 
-type FilterType = 'all' | 'A' | 'B' | 'C' | 'D';
-
-// === Mock Data ===
-
-function getMockData(): DiagnosisData {
-  const members: Member[] = [
-    {
-      id: '1', name: '张美丽', real_name: '张美丽', stage: 2, quadrant: 'A',
-      processQualified: true, resultQualified: true,
-      unqualifiedCount: 0, lagDays: 0, lastActive: '2025-02-18',
-      processDetails: {
-        learning: { label: '闯关进度', value: 18, unit: '关', level: 'good', threshold: { qualified: 7 } },
-        qcScore: { label: '质检平均分', value: 88, unit: '分', level: 'good', threshold: { qualified: 70 } },
-      },
-      resultDetails: {
-        wechatAddRate: { label: '加V率', value: 95, unit: '%', level: 'qualified', threshold: { qualified: 90 } },
-        consultationRate: { label: '面诊率', value: 92, unit: '%', level: 'qualified', threshold: { qualified: 85 } },
-      },
-    },
-    {
-      id: '2', name: '陈思远', real_name: '陈思远', stage: 2, quadrant: 'A',
-      processQualified: true, resultQualified: true,
-      unqualifiedCount: 0, lagDays: 0, lastActive: '2025-02-17',
-      processDetails: {
-        learning: { label: '闯关进度', value: 21, unit: '关', level: 'excellent', threshold: { qualified: 7 } },
-        qcScore: { label: '质检平均分', value: 82, unit: '分', level: 'good', threshold: { qualified: 70 } },
-      },
-      resultDetails: {
-        wechatAddRate: { label: '加V率', value: 93, unit: '%', level: 'qualified', threshold: { qualified: 90 } },
-        consultationRate: { label: '面诊率', value: 96, unit: '%', level: 'qualified', threshold: { qualified: 85 } },
-      },
-    },
-    {
-      id: '3', name: '刘小芳', real_name: '刘小芳', stage: 1, quadrant: 'B',
-      processQualified: true, resultQualified: false,
-      unqualifiedCount: 2, lagDays: 3, lastActive: '2025-02-15',
-      processDetails: {
-        learning: { label: '闯关进度', value: 9, unit: '关', level: 'good', threshold: { qualified: 7 } },
-        qcScore: { label: '质检平均分', value: 76, unit: '分', level: 'good', threshold: { qualified: 70 } },
-      },
-      resultDetails: {
-        wechatAddRate: { label: '加V率', value: 82, unit: '%', level: 'unqualified', threshold: { qualified: 90 } },
-        consultationRate: { label: '面诊率', value: 78, unit: '%', level: 'unqualified', threshold: { qualified: 85 } },
-      },
-    },
-    {
-      id: '4', name: '周建国', real_name: '周建国', stage: 2, quadrant: 'B',
-      processQualified: true, resultQualified: false,
-      unqualifiedCount: 1, lagDays: 5, lastActive: '2025-02-14',
-      processDetails: {
-        learning: { label: '闯关进度', value: 12, unit: '关', level: 'good', threshold: { qualified: 7 } },
-        qcScore: { label: '质检平均分', value: 71, unit: '分', level: 'qualified', threshold: { qualified: 70 } },
-      },
-      resultDetails: {
-        wechatAddRate: { label: '加V率', value: 87, unit: '%', level: 'unqualified', threshold: { qualified: 90 } },
-        consultationRate: { label: '面诊率', value: 88, unit: '%', level: 'qualified', threshold: { qualified: 85 } },
-      },
-    },
-    {
-      id: '5', name: '吴晓丽', real_name: '吴晓丽', stage: 1, quadrant: 'B',
-      processQualified: true, resultQualified: false,
-      unqualifiedCount: 1, lagDays: 2, lastActive: '2025-02-16',
-      processDetails: {
-        learning: { label: '闯关进度', value: 8, unit: '关', level: 'good', threshold: { qualified: 7 } },
-        qcScore: { label: '质检平均分', value: 74, unit: '分', level: 'qualified', threshold: { qualified: 70 } },
-      },
-      resultDetails: {
-        wechatAddRate: { label: '加V率', value: 91, unit: '%', level: 'qualified', threshold: { qualified: 90 } },
-        consultationRate: { label: '面诊率', value: 80, unit: '%', level: 'unqualified', threshold: { qualified: 85 } },
-      },
-    },
-    {
-      id: '6', name: '李婷婷', real_name: '李婷婷', stage: 1, quadrant: 'C',
-      processQualified: false, resultQualified: true,
-      unqualifiedCount: 2, lagDays: 4, lastActive: '2025-02-13',
-      processDetails: {
-        learning: { label: '闯关进度', value: 4, unit: '关', level: 'unqualified', threshold: { qualified: 7 } },
-        qcScore: { label: '质检平均分', value: 65, unit: '分', level: 'unqualified', threshold: { qualified: 70 } },
-      },
-      resultDetails: {
-        wechatAddRate: { label: '加V率', value: 92, unit: '%', level: 'qualified', threshold: { qualified: 90 } },
-        consultationRate: { label: '面诊率', value: 90, unit: '%', level: 'qualified', threshold: { qualified: 85 } },
-      },
-    },
-    {
-      id: '7', name: '王小明', real_name: '王小明', stage: 1, quadrant: 'C',
-      processQualified: false, resultQualified: true,
-      unqualifiedCount: 1, lagDays: 6, lastActive: '2025-02-12',
-      processDetails: {
-        learning: { label: '闯关进度', value: 5, unit: '关', level: 'unqualified', threshold: { qualified: 7 } },
-        qcScore: { label: '质检平均分', value: 73, unit: '分', level: 'qualified', threshold: { qualified: 70 } },
-      },
-      resultDetails: {
-        wechatAddRate: { label: '加V率', value: 94, unit: '%', level: 'qualified', threshold: { qualified: 90 } },
-        consultationRate: { label: '面诊率', value: 89, unit: '%', level: 'qualified', threshold: { qualified: 85 } },
-      },
-    },
-    {
-      id: '8', name: '赵大力', real_name: '赵大力', stage: 1, quadrant: 'D',
-      processQualified: false, resultQualified: false,
-      unqualifiedCount: 4, lagDays: 9, lastActive: '2025-02-10',
-      processDetails: {
-        learning: { label: '闯关进度', value: 2, unit: '关', level: 'unqualified', threshold: { qualified: 7 } },
-        qcScore: { label: '质检平均分', value: 55, unit: '分', level: 'unqualified', threshold: { qualified: 70 } },
-      },
-      resultDetails: {
-        wechatAddRate: { label: '加V率', value: 78, unit: '%', level: 'unqualified', threshold: { qualified: 90 } },
-        consultationRate: { label: '面诊率', value: 70, unit: '%', level: 'unqualified', threshold: { qualified: 85 } },
-      },
-    },
-  ];
-
-  return {
-    summary: { total: 8, A: 2, B: 3, C: 2, D: 1 },
-    members,
-  };
-}
-
-// === Helper Functions ===
-
-function countUnqualified(details: Record<string, any>): number {
-  return Object.values(details).filter(v => v.level === 'unqualified').length;
-}
-
-function getStageLabel(stage: number): string {
-  const labels: Record<number, string> = { 1: '阶段一', 2: '阶段二', 3: '阶段三' };
-  return labels[stage] || `阶段${stage}`;
-}
-
-function getProcessBadge(qualified: boolean) {
-  return qualified
-    ? { label: '合格', class: 'bg-[#22c55e]/15 text-[#22c55e]', icon: CheckCircle2 }
-    : { label: '不合格', class: 'bg-destructive/15 text-destructive', icon: XCircle };
-}
-
-function getResultBadge(qualified: boolean) {
-  return qualified
-    ? { label: '合格', class: 'bg-[#22c55e]/15 text-[#22c55e]', icon: CheckCircle2 }
-    : { label: '不合格', class: 'bg-destructive/15 text-destructive', icon: XCircle };
-}
-
-function getLagDaysClass(lagDays: number): string {
-  if (lagDays >= 7) return 'text-destructive font-semibold';
-  if (lagDays >= 3) return 'text-[#f59e0b] font-medium';
-  if (lagDays > 0) return 'text-muted-foreground';
-  return 'text-[#22c55e]';
-}
-
-function formatLastActive(dateStr: string): string {
-  try {
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    if (diffDays === 0) return '今天';
-    if (diffDays === 1) return '昨天';
-    if (diffDays < 7) return `${diffDays}天前`;
-    return dateStr;
-  } catch {
-    return dateStr;
-  }
-}
-
-// === Main Component ===
+const MONTH_HEADERS = [
+  { label: '入职当月', cols: 5, color: '#2978B5', subHeaders: ['月份', '资源数', '接诊率', '均价', '达标'] },
+  { label: '入职第二月', cols: 5, color: '#2978B5', subHeaders: ['月份', '资源数', '接诊率', '均价', '达标'] },
+  { label: '下组第1月', cols: 4, color: '#22c55e', subHeaders: ['月份', '资源数', '接诊率', '诊单价'] },
+  { label: '下组第2月', cols: 4, color: '#22c55e', subHeaders: ['月份', '资源数', '接诊率', '诊单价'] },
+  { label: '下组第3月', cols: 4, color: '#22c55e', subHeaders: ['月份', '资源数', '接诊率', '诊单价'] },
+];
 
 export default function TraineeBoardPage() {
-  const [data, setData] = useState<DiagnosisData | null>(null);
+  const [profiles, setProfiles] = useState<TraineeProfile[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeFilter, setActiveFilter] = useState<FilterType>('all');
+  const [saving, setSaving] = useState<string | null>(null);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newTrainee, setNewTrainee] = useState({ username: '', real_name: '', password: 'bt2026', department: '', position: '' });
 
-  useEffect(() => {
-    fetchDiagnosis();
-  }, []);
-
-  async function fetchDiagnosis() {
+  // Fetch profiles
+  const fetchProfiles = useCallback(async () => {
     try {
-      const res = await fetch('/api/diagnosis?view=team');
+      const res = await fetch('/api/trainee-profiles');
       if (res.ok) {
         const json = await res.json();
-        // Enrich members with computed fields
-        const enrichedMembers = (json.members || []).map((m: Member) => ({
-          ...m,
-          name: m.real_name || m.name,
-          unqualifiedCount: countUnqualified(m.processDetails) + countUnqualified(m.resultDetails),
-          lagDays: m.lagDays ?? Math.floor(Math.random() * 10),
-          lastActive: m.lastActive ?? '2025-02-15',
-        }));
-        setData({ summary: json.summary, members: enrichedMembers });
-      } else {
-        setData(getMockData());
+        setProfiles(json.profiles || []);
       }
     } catch {
-      setData(getMockData());
+      // ignore
     }
     setLoading(false);
-  }
+  }, []);
 
-  // Loading state
+  useEffect(() => { fetchProfiles(); }, [fetchProfiles]);
+
+  // Update a profile field
+  const updateProfile = async (userId: string, field: string, value: string) => {
+    setSaving(userId + field);
+    try {
+      await fetch('/api/trainee-profiles', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, field, value }),
+      });
+      setProfiles(prev => prev.map(p => p.user_id === userId ? { ...p, [field === 'status' ? 'profile_status' : field]: value } : p));
+    } catch { /* ignore */ }
+    setSaving(null);
+  };
+
+  // Update monthly data
+  const updateMonthly = async (userId: string, monthIndex: number, field: string, value: string | number | boolean) => {
+    try {
+      await fetch('/api/trainee-monthly', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, monthIndex, field, value }),
+      });
+    } catch { /* ignore */ }
+  };
+
+  // Add new trainee
+  const addTrainee = async () => {
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...newTrainee, role: 'trainee' }),
+      });
+      if (res.ok) {
+        setShowAddModal(false);
+        setNewTrainee({ username: '', real_name: '', password: 'bt2026', department: '', position: '' });
+        fetchProfiles();
+      }
+    } catch { /* ignore */ }
+  };
+
+  // Format date to YYYY-MM-DD
+  const formatDate = (dateStr: string | null | undefined): string => {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return '';
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
+
+  // Generate month options for select
+  const getMonthOptions = () => {
+    const options: { value: string; label: string }[] = [];
+    const now = new Date();
+    for (let i = -6; i <= 12; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+      const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
+      const label = `${d.getFullYear()}年${d.getMonth() + 1}月1日`;
+      options.push({ value: val, label });
+    }
+    return options;
+  };
+
+  // Render date select with YYYY-MM-DD precision
+  const renderDateSelect = (field: string, userId: string, currentValue: string, placeholder: string) => {
+    const dateVal = formatDate(currentValue);
+    const options = getMonthOptions();
+    return (
+      <select
+        className="w-full text-xs px-1 py-1 border border-border rounded bg-background text-foreground"
+        value={dateVal}
+        onChange={(e) => updateProfile(userId, field, e.target.value)}
+      >
+        <option value="">{placeholder}</option>
+        {options.map(o => (
+          <option key={o.value} value={o.value}>{o.label}</option>
+        ))}
+      </select>
+    );
+  };
+
+  // Render a date input with YYYY-MM-DD precision (free input)
+  const renderDateInput = (field: string, userId: string, currentValue: string, placeholder: string) => {
+    const dateVal = formatDate(currentValue);
+    return (
+      <input
+        type="date"
+        className="w-full text-xs px-1 py-1 border border-border rounded bg-background text-foreground"
+        value={dateVal}
+        placeholder={placeholder}
+        onChange={(e) => updateProfile(userId, field, e.target.value)}
+      />
+    );
+  };
+
+  // Render monthly data cell
+  const renderMonthlyCell = (userId: string, monthIndex: number, md: MonthlyData | undefined, type: 'training' | 'assigned') => {
+    if (!md) md = {} as MonthlyData;
+    const isTraining = type === 'training';
+
+    return (
+      <>
+        {/* Month key */}
+        <td className="px-1 py-1 text-center border-b border-r border-border">
+          <input
+            type="text"
+            className="w-full text-xs text-center px-0.5 py-0.5 border border-transparent hover:border-border rounded bg-transparent"
+            defaultValue={md.month_key || ''}
+            placeholder="2026-05"
+            onBlur={(e) => updateMonthly(userId, monthIndex, 'month_key', e.target.value)}
+          />
+        </td>
+        {/* Resource count */}
+        <td className="px-1 py-1 text-center border-b border-r border-border">
+          <input
+            type="number"
+            className="w-full text-xs text-center px-0.5 py-0.5 border border-transparent hover:border-border rounded bg-transparent"
+            defaultValue={md.resource_count || ''}
+            placeholder="0"
+            onBlur={(e) => updateMonthly(userId, monthIndex, 'resource_count', Number(e.target.value) || 0)}
+          />
+        </td>
+        {/* Reception rate */}
+        <td className="px-1 py-1 text-center border-b border-r border-border">
+          <input
+            type="number"
+            step="0.1"
+            className="w-full text-xs text-center px-0.5 py-0.5 border border-transparent hover:border-border rounded bg-transparent"
+            defaultValue={md.reception_rate || ''}
+            placeholder="0"
+            onBlur={(e) => updateMonthly(userId, monthIndex, 'reception_rate', Number(e.target.value) || 0)}
+          />
+        </td>
+        {/* Avg price / clinic unit price */}
+        <td className="px-1 py-1 text-center border-b border-r border-border">
+          <input
+            type="number"
+            step="0.01"
+            className="w-full text-xs text-center px-0.5 py-0.5 border border-transparent hover:border-border rounded bg-transparent"
+            defaultValue={md.avg_price || ''}
+            placeholder="0"
+            onBlur={(e) => updateMonthly(userId, monthIndex, 'avg_price', Number(e.target.value) || 0)}
+          />
+        </td>
+        {/* Qualified status (training only) */}
+        {isTraining && (
+          <td className="px-1 py-1 text-center border-b border-r border-border">
+            <span className={`inline-block w-4 h-4 rounded-full ${md.is_qualified ? 'bg-[#22c55e]' : 'bg-[#ef4444]/40'}`} />
+          </td>
+        )}
+      </>
+    );
+  };
+
+  // Stats
+  const total = profiles.length;
+  const trainingCount = profiles.filter(p => p.profile_status === 'training').length;
+  const assignedCount = profiles.filter(p => p.profile_status === 'assigned').length;
+
   if (loading) {
     return (
       <div className="p-6 space-y-6">
-        <div className="space-y-2">
-          <div className="h-7 w-32 bg-muted animate-pulse rounded" />
-          <div className="h-4 w-64 bg-muted animate-pulse rounded" />
+        <div className="flex items-center gap-2">
+          <Loader2 className="w-5 h-5 animate-spin text-primary" />
+          <span className="text-muted-foreground">加载中...</span>
         </div>
-        <div className="grid grid-cols-3 gap-4">
-          {[1, 2, 3].map(i => (
-            <div key={i} className="h-28 bg-muted animate-pulse rounded-lg" />
-          ))}
-        </div>
-        <div className="h-64 bg-muted animate-pulse rounded-lg" />
-        <div className="h-48 bg-muted animate-pulse rounded-lg" />
       </div>
     );
   }
 
-  if (!data) return null;
-
-  const { summary, members } = data;
-  const total = summary.total || 1;
-  const withUnqualified = members.filter(m => (m.unqualifiedCount || countUnqualified(m.processDetails) + countUnqualified(m.resultDetails)) > 0).length;
-  const inWarning = members.filter(m => m.quadrant === 'C' || m.quadrant === 'D').length;
-
-  const filteredMembers = activeFilter === 'all'
-    ? members
-    : members.filter(m => m.quadrant === activeFilter);
-
   return (
     <div className="p-6 space-y-6">
-      {/* === Title Area === */}
-      <div>
-        <div className="flex items-center gap-2">
-          <Users className="w-5 h-5 text-primary" />
-          <h1 className="text-xl font-bold text-foreground">新人看板</h1>
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="flex items-center gap-2">
+            <Users className="w-5 h-5 text-primary" />
+            <h1 className="text-xl font-bold text-foreground">新人档案管理</h1>
+          </div>
+          <p className="text-sm text-muted-foreground mt-1">完整业务数据追踪表格</p>
         </div>
-        <p className="text-sm text-muted-foreground mt-1">查看所有新人的进度、预警与四象限分布</p>
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="flex items-center gap-1.5 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
+        >
+          <Plus className="w-4 h-4" />
+          添加新人
+        </button>
       </div>
 
-      {/* === Stats Cards Row === */}
+      {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
-        {/* Stat: 总新人 */}
-        <div className="bg-card rounded-lg shadow-card p-5">
+        <div className="bg-card rounded-lg p-4 shadow-card">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <Users className="w-5 h-5 text-primary" />
+            <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+              <Users className="w-4 h-4 text-primary" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground">{summary.total}</p>
+              <p className="text-xl font-bold text-foreground">{total}</p>
               <p className="text-xs text-muted-foreground">总新人</p>
             </div>
           </div>
         </div>
-
-        {/* Stat: 有不合格项 */}
-        <div className="bg-card rounded-lg shadow-card p-5">
+        <div className="bg-card rounded-lg p-4 shadow-card">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#f59e0b]/10 flex items-center justify-center">
-              <AlertTriangle className="w-5 h-5 text-[#f59e0b]" />
+            <div className="w-9 h-9 rounded-full bg-[#2978B5]/10 flex items-center justify-center">
+              <AlertTriangle className="w-4 h-4 text-[#2978B5]" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-[#f59e0b]">{withUnqualified}</p>
-              <p className="text-xs text-muted-foreground">有不合格项</p>
+              <p className="text-xl font-bold text-[#2978B5]">{trainingCount}</p>
+              <p className="text-xs text-muted-foreground">在培训</p>
             </div>
           </div>
         </div>
-
-        {/* Stat: 预警中 */}
-        <div className="bg-card rounded-lg shadow-card p-5">
+        <div className="bg-card rounded-lg p-4 shadow-card">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center">
-              <Bell className="w-5 h-5 text-destructive" />
+            <div className="w-9 h-9 rounded-full bg-[#22c55e]/10 flex items-center justify-center">
+              <Users className="w-4 h-4 text-[#22c55e]" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-destructive">{inWarning}</p>
-              <p className="text-xs text-muted-foreground">预警中</p>
+              <p className="text-xl font-bold text-[#22c55e]">{assignedCount}</p>
+              <p className="text-xs text-muted-foreground">已下组</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* === Four-Quadrant Distribution Grid === */}
-      <div className="bg-card rounded-lg shadow-card p-5">
-        <h2 className="text-base font-semibold text-foreground mb-4">四象限分布</h2>
-        <div className="relative">
-          {/* Axis labels */}
-          <div className="absolute -left-1 top-1/2 -translate-y-1/2 -rotate-90 text-xs text-muted-foreground font-medium whitespace-nowrap select-none">
-            过程线
-          </div>
-          <div className="ml-5">
-            {/* Top row: A (process ✓ result ✓) | C (process ✗ result ✓) */}
-            <div className="grid grid-cols-2 gap-3 mb-3">
-              {/* A类 · 达标 — top-left: process pass + result pass */}
-              <div className={`border-2 ${QUADRANT_CONFIG.A.borderColor} ${QUADRANT_CONFIG.A.bgColor} rounded-lg p-5`}>
-                <div className="flex items-center justify-between mb-2">
-                  <span className={`text-sm font-semibold ${QUADRANT_CONFIG.A.color}`}>{QUADRANT_CONFIG.A.label}</span>
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium ${QUADRANT_CONFIG.A.badgeClass}`}>
-                    {Math.round((summary.A / total) * 100)}%
-                  </span>
-                </div>
-                <p className="text-3xl font-bold text-foreground">{summary.A}</p>
-                <p className="text-xs text-muted-foreground mt-1">{QUADRANT_CONFIG.A.desc}</p>
-              </div>
-
-              {/* C类 · 运气型 — top-right: process fail + result pass */}
-              <div className={`border-2 ${QUADRANT_CONFIG.C.borderColor} ${QUADRANT_CONFIG.C.bgColor} rounded-lg p-5`}>
-                <div className="flex items-center justify-between mb-2">
-                  <span className={`text-sm font-semibold ${QUADRANT_CONFIG.C.color}`}>{QUADRANT_CONFIG.C.label}</span>
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium ${QUADRANT_CONFIG.C.badgeClass}`}>
-                    {Math.round((summary.C / total) * 100)}%
-                  </span>
-                </div>
-                <p className="text-3xl font-bold text-foreground">{summary.C}</p>
-                <p className="text-xs text-muted-foreground mt-1">{QUADRANT_CONFIG.C.desc}</p>
-              </div>
-            </div>
-
-            {/* Bottom row: B (process ✓ result ✗) | D (process ✗ result ✗) */}
-            <div className="grid grid-cols-2 gap-3">
-              {/* B类 · 机制问题 — bottom-left: process pass + result fail */}
-              <div className={`border-2 ${QUADRANT_CONFIG.B.borderColor} ${QUADRANT_CONFIG.B.bgColor} rounded-lg p-5`}>
-                <div className="flex items-center justify-between mb-2">
-                  <span className={`text-sm font-semibold ${QUADRANT_CONFIG.B.color}`}>{QUADRANT_CONFIG.B.label}</span>
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium ${QUADRANT_CONFIG.B.badgeClass}`}>
-                    {Math.round((summary.B / total) * 100)}%
-                  </span>
-                </div>
-                <p className="text-3xl font-bold text-foreground">{summary.B}</p>
-                <p className="text-xs text-muted-foreground mt-1">{QUADRANT_CONFIG.B.desc}</p>
-              </div>
-
-              {/* D类 · 能力不足 — bottom-right: process fail + result fail */}
-              <div className={`border-2 ${QUADRANT_CONFIG.D.borderColor} ${QUADRANT_CONFIG.D.bgColor} rounded-lg p-5`}>
-                <div className="flex items-center justify-between mb-2">
-                  <span className={`text-sm font-semibold ${QUADRANT_CONFIG.D.color}`}>{QUADRANT_CONFIG.D.label}</span>
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium ${QUADRANT_CONFIG.D.badgeClass}`}>
-                    {Math.round((summary.D / total) * 100)}%
-                  </span>
-                </div>
-                <p className="text-3xl font-bold text-foreground">{summary.D}</p>
-                <p className="text-xs text-muted-foreground mt-1">{QUADRANT_CONFIG.D.desc}</p>
-              </div>
-            </div>
-
-            {/* Horizontal axis label */}
-            <div className="flex justify-center mt-3">
-              <span className="text-xs text-muted-foreground font-medium">结果线 →</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* === Trainee List Table with Quadrant Filter === */}
+      {/* Main Table */}
       <div className="bg-card rounded-lg shadow-card overflow-hidden">
-        {/* Table header with filter buttons */}
-        <div className="px-5 py-4 border-b border-border flex items-center justify-between">
-          <h2 className="text-base font-semibold text-foreground">新人列表</h2>
-          <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
-            {([
-              { key: 'all' as FilterType, label: '全部' },
-              { key: 'A' as FilterType, label: 'A类' },
-              { key: 'B' as FilterType, label: 'B类' },
-              { key: 'C' as FilterType, label: 'C类' },
-              { key: 'D' as FilterType, label: 'D类' },
-            ]).map(filter => (
+        <div className="overflow-x-auto" style={{ maxHeight: 'calc(100vh - 320px)' }}>
+          <table className="w-full text-xs border-collapse" style={{ minWidth: '2400px' }}>
+            <thead className="sticky top-0 z-10">
+              {/* Row 1: Main headers */}
+              <tr className="bg-[#102A43] text-white">
+                <th rowSpan={3} className="px-2 py-2 text-left border-r border-white/20 font-medium" style={{ minWidth: '80px' }}>名字</th>
+                <th rowSpan={3} className="px-2 py-2 text-center border-r border-white/20 font-medium" style={{ minWidth: '120px' }}>入职日期</th>
+                <th rowSpan={3} className="px-2 py-2 text-center border-r border-white/20 font-medium" style={{ minWidth: '130px' }}>预计下组时间</th>
+                <th rowSpan={3} className="px-2 py-2 text-center border-r border-white/20 font-medium" style={{ minWidth: '80px' }}>部门</th>
+                <th rowSpan={3} className="px-2 py-2 text-center border-r border-white/20 font-medium" style={{ minWidth: '80px' }}>职位</th>
+                <th rowSpan={3} className="px-2 py-2 text-center border-r border-white/20 font-medium" style={{ minWidth: '80px' }}>带教老师</th>
+                {/* Training period: 10 cols */}
+                <th colSpan={10} className="px-2 py-2 text-center border-r border-white/20 font-medium" style={{ background: '#2978B5' }}>新人培训周期</th>
+                <th rowSpan={3} className="px-2 py-2 text-center border-r border-white/20 font-medium" style={{ minWidth: '120px' }}>入组日期</th>
+                <th rowSpan={3} className="px-2 py-2 text-center border-r border-white/20 font-medium" style={{ minWidth: '80px' }}>状态</th>
+                <th rowSpan={3} className="px-2 py-2 text-center border-r border-white/20 font-medium" style={{ minWidth: '120px' }}>备注</th>
+                {/* Post-group: 12 cols */}
+                <th colSpan={12} className="px-2 py-2 text-center font-medium" style={{ background: '#22c55e' }}>下组后达标情况</th>
+              </tr>
+              {/* Row 2: Sub-headers */}
+              <tr className="bg-[#102A43] text-white">
+                {MONTH_HEADERS.slice(0, 2).map((h, i) => (
+                  <th key={i} colSpan={h.cols} className="px-2 py-1.5 text-center border-r border-white/20 font-normal" style={{ background: h.color + 'cc' }}>{h.label}</th>
+                ))}
+                {MONTH_HEADERS.slice(2).map((h, i) => (
+                  <th key={i} colSpan={h.cols} className="px-2 py-1.5 text-center border-r border-white/20 font-normal" style={{ background: h.color + 'cc' }}>{h.label}</th>
+                ))}
+              </tr>
+              {/* Row 3: Detail headers */}
+              <tr className="bg-[#102A43] text-white/90">
+                {MONTH_HEADERS.map((h, gi) =>
+                  h.subHeaders.map((sh, si) => (
+                    <th key={`${gi}-${si}`} className="px-1 py-1 text-center border-r border-white/20 font-normal text-[10px]" style={{ minWidth: '55px' }}>{sh}</th>
+                  ))
+                )}
+              </tr>
+            </thead>
+
+            <tbody>
+              {profiles.length === 0 ? (
+                <tr>
+                  <td colSpan={31} className="text-center py-12 text-muted-foreground">
+                    暂无新人数据，点击上方「添加新人」创建
+                  </td>
+                </tr>
+              ) : (
+                profiles.map((p, idx) => (
+                  <tr key={p.user_id} className={idx % 2 === 0 ? 'bg-background' : 'bg-muted/30'}>
+                    {/* Name */}
+                    <td className="px-2 py-1.5 border-b border-r border-border font-medium text-foreground">
+                      {p.real_name || p.username}
+                    </td>
+                    {/* Hire date - date picker YYYY-MM-DD */}
+                    <td className="px-1 py-1 border-b border-r border-border">
+                      {renderDateInput('hire_date', p.user_id, p.hire_date, '入职日期')}
+                    </td>
+                    {/* Expected group date - date picker YYYY-MM-DD */}
+                    <td className="px-1 py-1 border-b border-r border-border">
+                      {renderDateInput('expected_group_date', p.user_id, p.expected_group_date, '预计下组')}
+                    </td>
+                    {/* Department */}
+                    <td className="px-1 py-1 border-b border-r border-border text-center text-muted-foreground">
+                      {p.department || '-'}
+                    </td>
+                    {/* Position */}
+                    <td className="px-1 py-1 border-b border-r border-border text-center text-muted-foreground">
+                      {p.position || '-'}
+                    </td>
+                    {/* Mentor */}
+                    <td className="px-1 py-1 border-b border-r border-border text-center">
+                      {p.mentor_name || <span className="text-muted-foreground/50">未分配</span>}
+                    </td>
+                    {/* Training month 1 */}
+                    {renderMonthlyCell(p.user_id, 1, p.monthly_data['1'], 'training')}
+                    {/* Training month 2 */}
+                    {renderMonthlyCell(p.user_id, 2, p.monthly_data['2'], 'training')}
+                    {/* Group date - date picker YYYY-MM-DD */}
+                    <td className="px-1 py-1 border-b border-r border-border">
+                      {renderDateInput('group_date', p.user_id, p.group_date ?? '', '入组日期')}
+                    </td>
+                    {/* Status */}
+                    <td className="px-1 py-1 border-b border-r border-border">
+                      <select
+                        className="w-full text-xs px-1 py-1 border border-border rounded bg-background font-medium"
+                        style={{ color: STATUS_MAP[p.profile_status]?.color || '#667085' }}
+                        value={p.profile_status}
+                        onChange={(e) => updateProfile(p.user_id, 'status', e.target.value)}
+                      >
+                        {Object.entries(STATUS_MAP).map(([val, s]) => (
+                          <option key={val} value={val}>{s.label}</option>
+                        ))}
+                      </select>
+                    </td>
+                    {/* Remark */}
+                    <td className="px-1 py-1 border-b border-r border-border">
+                      <input
+                        type="text"
+                        className="w-full text-xs px-1 py-1 border border-transparent hover:border-border rounded bg-transparent"
+                        defaultValue={p.remark || ''}
+                        placeholder="备注"
+                        onBlur={(e) => updateProfile(p.user_id, 'remark', e.target.value)}
+                      />
+                    </td>
+                    {/* Post-group months 3-5 */}
+                    {renderMonthlyCell(p.user_id, 3, p.monthly_data['3'], 'assigned')}
+                    {renderMonthlyCell(p.user_id, 4, p.monthly_data['4'], 'assigned')}
+                    {renderMonthlyCell(p.user_id, 5, p.monthly_data['5'], 'assigned')}
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Saving indicator */}
+      {saving && (
+        <div className="fixed bottom-4 right-4 bg-card shadow-lg rounded-lg px-4 py-2 flex items-center gap-2 border border-border">
+          <Loader2 className="w-4 h-4 animate-spin text-primary" />
+          <span className="text-sm text-muted-foreground">保存中...</span>
+        </div>
+      )}
+
+      {/* Add Trainee Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setShowAddModal(false)}>
+          <div className="bg-card rounded-lg shadow-xl p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+            <h2 className="text-lg font-bold text-foreground mb-4">添加新人</h2>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs text-muted-foreground">用户名</label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm mt-1"
+                  value={newTrainee.username}
+                  onChange={(e) => setNewTrainee(prev => ({ ...prev, username: e.target.value }))}
+                  placeholder="请输入用户名"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground">真实姓名</label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm mt-1"
+                  value={newTrainee.real_name}
+                  onChange={(e) => setNewTrainee(prev => ({ ...prev, real_name: e.target.value }))}
+                  placeholder="请输入真实姓名"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground">密码</label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm mt-1"
+                  value={newTrainee.password}
+                  onChange={(e) => setNewTrainee(prev => ({ ...prev, password: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground">部门</label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm mt-1"
+                  value={newTrainee.department}
+                  onChange={(e) => setNewTrainee(prev => ({ ...prev, department: e.target.value }))}
+                  placeholder="如：培训部"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground">职位</label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm mt-1"
+                  value={newTrainee.position}
+                  onChange={(e) => setNewTrainee(prev => ({ ...prev, position: e.target.value }))}
+                  placeholder="如：健康顾问"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 mt-6">
               <button
-                key={filter.key}
-                id={`filter-${filter.key}`}
-                onClick={() => setActiveFilter(filter.key)}
-                className={`px-3.5 py-1.5 rounded-md text-xs font-medium transition-all ${
-                  activeFilter === filter.key
-                    ? 'bg-card text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
+                onClick={() => setShowAddModal(false)}
+                className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground"
               >
-                {filter.label}
+                取消
               </button>
-            ))}
+              <button
+                onClick={addTrainee}
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90"
+              >
+                确认添加
+              </button>
+            </div>
           </div>
         </div>
-
-        {/* Table */}
-        {filteredMembers.length === 0 ? (
-          <div className="py-12 text-center">
-            <Users className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
-            <p className="text-sm text-muted-foreground">
-              {activeFilter === 'all' ? '暂无新人数据' : `${QUADRANT_CONFIG[activeFilter]?.label || activeFilter}暂无成员`}
-            </p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-muted">
-                  <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">
-                    姓名
-                  </th>
-                  <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">
-                    阶段
-                  </th>
-                  <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">
-                    过程线状态
-                  </th>
-                  <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">
-                    结果线状态
-                  </th>
-                  <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">
-                    四象限
-                  </th>
-                  <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">
-                    不合格项
-                  </th>
-                  <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">
-                    滞后天数
-                  </th>
-                  <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">
-                    最近活跃
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/50">
-                {filteredMembers.map(member => {
-                  const processBadge = getProcessBadge(member.processQualified);
-                  const resultBadge = getResultBadge(member.resultQualified);
-                  const qConfig = QUADRANT_CONFIG[member.quadrant];
-                  const uqCount = member.unqualifiedCount ?? (countUnqualified(member.processDetails) + countUnqualified(member.resultDetails));
-                  const lag = member.lagDays ?? 0;
-                  const ProcessIcon = processBadge.icon;
-                  const ResultIcon = resultBadge.icon;
-
-                  return (
-                    <tr key={member.id} className="hover:bg-muted/50 transition-colors">
-                      {/* 姓名 */}
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-medium shrink-0">
-                            {(member.real_name || member.name).charAt(0)}
-                          </div>
-                          <span className="text-sm font-medium text-foreground">{member.real_name || member.name}</span>
-                        </div>
-                      </td>
-                      {/* 阶段 */}
-                      <td className="px-5 py-4">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-sm text-xs font-medium bg-muted text-muted-foreground">
-                          {getStageLabel(member.stage)}
-                        </span>
-                      </td>
-                      {/* 过程线状态 */}
-                      <td className="px-5 py-4 text-center">
-                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-sm text-xs font-medium ${processBadge.class}`}>
-                          <ProcessIcon className="w-3 h-3" />
-                          {processBadge.label}
-                        </span>
-                      </td>
-                      {/* 结果线状态 */}
-                      <td className="px-5 py-4 text-center">
-                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-sm text-xs font-medium ${resultBadge.class}`}>
-                          <ResultIcon className="w-3 h-3" />
-                          {resultBadge.label}
-                        </span>
-                      </td>
-                      {/* 四象限 */}
-                      <td className="px-5 py-4 text-center">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-sm text-xs font-semibold ${qConfig.badgeClass}`}>
-                          {member.quadrant}类
-                        </span>
-                      </td>
-                      {/* 不合格项 */}
-                      <td className="px-5 py-4 text-center">
-                        <span className={`text-sm font-medium ${uqCount > 0 ? 'text-destructive' : 'text-[#22c55e]'}`}>
-                          {uqCount > 0 ? uqCount : '—'}
-                        </span>
-                      </td>
-                      {/* 滞后天数 */}
-                      <td className="px-5 py-4 text-center">
-                        <span className={`text-sm ${getLagDaysClass(lag)}`}>
-                          {lag > 0 ? `${lag}天` : '—'}
-                        </span>
-                      </td>
-                      {/* 最近活跃 */}
-                      <td className="px-5 py-4 text-right">
-                        <span className="text-sm text-muted-foreground inline-flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5" />
-                          {member.lastActive ? formatLastActive(member.lastActive) : '—'}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+      )}
     </div>
   );
 }
