@@ -1,6 +1,6 @@
 'use client';
 
-import { BookOpen, FileText, Video, Download, Search, Upload, Headphones, Filter } from 'lucide-react';
+import { BookOpen, FileText, Video, Download, Search, Upload, Headphones, Filter, FolderTree, Tag, ChevronRight, ChevronDown } from 'lucide-react';
 import { useState, useMemo } from 'react';
 
 interface Resource {
@@ -15,6 +15,38 @@ interface Resource {
 }
 
 const CATEGORIES = ['全部', '医学基础', '话术训练', '沟通技巧', '流程规范', '质检标准', '产品知识'];
+
+// Category tree structure for the enhanced view
+interface CategoryNode {
+  name: string;
+  count: number;
+  children?: CategoryNode[];
+  icon: typeof FileText;
+}
+
+const CATEGORY_TREE: CategoryNode[] = [
+  { name: '医学基础', count: 3, icon: BookOpen, children: [
+    { name: '糖尿病基础', count: 2, icon: FileText },
+    { name: '并发症知识', count: 1, icon: FileText },
+  ]},
+  { name: '话术训练', count: 2, icon: Headphones, children: [
+    { name: '电话话术', count: 1, icon: Headphones },
+    { name: '微信话术', count: 1, icon: Headphones },
+  ]},
+  { name: '沟通技巧', count: 2, icon: Video, children: [
+    { name: '患者沟通', count: 1, icon: Video },
+    { name: '场景模拟', count: 1, icon: Video },
+  ]},
+  { name: '流程规范', count: 2, icon: FileText, children: [
+    { name: '加V流程', count: 1, icon: FileText },
+    { name: '操作规范', count: 1, icon: FileText },
+  ]},
+  { name: '质检标准', count: 2, icon: FileText, children: [
+    { name: '评分标准', count: 1, icon: FileText },
+    { name: '合规手册', count: 1, icon: FileText },
+  ]},
+  { name: '产品知识', count: 1, icon: BookOpen },
+];
 
 const TYPE_CONFIG: Record<string, { icon: typeof FileText; label: string; color: string }> = {
   document: { icon: FileText, label: '文档', color: 'text-primary' },
@@ -39,6 +71,8 @@ export default function ResourcesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('全部');
   const [activeType, setActiveType] = useState<string>('all');
+  const [viewMode, setViewMode] = useState<'list' | 'tree'>('list');
+  const [expandedCats, setExpandedCats] = useState<Set<string>>(new Set());
 
   const filtered = useMemo(() => {
     return MOCK_RESOURCES.filter(r => {
@@ -54,6 +88,14 @@ export default function ResourcesPage() {
     MOCK_RESOURCES.forEach(r => { byType[r.type]++; });
     return byType;
   }, []);
+
+  const toggleCat = (name: string) => {
+    setExpandedCats(prev => {
+      const next = new Set(prev);
+      if (next.has(name)) next.delete(name); else next.add(name);
+      return next;
+    });
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -73,13 +115,14 @@ export default function ResourcesPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-4 gap-4">
         {[
           { type: 'document', label: '文档', count: stats.document },
           { type: 'audio', label: '音频', count: stats.audio },
           { type: 'video', label: '视频', count: stats.video },
+          { type: 'total', label: '总计', count: MOCK_RESOURCES.length },
         ].map(item => {
-          const config = TYPE_CONFIG[item.type];
+          const config = item.type === 'total' ? { icon: FolderTree, color: 'text-primary' } : TYPE_CONFIG[item.type];
           const Icon = config.icon;
           return (
             <div key={item.type} className="bg-card rounded-lg shadow-card p-4 flex items-center gap-3">
@@ -95,109 +138,214 @@ export default function ResourcesPage() {
         })}
       </div>
 
-      {/* Search + Filters */}
+      {/* Search + View Toggle + Filters */}
       <div className="space-y-3">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <input
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-            placeholder="搜索资料名称或描述..."
-          />
-        </div>
-
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1">
-            <Filter className="w-3.5 h-3.5 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground">分类：</span>
+        <div className="flex items-center gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+              placeholder="搜索资料名称或描述..."
+            />
           </div>
-          <div className="flex items-center gap-1.5 flex-wrap">
-            {CATEGORIES.map(cat => (
-              <button
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
-                className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
-                  activeCategory === cat
-                    ? 'bg-primary/10 text-primary'
-                    : 'bg-muted text-muted-foreground hover:text-foreground'
-                }`}
+          <div className="flex bg-muted rounded-lg p-1">
+            {(['list', 'tree'] as const).map(v => (
+              <button key={v} onClick={() => setViewMode(v)}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition ${viewMode === v ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
               >
-                {cat}
+                {v === 'list' ? '列表视图' : '分类树视图'}
               </button>
             ))}
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
-          <span className="text-xs text-muted-foreground">类型：</span>
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={() => setActiveType('all')}
-              className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
-                activeType === 'all' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              全部
-            </button>
-            {Object.entries(TYPE_CONFIG).map(([type, config]) => (
-              <button
-                key={type}
-                onClick={() => setActiveType(type)}
-                className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
-                  activeType === type ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                {config.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Resource List */}
-      <div className="space-y-3">
-        {filtered.length === 0 ? (
-          <div className="bg-card rounded-lg shadow-card p-12 text-center">
-            <BookOpen className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
-            <p className="text-muted-foreground">未找到匹配的资料</p>
-          </div>
-        ) : (
-          filtered.map(r => {
-            const config = TYPE_CONFIG[r.type];
-            const Icon = config.icon;
-            return (
-              <div
-                key={r.id}
-                className="bg-card rounded-lg shadow-card p-4 flex items-center gap-4 border border-border/50 hover:shadow-float transition-shadow"
-              >
-                <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                  <Icon className={`w-5 h-5 ${config.color}`} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">{r.title}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5 truncate">{r.description}</p>
-                  <div className="flex items-center gap-3 mt-1.5">
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-sm text-xs bg-muted text-muted-foreground">{r.category}</span>
-                    <span className="text-xs text-muted-foreground">{config.label}</span>
-                    <span className="text-xs text-muted-foreground">{r.size}</span>
-                    <span className="text-xs text-muted-foreground">{r.date}</span>
-                    <span className="text-xs text-muted-foreground">{r.downloadCount}次下载</span>
-                  </div>
-                </div>
-                <button className="text-primary hover:text-primary/80 transition-colors p-2" title="下载">
-                  <Download className="w-4 h-4" />
-                </button>
+        {viewMode === 'list' && (
+          <>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-1">
+                <Filter className="w-3.5 h-3.5 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">分类：</span>
               </div>
-            );
-          })
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {CATEGORIES.map(cat => (
+                  <button
+                    key={cat}
+                    onClick={() => setActiveCategory(cat)}
+                    className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                      activeCategory === cat
+                        ? 'bg-primary/10 text-primary'
+                        : 'bg-muted text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <span className="text-xs text-muted-foreground">类型：</span>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setActiveType('all')}
+                  className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                    activeType === 'all' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  全部
+                </button>
+                {Object.entries(TYPE_CONFIG).map(([type, config]) => (
+                  <button
+                    key={type}
+                    onClick={() => setActiveType(type)}
+                    className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                      activeType === type ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    {config.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
         )}
       </div>
 
-      {/* Bottom info */}
-      <div className="text-center text-xs text-muted-foreground">
-        共 {filtered.length} 份资料 {searchQuery && `（搜索：${searchQuery}）`}
-      </div>
+      {/* Tree view with sidebar */}
+      {viewMode === 'tree' ? (
+        <div className="flex gap-6">
+          {/* Category tree sidebar */}
+          <div className="w-56 shrink-0 bg-card rounded-lg shadow-card p-3">
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 px-2">资料分类</h3>
+            <div className="space-y-0.5">
+              <button
+                onClick={() => setActiveCategory('全部')}
+                className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm transition ${
+                  activeCategory === '全部' ? 'bg-primary/10 text-primary font-medium' : 'text-foreground hover:bg-muted'
+                }`}
+              >
+                <FolderTree className="w-4 h-4 shrink-0" />
+                <span className="flex-1 text-left">全部</span>
+                <span className="text-xs text-muted-foreground">{MOCK_RESOURCES.length}</span>
+              </button>
+              {CATEGORY_TREE.map(cat => (
+                <div key={cat.name}>
+                  <button
+                    onClick={() => { setActiveCategory(cat.name); if (cat.children) toggleCat(cat.name); }}
+                    className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm transition ${
+                      activeCategory === cat.name ? 'bg-primary/10 text-primary font-medium' : 'text-foreground hover:bg-muted'
+                    }`}
+                  >
+                    {cat.children ? (
+                      expandedCats.has(cat.name) ? <ChevronDown className="w-3 h-3 shrink-0" /> : <ChevronRight className="w-3 h-3 shrink-0" />
+                    ) : <span className="w-3" />}
+                    <cat.icon className="w-4 h-4 shrink-0 text-muted-foreground" />
+                    <span className="flex-1 text-left">{cat.name}</span>
+                    <span className="text-xs text-muted-foreground">{cat.count}</span>
+                  </button>
+                  {cat.children && expandedCats.has(cat.name) && (
+                    <div className="ml-6 space-y-0.5 mt-0.5">
+                      {cat.children.map(child => (
+                        <button
+                          key={child.name}
+                          onClick={() => setActiveCategory(child.name)}
+                          className={`w-full flex items-center gap-2 px-2 py-1 rounded-md text-xs transition ${
+                            activeCategory === child.name ? 'bg-primary/10 text-primary font-medium' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                          }`}
+                        >
+                          <child.icon className="w-3 h-3 shrink-0" />
+                          <span className="flex-1 text-left">{child.name}</span>
+                          <span className="text-xs text-muted-foreground/60">{child.count}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Resource list */}
+          <div className="flex-1 space-y-3">
+            {filtered.length === 0 ? (
+              <div className="bg-card rounded-lg shadow-card p-12 text-center">
+                <BookOpen className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
+                <p className="text-muted-foreground">未找到匹配的资料</p>
+              </div>
+            ) : (
+              filtered.map(r => {
+                const config = TYPE_CONFIG[r.type];
+                const Icon = config.icon;
+                return (
+                  <div key={r.id} className="bg-card rounded-lg shadow-card p-4 flex items-center gap-4 border border-border/50 hover:shadow-float transition-shadow">
+                    <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0"><Icon className={`w-5 h-5 ${config.color}`} /></div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{r.title}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5 truncate">{r.description}</p>
+                      <div className="flex items-center gap-3 mt-1.5">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-sm text-xs bg-muted text-muted-foreground">{r.category}</span>
+                        <span className="text-xs text-muted-foreground">{config.label}</span>
+                        <span className="text-xs text-muted-foreground">{r.size}</span>
+                        <span className="text-xs text-muted-foreground">{r.downloadCount}次下载</span>
+                      </div>
+                    </div>
+                    <button className="text-primary hover:text-primary/80 transition-colors p-2" title="下载"><Download className="w-4 h-4" /></button>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      ) : (
+        /* List view (original) */
+        <>
+          {/* Resource List */}
+          <div className="space-y-3">
+            {filtered.length === 0 ? (
+              <div className="bg-card rounded-lg shadow-card p-12 text-center">
+                <BookOpen className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
+                <p className="text-muted-foreground">未找到匹配的资料</p>
+              </div>
+            ) : (
+              filtered.map(r => {
+                const config = TYPE_CONFIG[r.type];
+                const Icon = config.icon;
+                return (
+                  <div
+                    key={r.id}
+                    className="bg-card rounded-lg shadow-card p-4 flex items-center gap-4 border border-border/50 hover:shadow-float transition-shadow"
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                      <Icon className={`w-5 h-5 ${config.color}`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{r.title}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5 truncate">{r.description}</p>
+                      <div className="flex items-center gap-3 mt-1.5">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-sm text-xs bg-muted text-muted-foreground">{r.category}</span>
+                        <span className="text-xs text-muted-foreground">{config.label}</span>
+                        <span className="text-xs text-muted-foreground">{r.size}</span>
+                        <span className="text-xs text-muted-foreground">{r.date}</span>
+                        <span className="text-xs text-muted-foreground">{r.downloadCount}次下载</span>
+                      </div>
+                    </div>
+                    <button className="text-primary hover:text-primary/80 transition-colors p-2" title="下载">
+                      <Download className="w-4 h-4" />
+                    </button>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          {/* Bottom info */}
+          <div className="text-center text-xs text-muted-foreground">
+            共 {filtered.length} 份资料 {searchQuery && `（搜索：${searchQuery}）`}
+          </div>
+        </>
+      )}
     </div>
   );
 }

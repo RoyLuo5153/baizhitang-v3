@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   SlidersHorizontal, Users, GitBranch, Save, Loader2,
   CheckCircle2, AlertCircle, Shield, ArrowRight, AlertTriangle,
+  ClipboardCheck, Clock, UserCheck, XCircle, ChevronRight, Calendar,
 } from 'lucide-react';
 
 // === Types ===
@@ -39,7 +40,29 @@ interface StageRule {
   is_active: boolean;
 }
 
-type TabKey = 'thresholds' | 'users' | 'stages';
+type TabKey = 'thresholds' | 'users' | 'stages' | 'stage-applications';
+
+interface StageApplication {
+  id: number;
+  trainee_id: string;
+  trainee_name: string;
+  current_stage: number;
+  target_stage: number;
+  status: string;
+  reason: string;
+  evidence: string;
+  reviewer_id: string | null;
+  reviewer_name: string | null;
+  review_comment: string | null;
+  applied_at: string;
+  reviewed_at: string | null;
+}
+
+const MOCK_APPLICATIONS: StageApplication[] = [
+  { id: 1, trainee_id: '1', trainee_name: '张小红', current_stage: 1, target_stage: 2, status: 'pending', reason: '已通过7关闯关学习', evidence: '闯关成绩全部合格，双轨诊断连续2周B类以上', reviewer_id: null, reviewer_name: null, review_comment: null, applied_at: '2025-06-06T10:00:00Z', reviewed_at: null },
+  { id: 2, trainee_id: '2', trainee_name: '李大伟', current_stage: 1, target_stage: 2, status: 'approved', reason: '闯关7关全部通过', evidence: '闯关成绩全部合格，质检4维度均达良好以上', reviewer_id: '9', reviewer_name: '郑管理', review_comment: '表现优秀，同意升级', applied_at: '2025-06-01T09:00:00Z', reviewed_at: '2025-06-02T14:00:00Z' },
+  { id: 3, trainee_id: '3', trainee_name: '王美玲', current_stage: 2, target_stage: 3, status: 'rejected', reason: '连续4周A类，申请阶段三', evidence: '连续4周双轨诊断A类', reviewer_id: '9', reviewer_name: '郑管理', review_comment: '连续4周A类要求未完全满足（第3周为B类），请继续努力', applied_at: '2025-05-28T11:00:00Z', reviewed_at: '2025-05-29T16:00:00Z' },
+];
 
 // === Mock Data Fallbacks ===
 
@@ -160,6 +183,7 @@ export default function SettingsPage() {
 
   const [stageRules, setStageRules] = useState<StageRule[]>([]);
   const [rulesLoading, setRulesLoading] = useState(true);
+  const [stageApplications, setStageApplications] = useState<StageApplication[]>([]);
 
   // --- Fetch thresholds ---
   useEffect(() => {
@@ -213,6 +237,22 @@ export default function SettingsPage() {
       }
       setStageRules(MOCK_STAGE_RULES);
       setRulesLoading(false);
+    }
+    load();
+  }, []);
+
+  // --- Fetch stage applications ---
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await fetch('/api/stage-applications');
+        if (res.ok) {
+          const json = await res.json();
+          setStageApplications(json.applications || []);
+          return;
+        }
+      } catch {}
+      setStageApplications(MOCK_APPLICATIONS);
     }
     load();
   }, []);
@@ -277,6 +317,7 @@ export default function SettingsPage() {
     { key: 'thresholds', label: '阈值配置', icon: SlidersHorizontal },
     { key: 'users', label: '用户管理', icon: Users },
     { key: 'stages', label: '阶段规则', icon: GitBranch },
+    { key: 'stage-applications', label: '升级审批', icon: ClipboardCheck },
   ];
 
   // === Loading skeleton ===
@@ -737,6 +778,98 @@ export default function SettingsPage() {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* =========== Tab: 升级审批 =========== */}
+          {activeTab === 'stage-applications' && (
+            <div className="space-y-6">
+              {/* Stats */}
+              <div className="grid grid-cols-3 gap-4">
+                {[
+                  { label: '待审批', value: stageApplications.filter(a => a.status === 'pending').length, icon: Clock, color: 'text-[#f59e0b]', bg: 'bg-[#f59e0b]/10' },
+                  { label: '已通过', value: stageApplications.filter(a => a.status === 'approved').length, icon: UserCheck, color: 'text-[#22c55e]', bg: 'bg-[#22c55e]/10' },
+                  { label: '已驳回', value: stageApplications.filter(a => a.status === 'rejected').length, icon: XCircle, color: 'text-destructive', bg: 'bg-destructive/10' },
+                ].map((s, i) => (
+                  <div key={i} className="bg-card rounded-lg shadow-card p-4 flex items-center gap-3">
+                    <div className={`w-9 h-9 rounded-lg ${s.bg} flex items-center justify-center`}><s.icon className={`w-4 h-4 ${s.color}`} /></div>
+                    <div><div className="text-xl font-bold text-foreground">{s.value}</div><div className="text-xs text-muted-foreground">{s.label}</div></div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Application list */}
+              <div className="bg-card rounded-lg shadow-card overflow-hidden">
+                <div className="px-5 py-4 border-b border-border flex items-center gap-2">
+                  <ClipboardCheck className="w-4 h-4 text-primary" />
+                  <h2 className="text-base font-semibold text-foreground">阶段升级申请</h2>
+                  <span className="text-xs text-muted-foreground ml-1">{stageApplications.length} 条申请</span>
+                </div>
+                {stageApplications.length === 0 ? (
+                  <div className="py-12 text-center">
+                    <ClipboardCheck className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
+                    <p className="text-sm text-muted-foreground">暂无升级申请</p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-border/50">
+                    {stageApplications.map(app => {
+                      const statusConfig: Record<string, { label: string; color: string; bg: string }> = {
+                        pending: { label: '待审批', color: 'text-[#f59e0b]', bg: 'bg-[#f59e0b]/10' },
+                        approved: { label: '已通过', color: 'text-[#22c55e]', bg: 'bg-[#22c55e]/10' },
+                        rejected: { label: '已驳回', color: 'text-destructive', bg: 'bg-destructive/10' },
+                      };
+                      const sc = statusConfig[app.status] || statusConfig.pending;
+                      return (
+                        <div key={app.id} className="p-5 hover:bg-muted/20 transition">
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-bold shrink-0">
+                                {app.trainee_name.charAt(0)}
+                              </div>
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <h4 className="text-sm font-semibold text-foreground">{app.trainee_name}</h4>
+                                  <span className={`text-xs font-medium px-2 py-0.5 rounded ${sc.bg} ${sc.color}`}>{sc.label}</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                                  <span>{getStageLabel(app.current_stage)}</span>
+                                  <ArrowRight className="w-3 h-3" />
+                                  <span>{getStageLabel(app.target_stage)}</span>
+                                  <span className="flex items-center gap-1 ml-2"><Calendar className="w-3 h-3" />{new Date(app.applied_at).toLocaleDateString('zh-CN')}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="space-y-2 ml-13">
+                            <div className="p-2.5 bg-muted/50 rounded-lg">
+                              <span className="text-xs text-muted-foreground">申请理由：</span>
+                              <span className="text-sm text-foreground ml-1">{app.reason}</span>
+                            </div>
+                            <div className="p-2.5 bg-primary/5 border border-primary/10 rounded-lg">
+                              <span className="text-xs text-primary">达标证据：</span>
+                              <span className="text-sm text-foreground ml-1">{app.evidence}</span>
+                            </div>
+                            {app.review_comment && (
+                              <div className={`p-2.5 rounded-lg ${app.status === 'approved' ? 'bg-[#22c55e]/5 border border-[#22c55e]/10' : 'bg-destructive/5 border border-destructive/10'}`}>
+                                <span className={`text-xs ${app.status === 'approved' ? 'text-[#22c55e]' : 'text-destructive'}`}>审批意见：</span>
+                                <span className="text-sm text-foreground ml-1">{app.review_comment}</span>
+                                {app.reviewer_name && <span className="text-xs text-muted-foreground ml-2">— {app.reviewer_name}</span>}
+                              </div>
+                            )}
+                            {app.status === 'pending' && (
+                              <div className="flex items-center gap-3 pt-2">
+                                <button className="px-4 py-1.5 bg-[#22c55e] text-white rounded-md text-sm font-medium hover:bg-[#22c55e]/90 transition">通过</button>
+                                <button className="px-4 py-1.5 bg-destructive text-destructive-foreground rounded-md text-sm font-medium hover:bg-destructive/90 transition">驳回</button>
+                                <input placeholder="审批意见" className="flex-1 border border-border rounded-md px-3 py-1.5 text-sm" />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>

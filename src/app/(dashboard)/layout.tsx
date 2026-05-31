@@ -5,7 +5,8 @@ import { useRouter, usePathname } from 'next/navigation';
 import {
   Home, BookOpen, UserCircle, Users, Activity, Zap,
   BarChart3, Eye, FileQuestion, FolderOpen, ClipboardCheck,
-  ClipboardList, TrendingUp, Settings, LogOut, HeartPulse, ChevronDown
+  ClipboardList, TrendingUp, Settings, LogOut, HeartPulse, ChevronDown, Bell,
+  Mic, GraduationCap, BookMarked
 } from 'lucide-react';
 import { useState } from 'react';
 import Link from 'next/link';
@@ -37,7 +38,12 @@ const ALL_NAV_ITEMS: NavItem[] = [
   { label: '日常考核', href: '/assessment', icon: ClipboardList, permission: 'manage_assessments', group: '教务' },
   { label: '业务数据', href: '/scrm-import', icon: TrendingUp, permission: 'input_business_data', group: '教务' },
   // 设置
+  { label: '演练任务', href: '/practice', icon: Mic, permission: ['take_quiz', 'qc_review', 'perform_qc'], group: '教务' },
+  { label: '课程管理', href: '/courses', icon: GraduationCap, permission: ['manage_users', 'view_resources'], group: '教务' },
+  { label: '知识库', href: '/knowledge-base', icon: BookMarked, permission: ['access_resources', 'view_resources'], group: '教务' },
+  // 设置
   { label: '系统设置', href: '/settings', icon: Settings, permission: 'manage_users', group: '设置' },
+  { label: '通知中心', href: '/notifications', icon: Bell, group: '设置' },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -137,6 +143,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {ALL_NAV_ITEMS.find(i => i.href === pathname)?.label || '首页'}
           </h2>
           <div className="flex items-center gap-3">
+            <a
+              href="/notifications"
+              className="relative p-1.5 rounded-lg text-muted-foreground hover:bg-muted/50 hover:text-foreground transition"
+              title="通知中心"
+            >
+              <Bell className="w-4 h-4" />
+              <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-destructive rounded-full" />
+            </a>
             <span className="text-xs text-muted-foreground">
               {user.realName} · {roleLabel[user.role] || user.role}
             </span>
