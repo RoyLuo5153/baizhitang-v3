@@ -26,6 +26,7 @@ interface TraineeProfile {
   department: string;
   position: string;
   phone: string;
+  mentor_id: string | null;
   mentor_name: string | null;
   profile_status: string;
   remark: string;
@@ -37,12 +38,34 @@ interface TraineeProfile {
   created_at: string;
 }
 
+interface MentorOption {
+  id: string;
+  real_name: string;
+}
+
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
   training: { label: '在培训', color: '#2978B5' },
   assigned: { label: '下组', color: '#22c55e' },
   rotating: { label: '轮组', color: '#F59E0B' },
   resigned: { label: '离职', color: '#94a3b8' },
 };
+
+const DEPARTMENTS = [
+  '糖尿病管理一部',
+  '糖尿病管理二部',
+  '糖尿病管理三部',
+  '慢病管理部',
+  '健康管理部',
+  '运营部',
+];
+
+const POSITIONS = [
+  '服务助理',
+  '高级顾问',
+  '健康管理师',
+  '健康顾问',
+  '慢病管理师',
+];
 
 const MONTH_HEADERS = [
   { label: '入职当月', cols: 5, color: '#2978B5', subHeaders: ['月份', '资源数', '接诊率', '均价', '达标'] },
@@ -54,10 +77,14 @@ const MONTH_HEADERS = [
 
 export default function TraineeProfilesPage() {
   const [profiles, setProfiles] = useState<TraineeProfile[]>([]);
+  const [mentors, setMentors] = useState<MentorOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [newTrainee, setNewTrainee] = useState({ username: '', real_name: '', password: 'bt2026', department: '', position: '' });
+  const [newTrainee, setNewTrainee] = useState({
+    username: '', real_name: '', password: 'bt2026',
+    department: '', position: '', mentor_id: '',
+  });
 
   const fetchProfiles = useCallback(async () => {
     try {
@@ -70,7 +97,20 @@ export default function TraineeProfilesPage() {
     setLoading(false);
   }, []);
 
-  useEffect(() => { fetchProfiles(); }, [fetchProfiles]);
+  const fetchMentors = useCallback(async () => {
+    try {
+      const res = await fetch('/api/users?roleId=2');
+      if (res.ok) {
+        const json = await res.json();
+        setMentors((json.users || []).map((u: { id: string; realName: string }) => ({
+          id: u.id,
+          real_name: u.realName,
+        })));
+      }
+    } catch { /* ignore */ }
+  }, []);
+
+  useEffect(() => { fetchProfiles(); fetchMentors(); }, [fetchProfiles, fetchMentors]);
 
   const updateProfile = async (userId: string, field: string, value: string) => {
     setSaving(userId + field);
@@ -80,7 +120,16 @@ export default function TraineeProfilesPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, field, value }),
       });
-      setProfiles(prev => prev.map(p => p.user_id === userId ? { ...p, [field === 'status' ? 'profile_status' : field]: value } : p));
+      // Update local state
+      setProfiles(prev => prev.map(p => {
+        if (p.user_id !== userId) return p;
+        if (field === 'status') return { ...p, profile_status: value };
+        if (field === 'mentor_id') {
+          const mentor = mentors.find(m => m.id === value);
+          return { ...p, mentor_id: value, mentor_name: mentor?.real_name || null };
+        }
+        return { ...p, [field]: value };
+      }));
     } catch { /* ignore */ }
     setSaving(null);
   };
@@ -100,11 +149,14 @@ export default function TraineeProfilesPage() {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...newTrainee, role: 'trainee' }),
+        body: JSON.stringify({
+          ...newTrainee,
+          role: 'trainee',
+        }),
       });
       if (res.ok) {
         setShowAddModal(false);
-        setNewTrainee({ username: '', real_name: '', password: 'bt2026', department: '', position: '' });
+        setNewTrainee({ username: '', real_name: '', password: 'bt2026', department: '', position: '', mentor_id: '' });
         fetchProfiles();
       }
     } catch { /* ignore */ }
@@ -132,6 +184,25 @@ export default function TraineeProfilesPage() {
       />
     );
   };
+
+  const renderSelect = (
+    field: string,
+    userId: string,
+    currentValue: string,
+    options: { value: string; label: string }[],
+    placeholder: string,
+  ) => (
+    <select
+      className="w-full text-xs px-1 py-1 border border-border rounded bg-background text-foreground"
+      value={currentValue || ''}
+      onChange={(e) => updateProfile(userId, field, e.target.value)}
+    >
+      <option value="">{placeholder}</option>
+      {options.map(opt => (
+        <option key={opt.value} value={opt.value}>{opt.label}</option>
+      ))}
+    </select>
+  );
 
   const renderMonthlyCell = (userId: string, monthIndex: number, md: MonthlyData | undefined, type: 'training' | 'assigned') => {
     if (!md) md = {} as MonthlyData;
@@ -267,9 +338,9 @@ export default function TraineeProfilesPage() {
                 <th rowSpan={3} className="px-2 py-2 text-left border-r border-white/20 font-medium" style={{ minWidth: '80px' }}>名字</th>
                 <th rowSpan={3} className="px-2 py-2 text-center border-r border-white/20 font-medium" style={{ minWidth: '120px' }}>入职日期</th>
                 <th rowSpan={3} className="px-2 py-2 text-center border-r border-white/20 font-medium" style={{ minWidth: '130px' }}>预计下组时间</th>
-                <th rowSpan={3} className="px-2 py-2 text-center border-r border-white/20 font-medium" style={{ minWidth: '80px' }}>部门</th>
-                <th rowSpan={3} className="px-2 py-2 text-center border-r border-white/20 font-medium" style={{ minWidth: '80px' }}>职位</th>
-                <th rowSpan={3} className="px-2 py-2 text-center border-r border-white/20 font-medium" style={{ minWidth: '80px' }}>带教老师</th>
+                <th rowSpan={3} className="px-2 py-2 text-center border-r border-white/20 font-medium" style={{ minWidth: '100px' }}>部门</th>
+                <th rowSpan={3} className="px-2 py-2 text-center border-r border-white/20 font-medium" style={{ minWidth: '100px' }}>职位</th>
+                <th rowSpan={3} className="px-2 py-2 text-center border-r border-white/20 font-medium" style={{ minWidth: '100px' }}>带教老师</th>
                 <th colSpan={10} className="px-2 py-2 text-center border-r border-white/20 font-medium" style={{ background: '#2978B5' }}>新人培训周期</th>
                 <th rowSpan={3} className="px-2 py-2 text-center border-r border-white/20 font-medium" style={{ minWidth: '120px' }}>入组日期</th>
                 <th rowSpan={3} className="px-2 py-2 text-center border-r border-white/20 font-medium" style={{ minWidth: '80px' }}>状态</th>
@@ -312,14 +383,23 @@ export default function TraineeProfilesPage() {
                     <td className="px-1 py-1 border-b border-r border-border">
                       {renderDateInput('expected_group_date', p.user_id, p.expected_group_date, '预计下组')}
                     </td>
-                    <td className="px-1 py-1 border-b border-r border-border text-center text-muted-foreground">
-                      {p.department || '-'}
+                    <td className="px-1 py-1 border-b border-r border-border">
+                      {renderSelect('department', p.user_id, p.department,
+                        DEPARTMENTS.map(d => ({ value: d, label: d })),
+                        '选择部门'
+                      )}
                     </td>
-                    <td className="px-1 py-1 border-b border-r border-border text-center text-muted-foreground">
-                      {p.position || '-'}
+                    <td className="px-1 py-1 border-b border-r border-border">
+                      {renderSelect('position', p.user_id, p.position,
+                        POSITIONS.map(p => ({ value: p, label: p })),
+                        '选择职位'
+                      )}
                     </td>
-                    <td className="px-1 py-1 border-b border-r border-border text-center">
-                      {p.mentor_name || <span className="text-muted-foreground/50">未分配</span>}
+                    <td className="px-1 py-1 border-b border-r border-border">
+                      {renderSelect('mentor_id', p.user_id, p.mentor_id || '',
+                        mentors.map(m => ({ value: m.id, label: m.real_name })),
+                        '选择导师'
+                      )}
                     </td>
                     {renderMonthlyCell(p.user_id, 1, p.monthly_data['1'], 'training')}
                     {renderMonthlyCell(p.user_id, 2, p.monthly_data['2'], 'training')}
@@ -385,11 +465,36 @@ export default function TraineeProfilesPage() {
               </div>
               <div>
                 <label className="text-xs text-muted-foreground">部门</label>
-                <input type="text" className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm mt-1" value={newTrainee.department} onChange={(e) => setNewTrainee(prev => ({ ...prev, department: e.target.value }))} placeholder="如：培训部" />
+                <select
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm mt-1"
+                  value={newTrainee.department}
+                  onChange={(e) => setNewTrainee(prev => ({ ...prev, department: e.target.value }))}
+                >
+                  <option value="">选择部门</option>
+                  {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
+                </select>
               </div>
               <div>
                 <label className="text-xs text-muted-foreground">职位</label>
-                <input type="text" className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm mt-1" value={newTrainee.position} onChange={(e) => setNewTrainee(prev => ({ ...prev, position: e.target.value }))} placeholder="如：健康顾问" />
+                <select
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm mt-1"
+                  value={newTrainee.position}
+                  onChange={(e) => setNewTrainee(prev => ({ ...prev, position: e.target.value }))}
+                >
+                  <option value="">选择职位</option>
+                  {POSITIONS.map(p => <option key={p} value={p}>{p}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground">带教老师</label>
+                <select
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm mt-1"
+                  value={newTrainee.mentor_id}
+                  onChange={(e) => setNewTrainee(prev => ({ ...prev, mentor_id: e.target.value }))}
+                >
+                  <option value="">选择导师</option>
+                  {mentors.map(m => <option key={m.id} value={m.id}>{m.real_name}</option>)}
+                </select>
               </div>
             </div>
             <div className="flex justify-end gap-3 mt-6">

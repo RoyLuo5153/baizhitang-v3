@@ -8,7 +8,7 @@ function simpleHash(password: string): string {
 
 export async function POST(request: NextRequest) {
   try {
-    const { username, real_name, password, role, roleId, department, position } = await request.json();
+    const { username, real_name, password, role, roleId, department, position, mentor_id } = await request.json();
 
     if (!username || !real_name || !password) {
       return NextResponse.json({ error: '缺少必要参数' }, { status: 400 });
@@ -52,6 +52,7 @@ export async function POST(request: NextRequest) {
         stage: 1,
         is_active: true,
         department: department || null,
+        mentor_id: mentor_id || null,
       })
       .select('id, username, real_name')
       .single();

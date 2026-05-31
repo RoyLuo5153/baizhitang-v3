@@ -1,14 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
 
-// GET /api/users — 获取用户列表
+// GET /api/users — 获取用户列表（支持?roleId=2筛选导师）
 export async function GET(req: NextRequest) {
   try {
     const supabase = getSupabaseClient();
-    const { data, error } = await supabase
+    const url = new URL(req.url);
+    const roleIdFilter = url.searchParams.get('roleId');
+
+    let query = supabase
       .from('users')
       .select('id, username, real_name, role_id, is_active, created_at')
       .order('id');
+
+    if (roleIdFilter) {
+      query = query.eq('role_id', Number(roleIdFilter));
+    }
+
+    const { data, error } = await query;
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 

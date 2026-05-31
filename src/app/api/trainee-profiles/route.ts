@@ -86,6 +86,7 @@ export async function GET() {
         department: p.department || '',
         position: p.position || '',
         phone: p.phone || '',
+        mentor_id: mentorId || null,
         mentor_name: mentorId ? (mentorMap[mentorId] || null) : null,
         profile_status: p.profile_status || 'training',
         remark: p.remark || '',
@@ -115,6 +116,20 @@ export async function PUT(request: NextRequest) {
     }
 
     const supabase = getSupabaseClient();
+
+    // Mentor is stored on users table, not trainee_profiles
+    if (field === 'mentor_id') {
+      const { error } = await supabase
+        .from('users')
+        .update({ mentor_id: value || null })
+        .eq('id', userId);
+
+      if (error) {
+        console.error('[trainee-profiles] PUT mentor update error:', error);
+        return NextResponse.json({ error: '更新导师失败' }, { status: 500 });
+      }
+      return NextResponse.json({ message: '更新成功', success: true });
+    }
 
     // Map frontend field names to DB columns
     const fieldMap: Record<string, string> = {
