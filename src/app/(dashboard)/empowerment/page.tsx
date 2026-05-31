@@ -52,10 +52,16 @@ export default function EmpowermentPage() {
 
   async function fetchData() {
     try {
-      const res = await fetch('/api/empower');
-      if (res.ok) {
-        const json = await res.json();
+      const [plansRes, execRes] = await Promise.all([
+        fetch('/api/empower'),
+        fetch('/api/empower/executions'),
+      ]);
+      if (plansRes.ok) {
+        const json = await plansRes.json();
         setPlans(json.plans || []);
+      }
+      if (execRes.ok) {
+        const json = await execRes.json();
         setExecutions(json.executions || []);
       }
     } catch {
