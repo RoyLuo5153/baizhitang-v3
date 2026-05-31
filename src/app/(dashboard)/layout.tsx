@@ -25,7 +25,8 @@ const ALL_NAV_ITEMS: NavItem[] = [
   { label: '闯关学习', href: '/learning', icon: BookOpen, permission: 'take_quiz', group: '学习' },
   { label: '成长档案', href: '/growth', icon: UserCircle, permission: 'view_own_diagnosis', group: '学习' },
   // 管理
-  { label: '新人看板', href: '/trainee-board', icon: Users, permission: ['view_trainee_board', 'view_all_trainees'], group: '管理' },
+  { label: '新人看板', href: '/trainee-board', icon: Bell, permission: ['view_trainee_board', 'view_all_trainees', 'take_quiz'], group: '管理' },
+  { label: '新人档案', href: '/trainee-profiles', icon: Users, permission: ['view_all_trainees', 'view_trainee_board'], group: '管理' },
   { label: '双轨诊断', href: '/diagnosis', icon: Activity, permission: 'view_team_diagnosis', group: '管理' },
   { label: '赋能中心', href: '/empowerment', icon: Zap, permission: ['push_plans', 'view_own_empower'], group: '管理' },
   // 数据
