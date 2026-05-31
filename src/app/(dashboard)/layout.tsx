@@ -102,7 +102,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   };
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
+    <div className="flex h-screen bg-background overflow-hidden" suppressHydrationWarning>
       {/* Sidebar */}
       <aside className={`${collapsed ? 'w-16' : 'w-56'} flex-shrink-0 bg-card border-r border-border/50 flex flex-col transition-all duration-200`}>
         {/* Logo */}
