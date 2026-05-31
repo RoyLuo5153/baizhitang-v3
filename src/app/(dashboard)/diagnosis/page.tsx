@@ -1,10 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import {
   ScanSearch, Users, AlertTriangle, CheckCircle2, TrendingDown,
   ChevronRight, Activity, Target, Route as RouteIcon, User,
+  X, ArrowRight, Zap, Clock, ListChecks, Send, BarChart3,
+  TrendingUp, TrendingDown as TrendingDownIcon,
 } from 'lucide-react';
+
+/* ------------------------------------------------------------------ */
+/*  Types                                                              */
+/* ------------------------------------------------------------------ */
 
 interface Member {
   id: string;
@@ -22,6 +28,155 @@ interface DiagnosisData {
   summary: { total: number; A: number; B: number; C: number; D: number };
   members: Member[];
 }
+
+interface AttributionEntry {
+  metricKey: string;
+  metricLabel: string;
+  currentValue: number;
+  unit: string;
+  threshold: number;
+  problemLabel: string;
+  problemDesc: string;
+  planName: string;
+  planHours: number;
+  planSteps: string[];
+}
+
+interface FunnelStage {
+  key: string;
+  label: string;
+  value: number;
+  threshold: number;
+}
+
+interface WeeklyFunnel {
+  week: string;
+  stages: FunnelStage[];
+}
+
+/* ------------------------------------------------------------------ */
+/*  Attribution Mapping (metric → problem → plan)                      */
+/* ------------------------------------------------------------------ */
+
+const PROCESS_ATTRIBUTIONS: Record<string, Omit<AttributionEntry, 'currentValue'>> = {
+  learning: {
+    metricKey: 'learning',
+    metricLabel: '闯关进度',
+    unit: '关',
+    threshold: 7,
+    problemLabel: '学习进度滞后',
+    problemDesc: '闯关进度未达标，知识储备不足，需加速基础课程学习',
+    planName: '闯关加速训练',
+    planHours: 4,
+    planSteps: ['完成薄弱关卡重做', '观看名师解题视频', '完成阶段性测试'],
+  },
+  qcScore: {
+    metricKey: 'qcScore',
+    metricLabel: '质检平均分',
+    unit: '分',
+    threshold: 70,
+    problemLabel: '质检分数偏低',
+    problemDesc: '质检评分不达标，沟通表达与流程执行需强化',
+    planName: '质检提分专项',
+    planHours: 6,
+    planSteps: ['回放低分录音找问题', '针对性话术强化训练', '模拟质检互评练习'],
+  },
+  rolePlay: {
+    metricKey: 'rolePlay',
+    metricLabel: '场景模拟评分',
+    unit: '分',
+    threshold: 75,
+    problemLabel: '场景应对薄弱',
+    problemDesc: '场景模拟评分不达标，实际应对能力需提升',
+    planName: '场景实战演练',
+    planHours: 5,
+    planSteps: ['高频场景逐一演练', '异议处理专项训练', '录音复盘与改进'],
+  },
+  attendance: {
+    metricKey: 'attendance',
+    metricLabel: '出勤率',
+    unit: '%',
+    threshold: 90,
+    problemLabel: '出勤不达标',
+    problemDesc: '出勤率偏低，影响学习连贯性和团队节奏',
+    planName: '出勤管理计划',
+    planHours: 2,
+    planSteps: ['制定个人出勤计划', '设置出勤提醒', '每周出勤回顾'],
+  },
+};
+
+const RESULT_ATTRIBUTIONS: Record<string, Omit<AttributionEntry, 'currentValue'>> = {
+  wechatAddRate: {
+    metricKey: 'wechatAddRate',
+    metricLabel: '加V率',
+    unit: '%',
+    threshold: 90,
+    problemLabel: '加V率不达标',
+    problemDesc: '话术运用不熟练，需加强场景模拟训练',
+    planName: '加V话术强化',
+    planHours: 3,
+    planSteps: ['优化开场白话术', '模拟加V场景演练', 'A/B测试不同话术'],
+  },
+  consultationRate: {
+    metricKey: 'consultationRate',
+    metricLabel: '面诊率',
+    unit: '%',
+    threshold: 85,
+    problemLabel: '面诊转化不足',
+    problemDesc: '面诊邀约技巧欠缺，需提升客户说服力',
+    planName: '面诊邀约特训',
+    planHours: 4,
+    planSteps: ['面诊价值话术训练', '邀约时机把握演练', '异议处理专项'],
+  },
+  receptionRate: {
+    metricKey: 'receptionRate',
+    metricLabel: '接诊率',
+    unit: '%',
+    threshold: 80,
+    problemLabel: '接诊率偏低',
+    problemDesc: '接诊流程把控不足，需提升专业性表现',
+    planName: '接诊流程优化',
+    planHours: 5,
+    planSteps: ['接诊SOP标准化训练', '专业形象塑造指导', '客户需求挖掘训练'],
+  },
+  signRate: {
+    metricKey: 'signRate',
+    metricLabel: '签收率',
+    unit: '%',
+    threshold: 60,
+    problemLabel: '签收转化弱',
+    problemDesc: '方案呈现和异议处理能力不足，需加强成交技巧',
+    planName: '签收转化突破',
+    planHours: 6,
+    planSteps: ['方案呈现技巧训练', '价格异议处理演练', '成交信号识别训练'],
+  },
+  medicationRate: {
+    metricKey: 'medicationRate',
+    metricLabel: '用药率',
+    unit: '%',
+    threshold: 70,
+    problemLabel: '用药率不达标',
+    problemDesc: '用药方案解读能力不足，需加强专业沟通',
+    planName: '用药沟通专项',
+    planHours: 4,
+    planSteps: ['用药方案解读训练', '患者疑虑应对话术', '用药跟踪回访规范'],
+  },
+  registrationRate: {
+    metricKey: 'registrationRate',
+    metricLabel: '挂号率',
+    unit: '%',
+    threshold: 50,
+    problemLabel: '挂号率偏低',
+    problemDesc: '复诊引导意识薄弱，需强化长期管理思维',
+    planName: '挂号引导训练',
+    planHours: 3,
+    planSteps: ['复诊价值传递话术', '挂号时机把握训练', '患者管理计划制定'],
+  },
+};
+
+/* ------------------------------------------------------------------ */
+/*  Quadrant Config                                                    */
+/* ------------------------------------------------------------------ */
 
 const QUADRANT_CONFIG: Record<string, {
   label: string; desc: string; color: string; bgColor: string; borderColor: string; icon: any;
@@ -60,6 +215,48 @@ const QUADRANT_CONFIG: Record<string, {
   },
 };
 
+/* ------------------------------------------------------------------ */
+/*  Helper: build attribution entries for a member                     */
+/* ------------------------------------------------------------------ */
+
+function buildAttributions(member: Member): AttributionEntry[] {
+  const entries: AttributionEntry[] = [];
+
+  // Process line unqualified items
+  const processEntries = Object.entries(member.processDetails);
+  for (const [key, detail] of processEntries) {
+    if (detail.level === 'unqualified') {
+      const mapping = PROCESS_ATTRIBUTIONS[key];
+      if (mapping) {
+        entries.push({
+          ...mapping,
+          currentValue: detail.value,
+        });
+      }
+    }
+  }
+
+  // Result line unqualified items
+  const resultEntries = Object.entries(member.resultDetails);
+  for (const [key, detail] of resultEntries) {
+    if (detail.level === 'unqualified') {
+      const mapping = RESULT_ATTRIBUTIONS[key];
+      if (mapping) {
+        entries.push({
+          ...mapping,
+          currentValue: detail.value,
+        });
+      }
+    }
+  }
+
+  return entries;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Main Component                                                     */
+/* ------------------------------------------------------------------ */
+
 export default function DiagnosisPage() {
   const [data, setData] = useState<DiagnosisData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -83,6 +280,12 @@ export default function DiagnosisPage() {
     }
     setLoading(false);
   }
+
+  // Build attributions for selected member
+  const attributions = useMemo(() => {
+    if (!selectedMember) return [];
+    return buildAttributions(selectedMember);
+  }, [selectedMember]);
 
   if (loading) {
     return (
@@ -133,70 +336,490 @@ export default function DiagnosisPage() {
         })}
       </div>
 
-      {/* Quadrant Grid with Members */}
-      <div className="grid grid-cols-2 gap-6">
-        {(['A', 'B', 'C', 'D'] as const).map(q => {
-          const config = QUADRANT_CONFIG[q];
-          const qMembers = members.filter(m => m.quadrant === q);
-          return (
-            <div
-              key={q}
-              className={`bg-card rounded-lg shadow-card border ${config.borderColor} overflow-hidden`}
-            >
-              <div className={`px-5 py-3 border-b border-border flex items-center gap-2 ${config.bgColor}`}>
-                <span className={`text-sm font-semibold ${config.color}`}>{config.label}</span>
-                <span className="text-xs text-muted-foreground">{qMembers.length}人</span>
+      {/* Quadrant Grid + Attribution Panel */}
+      <div className="flex gap-6">
+        {/* Quadrant Grid */}
+        <div className={`grid grid-cols-2 gap-6 ${selectedMember ? 'w-3/5' : 'w-full'} transition-all duration-300`}>
+          {(['A', 'B', 'C', 'D'] as const).map(q => {
+            const config = QUADRANT_CONFIG[q];
+            const qMembers = members.filter(m => m.quadrant === q);
+            return (
+              <div
+                key={q}
+                className={`bg-card rounded-lg shadow-card border ${config.borderColor} overflow-hidden`}
+              >
+                <div className={`px-5 py-3 border-b border-border flex items-center gap-2 ${config.bgColor}`}>
+                  <span className={`text-sm font-semibold ${config.color}`}>{config.label}</span>
+                  <span className="text-xs text-muted-foreground">{qMembers.length}人</span>
+                </div>
+                <div className="p-4 space-y-2 max-h-64 overflow-y-auto">
+                  {qMembers.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">暂无成员</p>
+                  ) : (
+                    qMembers.map(m => (
+                      <button
+                        key={m.id}
+                        onClick={() => setSelectedMember(selectedMember?.id === m.id ? null : m)}
+                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm hover:bg-muted transition-colors ${
+                          selectedMember?.id === m.id ? 'bg-primary/10 text-primary ring-1 ring-primary/30' : 'text-foreground'
+                        }`}
+                      >
+                        <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-medium shrink-0">
+                          {m.name.charAt(0)}
+                        </div>
+                        <span className="font-medium">{m.name}</span>
+                        <span className="text-xs text-muted-foreground">阶段{m.stage}</span>
+                        <ChevronRight className="w-4 h-4 ml-auto text-muted-foreground" />
+                      </button>
+                    ))
+                  )}
+                </div>
               </div>
-              <div className="p-4 space-y-2 max-h-64 overflow-y-auto">
-                {qMembers.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">暂无成员</p>
-                ) : (
-                  qMembers.map(m => (
-                    <button
-                      key={m.id}
-                      onClick={() => setSelectedMember(m)}
-                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm hover:bg-muted transition-colors ${
-                        selectedMember?.id === m.id ? 'bg-primary/10 text-primary' : 'text-foreground'
-                      }`}
-                    >
-                      <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-medium shrink-0">
-                        {m.name.charAt(0)}
-                      </div>
-                      <span className="font-medium">{m.name}</span>
-                      <span className="text-xs text-muted-foreground">阶段{m.stage}</span>
-                      <ChevronRight className="w-4 h-4 ml-auto text-muted-foreground" />
-                    </button>
-                  ))
-                )}
+            );
+          })}
+        </div>
+
+        {/* Attribution Panel */}
+        {selectedMember && (
+          <div className="w-2/5 min-w-[400px] bg-card rounded-lg shadow-card border border-border overflow-hidden flex flex-col">
+            {/* Panel Header */}
+            <div className="px-5 py-4 border-b border-border flex items-center justify-between bg-muted/30">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
+                  {selectedMember.name.charAt(0)}
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground">{selectedMember.name} · 归因面板</h3>
+                  <span className={`text-xs font-medium ${QUADRANT_CONFIG[selectedMember.quadrant].color}`}>
+                    {QUADRANT_CONFIG[selectedMember.quadrant].label}
+                  </span>
+                </div>
               </div>
+              <button
+                onClick={() => setSelectedMember(null)}
+                className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
-          );
-        })}
+
+            {/* Attribution Flow */}
+            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+              {attributions.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <CheckCircle2 className="w-10 h-10 text-[#22c55e] mb-3" />
+                  <p className="text-sm font-medium text-foreground">全部达标</p>
+                  <p className="text-xs text-muted-foreground mt-1">该成员所有指标均已达标，暂无需归因</p>
+                </div>
+              ) : (
+                attributions.map((attr, idx) => (
+                  <AttributionFlowRow key={attr.metricKey} entry={attr} index={idx} />
+                ))
+              )}
+            </div>
+
+            {/* Panel Footer */}
+            {attributions.length > 0 && (
+              <div className="px-5 py-3 border-t border-border bg-muted/30 flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">
+                  共 {attributions.length} 项待提升 · 预计 {attributions.reduce((s, a) => s + a.planHours, 0)} 小时
+                </span>
+                <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors">
+                  <Send className="w-3.5 h-3.5" />
+                  一键推送全部方案
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Selected Member Detail */}
-      {selectedMember && (
-        <div className="bg-card rounded-lg shadow-card p-5 border border-border">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
-              {selectedMember.name.charAt(0)}
-            </div>
-            <div>
-              <h3 className="text-base font-semibold text-foreground">{selectedMember.name}</h3>
-              <span className={`text-xs font-medium ${QUADRANT_CONFIG[selectedMember.quadrant].color}`}>
-                {QUADRANT_CONFIG[selectedMember.quadrant].label}
-              </span>
-            </div>
+      {/* Funnel Trend Chart */}
+      <FunnelTrendSection members={members} />
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Attribution Flow Row: 不合格项 → 问题归因 → 推荐方案               */
+/* ------------------------------------------------------------------ */
+
+function AttributionFlowRow({ entry, index }: { entry: AttributionEntry; index: number }) {
+  const [planExpanded, setPlanExpanded] = useState(false);
+
+  return (
+    <div className="rounded-lg border border-border overflow-hidden">
+      {/* Flow: Metric → Problem → Plan */}
+      <div className="flex items-stretch">
+        {/* Step 1: Unqualified Metric */}
+        <div className="flex-1 p-3.5 bg-destructive/5 border-r border-border">
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="w-2 h-2 rounded-full bg-destructive shrink-0" />
+            <span className="text-xs font-semibold text-destructive">不合格项</span>
           </div>
-          <div className="grid grid-cols-2 gap-6">
-            <ProcessLineTable details={selectedMember.processDetails} />
-            <ResultLineTable details={selectedMember.resultDetails} />
+          <p className="text-sm font-semibold text-foreground">{entry.metricLabel}</p>
+          <div className="flex items-baseline gap-1 mt-1">
+            <span className="text-lg font-bold text-destructive">{entry.currentValue}</span>
+            <span className="text-xs text-muted-foreground">{entry.unit}</span>
+            <span className="text-xs text-muted-foreground mx-1">/</span>
+            <span className="text-xs text-muted-foreground">≥{entry.threshold}{entry.unit}</span>
+          </div>
+        </div>
+
+        {/* Arrow */}
+        <div className="flex items-center px-1 bg-muted/20">
+          <ArrowRight className="w-4 h-4 text-muted-foreground" />
+        </div>
+
+        {/* Step 2: Problem Attribution */}
+        <div className="flex-1 p-3.5 bg-warning/5 border-r border-border">
+          <div className="flex items-center gap-2 mb-1.5">
+            <AlertTriangle className="w-3.5 h-3.5 text-[#f59e0b] shrink-0" />
+            <span className="text-xs font-semibold text-[#f59e0b]">问题归因</span>
+          </div>
+          <p className="text-sm font-semibold text-foreground">{entry.problemLabel}</p>
+          <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{entry.problemDesc}</p>
+        </div>
+
+        {/* Arrow */}
+        <div className="flex items-center px-1 bg-muted/20">
+          <ArrowRight className="w-4 h-4 text-muted-foreground" />
+        </div>
+
+        {/* Step 3: Recommended Plan */}
+        <div className="flex-1 p-3.5 bg-primary/5">
+          <div className="flex items-center gap-2 mb-1.5">
+            <Zap className="w-3.5 h-3.5 text-primary shrink-0" />
+            <span className="text-xs font-semibold text-primary">推荐方案</span>
+          </div>
+          <p className="text-sm font-semibold text-foreground">{entry.planName}</p>
+          <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
+            <Clock className="w-3 h-3" />
+            <span>{entry.planHours}小时</span>
+          </div>
+          <button
+            onClick={() => setPlanExpanded(!planExpanded)}
+            className="mt-2 inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors"
+          >
+            <Send className="w-3 h-3" />
+            推送方案
+          </button>
+        </div>
+      </div>
+
+      {/* Expanded Plan Steps */}
+      {planExpanded && (
+        <div className="px-4 py-3 bg-muted/20 border-t border-border">
+          <div className="flex items-center gap-2 mb-2">
+            <ListChecks className="w-3.5 h-3.5 text-primary" />
+            <span className="text-xs font-semibold text-foreground">方案步骤</span>
+          </div>
+          <div className="space-y-1.5">
+            {entry.planSteps.map((step, i) => (
+              <div key={i} className="flex items-start gap-2">
+                <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center shrink-0 mt-0.5 font-medium">
+                  {i + 1}
+                </span>
+                <span className="text-xs text-foreground leading-relaxed">{step}</span>
+              </div>
+            ))}
           </div>
         </div>
       )}
     </div>
   );
 }
+
+/* ------------------------------------------------------------------ */
+/*  Funnel Trend Section                                               */
+/* ------------------------------------------------------------------ */
+
+const FUNNEL_STAGES = [
+  { key: 'wechatAddRate', label: '加V率', threshold: 90 },
+  { key: 'consultationRate', label: '面诊率', threshold: 85 },
+  { key: 'receptionRate', label: '接诊率', threshold: 80 },
+  { key: 'signRate', label: '签收率', threshold: 60 },
+  { key: 'medicationRate', label: '用药率', threshold: 70 },
+  { key: 'registrationRate', label: '挂号率', threshold: 50 },
+];
+
+function FunnelTrendSection({ members }: { members: Member[] }) {
+  // Compute team average for each funnel stage from member resultDetails
+  const currentAverages = useMemo(() => {
+    return FUNNEL_STAGES.map(stage => {
+      const values: number[] = [];
+      members.forEach(m => {
+        const detail = m.resultDetails[stage.key];
+        if (detail && detail.value !== null && detail.value !== undefined) {
+          values.push(detail.value);
+        }
+      });
+      const avg = values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : 0;
+      return {
+        ...stage,
+        value: Math.round(avg * 10) / 10,
+        aboveThreshold: avg >= stage.threshold,
+      };
+    });
+  }, [members]);
+
+  // Weekly trend data (mock last 4 weeks)
+  const weeklyData: WeeklyFunnel[] = [
+    {
+      week: 'W1 (12/02)',
+      stages: [
+        { key: 'wechatAddRate', label: '加V率', value: 82, threshold: 90 },
+        { key: 'consultationRate', label: '面诊率', value: 78, threshold: 85 },
+        { key: 'receptionRate', label: '接诊率', value: 72, threshold: 80 },
+        { key: 'signRate', label: '签收率', value: 48, threshold: 60 },
+        { key: 'medicationRate', label: '用药率', value: 62, threshold: 70 },
+        { key: 'registrationRate', label: '挂号率', value: 38, threshold: 50 },
+      ],
+    },
+    {
+      week: 'W2 (12/09)',
+      stages: [
+        { key: 'wechatAddRate', label: '加V率', value: 85, threshold: 90 },
+        { key: 'consultationRate', label: '面诊率', value: 80, threshold: 85 },
+        { key: 'receptionRate', label: '接诊率', value: 74, threshold: 80 },
+        { key: 'signRate', label: '签收率', value: 52, threshold: 60 },
+        { key: 'medicationRate', label: '用药率', value: 65, threshold: 70 },
+        { key: 'registrationRate', label: '挂号率', value: 42, threshold: 50 },
+      ],
+    },
+    {
+      week: 'W3 (12/16)',
+      stages: [
+        { key: 'wechatAddRate', label: '加V率', value: 87, threshold: 90 },
+        { key: 'consultationRate', label: '面诊率', value: 83, threshold: 85 },
+        { key: 'receptionRate', label: '接诊率', value: 76, threshold: 80 },
+        { key: 'signRate', label: '签收率', value: 55, threshold: 60 },
+        { key: 'medicationRate', label: '用药率', value: 68, threshold: 70 },
+        { key: 'registrationRate', label: '挂号率', value: 45, threshold: 50 },
+      ],
+    },
+    {
+      week: 'W4 (12/23)',
+      stages: currentAverages.map(s => ({
+        key: s.key,
+        label: s.label,
+        value: s.value,
+        threshold: s.threshold,
+      })),
+    },
+  ];
+
+  return (
+    <div className="bg-card rounded-lg shadow-card border border-border overflow-hidden">
+      {/* Section Header */}
+      <div className="px-5 py-4 border-b border-border flex items-center gap-3">
+        <BarChart3 className="w-4 h-4 text-primary" />
+        <h2 className="text-sm font-semibold text-foreground">漏斗趋势图</h2>
+        <span className="text-xs text-muted-foreground">团队结果线各环节均值 · 近4周趋势</span>
+      </div>
+
+      <div className="p-5 space-y-6">
+        {/* Current Week Funnel Bars */}
+        <div>
+          <div className="flex items-center gap-2 mb-4">
+            <Activity className="w-3.5 h-3.5 text-primary" />
+            <span className="text-xs font-semibold text-foreground">本周团队均值</span>
+          </div>
+          <div className="flex items-end gap-3 h-48">
+            {currentAverages.map((stage, i) => {
+              const barHeight = Math.max(stage.value * 1.6, 8); // scale to fit
+              const isAbove = stage.aboveThreshold;
+              return (
+                <div key={stage.key} className="flex-1 flex flex-col items-center gap-2">
+                  {/* Bar container */}
+                  <div className="relative w-full flex justify-center" style={{ height: 180 }}>
+                    {/* Threshold line */}
+                    <div
+                      className="absolute left-1 right-1 border-t border-dashed border-muted-foreground/40"
+                      style={{ bottom: stage.threshold * 1.6 }}
+                    >
+                      <span className="absolute -top-4 right-0 text-[10px] text-muted-foreground whitespace-nowrap">
+                        {stage.threshold}%
+                      </span>
+                    </div>
+                    {/* SVG Bar */}
+                    <svg
+                      width="100%"
+                      height="100%"
+                      viewBox={`0 0 48 180`}
+                      preserveAspectRatio="xMidYMax meet"
+                      className="overflow-visible"
+                    >
+                      {/* Bar */}
+                      <rect
+                        x="8"
+                        y={180 - barHeight}
+                        width="32"
+                        height={barHeight}
+                        rx="4"
+                        fill={isAbove ? '#22c55e' : '#ef4444'}
+                        opacity="0.85"
+                      />
+                      {/* Value label */}
+                      <text
+                        x="24"
+                        y={180 - barHeight - 6}
+                        textAnchor="middle"
+                        className="text-[11px] font-semibold"
+                        fill={isAbove ? '#22c55e' : '#ef4444'}
+                      >
+                        {stage.value}%
+                      </text>
+                    </svg>
+                  </div>
+                  {/* Stage label */}
+                  <span className={`text-[11px] font-medium ${isAbove ? 'text-[#22c55e]' : 'text-destructive'}`}>
+                    {stage.label}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Weekly Sparkline Trends */}
+        <div className="border-t border-border pt-5">
+          <div className="flex items-center gap-2 mb-4">
+            <TrendingUp className="w-3.5 h-3.5 text-primary" />
+            <span className="text-xs font-semibold text-foreground">近4周趋势</span>
+          </div>
+          <div className="grid grid-cols-6 gap-3">
+            {FUNNEL_STAGES.map(stage => {
+              const stageValues = weeklyData.map(w => {
+                const s = w.stages.find(st => st.key === stage.key);
+                return s ? s.value : 0;
+              });
+              const latestValue = stageValues[stageValues.length - 1];
+              const prevValue = stageValues[stageValues.length - 2];
+              const trendUp = latestValue > prevValue;
+              const aboveThreshold = latestValue >= stage.threshold;
+
+              return (
+                <div key={stage.key} className="bg-muted/30 rounded-lg p-3">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-medium text-foreground">{stage.label}</span>
+                    {trendUp ? (
+                      <TrendingUp className="w-3 h-3 text-[#22c55e]" />
+                    ) : (
+                      <TrendingDownIcon className="w-3 h-3 text-destructive" />
+                    )}
+                  </div>
+                  <div className="flex items-baseline gap-1 mb-2">
+                    <span className={`text-lg font-bold ${aboveThreshold ? 'text-[#22c55e]' : 'text-destructive'}`}>
+                      {latestValue}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground">%</span>
+                  </div>
+                  {/* Sparkline SVG */}
+                  <SparklineSVG
+                    values={stageValues}
+                    width={120}
+                    height={36}
+                    color={aboveThreshold ? '#22c55e' : '#ef4444'}
+                    threshold={stage.threshold}
+                    maxValue={100}
+                  />
+                  {/* Week labels */}
+                  <div className="flex justify-between mt-1">
+                    <span className="text-[9px] text-muted-foreground">W1</span>
+                    <span className="text-[9px] text-muted-foreground">W4</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Sparkline SVG Component (inline, no library)                       */
+/* ------------------------------------------------------------------ */
+
+function SparklineSVG({
+  values,
+  width,
+  height,
+  color,
+  threshold,
+  maxValue,
+}: {
+  values: number[];
+  width: number;
+  height: number;
+  color: string;
+  threshold: number;
+  maxValue: number;
+}) {
+  const padding = 2;
+  const chartW = width - padding * 2;
+  const chartH = height - padding * 2;
+
+  const points = values.map((v, i) => {
+    const x = padding + (i / Math.max(values.length - 1, 1)) * chartW;
+    const y = padding + chartH - (v / maxValue) * chartH;
+    return { x, y };
+  });
+
+  const thresholdY = padding + chartH - (threshold / maxValue) * chartH;
+
+  const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ');
+  const areaPath = `${linePath} L${points[points.length - 1].x},${padding + chartH} L${points[0].x},${padding + chartH} Z`;
+
+  return (
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="overflow-visible">
+      {/* Threshold line */}
+      <line
+        x1={padding}
+        y1={thresholdY}
+        x2={width - padding}
+        y2={thresholdY}
+        stroke="currentColor"
+        className="text-muted-foreground/30"
+        strokeWidth="0.5"
+        strokeDasharray="3,2"
+      />
+      {/* Area fill */}
+      <path
+        d={areaPath}
+        fill={color}
+        opacity="0.08"
+      />
+      {/* Line */}
+      <path
+        d={linePath}
+        fill="none"
+        stroke={color}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* Dots */}
+      {points.map((p, i) => (
+        <circle
+          key={i}
+          cx={p.x}
+          cy={p.y}
+          r={i === points.length - 1 ? 3 : 2}
+          fill={i === points.length - 1 ? color : '#fff'}
+          stroke={color}
+          strokeWidth={i === points.length - 1 ? 0 : 1.5}
+        />
+      ))}
+    </svg>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Process / Result Line Tables (kept from original)                  */
+/* ------------------------------------------------------------------ */
 
 function ProcessLineTable({ details }: { details: Record<string, any> }) {
   const entries = Object.entries(details);
@@ -354,6 +977,10 @@ function ResultLineTable({ details }: { details: Record<string, any> }) {
   );
 }
 
+/* ------------------------------------------------------------------ */
+/*  Mock Data (enhanced with more members & result funnel metrics)     */
+/* ------------------------------------------------------------------ */
+
 function getMockData(): DiagnosisData {
   return {
     summary: { total: 8, A: 2, B: 3, C: 2, D: 1 },
@@ -368,6 +995,10 @@ function getMockData(): DiagnosisData {
         resultDetails: {
           wechatAddRate: { label: '加V率', value: 92, unit: '%', threshold: { qualified: 90 }, level: 'qualified' },
           consultationRate: { label: '面诊率', value: 95, unit: '%', threshold: { qualified: 85 }, level: 'qualified' },
+          receptionRate: { label: '接诊率', value: 88, unit: '%', threshold: { qualified: 80 }, level: 'qualified' },
+          signRate: { label: '签收率', value: 65, unit: '%', threshold: { qualified: 60 }, level: 'qualified' },
+          medicationRate: { label: '用药率', value: 78, unit: '%', threshold: { qualified: 70 }, level: 'qualified' },
+          registrationRate: { label: '挂号率', value: 55, unit: '%', threshold: { qualified: 50 }, level: 'qualified' },
         },
       },
       {
@@ -380,6 +1011,106 @@ function getMockData(): DiagnosisData {
         resultDetails: {
           wechatAddRate: { label: '加V率', value: 78, unit: '%', threshold: { qualified: 90 }, level: 'unqualified' },
           consultationRate: { label: '面诊率', value: 70, unit: '%', threshold: { qualified: 85 }, level: 'unqualified' },
+          receptionRate: { label: '接诊率', value: 62, unit: '%', threshold: { qualified: 80 }, level: 'unqualified' },
+          signRate: { label: '签收率', value: 38, unit: '%', threshold: { qualified: 60 }, level: 'unqualified' },
+          medicationRate: { label: '用药率', value: 52, unit: '%', threshold: { qualified: 70 }, level: 'unqualified' },
+          registrationRate: { label: '挂号率', value: 30, unit: '%', threshold: { qualified: 50 }, level: 'unqualified' },
+        },
+      },
+      {
+        id: '3', name: '王五', role: 'trainee', stage: 2, quadrant: 'A',
+        processQualified: true, resultQualified: true,
+        processDetails: {
+          learning: { label: '闯关进度', value: 18, unit: '关', threshold: { qualified: 7, good: 14, excellent: 21 }, level: 'excellent' },
+          qcScore: { label: '质检平均分', value: 91, unit: '分', threshold: { qualified: 70, good: 80, excellent: 90 }, level: 'excellent' },
+        },
+        resultDetails: {
+          wechatAddRate: { label: '加V率', value: 95, unit: '%', threshold: { qualified: 90 }, level: 'qualified' },
+          consultationRate: { label: '面诊率', value: 90, unit: '%', threshold: { qualified: 85 }, level: 'qualified' },
+          receptionRate: { label: '接诊率', value: 85, unit: '%', threshold: { qualified: 80 }, level: 'qualified' },
+          signRate: { label: '签收率', value: 70, unit: '%', threshold: { qualified: 60 }, level: 'qualified' },
+          medicationRate: { label: '用药率', value: 80, unit: '%', threshold: { qualified: 70 }, level: 'qualified' },
+          registrationRate: { label: '挂号率', value: 58, unit: '%', threshold: { qualified: 50 }, level: 'qualified' },
+        },
+      },
+      {
+        id: '4', name: '赵六', role: 'trainee', stage: 1, quadrant: 'B',
+        processQualified: true, resultQualified: false,
+        processDetails: {
+          learning: { label: '闯关进度', value: 10, unit: '关', threshold: { qualified: 7, good: 14, excellent: 21 }, level: 'good' },
+          qcScore: { label: '质检平均分', value: 78, unit: '分', threshold: { qualified: 70, good: 80, excellent: 90 }, level: 'good' },
+        },
+        resultDetails: {
+          wechatAddRate: { label: '加V率', value: 88, unit: '%', threshold: { qualified: 90 }, level: 'unqualified' },
+          consultationRate: { label: '面诊率', value: 82, unit: '%', threshold: { qualified: 85 }, level: 'unqualified' },
+          receptionRate: { label: '接诊率', value: 81, unit: '%', threshold: { qualified: 80 }, level: 'qualified' },
+          signRate: { label: '签收率', value: 62, unit: '%', threshold: { qualified: 60 }, level: 'qualified' },
+          medicationRate: { label: '用药率', value: 68, unit: '%', threshold: { qualified: 70 }, level: 'unqualified' },
+          registrationRate: { label: '挂号率', value: 51, unit: '%', threshold: { qualified: 50 }, level: 'qualified' },
+        },
+      },
+      {
+        id: '5', name: '孙七', role: 'trainee', stage: 2, quadrant: 'B',
+        processQualified: true, resultQualified: false,
+        processDetails: {
+          learning: { label: '闯关进度', value: 12, unit: '关', threshold: { qualified: 7, good: 14, excellent: 21 }, level: 'good' },
+          qcScore: { label: '质检平均分', value: 82, unit: '分', threshold: { qualified: 70, good: 80, excellent: 90 }, level: 'good' },
+        },
+        resultDetails: {
+          wechatAddRate: { label: '加V率', value: 91, unit: '%', threshold: { qualified: 90 }, level: 'qualified' },
+          consultationRate: { label: '面诊率', value: 80, unit: '%', threshold: { qualified: 85 }, level: 'unqualified' },
+          receptionRate: { label: '接诊率', value: 75, unit: '%', threshold: { qualified: 80 }, level: 'unqualified' },
+          signRate: { label: '签收率', value: 58, unit: '%', threshold: { qualified: 60 }, level: 'unqualified' },
+          medicationRate: { label: '用药率', value: 72, unit: '%', threshold: { qualified: 70 }, level: 'qualified' },
+          registrationRate: { label: '挂号率', value: 48, unit: '%', threshold: { qualified: 50 }, level: 'unqualified' },
+        },
+      },
+      {
+        id: '6', name: '周八', role: 'trainee', stage: 1, quadrant: 'B',
+        processQualified: true, resultQualified: false,
+        processDetails: {
+          learning: { label: '闯关进度', value: 9, unit: '关', threshold: { qualified: 7, good: 14, excellent: 21 }, level: 'good' },
+          qcScore: { label: '质检平均分', value: 76, unit: '%', threshold: { qualified: 70, good: 80, excellent: 90 }, level: 'good' },
+        },
+        resultDetails: {
+          wechatAddRate: { label: '加V率', value: 86, unit: '%', threshold: { qualified: 90 }, level: 'unqualified' },
+          consultationRate: { label: '面诊率', value: 87, unit: '%', threshold: { qualified: 85 }, level: 'qualified' },
+          receptionRate: { label: '接诊率', value: 82, unit: '%', threshold: { qualified: 80 }, level: 'qualified' },
+          signRate: { label: '签收率', value: 55, unit: '%', threshold: { qualified: 60 }, level: 'unqualified' },
+          medicationRate: { label: '用药率', value: 71, unit: '%', threshold: { qualified: 70 }, level: 'qualified' },
+          registrationRate: { label: '挂号率', value: 53, unit: '%', threshold: { qualified: 50 }, level: 'qualified' },
+        },
+      },
+      {
+        id: '7', name: '吴九', role: 'trainee', stage: 2, quadrant: 'C',
+        processQualified: false, resultQualified: true,
+        processDetails: {
+          learning: { label: '闯关进度', value: 5, unit: '关', threshold: { qualified: 7, good: 14, excellent: 21 }, level: 'unqualified' },
+          qcScore: { label: '质检平均分', value: 65, unit: '分', threshold: { qualified: 70, good: 80, excellent: 90 }, level: 'unqualified' },
+        },
+        resultDetails: {
+          wechatAddRate: { label: '加V率', value: 93, unit: '%', threshold: { qualified: 90 }, level: 'qualified' },
+          consultationRate: { label: '面诊率', value: 88, unit: '%', threshold: { qualified: 85 }, level: 'qualified' },
+          receptionRate: { label: '接诊率', value: 84, unit: '%', threshold: { qualified: 80 }, level: 'qualified' },
+          signRate: { label: '签收率', value: 63, unit: '%', threshold: { qualified: 60 }, level: 'qualified' },
+          medicationRate: { label: '用药率', value: 75, unit: '%', threshold: { qualified: 70 }, level: 'qualified' },
+          registrationRate: { label: '挂号率', value: 52, unit: '%', threshold: { qualified: 50 }, level: 'qualified' },
+        },
+      },
+      {
+        id: '8', name: '郑十', role: 'trainee', stage: 1, quadrant: 'C',
+        processQualified: false, resultQualified: true,
+        processDetails: {
+          learning: { label: '闯关进度', value: 4, unit: '关', threshold: { qualified: 7, good: 14, excellent: 21 }, level: 'unqualified' },
+          qcScore: { label: '质检平均分', value: 72, unit: '分', threshold: { qualified: 70, good: 80, excellent: 90 }, level: 'qualified' },
+        },
+        resultDetails: {
+          wechatAddRate: { label: '加V率', value: 94, unit: '%', threshold: { qualified: 90 }, level: 'qualified' },
+          consultationRate: { label: '面诊率', value: 86, unit: '%', threshold: { qualified: 85 }, level: 'qualified' },
+          receptionRate: { label: '接诊率', value: 83, unit: '%', threshold: { qualified: 80 }, level: 'qualified' },
+          signRate: { label: '签收率', value: 64, unit: '%', threshold: { qualified: 60 }, level: 'qualified' },
+          medicationRate: { label: '用药率', value: 73, unit: '%', threshold: { qualified: 70 }, level: 'qualified' },
+          registrationRate: { label: '挂号率', value: 56, unit: '%', threshold: { qualified: 50 }, level: 'qualified' },
         },
       },
     ],

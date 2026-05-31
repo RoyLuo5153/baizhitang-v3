@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import {
   Zap, Plus, Library, PlayCircle, CheckCircle2, Clock, Users, Target,
-  MessageCirclePlus, Pill, Mic, BookOpen, ChevronRight,
+  MessageCirclePlus, Pill, Mic, BookOpen, ChevronRight, ArrowRight, TrendingUp,
 } from 'lucide-react';
 
 interface EmpowerPlan {
@@ -25,6 +25,10 @@ interface Execution {
   status: string;
   started_at: string;
   completed_at: string | null;
+  progress?: number;
+  before_quadrant?: string | null;
+  after_quadrant?: string | null;
+  improvement_pct?: number | null;
   verification_result: any;
   plan?: EmpowerPlan;
 }
@@ -212,23 +216,104 @@ function ExecutionCard({ execution, plans }: { execution: Execution; plans: Empo
   };
   const sc = statusConfig[execution.status] || statusConfig.assigned;
 
+  const quadrantColor: Record<string, string> = { A: '#22c55e', B: 'text-primary', C: '#f59e0b', D: '#ef4444' };
+  const quadrantLabel: Record<string, string> = { A: '达标', B: '机制问题', C: '运气型', D: '能力不足' };
+
   return (
-    <div className="bg-card rounded-lg shadow-card p-4 flex items-center gap-4 border border-border/50">
-      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-        <Zap className="w-5 h-5 text-primary" />
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <h4 className="text-sm font-semibold text-foreground">{plan?.name || '未知方案'}</h4>
-          <span className={`inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium ${sc.bg} ${sc.color}`}>
-            {sc.label}
-          </span>
+    <div className="bg-card rounded-lg shadow-card p-5 border border-border/50">
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+            <Zap className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h4 className="text-sm font-semibold text-foreground">{plan?.name || '未知方案'}</h4>
+              <span className={`inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium ${sc.bg} ${sc.color}`}>
+                {sc.label}
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              用户ID: {execution.user_id} · 开始: {new Date(execution.started_at).toLocaleDateString()}
+            </p>
+          </div>
         </div>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          用户ID: {execution.user_id} · 开始: {new Date(execution.started_at).toLocaleDateString()}
-        </p>
+        <ChevronRight className="w-4 h-4 text-muted-foreground" />
       </div>
-      <ChevronRight className="w-4 h-4 text-muted-foreground" />
+
+      {/* 闭环验证前后对比 */}
+      <div className="mt-3 pt-3 border-t border-border/50">
+        <div className="flex items-center gap-4">
+          {/* 赋能前 */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">赋能前:</span>
+            {execution.before_quadrant && (
+              <span
+                className="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-bold"
+                style={{
+                  backgroundColor: (quadrantColor[execution.before_quadrant] || '#999') + '20',
+                  color: quadrantColor[execution.before_quadrant] || '#999',
+                }}
+              >
+                {execution.before_quadrant}类·{quadrantLabel[execution.before_quadrant] || ''}
+              </span>
+            )}
+          </div>
+
+          {/* 箭头 */}
+          <div className="flex items-center gap-1 text-muted-foreground">
+            <div className="w-8 h-px bg-border" />
+            <ArrowRight className="w-4 h-4" />
+            <div className="w-8 h-px bg-border" />
+          </div>
+
+          {/* 赋能后 */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">赋能后:</span>
+            {execution.after_quadrant ? (
+              <span
+                className="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-bold"
+                style={{
+                  backgroundColor: (quadrantColor[execution.after_quadrant] || '#999') + '20',
+                  color: quadrantColor[execution.after_quadrant] || '#999',
+                }}
+              >
+                {execution.after_quadrant}类·{quadrantLabel[execution.after_quadrant] || ''}
+              </span>
+            ) : (
+              <span className="text-xs text-muted-foreground/50 italic">待验证</span>
+            )}
+          </div>
+
+          {/* 改善百分比 */}
+          {execution.improvement_pct != null && (
+            <div className="ml-auto flex items-center gap-1 text-xs">
+              <TrendingUp className="w-3.5 h-3.5 text-[#22c55e]" />
+              <span className="text-[#22c55e] font-medium">+{execution.improvement_pct}%</span>
+              <span className="text-muted-foreground">改善</span>
+            </div>
+          )}
+        </div>
+
+        {/* 进度条 */}
+        {execution.status !== 'assigned' && (
+          <div className="mt-3">
+            <div className="flex items-center justify-between text-xs mb-1">
+              <span className="text-muted-foreground">执行进度</span>
+              <span className="font-medium text-foreground">{execution.progress}%</span>
+            </div>
+            <div className="h-2 bg-muted rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-500"
+                style={{
+                  width: `${execution.progress ?? 0}%`,
+                  backgroundColor: (execution.progress ?? 0) >= 80 ? '#22c55e' : (execution.progress ?? 0) >= 40 ? '#2978B5' : '#f59e0b',
+                }}
+              />
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

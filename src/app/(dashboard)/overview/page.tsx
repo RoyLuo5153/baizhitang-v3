@@ -41,6 +41,7 @@ interface AlertItem {
 }
 
 interface OverviewData {
+  globalHealthScore: number;
   totalTrainees: number;
   levelPassRate: number;
   aClassRate: number;
@@ -65,6 +66,7 @@ interface EmpowerData {
 
 function getMockOverviewData(): OverviewData {
   return {
+    globalHealthScore: 62.5,
     totalTrainees: 42,
     levelPassRate: 73.8,
     aClassRate: 28.6,
@@ -211,7 +213,19 @@ export default function OverviewPage() {
           C: summary.C || 0,
           D: summary.D || 0,
         };
+        // 全局健康度 = Σ(每人合格项数) / (指标总数 × 人数) × 100
+        const TOTAL_METRICS = 12; // 6 process + 6 result
+        let totalQualified = 0;
+        (diagnosisJson.members || []).forEach((m: Record<string, unknown>) => {
+          const pd = m.processDetails as Record<string, {level: string}> || {};
+          const rd = m.resultDetails as Record<string, {level: string}> || {};
+          Object.values(pd).forEach((v) => { if (v.level === 'qualified') totalQualified++; });
+          Object.values(rd).forEach((v) => { if (v.level === 'qualified') totalQualified++; });
+        });
+        const healthScore = total > 0 ? Math.round((totalQualified / (TOTAL_METRICS * total)) * 1000) / 10 : 0;
+
         setOverviewData({
+          globalHealthScore: healthScore,
           totalTrainees: total,
           levelPassRate: 73.8,
           aClassRate: total > 0 ? Math.round((qDist.A / total) * 1000) / 10 : 0,
@@ -303,7 +317,25 @@ export default function OverviewPage() {
       </div>
 
       {/* ─── Core KPI Cards ─────────────────────────── */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-5 gap-4">
+        {/* Card: 全局健康度 */}
+        <div className="bg-card rounded-xl shadow-card p-5 border border-primary/20 hover:shadow-float transition-shadow relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full -translate-y-8 translate-x-8" />
+          <div className="flex items-center gap-2 mb-3 relative">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Shield className="w-4 h-4 text-primary" />
+            </div>
+            <span className="text-sm font-medium text-muted-foreground">全局健康度</span>
+          </div>
+          <div className="flex items-baseline gap-2 relative">
+            <p className="text-3xl font-bold text-primary">{overviewData.globalHealthScore}</p>
+            <span className="text-sm text-muted-foreground">/ 100</span>
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            Σ合格项数 / (指标数 × 新人数) × 100
+          </p>
+        </div>
+
         {/* Card: 在培人数 */}
         <div className="bg-card rounded-xl shadow-card p-5 border border-border/40 hover:shadow-float transition-shadow">
           <div className="flex items-center gap-2 mb-3">

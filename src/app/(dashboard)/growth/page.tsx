@@ -7,7 +7,7 @@ import {
   UserCircle, Award, TrendingUp, TrendingDown, AlertTriangle,
   CheckCircle2, XCircle, Clock, Zap, BookOpen, BarChart3,
   Activity, ChevronRight, ArrowRight, Target, FileText,
-  Lightbulb, Calendar, Users
+  Lightbulb, Calendar, Users, Hexagon, Crosshair
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -66,11 +66,11 @@ interface GrowthData {
 }
 
 // === Quadrant config ===
-const QUADRANT_CONFIG: Record<string, { label: string; color: string; bgColor: string; borderColor: string; description: string }> = {
-  A: { label: 'A类', color: 'text-[#22c55e]', bgColor: 'bg-[#22c55e]/10', borderColor: 'border-[#22c55e]/30', description: '过程达标·结果达标' },
-  B: { label: 'B类', color: 'text-[#f59e0b]', bgColor: 'bg-[#f59e0b]/10', borderColor: 'border-[#f59e0b]/30', description: '过程达标·结果不达标' },
-  C: { label: 'C类', color: 'text-[#ef4444]', bgColor: 'bg-[#ef4444]/10', borderColor: 'border-[#ef4444]/30', description: '过程不达标·结果达标' },
-  D: { label: 'D类', color: 'text-[#ef4444]', bgColor: 'bg-[#ef4444]/10', borderColor: 'border-[#ef4444]/30', description: '过程不达标·结果不达标' },
+const QUADRANT_CONFIG: Record<string, { label: string; color: string; bgColor: string; borderColor: string; description: string; suggestion: string }> = {
+  A: { label: 'A类', color: 'text-[#22c55e]', bgColor: 'bg-[#22c55e]/10', borderColor: 'border-[#22c55e]/30', description: '过程达标·结果达标', suggestion: '保持当前状态，追求卓越突破' },
+  B: { label: 'B类', color: 'text-[hsl(var(--primary))]', bgColor: 'bg-primary/10', borderColor: 'border-primary/30', description: '过程达标·结果不达标', suggestion: '过程扎实但结果未达预期，需优化转化机制与执行策略' },
+  C: { label: 'C类', color: 'text-[#f59e0b]', bgColor: 'bg-[#f59e0b]/10', borderColor: 'border-[#f59e0b]/30', description: '过程不达标·结果达标', suggestion: '结果虽达标但过程不可控，需夯实基础能力避免业绩波动' },
+  D: { label: 'D类', color: 'text-[hsl(var(--destructive))]', bgColor: 'bg-destructive/10', borderColor: 'border-destructive/30', description: '过程不达标·结果不达标', suggestion: '过程与结果均需提升，建议从基础能力入手逐步改善' },
 };
 
 const STAGE_LABELS: Record<number, string> = {
@@ -295,6 +295,279 @@ export default function GrowthProfilePage() {
           <div className="text-center">
             <p className="text-xs text-muted-foreground">当前象限</p>
             <p className={`text-lg font-bold mt-1 ${quadrantInfo.color}`}>{quadrantInfo.label}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* === Quadrant Position Chart === */}
+      <div id="quadrant-chart" className="bg-card rounded-lg shadow-card p-5 border border-border/30">
+        <div className="flex items-center gap-2 mb-4">
+          <Crosshair className="w-4 h-4 text-primary" />
+          <h2 className="text-base font-semibold text-foreground">四象限定位图</h2>
+        </div>
+
+        {/* 2x2 grid */}
+        <div className="grid grid-cols-2 gap-3 max-w-xl mx-auto">
+          {/* A类 - Top Left (达标) */}
+          <div className={`relative rounded-lg border-2 p-4 min-h-[120px] flex flex-col items-center justify-center transition-all ${
+            data.quadrant === 'A'
+              ? 'border-[#22c55e] bg-[#22c55e]/8 shadow-[0_0_16px_rgba(34,197,94,0.15)]'
+              : 'border-border/30 bg-muted/30'
+          }`}>
+            <span className={`text-xl font-bold ${data.quadrant === 'A' ? 'text-[#22c55e]' : 'text-muted-foreground/50'}`}>A类</span>
+            <span className={`text-xs mt-1 ${data.quadrant === 'A' ? 'text-[#22c55e]/80' : 'text-muted-foreground/40'}`}>过程达标·结果达标</span>
+            {data.quadrant === 'A' && (
+              <div className="absolute top-2 right-2 flex items-center gap-1.5">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#22c55e] opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#22c55e]" />
+                </span>
+                <span className="text-xs font-semibold text-[#22c55e]">{data.user.real_name}</span>
+              </div>
+            )}
+          </div>
+
+          {/* B类 - Top Right (机制问题) */}
+          <div className={`relative rounded-lg border-2 p-4 min-h-[120px] flex flex-col items-center justify-center transition-all ${
+            data.quadrant === 'B'
+              ? 'border-primary bg-primary/8 shadow-[0_0_16px_hsla(var(--primary),0.15)]'
+              : 'border-border/30 bg-muted/30'
+          }`}>
+            <span className={`text-xl font-bold ${data.quadrant === 'B' ? 'text-[hsl(var(--primary))]' : 'text-muted-foreground/50'}`}>B类</span>
+            <span className={`text-xs mt-1 ${data.quadrant === 'B' ? 'text-primary/80' : 'text-muted-foreground/40'}`}>过程达标·结果不达标</span>
+            {data.quadrant === 'B' && (
+              <div className="absolute top-2 right-2 flex items-center gap-1.5">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary" />
+                </span>
+                <span className="text-xs font-semibold text-[hsl(var(--primary))]">{data.user.real_name}</span>
+              </div>
+            )}
+          </div>
+
+          {/* C类 - Bottom Left (运气型) */}
+          <div className={`relative rounded-lg border-2 p-4 min-h-[120px] flex flex-col items-center justify-center transition-all ${
+            data.quadrant === 'C'
+              ? 'border-[#f59e0b] bg-[#f59e0b]/8 shadow-[0_0_16px_rgba(245,158,11,0.15)]'
+              : 'border-border/30 bg-muted/30'
+          }`}>
+            <span className={`text-xl font-bold ${data.quadrant === 'C' ? 'text-[#f59e0b]' : 'text-muted-foreground/50'}`}>C类</span>
+            <span className={`text-xs mt-1 ${data.quadrant === 'C' ? 'text-[#f59e0b]/80' : 'text-muted-foreground/40'}`}>过程不达标·结果达标</span>
+            {data.quadrant === 'C' && (
+              <div className="absolute top-2 right-2 flex items-center gap-1.5">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#f59e0b] opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#f59e0b]" />
+                </span>
+                <span className="text-xs font-semibold text-[#f59e0b]">{data.user.real_name}</span>
+              </div>
+            )}
+          </div>
+
+          {/* D类 - Bottom Right (能力不足) */}
+          <div className={`relative rounded-lg border-2 p-4 min-h-[120px] flex flex-col items-center justify-center transition-all ${
+            data.quadrant === 'D'
+              ? 'border-destructive bg-destructive/8 shadow-[0_0_16px_hsla(var(--destructive),0.15)]'
+              : 'border-border/30 bg-muted/30'
+          }`}>
+            <span className={`text-xl font-bold ${data.quadrant === 'D' ? 'text-[hsl(var(--destructive))]' : 'text-muted-foreground/50'}`}>D类</span>
+            <span className={`text-xs mt-1 ${data.quadrant === 'D' ? 'text-destructive/80' : 'text-muted-foreground/40'}`}>过程不达标·结果不达标</span>
+            {data.quadrant === 'D' && (
+              <div className="absolute top-2 right-2 flex items-center gap-1.5">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-destructive" />
+                </span>
+                <span className="text-xs font-semibold text-[hsl(var(--destructive))]">{data.user.real_name}</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Axis labels */}
+        <div className="max-w-xl mx-auto flex justify-between mt-2 px-1">
+          <span className="text-[10px] text-muted-foreground/50 font-medium tracking-wide">← 过程不达标</span>
+          <span className="text-[10px] text-muted-foreground/50 font-medium tracking-wide">过程达标 →</span>
+        </div>
+        <div className="max-w-xl mx-auto flex flex-col items-center mt-0.5">
+          <span className="text-[10px] text-muted-foreground/50 font-medium tracking-wide">↑ 结果达标</span>
+          <span className="text-[10px] text-muted-foreground/50 font-medium tracking-wide">↓ 结果不达标</span>
+        </div>
+
+        {/* Current position summary */}
+        <div className={`mt-4 rounded-lg border px-4 py-3 flex items-center gap-3 ${quadrantInfo.bgColor} ${quadrantInfo.borderColor}`}>
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${quadrantInfo.bgColor} ${quadrantInfo.color}`}>
+            {data.quadrant}
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-medium text-foreground">
+              当前位于：<span className={quadrantInfo.color}>{quadrantInfo.label} - {quadrantInfo.description}</span>
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">{quadrantInfo.suggestion}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* === Dual-track Radar Chart === */}
+      <div id="dual-track-radar" className="bg-card rounded-lg shadow-card p-5 border border-border/30">
+        <div className="flex items-center gap-2 mb-4">
+          <Hexagon className="w-4 h-4 text-primary" />
+          <h2 className="text-base font-semibold text-foreground">双轨雷达图</h2>
+          <span className="text-xs text-muted-foreground">过程线 + 结果线维度对标</span>
+        </div>
+
+        <div className="flex items-start gap-6">
+          {/* SVG Radar Chart */}
+          <div className="flex-1 flex justify-center">
+            <svg
+              viewBox="-10 -10 320 290"
+              className="w-full max-w-md"
+              style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
+            >
+              {/* Grid rings at 25%, 50%, 75%, 100% */}
+              {[0.25, 0.5, 0.75, 1].map(scale => {
+                const points = computeRadarPoints(11, scale);
+                return (
+                  <polygon
+                    key={`ring-${scale}`}
+                    points={points.map(p => `${p.x},${p.y}`).join(' ')}
+                    fill="none"
+                    stroke="hsl(240 5.9% 90%)"
+                    strokeWidth="0.6"
+                    opacity={scale === 1 ? 0.5 : 0.25}
+                  />
+                );
+              })}
+
+              {/* Axis lines from center to each vertex */}
+              {computeRadarPoints(11, 1).map((p, i) => (
+                <line
+                  key={`axis-${i}`}
+                  x1="150"
+                  y1="135"
+                  x2={p.x}
+                  y2={p.y}
+                  stroke="hsl(240 5.9% 90%)"
+                  strokeWidth="0.5"
+                  opacity="0.35"
+                />
+              ))}
+
+              {/* Result line polygon (drawn first, behind process) */}
+              <polygon
+                points={computeDataRadarPoints(data.resultMetrics, data.processMetrics, 11).map(p => `${p.x},${p.y}`).join(' ')}
+                fill="rgba(245,158,11,0.12)"
+                stroke="#f59e0b"
+                strokeWidth="1.5"
+                strokeLinejoin="round"
+              />
+
+              {/* Process line polygon */}
+              <polygon
+                points={computeDataRadarPoints(data.processMetrics, data.resultMetrics, 11).map(p => `${p.x},${p.y}`).join(' ')}
+                fill="hsl(222.2 47.4% 50%)"
+                stroke="hsl(222.2 47.4% 50%)"
+                strokeWidth="1.5"
+                strokeLinejoin="round"
+              />
+
+              {/* Data points - Process line */}
+              {computeDataRadarPoints(data.processMetrics, data.resultMetrics, 11).map((p, i) => (
+                <circle
+                  key={`process-dot-${i}`}
+                  cx={p.x}
+                  cy={p.y}
+                  r="3"
+                  fill="hsl(222.2 47.4% 50%)"
+                  stroke="white"
+                  strokeWidth="1"
+                />
+              ))}
+
+              {/* Data points - Result line */}
+              {computeDataRadarPoints(data.resultMetrics, data.processMetrics, 11).map((p, i) => (
+                <circle
+                  key={`result-dot-${i}`}
+                  cx={p.x}
+                  cy={p.y}
+                  r="3"
+                  fill="#f59e0b"
+                  stroke="white"
+                  strokeWidth="1"
+                />
+              ))}
+
+              {/* Axis labels */}
+              {computeRadarPoints(11, 1).map((p, i) => {
+                const label = i < data.processMetrics.length
+                  ? data.processMetrics[i].label
+                  : data.resultMetrics[i - data.processMetrics.length].label;
+                const anchor = p.x > 155 ? 'start' : p.x < 145 ? 'end' : 'middle';
+                const dy = p.y < 130 ? -6 : p.y > 140 ? 14 : 4;
+                const dx = p.x > 155 ? 8 : p.x < 145 ? -8 : 0;
+                return (
+                  <text
+                    key={`label-${i}`}
+                    x={p.x + dx}
+                    y={p.y + dy}
+                    textAnchor={anchor}
+                    fill="hsl(240 3.8% 46.1%)"
+                    fontSize="8.5"
+                    fontWeight="500"
+                  >
+                    {label}
+                  </text>
+                );
+              })}
+            </svg>
+          </div>
+
+          {/* Legend and metric details */}
+          <div className="w-52 shrink-0 space-y-3">
+            {/* Legend */}
+            <div className="space-y-2 pb-3 border-b border-border/20">
+              <div className="flex items-center gap-2">
+                <span className="w-4 h-0.5 rounded bg-primary inline-block" />
+                <span className="text-xs font-medium text-foreground">过程线</span>
+                <span className="text-[10px] text-muted-foreground">{processQualifiedCount}/{data.processMetrics.length} 达标</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-4 h-0.5 rounded bg-[#f59e0b] inline-block" />
+                <span className="text-xs font-medium text-foreground">结果线</span>
+                <span className="text-[10px] text-muted-foreground">{resultQualifiedCount}/{data.resultMetrics.length} 达标</span>
+              </div>
+            </div>
+
+            {/* Process metrics detail */}
+            <div>
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">过程维度</p>
+              <div className="space-y-1">
+                {data.processMetrics.map(m => (
+                  <div key={m.key} className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground truncate mr-2">{m.label}</span>
+                    <span className={`font-medium ${m.qualified ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
+                      {m.value !== null ? `${m.value}${m.unit}` : '-'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Result metrics detail */}
+            <div>
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">结果维度</p>
+              <div className="space-y-1">
+                {data.resultMetrics.map(m => (
+                  <div key={m.key} className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground truncate mr-2">{m.label}</span>
+                    <span className={`font-medium ${m.qualified ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
+                      {m.value !== null ? `${m.value}${m.unit}` : '-'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -818,6 +1091,51 @@ function getQuadrantRank(quadrant?: string): number {
   if (!quadrant) return 0;
   const ranks: Record<string, number> = { A: 4, B: 3, C: 2, D: 1 };
   return ranks[quadrant] || 0;
+}
+
+// === Radar chart helpers ===
+const RADAR_CENTER_X = 150;
+const RADAR_CENTER_Y = 135;
+const RADAR_RADIUS = 110;
+
+/** Compute polygon points for an N-axis radar grid ring at a given scale (0..1) */
+function computeRadarPoints(numAxes: number, scale: number): { x: number; y: number }[] {
+  const points: { x: number; y: number }[] = [];
+  for (let i = 0; i < numAxes; i++) {
+    const angle = (Math.PI * 2 * i) / numAxes - Math.PI / 2;
+    points.push({
+      x: RADAR_CENTER_X + RADAR_RADIUS * scale * Math.cos(angle),
+      y: RADAR_CENTER_Y + RADAR_RADIUS * scale * Math.sin(angle),
+    });
+  }
+  return points;
+}
+
+/** Compute radar polygon points from actual metric data.
+ *  Plots process metrics on axes 0..4 and result metrics on axes 5..10.
+ *  Each value is plotted as a percentage of the excellent threshold (100% = threshold).
+ *  Values that exceed the threshold are capped at 1.0 for visual clarity.
+ */
+function computeDataRadarPoints(
+  primaryMetrics: ProcessMetric[] | ResultMetric[],
+  secondaryMetrics: ProcessMetric[] | ResultMetric[],
+  numAxes: number
+): { x: number; y: number }[] {
+  const points: { x: number; y: number }[] = [];
+  for (let i = 0; i < numAxes; i++) {
+    const metric = i < primaryMetrics.length ? primaryMetrics[i] : secondaryMetrics[i - primaryMetrics.length];
+    const angle = (Math.PI * 2 * i) / numAxes - Math.PI / 2;
+    // Value as fraction of threshold; if value is null, default to 0
+    // Cap at 1.0 (threshold) for visual clarity on the radar
+    const fraction = metric && metric.value !== null && metric.threshold > 0
+      ? Math.min(metric.value / metric.threshold, 1.0)
+      : 0;
+    points.push({
+      x: RADAR_CENTER_X + RADAR_RADIUS * fraction * Math.cos(angle),
+      y: RADAR_CENTER_Y + RADAR_RADIUS * fraction * Math.sin(angle),
+    });
+  }
+  return points;
 }
 
 function transformApiResponse(raw: any, currentUser: any): GrowthData {

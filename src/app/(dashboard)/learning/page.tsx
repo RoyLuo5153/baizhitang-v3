@@ -57,7 +57,7 @@ export default function LearningPage() {
   const [totalPassed, setTotalPassed] = useState(0);
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
   const [dataLoading, setDataLoading] = useState(true);
-  const [showQuiz, setShowQuiz] = useState(false);
+  const [stageUnlockTip, setStageUnlockTip] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -117,6 +117,14 @@ export default function LearningPage() {
           <span>已通过 <span className="text-primary font-semibold">{totalPassed}</span> / 21 关</span>
         </div>
       </div>
+
+      {/* 阶段解锁提示 */}
+      {stageUnlockTip && (
+        <div className="bg-[#f59e0b]/10 border border-[#f59e0b]/20 text-[#f59e0b] rounded-lg px-4 py-3 text-sm flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
+          <Lock className="w-4 h-4 shrink-0" />
+          <span>{stageUnlockTip}</span>
+        </div>
+      )}
 
       {/* 阶段进度指示器 */}
       <div className="bg-card rounded-lg shadow-sm p-5 border border-border/30">
@@ -201,7 +209,12 @@ export default function LearningPage() {
                       <div
                         key={level.levelId}
                         onClick={() => {
-                          if (level.status !== 'locked' && level.status !== 'locked-stage') {
+                          if (level.status === 'locked-stage') {
+                            const prevStage = level.stage - 1;
+                            const sp = stageProgress[prevStage] || { completed: 0, total: 7 };
+                            setStageUnlockTip(`需完成阶段${prevStage}全部${sp.total}关（当前已通过${sp.completed}关）`);
+                            setTimeout(() => setStageUnlockTip(null), 3000);
+                          } else if (level.status !== 'locked') {
                             setSelectedLevel(level.levelId);
                           }
                         }}
@@ -237,6 +250,11 @@ export default function LearningPage() {
                         }`}>
                           第{level.levelId}关
                         </span>
+                        {level.status === 'locked-stage' && (
+                          <span className="text-[10px] text-muted-foreground/60 text-center leading-tight mt-0.5">
+                            需完成阶段{level.stage - 1}
+                          </span>
+                        )}
                         {isActive && (
                           <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-primary rounded-full flex items-center justify-center">
                             <Flame className="w-2.5 h-2.5 text-primary-foreground" />

@@ -14,30 +14,30 @@ type NavItem = {
   label: string;
   href: string;
   icon: React.ElementType;
-  permission?: string;
+  permission?: string | string[];
   group?: string;
 };
 
 const ALL_NAV_ITEMS: NavItem[] = [
   { label: '首页', href: '/', icon: Home },
   // 学习
-  { label: '闯关学习', href: '/learning', icon: BookOpen, permission: 'learning.view', group: '学习' },
-  { label: '成长档案', href: '/growth', icon: UserCircle, permission: 'growth.own', group: '学习' },
+  { label: '闯关学习', href: '/learning', icon: BookOpen, permission: 'take_quiz', group: '学习' },
+  { label: '成长档案', href: '/growth', icon: UserCircle, permission: 'view_own_diagnosis', group: '学习' },
   // 管理
-  { label: '新人看板', href: '/trainee-board', icon: Users, permission: 'growth.team', group: '管理' },
-  { label: '双轨诊断', href: '/diagnosis', icon: Activity, permission: 'diagnosis.team', group: '管理' },
-  { label: '赋能中心', href: '/empowerment', icon: Zap, permission: 'empower.assign', group: '管理' },
+  { label: '新人看板', href: '/trainee-board', icon: Users, permission: ['view_trainee_board', 'view_all_trainees'], group: '管理' },
+  { label: '双轨诊断', href: '/diagnosis', icon: Activity, permission: 'view_team_diagnosis', group: '管理' },
+  { label: '赋能中心', href: '/empowerment', icon: Zap, permission: ['push_plans', 'view_own_empower'], group: '管理' },
   // 数据
-  { label: '数据看板', href: '/dashboard', icon: BarChart3, permission: 'dashboard.team', group: '数据' },
-  { label: '全局概览', href: '/overview', icon: Eye, permission: 'overview.view', group: '数据' },
+  { label: '数据看板', href: '/dashboard', icon: BarChart3, permission: 'view_dashboard', group: '数据' },
+  { label: '全局概览', href: '/overview', icon: Eye, permission: ['view_boss_dashboard', 'view_all_trainees'], group: '数据' },
   // 教务
-  { label: '题库管理', href: '/question-bank', icon: FileQuestion, permission: 'question.create', group: '教务' },
-  { label: '资料中心', href: '/resources', icon: FolderOpen, permission: 'resource.view', group: '教务' },
-  { label: '质检审核', href: '/qc-review', icon: ClipboardCheck, permission: 'qc.review', group: '教务' },
-  { label: '日常考核', href: '/assessment', icon: ClipboardList, permission: 'assessment.create', group: '教务' },
-  { label: '业务数据', href: '/scrm-import', icon: TrendingUp, permission: 'business.view', group: '教务' },
+  { label: '题库管理', href: '/question-bank', icon: FileQuestion, permission: 'manage_questions', group: '教务' },
+  { label: '资料中心', href: '/resources', icon: FolderOpen, permission: 'view_resources', group: '教务' },
+  { label: '质检审核', href: '/qc-review', icon: ClipboardCheck, permission: ['qc_review', 'perform_qc', 'view_own_qc'], group: '教务' },
+  { label: '日常考核', href: '/assessment', icon: ClipboardList, permission: 'manage_assessments', group: '教务' },
+  { label: '业务数据', href: '/scrm-import', icon: TrendingUp, permission: 'input_business_data', group: '教务' },
   // 设置
-  { label: '系统设置', href: '/settings', icon: Settings, permission: 'settings.user', group: '设置' },
+  { label: '系统设置', href: '/settings', icon: Settings, permission: 'manage_users', group: '设置' },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -51,7 +51,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // 过滤导航项
   const visibleItems = ALL_NAV_ITEMS.filter(item => {
     if (!item.permission) return true;
-    return hasPermission(item.permission);
+    const perms = Array.isArray(item.permission) ? item.permission : [item.permission];
+    return perms.some(p => hasPermission(p));
   });
 
   // 按group分组
