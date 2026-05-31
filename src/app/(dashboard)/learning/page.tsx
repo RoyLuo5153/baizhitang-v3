@@ -4,8 +4,22 @@ import { useAuth } from '@/lib/auth/context';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useCallback } from 'react';
 import {
-  Check, Lock, Swords, Play, Star, Flame, Trophy, ChevronRight
+  Check, Lock, Swords, Play, Star, Flame, Trophy, ChevronRight,
+  Calendar, Clock, BookOpen, Zap, ClipboardCheck, Flag, Circle, CheckCircle2,
 } from 'lucide-react';
+
+interface DayTask {
+  id: number;
+  dayIndex: number;
+  taskType: string;
+  taskTitle: string;
+  taskDescription: string;
+  standard: string;
+  deadlineTime: string | null;
+  isCompleted: boolean;
+  relatedLevelId: number | null;
+  sortOrder: number;
+}
 
 interface LevelInfo {
   levelId: number;
@@ -58,6 +72,8 @@ export default function LearningPage() {
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
   const [dataLoading, setDataLoading] = useState(true);
   const [stageUnlockTip, setStageUnlockTip] = useState<string | null>(null);
+  const [dayTasks, setDayTasks] = useState<Record<number, DayTask[]>>({});
+  const [activeDay, setActiveDay] = useState<number>(1);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -77,6 +93,30 @@ export default function LearningPage() {
         // 默认选中第一个未通过的关卡
         const activeLevel = data.levels.find((l: LevelInfo) => l.status === 'active' || l.status === 'in_progress');
         if (activeLevel) setSelectedLevel(activeLevel.levelId);
+      }
+
+      // 获取7天排课任务
+      try {
+        const planRes = await fetch(`/api/growth-plan?userId=${user.id}`);
+        if (planRes.ok) {
+          const planData = await planRes.json();
+          if (planData.todayPlans && planData.todayPlans.length > 0) {
+            // 从API获取所有7天的任务
+            const allDayTasks: Record<number, DayTask[]> = {};
+            for (const p of planData.todayPlans) {
+              if (!allDayTasks[p.dayIndex]) allDayTasks[p.dayIndex] = [];
+              allDayTasks[p.dayIndex].push(p);
+            }
+            // 如果只有当天的，还需要加载其他天的
+            if (planData.weekOverview) {
+              const currentDay = planData.currentDayIndex || 1;
+              setActiveDay(currentDay);
+            }
+            setDayTasks(allDayTasks);
+          }
+        }
+      } catch {
+        // non-critical, ignore
       }
     } catch (err) {
       console.error('Failed to fetch learning progress:', err);
@@ -180,6 +220,108 @@ export default function LearningPage() {
           })}
         </div>
       </div>
+
+      {/* 7天排课表 */}
+      {Object.keys(dayTasks).length > 0 && (
+        <div className="bg-card rounded-lg shadow-sm p-5 border border-border/30">
+          <div className="flex items-center gap-2 mb-4">
+            <Calendar className="w-4 h-4 text-[#f59e0b]" />
+            <h2 className="text-base font-semibold text-foreground">7天排课表</h2>
+            <span className="text-xs text-muted-foreground">每天的学习和考核安排</span>
+          </div>
+          {/* 天数切换标签 */}
+          <div className="flex gap-1.5 mb-4">
+            {[1, 2, 3, 4, 5, 6, 7].map(day => {
+              const tasks = dayTasks[day] || [];
+              const allDone = tasks.length > 0 && tasks.every(t => t.isCompleted);
+              const hasProgress = tasks.some(t => t.isCompleted) && !allDone;
+              const isActive = day === activeDay;
+              return (
+                <button
+                  key={day}
+                  onClick={() => setActiveDay(day)}
+                  className={`flex-1 py-2 px-1 rounded-md text-center text-xs font-medium transition-all ${
+                    isActive
+                      ? 'bg-[#2978B5]/10 text-[#2978B5] border border-[#2978B5]/30'
+                      : allDone
+                      ? 'bg-[#22c55e]/8 text-[#22c55e] hover:bg-[#22c55e]/12'
+                      : hasProgress
+                      ? 'bg-[#f59e0b]/8 text-[#f59e0b] hover:bg-[#f59e0b]/12'
+                      : 'bg-muted/40 text-muted-foreground hover:bg-muted/60'
+                  }`}
+                >
+                  <div>Day{day}</div>
+                  {allDone && <Check className="w-3 h-3 mx-auto mt-0.5" />}
+                  {hasProgress && !allDone && (
+                    <div className="text-[10px] mt-0.5">
+                      {tasks.filter(t => t.isCompleted).length}/{tasks.length}
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          {/* 当天任务列表 */}
+          {(dayTasks[activeDay] || []).length > 0 ? (
+            <div className="space-y-2">
+              {(dayTasks[activeDay] || []).map(task => {
+                const typeColors: Record<string, { bg: string; text: string; icon: React.ReactNode }> = {
+                  study: { bg: 'bg-[#2978B5]/10', text: 'text-[#2978B5]', icon: <BookOpen className="w-3 h-3" /> },
+                  practice: { bg: 'bg-[#f59e0b]/10', text: 'text-[#f59e0b]', icon: <Zap className="w-3 h-3" /> },
+                  quiz: { bg: 'bg-[#22c55e]/10', text: 'text-[#22c55e]', icon: <ClipboardCheck className="w-3 h-3" /> },
+                  review: { bg: 'bg-[#8b5cf6]/10', text: 'text-[#8b5cf6]', icon: <Flag className="w-3 h-3" /> },
+                };
+                const tc = typeColors[task.taskType] || typeColors.study;
+                return (
+                  <div
+                    key={task.id}
+                    className={`flex items-center gap-3 py-2.5 px-3 rounded-md ${
+                      task.isCompleted ? 'bg-muted/20' : 'bg-background border border-border/30'
+                    }`}
+                  >
+                    {task.isCompleted ? (
+                      <CheckCircle2 className="w-4 h-4 text-[#22c55e] shrink-0" />
+                    ) : (
+                      <Circle className="w-4 h-4 text-muted-foreground/40 shrink-0" />
+                    )}
+                    <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${tc.bg} ${tc.text} flex items-center gap-1 shrink-0`}>
+                      {tc.icon}
+                      {task.taskType === 'study' ? '学习' : task.taskType === 'practice' ? '实操' : task.taskType === 'quiz' ? '考核' : '复盘'}
+                    </span>
+                    <span className={`text-sm flex-1 ${task.isCompleted ? 'text-muted-foreground line-through' : 'text-foreground'}`}>
+                      {task.taskTitle}
+                    </span>
+                    {task.standard && (
+                      <span className="text-xs text-[#f59e0b] flex items-center gap-1 shrink-0">
+                        <Flag className="w-3 h-3" />
+                        {task.standard}
+                      </span>
+                    )}
+                    {task.deadlineTime && (
+                      <span className="text-xs text-muted-foreground flex items-center gap-1 shrink-0">
+                        <Clock className="w-3 h-3" />
+                        {task.deadlineTime}
+                      </span>
+                    )}
+                    {task.relatedLevelId && !task.isCompleted && (
+                      <button
+                        onClick={() => setSelectedLevel(task.relatedLevelId!)}
+                        className="text-xs text-[#2978B5] hover:underline shrink-0"
+                      >
+                        去闯关
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-6 text-sm text-muted-foreground">
+              Day{activeDay} 暂无排课安排
+            </div>
+          )}
+        </div>
+      )}
 
       {/* 关卡地图 */}
       <div className="bg-card rounded-lg shadow-sm p-5 border border-border/30">

@@ -21,6 +21,11 @@
 - **四象限**: A(全合格)/B(结果不合格)/C(过程不合格)/D(全不合格)
 - **三阶段**: 阶段一→二(闯关7关全通过)→三(连续4周A类)，连续2周D类触发复训
 - **5角色**: trainee/mentor/teacher/training_manager/boss
+- **四阶段成长模型**: 学习期(1周7天排课) → 练习期(2-4周19动作演练) → 独立期(2-3月) → 熟练期(3月+)
+- **19核心动作4节点**: 首通电话(6动作30%) + 第三天回访(4动作25%) + 第五天预约(6动作30%) + 面诊当天(3动作15%)
+- **5级评分标准**: 5分(全面完成有亮点) / 4分(按要求完成) / 3分(勉强完成) / 2分(明显遗漏) / 0分(未执行)
+- **信任度公式**: 患者信任度 = 认知水平 × 专业感知 × 安全感
+- **4类特殊情况**: 未按时用药/延迟用药/用药中断/不规律用药(10个补充动作)
 
 ## 目录结构
 
@@ -48,6 +53,8 @@
 │   │       ├── auth/       # 登录/登出/当前用户
 │   │       ├── learning/   # 学习关卡+答题提交
 │   │       ├── growth/     # 成长档案
+│   │       ├── growth-plan/ # 成长计划（每日任务+阶段进度）
+│   │       ├── core-actions/ # 19核心动作+评分
 │   │       ├── diagnosis/  # 双轨诊断
 │   │       ├── empower/    # 赋能方案
 │   │       ├── qc/         # 质检记录
@@ -65,9 +72,9 @@
 └── tsconfig.json
 ```
 
-## 数据库表（19张）
+## 数据库表（24张）
 
-核心表: users, roles, permissions, role_permissions, learning_levels, level_progress, quiz_attempts, questions, qc_records, business_data, thresholds, empower_plans, empower_executions, mentor_trainees, stage_rules, announcements, resources, daily_assessments, configurations
+核心表: users, roles, permissions, role_permissions, learning_levels, level_progress, quiz_attempts, questions, qc_records, business_data, thresholds, empower_plans, empower_executions, mentor_trainees, stage_rules, announcements, resources, daily_assessments, configurations, growth_stages, daily_plans, core_actions, action_scores, special_patient_actions
 
 ## 测试账号
 
