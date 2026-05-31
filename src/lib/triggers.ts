@@ -117,6 +117,48 @@ export async function onQuizFailed(
 }
 
 /**
+ * 演练低分联动
+ * 演练评分≤2分 → 通知导师安排辅导 + 可创建临时演练任务
+ */
+export async function onPracticeLowScore(
+  traineeId: string,
+  traineeName: string,
+  submissionId: number,
+  taskTitle: string,
+  score: number
+): Promise<void> {
+  if (score <= 2) {
+    const mentorId = await getMentorId(traineeId);
+
+    if (mentorId) {
+      await sendNotification({
+        userId: mentorId,
+        type: 'practice_submitted',
+        title: `${traineeName}演练评分不达标`,
+        message: `${traineeName}在「${taskTitle}」的演练评分仅${score}分（≤2分），建议安排针对性辅导或创建临时演练任务`,
+        relatedUserId: traineeId,
+        relatedId: submissionId,
+        priority: 'high',
+      });
+    }
+
+    // 通知培训负责人
+    const managerIds = await getTrainingManagerIds();
+    for (const mgrId of managerIds) {
+      await sendNotification({
+        userId: mgrId,
+        type: 'practice_submitted',
+        title: `${traineeName}演练评分不达标`,
+        message: `${traineeName}在「${taskTitle}」的演练评分仅${score}分，导师：${mentorId || '未分配'}`,
+        relatedUserId: traineeId,
+        relatedId: submissionId,
+        priority: 'medium',
+      });
+    }
+  }
+}
+
+/**
  * 闯关通过联动
  * 通过关卡 → 检查是否触发阶段转换
  */

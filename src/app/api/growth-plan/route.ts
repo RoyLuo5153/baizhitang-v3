@@ -148,6 +148,29 @@ export async function GET(request: NextRequest) {
           .insert(newPlans)
           .select();
         todayPlans = inserted || [];
+
+        // 联动：为practice类型任务自动创建practice_tasks
+        const practiceItems = (inserted || []).filter((p: Record<string, unknown>) => p.task_type === 'practice');
+        if (practiceItems.length > 0) {
+          try {
+            const practiceTaskInserts = practiceItems.map((p: Record<string, unknown>) => ({
+              task_type: 'system_task',
+              title: String(p.task_title || ''),
+              description: String(p.task_description || ''),
+              task_tag: deriveTaskTag(String(p.task_title || '')),
+              linked_course: p.related_level_id ? `闯关第${p.related_level_id}关` : null,
+              linked_stage: String(p.stage_key || ''),
+              linked_day_index: Number(p.day_index) || null,
+              assigned_to: userId,
+              assigned_by: null,
+              deadline: null,
+              status: 'pending',
+            }));
+            await client.from('practice_tasks').insert(practiceTaskInserts);
+          } catch (ptErr) {
+            console.error('Auto-create practice_tasks error:', ptErr);
+          }
+        }
       }
     }
   }
@@ -322,8 +345,42 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    // 联动：为practice类型任务自动创建practice_tasks
+    const practiceItems = (inserted || []).filter((p: Record<string, unknown>) => p.task_type === 'practice');
+    if (practiceItems.length > 0) {
+      try {
+        const practiceTaskInserts = practiceItems.map((p: Record<string, unknown>) => ({
+          task_type: 'system_task',
+          title: String(p.task_title || ''),
+          description: String(p.task_description || ''),
+          task_tag: deriveTaskTag(String(p.task_title || '')),
+          linked_course: p.related_level_id ? `闯关第${p.related_level_id}关` : null,
+          linked_stage: String(p.stage_key || ''),
+          linked_day_index: Number(p.day_index) || null,
+          assigned_to: userId,
+          assigned_by: null,
+          deadline: null,
+          status: 'pending',
+        }));
+        await client.from('practice_tasks').insert(practiceTaskInserts);
+      } catch (ptErr) {
+        console.error('Auto-create practice_tasks error:', ptErr);
+      }
+    }
+
     return NextResponse.json({ success: true, count: inserted?.length || 0 });
   } catch (err) {
     return NextResponse.json({ error: '请求格式错误' }, { status: 400 });
   }
+}
+
+function deriveTaskTag(title: string): string {
+  if (title.includes('首通')) return '首通电话';
+  if (title.includes('回访')) return '第三天回访';
+  if (title.includes('预约')) return '第五天预约';
+  if (title.includes('面诊')) return '面诊当天';
+  if (title.includes('综合') || title.includes('全流程')) return '综合演练';
+  if (title.includes('特殊')) return '特殊情况处理';
+  if (title.includes('异议')) return '异议处理';
+  return '通用';
 }

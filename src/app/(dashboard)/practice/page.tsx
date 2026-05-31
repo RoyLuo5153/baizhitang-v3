@@ -1,248 +1,657 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Mic, Upload, CheckCircle2, Clock, MessageSquare, Send, FileAudio, ChevronDown, ChevronUp, Star } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '@/lib/auth/context';
+import { cn } from '@/lib/utils';
 
-interface Submission {
+/* ── 类型 ── */
+interface PracticeTask {
   id: number;
-  trainee_id: string;
-  trainee_name?: string | null;
-  level_id: number;
-  level_name?: string | null;
-  submission_type: string;
+  task_type: 'system_task' | 'temp_task';
   title: string;
-  description: string;
-  file_url: string;
-  status: string;
-  reviewer_id: string | null;
-  reviewer_name?: string | null;
-  review_score: number | null;
-  review_comment: string | null;
-  submitted_at: string;
-  reviewed_at: string | null;
+  description: string | null;
+  task_tag: string | null;
+  linked_course: string | null;
+  linked_stage: string | null;
+  linked_day_index: number | null;
+  assigned_to: string;
+  assigned_by: string | null;
+  deadline: string | null;
+  status: 'pending' | 'submitted' | 'reviewed';
+  submission_id: number | null;
+  created_at: string;
+  // 附加字段（API join）
+  trainee_name?: string;
+  submission?: { id: number; file_url: string; submitted_at: string; description: string | null };
+  review?: { score: number | null; comment: string | null; reviewer_id: string | null; reviewed_at: string | null } | null;
 }
 
+interface CoreAction {
+  id: number;
+  node_key: string;
+  node_name: string;
+  action_index: number;
+  action_name: string;
+  scoring_5: string | null;
+  scoring_4: string | null;
+  scoring_3: string | null;
+  scoring_2: string | null;
+  scoring_0: string | null;
+}
+
+const SCORE_LABELS: Record<number, { label: string; color: string }> = {
+  5: { label: '全面完成有亮点', color: 'text-emerald-600' },
+  4: { label: '按要求完成', color: 'text-blue-600' },
+  3: { label: '勉强完成', color: 'text-amber-600' },
+  2: { label: '明显遗漏', color: 'text-orange-600' },
+  0: { label: '未执行', color: 'text-red-600' },
+};
+
 export default function PracticePage() {
-  const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const { user } = useAuth();
+  const isTrainee = user?.role === '1';
+  const [activeTab, setActiveTab] = useState(isTrainee ? 'pending' : 'review');
+  const [pendingTasks, setPendingTasks] = useState<PracticeTask[]>([]);
+  const [history, setHistory] = useState<PracticeTask[]>([]);
+  const [pendingReview, setPendingReview] = useState<PracticeTask[]>([]);
+  const [reviewedHistory, setReviewedHistory] = useState<PracticeTask[]>([]);
+  const [coreActions, setCoreActions] = useState<CoreAction[]>([]);
+  const [stats, setStats] = useState({ pending: 0, submitted: 0, reviewed: 0 });
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'my' | 'review'>('my');
-  const [showSubmitModal, setShowSubmitModal] = useState(false);
-  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [submitModal, setSubmitModal] = useState<PracticeTask | null>(null);
+  const [reviewModal, setReviewModal] = useState<PracticeTask | null>(null);
+  const [createModal, setCreateModal] = useState(false);
+  const [submitFileUrl, setSubmitFileUrl] = useState('');
+  const [submitDesc, setSubmitDesc] = useState('');
+  const [reviewScore, setReviewScore] = useState<number | null>(null);
+  const [reviewComment, setReviewComment] = useState('');
+  const [reviewPass, setReviewPass] = useState(true);
+  const [newTask, setNewTask] = useState({ assignedTo: '', title: '', description: '', taskTag: '', deadline: '' });
 
-  useEffect(() => { fetchSubmissions(); }, []);
-
-  const fetchSubmissions = async () => {
+  const fetchData = useCallback(async () => {
+    if (!user?.id) return;
+    setLoading(true);
     try {
-      const res = await fetch('/api/practice?userId=1');
-      if (res.ok) {
-        const data = await res.json();
-        setSubmissions(data.submissions || []);
-        setLoading(false);
-        return;
+      const res = await fetch(`/api/practice?userId=${user.id}&role=${isTrainee ? 'trainee' : 'reviewer'}`);
+      const data = await res.json();
+      if (isTrainee) {
+        setPendingTasks(data.pendingTasks || []);
+        setHistory(data.history || []);
+        setStats(data.stats || { pending: 0, submitted: 0, reviewed: 0 });
+      } else {
+        setPendingReview(data.pendingReview || []);
+        setReviewedHistory(data.reviewedHistory || []);
+        setCoreActions(data.coreActions || []);
+        setStats({ pending: (data.pendingReview || []).length, submitted: 0, reviewed: (data.reviewedHistory || []).length });
       }
-    } catch {}
-    setSubmissions(MOCK_SUBMISSIONS);
-    setLoading(false);
+    } catch (err) {
+      console.error('Fetch practice error:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id, isTrainee]);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  /* ── 新人提交录音 ── */
+  const handleSubmit = async () => {
+    if (!submitModal || !user?.id) return;
+    try {
+      const res = await fetch('/api/practice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          taskId: submitModal.id,
+          traineeId: user.id,
+          fileUrl: submitFileUrl,
+          description: submitDesc,
+          title: submitModal.title,
+        }),
+      });
+      if (res.ok) {
+        setSubmitModal(null);
+        setSubmitFileUrl('');
+        setSubmitDesc('');
+        fetchData();
+      }
+    } catch (err) {
+      console.error('Submit error:', err);
+    }
   };
 
-  const statusConfig: Record<string, { label: string; color: string; bg: string; icon: typeof Clock }> = {
-    submitted: { label: '待审核', color: 'text-[#f59e0b]', bg: 'bg-[#f59e0b]/10', icon: Clock },
-    reviewed: { label: '已评分', color: 'text-[#22c55e]', bg: 'bg-[#22c55e]/10', icon: CheckCircle2 },
-    revision: { label: '需修改', color: 'text-destructive', bg: 'bg-destructive/10', icon: MessageSquare },
+  /* ── 导师审核 ── */
+  const handleReview = async () => {
+    if (!reviewModal?.submission?.id || reviewScore === null) return;
+    try {
+      const res = await fetch('/api/practice', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          submissionId: reviewModal.submission.id,
+          reviewScore,
+          reviewComment,
+          reviewerId: user?.id,
+          pass: reviewPass,
+        }),
+      });
+      if (res.ok) {
+        setReviewModal(null);
+        setReviewScore(null);
+        setReviewComment('');
+        setReviewPass(true);
+        fetchData();
+      }
+    } catch (err) {
+      console.error('Review error:', err);
+    }
   };
 
-  const typeConfig: Record<string, { label: string; icon: typeof Mic }> = {
-    recording: { label: '录音演练', icon: Mic },
-    wechat: { label: '微信截图', icon: MessageSquare },
+  /* ── 创建临时任务 ── */
+  const handleCreateTask = async () => {
+    if (!user?.id) return;
+    try {
+      const res = await fetch('/api/practice/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          assignedTo: newTask.assignedTo,
+          title: newTask.title,
+          description: newTask.description,
+          taskTag: newTask.taskTag,
+          deadline: newTask.deadline || null,
+          assignedBy: user.id,
+        }),
+      });
+      if (res.ok) {
+        setCreateModal(false);
+        setNewTask({ assignedTo: '', title: '', description: '', taskTag: '', deadline: '' });
+        fetchData();
+      }
+    } catch (err) {
+      console.error('Create task error:', err);
+    }
   };
 
-  const mySubmissions = submissions.filter(s => s.trainee_id === '1');
-  const pendingReviews = submissions.filter(s => s.status === 'submitted' && s.trainee_id !== '1');
+  const formatDate = (d: string | null) => d ? new Date(d).toLocaleDateString('zh-CN') : '';
+  const formatTime = (d: string | null) => d ? new Date(d).toLocaleString('zh-CN') : '';
 
-  if (loading) return <div className="space-y-4">{[1,2,3].map(i=><div key={i} className="bg-card rounded-lg p-5 animate-pulse"><div className="h-5 bg-muted rounded w-1/3 mb-3"/><div className="h-3 bg-muted rounded w-2/3"/></div>)}</div>;
-
-  const displayList = activeTab === 'my' ? mySubmissions : pendingReviews;
+  if (loading) {
+    return <div className="flex items-center justify-center h-96 text-muted-foreground">加载中...</div>;
+  }
 
   return (
-    <div className="space-y-5">
-      {/* Header */}
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Mic className="w-5 h-5 text-primary" />
-          <h1 className="text-xl font-semibold text-foreground">录音演练</h1>
-        </div>
-        <button onClick={() => setShowSubmitModal(true)} className="flex items-center gap-1.5 bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 transition">
-          <Upload className="w-4 h-4" /> 提交演练
-        </button>
+        <h1 className="text-2xl font-bold" style={{ color: '#102A43' }}>录音演练</h1>
+        {!isTrainee && (
+          <button
+            onClick={() => setCreateModal(true)}
+            className="px-4 py-2 rounded-lg text-white font-medium"
+            style={{ backgroundColor: '#F59E0B' }}
+          >
+            + 创建临时演练任务
+          </button>
+        )}
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-4 gap-4">
-        {[
-          { label: '我的提交', value: mySubmissions.length, icon: Send, color: 'text-primary', bg: 'bg-primary/10' },
-          { label: '待审核', value: mySubmissions.filter(s => s.status === 'submitted').length, icon: Clock, color: 'text-[#f59e0b]', bg: 'bg-[#f59e0b]/10' },
-          { label: '已通过', value: mySubmissions.filter(s => s.review_score !== null && s.review_score >= 70).length, icon: CheckCircle2, color: 'text-[#22c55e]', bg: 'bg-[#22c55e]/10' },
-          { label: '平均分', value: mySubmissions.filter(s => s.review_score).length ? Math.round(mySubmissions.filter(s => s.review_score).reduce((a, s) => a + (s.review_score || 0), 0) / mySubmissions.filter(s => s.review_score).length) : '-', icon: Star, color: 'text-primary', bg: 'bg-primary/10' },
-        ].map((s, i) => (
-          <div key={i} className="bg-card rounded-lg shadow-card p-4 flex items-center gap-3">
-            <div className={`w-9 h-9 rounded-lg ${s.bg} flex items-center justify-center`}><s.icon className={`w-4 h-4 ${s.color}`} /></div>
-            <div><div className="text-xl font-bold text-foreground">{s.value}</div><div className="text-xs text-muted-foreground">{s.label}</div></div>
-          </div>
-        ))}
+      {/* 统计条 */}
+      <div className="grid grid-cols-3 gap-4">
+        {isTrainee ? (
+          <>
+            <StatCard label="待完成" value={stats.pending} color="#F59E0B" />
+            <StatCard label="已提交待审" value={stats.submitted} color="#2978B5" />
+            <StatCard label="已审核" value={stats.reviewed} color="#10B981" />
+          </>
+        ) : (
+          <>
+            <StatCard label="待审核" value={stats.pending} color="#F59E0B" />
+            <StatCard label="已审核" value={stats.reviewed} color="#10B981" />
+            <StatCard label="核心动作" value={coreActions.length} color="#2978B5" />
+          </>
+        )}
       </div>
 
-      {/* Tabs */}
-      <div className="flex bg-muted rounded-lg p-1 w-fit">
-        <button onClick={() => setActiveTab('my')} className={`px-4 py-1.5 text-sm font-medium rounded-md transition ${activeTab === 'my' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground'}`}>我的提交</button>
-        <button onClick={() => setActiveTab('review')} className={`px-4 py-1.5 text-sm font-medium rounded-md transition ${activeTab === 'review' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground'}`}>待我审核 ({pendingReviews.length})</button>
+      {/* Tab切换 */}
+      <div className="flex gap-1 p-1 rounded-lg" style={{ backgroundColor: '#E6E1D8' }}>
+        {isTrainee ? (
+          <>
+            <TabBtn active={activeTab === 'pending'} onClick={() => setActiveTab('pending')}>待完成演练</TabBtn>
+            <TabBtn active={activeTab === 'history'} onClick={() => setActiveTab('history')}>历史与反馈</TabBtn>
+          </>
+        ) : (
+          <>
+            <TabBtn active={activeTab === 'review'} onClick={() => setActiveTab('review')}>待我审核</TabBtn>
+            <TabBtn active={activeTab === 'reviewed'} onClick={() => setActiveTab('reviewed')}>审核历史</TabBtn>
+          </>
+        )}
       </div>
 
-      {/* Submission list */}
-      <div className="space-y-3">
-        {displayList.length === 0 ? (
-          <div className="bg-card rounded-lg p-12 text-center">
-            <Mic className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
-            <p className="text-muted-foreground text-sm">{activeTab === 'my' ? '暂无演练记录，点击"提交演练"开始' : '暂无待审核的演练'}</p>
-          </div>
-        ) : displayList.map(sub => {
-          const cfg = statusConfig[sub.status] || statusConfig.submitted;
-          const tcfg = typeConfig[sub.submission_type] || typeConfig.recording;
-          const StatusIcon = cfg.icon;
-          const TypeIcon = tcfg.icon;
-          const isExpanded = expandedId === sub.id;
-
-          return (
-            <div key={sub.id} className="bg-card rounded-lg shadow-card overflow-hidden">
-              <div className="p-5 cursor-pointer hover:bg-muted/20 transition" onClick={() => setExpandedId(isExpanded ? null : sub.id)}>
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start gap-3">
-                    <div className={`w-9 h-9 rounded-lg ${cfg.bg} flex items-center justify-center flex-shrink-0 mt-0.5`}>
-                      <TypeIcon className={`w-4 h-4 ${cfg.color}`} />
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-foreground mb-1">{sub.title}</h3>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <span className={`px-1.5 py-0.5 rounded ${tcfg.label === '录音演练' ? 'bg-primary/10 text-primary' : 'bg-[#f59e0b]/10 text-[#f59e0b]'}`}>{tcfg.label}</span>
-                        {sub.level_name && <span>关卡: {sub.level_name}</span>}
-                        <span>{new Date(sub.submitted_at).toLocaleDateString('zh-CN')}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded ${cfg.bg} ${cfg.color} flex items-center gap-1`}>
-                      <StatusIcon className="w-3 h-3" />{cfg.label}
+      {/* ── 新人：待完成演练 ── */}
+      {isTrainee && activeTab === 'pending' && (
+        <div className="space-y-3">
+          {pendingTasks.length === 0 ? (
+            <EmptyState text="暂无待完成演练任务" />
+          ) : pendingTasks.map(task => (
+            <div key={task.id} className="rounded-xl border p-4" style={{ backgroundColor: '#FFFFFF', borderColor: '#E6E1D8' }}>
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium',
+                      task.task_type === 'system_task' ? 'bg-blue-50 text-blue-700' : 'bg-amber-50 text-amber-700'
+                    )}>
+                      {task.task_type === 'system_task' ? '系统任务' : '临时任务'}
                     </span>
-                    {isExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                    {task.task_tag && (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{task.task_tag}</span>
+                    )}
+                    {task.status === 'submitted' && (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-green-50 text-green-700">已提交</span>
+                    )}
                   </div>
+                  <h3 className="font-semibold text-base mb-1" style={{ color: '#102A43' }}>{task.title}</h3>
+                  {task.description && <p className="text-sm mb-2" style={{ color: '#667085' }}>{task.description}</p>}
+                  {task.linked_course && (
+                    <p className="text-xs mb-1" style={{ color: '#2978B5' }}>关联课程：{task.linked_course}</p>
+                  )}
+                  {task.linked_stage && (
+                    <p className="text-xs" style={{ color: '#667085' }}>
+                      {task.linked_stage === 'learning' ? '学习期' : '练习期'} Day{task.linked_day_index}
+                    </p>
+                  )}
+                  {task.deadline && (
+                    <p className="text-xs mt-1" style={{ color: '#667085' }}>
+                      截止：{formatTime(task.deadline)}
+                    </p>
+                  )}
+                  {task.task_type === 'temp_task' && task.assigned_by && (
+                    <p className="text-xs mt-1" style={{ color: '#667085' }}>布置人：导师</p>
+                  )}
+                </div>
+                {task.status === 'pending' && (
+                  <button
+                    onClick={() => setSubmitModal(task)}
+                    className="ml-4 px-4 py-2 rounded-lg text-white text-sm font-medium shrink-0"
+                    style={{ backgroundColor: '#2978B5' }}
+                  >
+                    提交录音
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── 新人：历史与反馈 ── */}
+      {isTrainee && activeTab === 'history' && (
+        <div className="space-y-3">
+          {history.length === 0 ? (
+            <EmptyState text="暂无审核历史" />
+          ) : history.map(task => (
+            <div key={task.id} className="rounded-xl border p-4" style={{ backgroundColor: '#FFFFFF', borderColor: '#E6E1D8' }}>
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium',
+                      task.task_type === 'system_task' ? 'bg-blue-50 text-blue-700' : 'bg-amber-50 text-amber-700'
+                    )}>
+                      {task.task_type === 'system_task' ? '系统任务' : '临时任务'}
+                    </span>
+                    {task.task_tag && (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{task.task_tag}</span>
+                    )}
+                  </div>
+                  <h3 className="font-semibold text-base mb-1" style={{ color: '#102A43' }}>{task.title}</h3>
+                  {task.review && task.review.score !== null && (
+                    <div className="mt-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm" style={{ color: '#667085' }}>评分：</span>
+                        <span className={cn('text-lg font-bold', SCORE_LABELS[task.review.score]?.color || 'text-gray-600')}>
+                          {task.review.score}分
+                        </span>
+                        <span className="text-sm" style={{ color: '#667085' }}>
+                          {SCORE_LABELS[task.review.score]?.label || ''}
+                        </span>
+                      </div>
+                      {task.review.comment && (
+                        <p className="text-sm mt-1 p-2 rounded" style={{ backgroundColor: '#F8F6F0', color: '#1D2733' }}>
+                          {task.review.comment}
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
+            </div>
+          ))}
+        </div>
+      )}
 
-              {/* Expanded details */}
-              {isExpanded && (
-                <div className="px-5 pb-5 pt-0 border-t border-border/30">
-                  <div className="mt-4 space-y-3">
-                    {sub.description && (
-                      <div>
-                        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">描述</span>
-                        <p className="text-sm text-foreground mt-1">{sub.description}</p>
-                      </div>
-                    )}
-                    {sub.file_url && (
-                      <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
-                        <FileAudio className="w-4 h-4 text-primary" />
-                        <span className="text-sm text-primary hover:underline cursor-pointer">播放录音</span>
-                      </div>
-                    )}
-                    {sub.review_score !== null && (
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="p-3 bg-muted/50 rounded-lg">
-                          <span className="text-xs text-muted-foreground">评分</span>
-                          <div className={`text-2xl font-bold mt-1 ${sub.review_score >= 70 ? 'text-[#22c55e]' : sub.review_score >= 50 ? 'text-[#f59e0b]' : 'text-destructive'}`}>
-                            {sub.review_score}<span className="text-sm text-muted-foreground font-normal">/100</span>
-                          </div>
-                        </div>
-                        <div className="p-3 bg-muted/50 rounded-lg">
-                          <span className="text-xs text-muted-foreground">审核人</span>
-                          <div className="text-sm font-medium text-foreground mt-1">{sub.reviewer_name || '导师'}</div>
-                          {sub.reviewed_at && <div className="text-xs text-muted-foreground mt-0.5">{new Date(sub.reviewed_at).toLocaleDateString('zh-CN')}</div>}
-                        </div>
-                      </div>
-                    )}
-                    {sub.review_comment && (
-                      <div className="p-3 bg-primary/5 border border-primary/10 rounded-lg">
-                        <span className="text-xs font-semibold text-primary">导师评语</span>
-                        <p className="text-sm text-foreground mt-1">{sub.review_comment}</p>
-                      </div>
-                    )}
-                    {activeTab === 'review' && sub.status === 'submitted' && (
-                      <div className="flex gap-3 pt-2">
-                        <input type="number" placeholder="评分(0-100)" className="border border-border rounded-lg px-3 py-2 text-sm w-32" min={0} max={100} />
-                        <input placeholder="评语" className="border border-border rounded-lg px-3 py-2 text-sm flex-1" />
-                        <button className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition">提交评分</button>
-                      </div>
+      {/* ── 导师/负责人：待审核 ── */}
+      {!isTrainee && activeTab === 'review' && (
+        <div className="space-y-3">
+          {pendingReview.length === 0 ? (
+            <EmptyState text="暂无待审核演练" />
+          ) : pendingReview.map(task => (
+            <div key={task.id} className="rounded-xl border p-4" style={{ backgroundColor: '#FFFFFF', borderColor: '#E6E1D8' }}>
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium',
+                      task.task_type === 'system_task' ? 'bg-blue-50 text-blue-700' : 'bg-amber-50 text-amber-700'
+                    )}>
+                      {task.task_type === 'system_task' ? '系统任务' : '临时任务'}
+                    </span>
+                    {task.task_tag && (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{task.task_tag}</span>
                     )}
                   </div>
+                  <h3 className="font-semibold text-base mb-1" style={{ color: '#102A43' }}>
+                    <span style={{ color: '#2978B5' }}>{task.trainee_name}</span> — {task.title}
+                  </h3>
+                  <p className="text-sm" style={{ color: '#667085' }}>
+                    提交时间：{task.submission?.submitted_at ? formatTime(task.submission.submitted_at) : '未知'}
+                  </p>
+                  {task.submission?.description && (
+                    <p className="text-sm mt-1" style={{ color: '#667085' }}>说明：{task.submission.description}</p>
+                  )}
+                </div>
+                <button
+                  onClick={() => { setReviewModal(task); setReviewScore(null); setReviewComment(''); setReviewPass(true); }}
+                  className="ml-4 px-4 py-2 rounded-lg text-white text-sm font-medium shrink-0"
+                  style={{ backgroundColor: '#F59E0B' }}
+                >
+                  审核评分
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── 导师/负责人：审核历史 ── */}
+      {!isTrainee && activeTab === 'reviewed' && (
+        <div className="space-y-3">
+          {reviewedHistory.length === 0 ? (
+            <EmptyState text="暂无审核历史" />
+          ) : reviewedHistory.map(task => (
+            <div key={task.id} className="rounded-xl border p-4" style={{ backgroundColor: '#FFFFFF', borderColor: '#E6E1D8' }}>
+              <div className="flex items-center gap-2 mb-1">
+                <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium',
+                  task.task_type === 'system_task' ? 'bg-blue-50 text-blue-700' : 'bg-amber-50 text-amber-700'
+                )}>
+                  {task.task_type === 'system_task' ? '系统任务' : '临时任务'}
+                </span>
+              </div>
+              <h3 className="font-semibold text-base" style={{ color: '#102A43' }}>
+                <span style={{ color: '#2978B5' }}>{task.trainee_name}</span> — {task.title}
+              </h3>
+              {task.review && task.review.score !== null && (
+                <div className="flex items-center gap-2 mt-1">
+                  <span className={cn('text-lg font-bold', SCORE_LABELS[task.review.score]?.color || 'text-gray-600')}>
+                    {task.review.score}分
+                  </span>
+                  <span className="text-sm" style={{ color: '#667085' }}>{SCORE_LABELS[task.review.score]?.label || ''}</span>
                 </div>
               )}
+              {task.review?.comment && (
+                <p className="text-sm mt-1 p-2 rounded" style={{ backgroundColor: '#F8F6F0', color: '#1D2733' }}>{task.review.comment}</p>
+              )}
             </div>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
 
-      {/* Submit Modal */}
-      {showSubmitModal && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center" onClick={() => setShowSubmitModal(false)}>
-          <div className="bg-card rounded-xl shadow-lg w-full max-w-lg p-6" onClick={e => e.stopPropagation()}>
-            <h2 className="text-lg font-semibold text-foreground mb-4">提交演练</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium text-foreground mb-1 block">演练类型</label>
-                <div className="flex gap-3">
-                  <button className="flex-1 p-3 border-2 border-primary rounded-lg text-center">
-                    <Mic className="w-5 h-5 mx-auto mb-1 text-primary" /><span className="text-sm font-medium text-foreground">录音演练</span>
-                  </button>
-                  <button className="flex-1 p-3 border border-border rounded-lg text-center hover:border-primary/50">
-                    <MessageSquare className="w-5 h-5 mx-auto mb-1 text-muted-foreground" /><span className="text-sm font-medium text-muted-foreground">微信截图</span>
-                  </button>
-                </div>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-foreground mb-1 block">演练标题</label>
-                <input className="w-full border border-border rounded-lg px-3 py-2 text-sm" placeholder="如：首次电话沟通演练" />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-foreground mb-1 block">关联关卡</label>
-                <select className="w-full border border-border rounded-lg px-3 py-2 text-sm">
-                  <option>初心启航(第1关)</option><option>角色认知(第2关)</option><option>糖尿病基础(第3关)</option>
-                </select>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-foreground mb-1 block">上传文件</label>
-                <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary/50 transition cursor-pointer">
-                  <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground">点击上传或拖拽文件至此</p>
-                  <p className="text-xs text-muted-foreground mt-1">支持 mp3/wav/png/jpg，最大50MB</p>
-                </div>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-foreground mb-1 block">备注说明</label>
-                <textarea className="w-full border border-border rounded-lg px-3 py-2 text-sm" rows={2} placeholder="描述演练场景或特别说明" />
-              </div>
+      {/* ── 提交录音弹窗 ── */}
+      {submitModal && (
+        <Modal title="提交演练录音" onClose={() => setSubmitModal(null)}>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium" style={{ color: '#102A43' }}>演练任务</label>
+              <p className="mt-1 text-sm p-2 rounded" style={{ backgroundColor: '#F8F6F0', color: '#1D2733' }}>
+                {submitModal.title}
+              </p>
+              {submitModal.description && (
+                <p className="text-xs mt-1" style={{ color: '#667085' }}>{submitModal.description}</p>
+              )}
             </div>
-            <div className="flex justify-end gap-3 mt-6">
-              <button onClick={() => setShowSubmitModal(false)} className="px-4 py-2 text-sm text-muted-foreground">取消</button>
-              <button onClick={() => setShowSubmitModal(false)} className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium">提交</button>
+            <div>
+              <label className="text-sm font-medium" style={{ color: '#102A43' }}>录音链接</label>
+              <input
+                type="text"
+                value={submitFileUrl}
+                onChange={e => setSubmitFileUrl(e.target.value)}
+                placeholder="粘贴录音文件链接"
+                className="mt-1 w-full border rounded-lg px-3 py-2 text-sm"
+                style={{ borderColor: '#E6E1D8' }}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium" style={{ color: '#102A43' }}>说明（选填）</label>
+              <textarea
+                value={submitDesc}
+                onChange={e => setSubmitDesc(e.target.value)}
+                placeholder="对本次演练的补充说明..."
+                rows={3}
+                className="mt-1 w-full border rounded-lg px-3 py-2 text-sm"
+                style={{ borderColor: '#E6E1D8' }}
+              />
+            </div>
+            <div className="flex justify-end gap-3 pt-2">
+              <button onClick={() => setSubmitModal(null)} className="px-4 py-2 rounded-lg border text-sm" style={{ borderColor: '#E6E1D8', color: '#667085' }}>取消</button>
+              <button onClick={handleSubmit} className="px-4 py-2 rounded-lg text-white text-sm font-medium" style={{ backgroundColor: '#2978B5' }}>提交</button>
             </div>
           </div>
-        </div>
+        </Modal>
+      )}
+
+      {/* ── 审核评分弹窗 ── */}
+      {reviewModal && (
+        <Modal title="审核评分" onClose={() => setReviewModal(null)}>
+          <div className="space-y-4">
+            <div className="p-3 rounded-lg" style={{ backgroundColor: '#F8F6F0' }}>
+              <p className="font-medium" style={{ color: '#102A43' }}>
+                <span style={{ color: '#2978B5' }}>{reviewModal.trainee_name}</span> — {reviewModal.title}
+              </p>
+              <p className="text-sm mt-1" style={{ color: '#667085' }}>
+                提交时间：{reviewModal.submission?.submitted_at ? formatTime(reviewModal.submission.submitted_at) : '未知'}
+              </p>
+              {reviewModal.submission?.description && (
+                <p className="text-sm mt-1" style={{ color: '#667085' }}>说明：{reviewModal.submission.description}</p>
+              )}
+            </div>
+
+            {/* 5级评分选择 */}
+            <div>
+              <label className="text-sm font-medium" style={{ color: '#102A43' }}>评分</label>
+              <div className="grid grid-cols-5 gap-2 mt-2">
+                {[5, 4, 3, 2, 0].map(s => (
+                  <button
+                    key={s}
+                    onClick={() => setReviewScore(s)}
+                    className={cn(
+                      'p-2 rounded-lg border text-center text-sm transition-all',
+                      reviewScore === s ? 'border-blue-500 ring-2 ring-blue-200' : ''
+                    )}
+                    style={{ borderColor: reviewScore === s ? '#2978B5' : '#E6E1D8', backgroundColor: reviewScore === s ? '#EBF5FF' : '#FFFFFF' }}
+                  >
+                    <div className={cn('text-lg font-bold', SCORE_LABELS[s].color)}>{s}分</div>
+                    <div className="text-xs" style={{ color: '#667085' }}>{SCORE_LABELS[s].label}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 评分标准参考 */}
+            {reviewScore !== null && reviewModal.task_tag && coreActions.length > 0 && (
+              <div className="p-3 rounded-lg border text-xs" style={{ backgroundColor: '#FAFAFA', borderColor: '#E6E1D8' }}>
+                <p className="font-medium mb-1" style={{ color: '#102A43' }}>评分标准参考：</p>
+                {coreActions
+                  .filter(a => reviewModal.task_tag?.includes(a.node_name) || reviewModal.title.includes(a.action_name))
+                  .slice(0, 3)
+                  .map(a => (
+                    <div key={a.id} className="mb-1" style={{ color: '#667085' }}>
+                      {a.action_name}：{a[`scoring_${reviewScore}` as keyof CoreAction] as string || '—'}
+                    </div>
+                  ))
+                }
+              </div>
+            )}
+
+            <div>
+              <label className="text-sm font-medium" style={{ color: '#102A43' }}>卡点说明/改进建议</label>
+              <textarea
+                value={reviewComment}
+                onChange={e => setReviewComment(e.target.value)}
+                placeholder="指出卡点和改进方向..."
+                rows={3}
+                className="mt-1 w-full border rounded-lg px-3 py-2 text-sm"
+                style={{ borderColor: '#E6E1D8' }}
+              />
+            </div>
+
+            <div className="flex items-center gap-3">
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={reviewPass}
+                  onChange={e => setReviewPass(e.target.checked)}
+                  className="rounded"
+                />
+                <span style={{ color: '#102A43' }}>通过</span>
+              </label>
+              <span className="text-xs" style={{ color: '#667085' }}>
+                不通过将要求新人重新提交
+              </span>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <button onClick={() => setReviewModal(null)} className="px-4 py-2 rounded-lg border text-sm" style={{ borderColor: '#E6E1D8', color: '#667085' }}>取消</button>
+              <button
+                onClick={handleReview}
+                disabled={reviewScore === null}
+                className="px-4 py-2 rounded-lg text-white text-sm font-medium disabled:opacity-50"
+                style={{ backgroundColor: reviewScore === null ? '#ccc' : '#F59E0B' }}
+              >
+                提交审核结论
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* ── 创建临时任务弹窗 ── */}
+      {createModal && (
+        <Modal title="创建临时演练任务" onClose={() => setCreateModal(false)}>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium" style={{ color: '#102A43' }}>指派新人</label>
+              <input
+                type="text"
+                value={newTask.assignedTo}
+                onChange={e => setNewTask({ ...newTask, assignedTo: e.target.value })}
+                placeholder="输入新人ID"
+                className="mt-1 w-full border rounded-lg px-3 py-2 text-sm"
+                style={{ borderColor: '#E6E1D8' }}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium" style={{ color: '#102A43' }}>任务名称</label>
+              <input
+                type="text"
+                value={newTask.title}
+                onChange={e => setNewTask({ ...newTask, title: e.target.value })}
+                placeholder="如：异议处理专项演练"
+                className="mt-1 w-full border rounded-lg px-3 py-2 text-sm"
+                style={{ borderColor: '#E6E1D8' }}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium" style={{ color: '#102A43' }}>知识点标签</label>
+              <input
+                type="text"
+                value={newTask.taskTag}
+                onChange={e => setNewTask({ ...newTask, taskTag: e.target.value })}
+                placeholder="如：异议处理、首通电话"
+                className="mt-1 w-full border rounded-lg px-3 py-2 text-sm"
+                style={{ borderColor: '#E6E1D8' }}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium" style={{ color: '#102A43' }}>演练要求</label>
+              <textarea
+                value={newTask.description}
+                onChange={e => setNewTask({ ...newTask, description: e.target.value })}
+                placeholder="描述演练的具体要求和标准..."
+                rows={3}
+                className="mt-1 w-full border rounded-lg px-3 py-2 text-sm"
+                style={{ borderColor: '#E6E1D8' }}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium" style={{ color: '#102A43' }}>截止时间</label>
+              <input
+                type="datetime-local"
+                value={newTask.deadline}
+                onChange={e => setNewTask({ ...newTask, deadline: e.target.value })}
+                className="mt-1 w-full border rounded-lg px-3 py-2 text-sm"
+                style={{ borderColor: '#E6E1D8' }}
+              />
+            </div>
+            <div className="flex justify-end gap-3 pt-2">
+              <button onClick={() => setCreateModal(false)} className="px-4 py-2 rounded-lg border text-sm" style={{ borderColor: '#E6E1D8', color: '#667085' }}>取消</button>
+              <button
+                onClick={handleCreateTask}
+                disabled={!newTask.assignedTo || !newTask.title}
+                className="px-4 py-2 rounded-lg text-white text-sm font-medium disabled:opacity-50"
+                style={{ backgroundColor: !newTask.assignedTo || !newTask.title ? '#ccc' : '#F59E0B' }}
+              >
+                派发任务
+              </button>
+            </div>
+          </div>
+        </Modal>
       )}
     </div>
   );
 }
 
-const MOCK_SUBMISSIONS: Submission[] = [
-  { id: 1, trainee_id: '1', trainee_name: '张小红', level_id: 1, level_name: '初心启航', submission_type: 'recording', title: '首次电话沟通演练', description: '按照第一关话术要求进行的电话沟通录音', file_url: '/uploads/recording_1.mp3', status: 'reviewed', reviewer_id: '6', reviewer_name: '陈导师', review_score: 78, review_comment: '话术基本到位，但开场白需要更自然，建议多练习自我介绍环节', submitted_at: '2025-06-03T10:00:00Z', reviewed_at: '2025-06-04T15:00:00Z' },
-  { id: 2, trainee_id: '2', trainee_name: '李大伟', level_id: 1, level_name: '初心启航', submission_type: 'recording', title: '服务助理角色模拟', description: '模拟患者来电咨询场景', file_url: '/uploads/recording_2.mp3', status: 'submitted', reviewer_id: null, reviewer_name: null, review_score: null, review_comment: null, submitted_at: '2025-06-05T14:00:00Z', reviewed_at: null },
-  { id: 3, trainee_id: '3', trainee_name: '王美玲', level_id: 5, level_name: '复诊邀约', submission_type: 'recording', title: '复诊邀约话术演练', description: '按照第五关要求进行的复诊邀约录音', file_url: '/uploads/recording_3.mp3', status: 'reviewed', reviewer_id: '7', reviewer_name: '周导师', review_score: 85, review_comment: '整体流畅，邀约话术运用得当，继续保持', submitted_at: '2025-06-04T09:00:00Z', reviewed_at: '2025-06-05T11:00:00Z' },
-  { id: 4, trainee_id: '1', trainee_name: '张小红', level_id: 1, level_name: '初心启航', submission_type: 'wechat', title: '微信加V沟通截图', description: '与患者微信加好友的完整沟通截图', file_url: '/uploads/wechat_1.png', status: 'submitted', reviewer_id: null, reviewer_name: null, review_score: null, review_comment: null, submitted_at: '2025-06-06T16:00:00Z', reviewed_at: null },
-];
+/* ── 小组件 ── */
+function StatCard({ label, value, color }: { label: string; value: number; color: string }) {
+  return (
+    <div className="rounded-xl border p-4 text-center" style={{ backgroundColor: '#FFFFFF', borderColor: '#E6E1D8' }}>
+      <div className="text-2xl font-bold" style={{ color }}>{value}</div>
+      <div className="text-sm" style={{ color: '#667085' }}>{label}</div>
+    </div>
+  );
+}
+
+function TabBtn({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn('px-4 py-2 rounded-md text-sm font-medium transition-all', active ? 'bg-white shadow-sm' : '')}
+      style={{ color: active ? '#102A43' : '#667085' }}
+    >
+      {children}
+    </button>
+  );
+}
+
+function EmptyState({ text }: { text: string }) {
+  return <div className="text-center py-12" style={{ color: '#667085' }}>{text}</div>;
+}
+
+function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: '#E6E1D8' }}>
+          <h2 className="font-semibold text-lg" style={{ color: '#102A43' }}>{title}</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+        </div>
+        <div className="p-4">{children}</div>
+      </div>
+    </div>
+  );
+}

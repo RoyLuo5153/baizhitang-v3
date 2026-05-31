@@ -72,10 +72,24 @@ export default function EmpowermentPage() {
   const [activeTab, setActiveTab] = useState<TabType>('plans');
   const [showNewPlanDialog, setShowNewPlanDialog] = useState(false);
   const [showNewCoachingDialog, setShowNewCoachingDialog] = useState(false);
+  const [showTempTaskDialog, setShowTempTaskDialog] = useState(false);
+  const [tempTask, setTempTask] = useState({ title: '', description: '', taskTag: '', assignedTo: '', deadline: '' });
+  const [trainees, setTrainees] = useState<{id: string; name: string}[]>([]);
 
   useEffect(() => {
     fetchData();
+    fetchTrainees();
   }, []);
+
+  async function fetchTrainees() {
+    try {
+      const res = await fetch('/api/trainee-profiles');
+      if (res.ok) {
+        const json = await res.json();
+        setTrainees((json.profiles || []).map((p: Record<string, unknown>) => ({ id: String(p.user_id), name: String(p.real_name || '') })));
+      }
+    } catch { /* ignore */ }
+  }
 
   async function fetchData() {
     try {
@@ -117,12 +131,20 @@ export default function EmpowermentPage() {
           </div>
           <p className="text-sm text-muted-foreground mt-1">基于双轨诊断结果，精准推送赋能方案并闭环验证</p>
         </div>
-        <button
-          onClick={() => setShowNewPlanDialog(true)}
-          className="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all inline-flex items-center gap-2"
-        >
-          <Plus className="w-3.5 h-3.5" />新建方案
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowTempTaskDialog(true)}
+            className="border border-primary text-primary px-4 py-2 rounded-md text-sm font-medium hover:bg-primary/5 active:scale-[0.98] transition-all inline-flex items-center gap-2"
+          >
+            <Mic className="w-3.5 h-3.5" />创建临时演练任务
+          </button>
+          <button
+            onClick={() => setShowNewPlanDialog(true)}
+            className="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all inline-flex items-center gap-2"
+          >
+            <Plus className="w-3.5 h-3.5" />新建方案
+          </button>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -303,6 +325,102 @@ export default function EmpowermentPage() {
       {/* New Plan Dialog */}
       {showNewPlanDialog && (
         <NewPlanDialog onClose={() => setShowNewPlanDialog(false)} onCreated={() => fetchData()} />
+      )}
+
+      {/* 创建临时演练任务弹窗 */}
+      {showTempTaskDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowTempTaskDialog(false)}>
+          <div className="bg-card rounded-lg shadow-lg p-6 w-full max-w-lg" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-foreground">创建临时演练任务</h3>
+              <button onClick={() => setShowTempTaskDialog(false)} className="text-muted-foreground hover:text-foreground">×</button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1">任务名称 *</label>
+                <input
+                  value={tempTask.title}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTempTask(prev => ({ ...prev, title: e.target.value }))}
+                  placeholder="如：异议处理专项演练"
+                  className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1">指派新人 *</label>
+                <select
+                  value={tempTask.assignedTo}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setTempTask(prev => ({ ...prev, assignedTo: e.target.value }))}
+                  className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
+                >
+                  <option value="">选择新人</option>
+                  {trainees.map((t: {id: string; name: string}) => <option key={t.id} value={t.id}>{t.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1">知识点标签</label>
+                <input
+                  value={tempTask.taskTag}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTempTask(prev => ({ ...prev, taskTag: e.target.value }))}
+                  placeholder="如：异议处理、首通电话"
+                  className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1">演练要求</label>
+                <textarea
+                  value={tempTask.description}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setTempTask(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="描述演练的具体要求和达标标准"
+                  rows={3}
+                  className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1">截止时间</label>
+                <input
+                  type="datetime-local"
+                  value={tempTask.deadline}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTempTask(prev => ({ ...prev, deadline: e.target.value }))}
+                  className="w-full border border-border rounded-md px-3 py-2 text-sm bg-background"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => setShowTempTaskDialog(false)}
+                className="px-4 py-2 rounded-md text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                取消
+              </button>
+              <button
+                onClick={async () => {
+                  if (!tempTask.title || !tempTask.assignedTo) return;
+                  try {
+                    const res = await fetch('/api/practice/tasks', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        title: tempTask.title,
+                        description: tempTask.description,
+                        taskTag: tempTask.taskTag,
+                        assignedTo: tempTask.assignedTo,
+                        deadline: tempTask.deadline || null,
+                      }),
+                    });
+                    if (res.ok) {
+                      setShowTempTaskDialog(false);
+                      setTempTask({ title: '', description: '', taskTag: '', assignedTo: '', deadline: '' });
+                    }
+                  } catch { /* ignore */ }
+                }}
+                className="px-4 py-2 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50"
+                disabled={!tempTask.title || !tempTask.assignedTo}
+              >
+                派发任务
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
