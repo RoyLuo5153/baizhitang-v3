@@ -247,6 +247,22 @@ export async function POST(request: NextRequest) {
       console.error('Practice trigger error:', triggerErr);
     }
 
+    // 系统盯人：演练提交自动触发质检任务
+    try {
+      const qcType = body.submissionType === 'screenshot' ? 'wechat' : 'recording';
+      await supabase.from('qc_records').insert({
+        user_id: body.traineeId,
+        qc_type: qcType,
+        qc_date: new Date().toISOString().split('T')[0],
+        audio_url: body.fileUrl || null,
+        source_type: 'practice_submission',
+        source_id: Number((submission as Record<string, unknown>).id) || null,
+        status: 'pending',
+      });
+    } catch (qcErr) {
+      console.error('Auto QC creation error:', qcErr);
+    }
+
     return NextResponse.json({ success: true, submission });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : 'Unknown error';

@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   SlidersHorizontal, Users, GitBranch, Save, Loader2,
   CheckCircle2, AlertCircle, Shield, ArrowRight, AlertTriangle,
-  ClipboardCheck, Clock, UserCheck, XCircle, ChevronRight, Calendar,
+  ClipboardCheck, Clock, UserCheck, XCircle, Calendar,
+  Plus, Trash2, Pencil, X, ChevronDown, ChevronRight,
 } from 'lucide-react';
 
 // === Types ===
@@ -23,11 +24,12 @@ interface ThresholdConfig {
 interface UserRecord {
   id: string;
   username: string;
-  real_name: string;
-  role_name: string;
-  role_display_name: string;
-  stage: number;
-  is_active: boolean;
+  realName: string;
+  roleId: number;
+  roleName: string;
+  stage: number | null;
+  status: string;
+  createdAt: string;
 }
 
 interface StageRule {
@@ -35,7 +37,7 @@ interface StageRule {
   from_stage: number;
   to_stage: number;
   rule_type: string;
-  rule_config: Record<string, any> | null;
+  rule_config: Record<string, unknown> | null;
   description: string | null;
   is_active: boolean;
 }
@@ -61,7 +63,6 @@ interface StageApplication {
 const MOCK_APPLICATIONS: StageApplication[] = [
   { id: 1, trainee_id: '1', trainee_name: '张小红', current_stage: 1, target_stage: 2, status: 'pending', reason: '已通过7关闯关学习', evidence: '闯关成绩全部合格，双轨诊断连续2周B类以上', reviewer_id: null, reviewer_name: null, review_comment: null, applied_at: '2025-06-06T10:00:00Z', reviewed_at: null },
   { id: 2, trainee_id: '2', trainee_name: '李大伟', current_stage: 1, target_stage: 2, status: 'approved', reason: '闯关7关全部通过', evidence: '闯关成绩全部合格，质检4维度均达良好以上', reviewer_id: '9', reviewer_name: '郑管理', review_comment: '表现优秀，同意升级', applied_at: '2025-06-01T09:00:00Z', reviewed_at: '2025-06-02T14:00:00Z' },
-  { id: 3, trainee_id: '3', trainee_name: '王美玲', current_stage: 2, target_stage: 3, status: 'rejected', reason: '连续4周A类，申请阶段三', evidence: '连续4周双轨诊断A类', reviewer_id: '9', reviewer_name: '郑管理', review_comment: '连续4周A类要求未完全满足（第3周为B类），请继续努力', applied_at: '2025-05-28T11:00:00Z', reviewed_at: '2025-05-29T16:00:00Z' },
 ];
 
 // === Mock Data Fallbacks ===
@@ -83,54 +84,34 @@ const DEFAULT_RESULT_THRESHOLDS: ThresholdConfig[] = [
   { id: 'r6', metric_key: 'appointment_rate', metric_name: '挂号率', category: 'result', qualified_value: 80, good_value: 88, excellent_value: 95, unit: '%' },
 ];
 
-const MOCK_USERS: UserRecord[] = [
-  { id: '1', username: 'zhangml', real_name: '张美丽', role_name: 'trainee', role_display_name: '新人', stage: 2, is_active: true },
-  { id: '2', username: 'chensy', real_name: '陈思远', role_name: 'trainee', role_display_name: '新人', stage: 2, is_active: true },
-  { id: '3', username: 'liuxf', real_name: '刘小芳', role_name: 'trainee', role_display_name: '新人', stage: 1, is_active: true },
-  { id: '4', username: 'wangjm', real_name: '王建明', role_name: 'mentor', role_display_name: '带教导师', stage: 3, is_active: true },
-  { id: '5', username: 'liyl', real_name: '李云龙', role_name: 'trainer', role_display_name: '培训师', stage: 3, is_active: true },
-  { id: '6', username: 'zhaodl', real_name: '赵大力', role_name: 'trainee', role_display_name: '新人', stage: 1, is_active: false },
-  { id: '7', username: 'sunhw', real_name: '孙慧文', role_name: 'training_manager', role_display_name: '培训负责人', stage: 3, is_active: true },
-  { id: '8', username: 'zhougm', real_name: '周国民', role_name: 'general_manager', role_display_name: '总经理', stage: 3, is_active: true },
-];
-
-const MOCK_STAGE_RULES: StageRule[] = [
-  {
-    id: 1, from_stage: 1, to_stage: 2, rule_type: 'passing',
-    rule_config: { required_passes: 7, total_levels: 7 },
-    description: '闯关7关全通过', is_active: true,
-  },
-  {
-    id: 2, from_stage: 2, to_stage: 3, rule_type: 'quadrant_sustained',
-    rule_config: { quadrant: 'A', consecutive_weeks: 4 },
-    description: '连续4周A类', is_active: true,
-  },
-  {
-    id: 3, from_stage: 0, to_stage: 0, rule_type: 'warning',
-    rule_config: { quadrant: 'D', consecutive_weeks: 2, action: 'retrain' },
-    description: '连续2周D类触发复训', is_active: true,
-  },
-  {
-    id: 4, from_stage: 3, to_stage: 2, rule_type: 'demotion',
-    rule_config: { quadrant: 'D', consecutive_weeks: 3 },
-    description: '阶段三人连续3周D类降回阶段二', is_active: true,
-  },
-];
-
 // === Helpers ===
+
+const ROLE_OPTIONS = [
+  { id: 1, name: 'trainee', displayName: '新人' },
+  { id: 2, name: 'mentor', displayName: '带教导师' },
+  { id: 3, name: 'teacher', displayName: '培训师' },
+  { id: 4, name: 'training_manager', displayName: '培训负责人' },
+  { id: 5, name: 'boss', displayName: '老板' },
+];
 
 const ROLE_BADGE_MAP: Record<string, { bg: string; text: string }> = {
   trainee: { bg: 'bg-primary/15', text: 'text-primary' },
   mentor: { bg: 'bg-[#f59e0b]/15', text: 'text-[#f59e0b]' },
-  trainer: { bg: 'bg-primary/15', text: 'text-primary' },
+  teacher: { bg: 'bg-primary/15', text: 'text-primary' },
   training_manager: { bg: 'bg-destructive/15', text: 'text-destructive' },
-  general_manager: { bg: 'bg-amber-500/15', text: 'text-amber-600' },
+  boss: { bg: 'bg-amber-500/15', text: 'text-amber-600' },
 };
 
-const STAGE_LABELS: Record<number, string> = { 1: '阶段一', 2: '阶段二', 3: '阶段三' };
+const STAGE_LABELS: Record<number, string> = { 1: '阶段一', 2: '阶段二', 3: '阶段三', 4: '阶段四' };
 
-function getStageLabel(stage: number): string {
+function getStageLabel(stage: number | null): string {
+  if (stage === null || stage === undefined) return '未分配';
   return STAGE_LABELS[stage] || `阶段${stage}`;
+}
+
+function getRoleDisplayName(roleName: string): string {
+  const found = ROLE_OPTIONS.find(r => r.name === roleName);
+  return found ? found.displayName : roleName;
 }
 
 // === Sub-components ===
@@ -168,6 +149,498 @@ function ThresholdInput({
   );
 }
 
+// === User Dialog Component ===
+
+function UserDialog({
+  mode,
+  user,
+  onClose,
+  onSaved,
+}: {
+  mode: 'add' | 'edit';
+  user: Partial<UserRecord> | null;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [form, setForm] = useState({
+    username: user?.username || '',
+    realName: user?.realName || '',
+    password: '',
+    roleId: user?.roleId || 1,
+    stage: user?.stage ?? 1,
+    status: user?.status || 'active',
+  });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async () => {
+    if (!form.username.trim() || !form.realName.trim()) {
+      setError('用户名和姓名不能为空');
+      return;
+    }
+    if (mode === 'add' && !form.password.trim()) {
+      setError('新增用户需要设置密码');
+      return;
+    }
+    setSaving(true);
+    setError('');
+    try {
+      if (mode === 'add') {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: form.username,
+            password: form.password,
+            realName: form.realName,
+            roleId: form.roleId,
+          }),
+        });
+        if (!res.ok) {
+          const json = await res.json();
+          throw new Error(json.error || '创建失败');
+        }
+        // If trainee, also set stage
+        if (form.roleId === 1 && form.stage) {
+          const regResult = await res.json();
+          if (regResult.user?.id) {
+            await fetch('/api/users', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ userId: regResult.user.id, stage: form.stage }),
+            });
+          }
+        }
+      } else if (mode === 'edit' && user?.id) {
+        const res = await fetch('/api/users', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: user.id,
+            realName: form.realName,
+            roleId: form.roleId,
+            stage: form.roleId === 1 ? form.stage : undefined,
+            status: form.status,
+          }),
+        });
+        if (!res.ok) {
+          const json = await res.json();
+          throw new Error(json.error || '更新失败');
+        }
+      }
+      onSaved();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : '操作失败');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
+      <div className="bg-card rounded-lg shadow-lg w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="text-base font-semibold text-foreground">
+            {mode === 'add' ? '添加用户' : '编辑用户'}
+          </h3>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          {mode === 'add' && (
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1.5 block">用户名</label>
+              <input
+                value={form.username}
+                onChange={e => setForm(prev => ({ ...prev, username: e.target.value }))}
+                className="w-full h-9 rounded-md border border-border bg-transparent px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+                placeholder="登录用户名"
+              />
+            </div>
+          )}
+          <div>
+            <label className="text-xs font-medium text-muted-foreground mb-1.5 block">姓名</label>
+            <input
+              value={form.realName}
+              onChange={e => setForm(prev => ({ ...prev, realName: e.target.value }))}
+              className="w-full h-9 rounded-md border border-border bg-transparent px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+              placeholder="真实姓名"
+            />
+          </div>
+          {mode === 'add' && (
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1.5 block">密码</label>
+              <input
+                type="password"
+                value={form.password}
+                onChange={e => setForm(prev => ({ ...prev, password: e.target.value }))}
+                className="w-full h-9 rounded-md border border-border bg-transparent px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+                placeholder="登录密码"
+              />
+            </div>
+          )}
+          <div>
+            <label className="text-xs font-medium text-muted-foreground mb-1.5 block">角色</label>
+            <select
+              value={form.roleId}
+              onChange={e => setForm(prev => ({ ...prev, roleId: Number(e.target.value) }))}
+              className="w-full h-9 rounded-md border border-border bg-transparent px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+            >
+              {ROLE_OPTIONS.map(r => (
+                <option key={r.id} value={r.id}>{r.displayName} ({r.name})</option>
+              ))}
+            </select>
+          </div>
+          {form.roleId === 1 && (
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1.5 block">当前阶段</label>
+              <select
+                value={form.stage ?? 1}
+                onChange={e => setForm(prev => ({ ...prev, stage: Number(e.target.value) }))}
+                className="w-full h-9 rounded-md border border-border bg-transparent px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+              >
+                {Object.entries(STAGE_LABELS).map(([id, label]) => (
+                  <option key={id} value={id}>{label}</option>
+                ))}
+              </select>
+            </div>
+          )}
+          {mode === 'edit' && (
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1.5 block">状态</label>
+              <select
+                value={form.status}
+                onChange={e => setForm(prev => ({ ...prev, status: e.target.value }))}
+                className="w-full h-9 rounded-md border border-border bg-transparent px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+              >
+                <option value="active">在职</option>
+                <option value="inactive">停用</option>
+              </select>
+            </div>
+          )}
+        </div>
+
+        {error && (
+          <div className="mt-3 flex items-center gap-1.5 text-sm text-destructive">
+            <AlertCircle className="w-3.5 h-3.5" />
+            {error}
+          </div>
+        )}
+
+        <div className="mt-6 flex items-center justify-end gap-3">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          >
+            取消
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={saving}
+            className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+          >
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : mode === 'add' ? '创建' : '保存'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// === Stage Rule Dialog Component ===
+
+function StageRuleDialog({
+  rule,
+  onClose,
+  onSaved,
+}: {
+  rule: Partial<StageRule> | null;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const isEdit = !!rule?.id;
+  const [form, setForm] = useState({
+    from_stage: rule?.from_stage ?? 1,
+    to_stage: rule?.to_stage ?? 2,
+    rule_type: rule?.rule_type ?? 'promotion',
+    description: rule?.description ?? '',
+    is_active: rule?.is_active ?? true,
+    // Config fields
+    required_passes: (rule?.rule_config as Record<string, unknown>)?.required_passes as number ?? 7,
+    total_levels: (rule?.rule_config as Record<string, unknown>)?.total_levels as number ?? 7,
+    quadrant: (rule?.rule_config as Record<string, unknown>)?.quadrant as string ?? 'A',
+    consecutive_weeks: (rule?.rule_config as Record<string, unknown>)?.consecutive_weeks as number ?? 4,
+    action: (rule?.rule_config as Record<string, unknown>)?.action as string ?? 'retrain',
+  });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  const buildRuleConfig = (): Record<string, unknown> => {
+    if (form.rule_type === 'promotion' && form.from_stage === 1 && form.to_stage === 2) {
+      return { required_passes: form.required_passes, total_levels: form.total_levels };
+    }
+    if (form.rule_type === 'promotion' && form.from_stage === 2 && form.to_stage === 3) {
+      return { quadrant: form.quadrant, consecutive_weeks: form.consecutive_weeks };
+    }
+    if (form.rule_type === 'warning') {
+      return { quadrant: form.quadrant, consecutive_weeks: form.consecutive_weeks, action: form.action };
+    }
+    if (form.rule_type === 'demotion') {
+      return { quadrant: form.quadrant, consecutive_weeks: form.consecutive_weeks };
+    }
+    return {};
+  };
+
+  const handleSubmit = async () => {
+    if (!form.description.trim()) {
+      setError('规则描述不能为空');
+      return;
+    }
+    setSaving(true);
+    setError('');
+    try {
+      const url = '/api/stage-rules';
+      const method = isEdit ? 'PUT' : 'POST';
+      const body: Record<string, unknown> = isEdit
+        ? { id: rule!.id, description: form.description, is_active: form.is_active, rule_config: buildRuleConfig() }
+        : { from_stage: form.from_stage, to_stage: form.to_stage, rule_type: form.rule_type, rule_config: buildRuleConfig(), description: form.description };
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        const json = await res.json();
+        throw new Error(json.error || '操作失败');
+      }
+      onSaved();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : '操作失败');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
+      <div className="bg-card rounded-lg shadow-lg w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="text-base font-semibold text-foreground">
+            {isEdit ? '编辑规则' : '新增规则'}
+          </h3>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          {!isEdit && (
+            <>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">规则类型</label>
+                <select
+                  value={form.rule_type}
+                  onChange={e => setForm(prev => ({ ...prev, rule_type: e.target.value }))}
+                  className="w-full h-9 rounded-md border border-border bg-transparent px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+                >
+                  <option value="promotion">晋升规则</option>
+                  <option value="warning">预警规则</option>
+                  <option value="demotion">降级规则</option>
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1.5 block">起始阶段</label>
+                  <select
+                    value={form.from_stage}
+                    onChange={e => setForm(prev => ({ ...prev, from_stage: Number(e.target.value) }))}
+                    className="w-full h-9 rounded-md border border-border bg-transparent px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+                  >
+                    {Object.entries(STAGE_LABELS).map(([id, label]) => (
+                      <option key={id} value={id}>{label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1.5 block">目标阶段</label>
+                  <select
+                    value={form.to_stage}
+                    onChange={e => setForm(prev => ({ ...prev, to_stage: Number(e.target.value) }))}
+                    className="w-full h-9 rounded-md border border-border bg-transparent px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+                  >
+                    {Object.entries(STAGE_LABELS).map(([id, label]) => (
+                      <option key={id} value={id}>{label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </>
+          )}
+
+          <div>
+            <label className="text-xs font-medium text-muted-foreground mb-1.5 block">规则描述</label>
+            <input
+              value={form.description}
+              onChange={e => setForm(prev => ({ ...prev, description: e.target.value }))}
+              className="w-full h-9 rounded-md border border-border bg-transparent px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+              placeholder="例：闯关7关全通过"
+            />
+          </div>
+
+          {/* Dynamic config fields based on rule_type */}
+          {(form.rule_type === 'promotion' && form.from_stage === 1 && form.to_stage === 2) && (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">通关数</label>
+                <input
+                  type="number"
+                  value={form.required_passes}
+                  onChange={e => setForm(prev => ({ ...prev, required_passes: Number(e.target.value) }))}
+                  className="w-full h-9 rounded-md border border-border bg-transparent px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">总关数</label>
+                <input
+                  type="number"
+                  value={form.total_levels}
+                  onChange={e => setForm(prev => ({ ...prev, total_levels: Number(e.target.value) }))}
+                  className="w-full h-9 rounded-md border border-border bg-transparent px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+                />
+              </div>
+            </div>
+          )}
+
+          {(form.rule_type === 'promotion' && form.from_stage !== 1) && (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">象限要求</label>
+                <select
+                  value={form.quadrant}
+                  onChange={e => setForm(prev => ({ ...prev, quadrant: e.target.value }))}
+                  className="w-full h-9 rounded-md border border-border bg-transparent px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+                >
+                  <option value="A">A类（全合格）</option>
+                  <option value="B">B类及以上</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">连续周数</label>
+                <input
+                  type="number"
+                  value={form.consecutive_weeks}
+                  onChange={e => setForm(prev => ({ ...prev, consecutive_weeks: Number(e.target.value) }))}
+                  className="w-full h-9 rounded-md border border-border bg-transparent px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+                />
+              </div>
+            </div>
+          )}
+
+          {form.rule_type === 'warning' && (
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">触发象限</label>
+                <select
+                  value={form.quadrant}
+                  onChange={e => setForm(prev => ({ ...prev, quadrant: e.target.value }))}
+                  className="w-full h-9 rounded-md border border-border bg-transparent px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+                >
+                  <option value="D">D类</option>
+                  <option value="C">C类</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">连续周数</label>
+                <input
+                  type="number"
+                  value={form.consecutive_weeks}
+                  onChange={e => setForm(prev => ({ ...prev, consecutive_weeks: Number(e.target.value) }))}
+                  className="w-full h-9 rounded-md border border-border bg-transparent px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">处理方式</label>
+                <select
+                  value={form.action}
+                  onChange={e => setForm(prev => ({ ...prev, action: e.target.value }))}
+                  className="w-full h-9 rounded-md border border-border bg-transparent px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+                >
+                  <option value="retrain">复训</option>
+                  <option value="warning">警告</option>
+                  <option value="mentor_assign">指派导师</option>
+                </select>
+              </div>
+            </div>
+          )}
+
+          {form.rule_type === 'demotion' && (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">触发象限</label>
+                <select
+                  value={form.quadrant}
+                  onChange={e => setForm(prev => ({ ...prev, quadrant: e.target.value }))}
+                  className="w-full h-9 rounded-md border border-border bg-transparent px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+                >
+                  <option value="D">D类</option>
+                  <option value="C">C类</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">连续周数</label>
+                <input
+                  type="number"
+                  value={form.consecutive_weeks}
+                  onChange={e => setForm(prev => ({ ...prev, consecutive_weeks: Number(e.target.value) }))}
+                  className="w-full h-9 rounded-md border border-border bg-transparent px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+                />
+              </div>
+            </div>
+          )}
+
+          {isEdit && (
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={form.is_active}
+                onChange={e => setForm(prev => ({ ...prev, is_active: e.target.checked }))}
+                className="rounded border-border"
+              />
+              <label className="text-sm text-muted-foreground">规则生效中</label>
+            </div>
+          )}
+        </div>
+
+        {error && (
+          <div className="mt-3 flex items-center gap-1.5 text-sm text-destructive">
+            <AlertCircle className="w-3.5 h-3.5" />
+            {error}
+          </div>
+        )}
+
+        <div className="mt-6 flex items-center justify-end gap-3">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          >
+            取消
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={saving}
+            className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+          >
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : isEdit ? '保存' : '创建'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // === Main Component ===
 
 export default function SettingsPage() {
@@ -179,10 +652,11 @@ export default function SettingsPage() {
 
   const [users, setUsers] = useState<UserRecord[]>([]);
   const [usersLoading, setUsersLoading] = useState(true);
-  const [userToggling, setUserToggling] = useState<string | null>(null);
+  const [userDialog, setUserDialog] = useState<{ mode: 'add' | 'edit'; user: Partial<UserRecord> | null } | null>(null);
 
   const [stageRules, setStageRules] = useState<StageRule[]>([]);
   const [rulesLoading, setRulesLoading] = useState(true);
+  const [ruleDialog, setRuleDialog] = useState<Partial<StageRule> | null>(null);
   const [stageApplications, setStageApplications] = useState<StageApplication[]>([]);
 
   // --- Fetch thresholds ---
@@ -208,38 +682,45 @@ export default function SettingsPage() {
     load();
   }, []);
 
-  // --- Fetch users ---
-  useEffect(() => {
-    async function load() {
-      try {
-        const res = await fetch('/api/auth/me');
-        if (res.ok) {
-          // Attempt to fetch users list
-          const usersRes = await fetch('/api/auth/me'); // Placeholder; real endpoint may differ
-          if (!usersRes.ok) throw new Error();
-        }
-      } catch {
-        // Use mock data
+  // --- Fetch users from real API ---
+  const fetchUsers = useCallback(async () => {
+    setUsersLoading(true);
+    try {
+      const res = await fetch('/api/users');
+      if (res.ok) {
+        const json = await res.json();
+        setUsers(json.users || []);
+        setUsersLoading(false);
+        return;
       }
-      setUsers(MOCK_USERS);
-      setUsersLoading(false);
+    } catch {
+      // fallback
     }
-    load();
+    setUsers([]);
+    setUsersLoading(false);
   }, []);
 
-  // --- Fetch stage rules ---
-  useEffect(() => {
-    async function load() {
-      try {
-        // Future: fetch from /api/stage-rules
-      } catch {
-        // fallback
+  useEffect(() => { fetchUsers(); }, [fetchUsers]);
+
+  // --- Fetch stage rules from real API ---
+  const fetchStageRules = useCallback(async () => {
+    setRulesLoading(true);
+    try {
+      const res = await fetch('/api/stage-rules');
+      if (res.ok) {
+        const json = await res.json();
+        setStageRules(json.all || []);
+        setRulesLoading(false);
+        return;
       }
-      setStageRules(MOCK_STAGE_RULES);
-      setRulesLoading(false);
+    } catch {
+      // fallback
     }
-    load();
+    setStageRules([]);
+    setRulesLoading(false);
   }, []);
+
+  useEffect(() => { fetchStageRules(); }, [fetchStageRules]);
 
   // --- Fetch stage applications ---
   useEffect(() => {
@@ -266,7 +747,6 @@ export default function SettingsPage() {
     setThresholdsSaving(true);
     setSaveMessage(null);
     try {
-      // Save each changed threshold
       const results = await Promise.allSettled(
         thresholds.map(t =>
           fetch('/api/thresholds', {
@@ -294,21 +774,43 @@ export default function SettingsPage() {
     setTimeout(() => setSaveMessage(null), 3000);
   };
 
-  // --- User toggle handler ---
-  const toggleUserActive = async (userId: string) => {
-    setUserToggling(userId);
-    setUsers(prev =>
-      prev.map(u => u.id === userId ? { ...u, is_active: !u.is_active } : u)
-    );
-    // Future: PATCH /api/users/{id} to persist
-    setTimeout(() => setUserToggling(null), 300);
+  // --- User delete handler ---
+  const handleDeleteUser = async (userId: string) => {
+    if (!confirm('确定要删除此用户吗？此操作不可恢复。')) return;
+    try {
+      const res = await fetch(`/api/users?id=${userId}`, { method: 'DELETE' });
+      if (res.ok) {
+        await fetchUsers();
+      } else {
+        const json = await res.json();
+        alert(json.error || '删除失败');
+      }
+    } catch {
+      alert('删除失败，请检查网络连接');
+    }
+  };
+
+  // --- Stage rule delete handler ---
+  const handleDeleteRule = async (ruleId: number) => {
+    if (!confirm('确定要删除此规则吗？')) return;
+    try {
+      const res = await fetch(`/api/stage-rules?id=${ruleId}`, { method: 'DELETE' });
+      if (res.ok) {
+        await fetchStageRules();
+      } else {
+        const json = await res.json();
+        alert(json.error || '删除失败');
+      }
+    } catch {
+      alert('删除失败，请检查网络连接');
+    }
   };
 
   // --- Derived data ---
   const processThresholds = thresholds.filter(t => t.category === 'process');
   const resultThresholds = thresholds.filter(t => t.category === 'result');
 
-  const promotionRules = stageRules.filter(r => r.from_stage > 0 && r.to_stage > 0 && r.rule_type !== 'warning' && r.rule_type !== 'demotion');
+  const promotionRules = stageRules.filter(r => r.rule_type === 'promotion');
   const warningRules = stageRules.filter(r => r.rule_type === 'warning');
   const demotionRules = stageRules.filter(r => r.rule_type === 'demotion');
 
@@ -400,24 +902,9 @@ export default function SettingsPage() {
                           {t.unit && <p className="text-xs text-muted-foreground mt-0.5">单位: {t.unit}</p>}
                         </div>
                         <div className="grid grid-cols-3 gap-3">
-                          <ThresholdInput
-                            label="合格"
-                            value={t.qualified_value}
-                            color="red"
-                            onChange={(v) => updateThreshold(t.id, 'qualified_value', v)}
-                          />
-                          <ThresholdInput
-                            label="良好"
-                            value={t.good_value}
-                            color="amber"
-                            onChange={(v) => updateThreshold(t.id, 'good_value', v)}
-                          />
-                          <ThresholdInput
-                            label="优秀"
-                            value={t.excellent_value}
-                            color="green"
-                            onChange={(v) => updateThreshold(t.id, 'excellent_value', v)}
-                          />
+                          <ThresholdInput label="合格" value={t.qualified_value} color="red" onChange={(v) => updateThreshold(t.id, 'qualified_value', v)} />
+                          <ThresholdInput label="良好" value={t.good_value} color="amber" onChange={(v) => updateThreshold(t.id, 'good_value', v)} />
+                          <ThresholdInput label="优秀" value={t.excellent_value} color="green" onChange={(v) => updateThreshold(t.id, 'excellent_value', v)} />
                         </div>
                       </div>
                     ))
@@ -446,24 +933,9 @@ export default function SettingsPage() {
                           {t.unit && <p className="text-xs text-muted-foreground mt-0.5">单位: {t.unit}</p>}
                         </div>
                         <div className="grid grid-cols-3 gap-3">
-                          <ThresholdInput
-                            label="合格"
-                            value={t.qualified_value}
-                            color="red"
-                            onChange={(v) => updateThreshold(t.id, 'qualified_value', v)}
-                          />
-                          <ThresholdInput
-                            label="良好"
-                            value={t.good_value}
-                            color="amber"
-                            onChange={(v) => updateThreshold(t.id, 'good_value', v)}
-                          />
-                          <ThresholdInput
-                            label="优秀"
-                            value={t.excellent_value}
-                            color="green"
-                            onChange={(v) => updateThreshold(t.id, 'excellent_value', v)}
-                          />
+                          <ThresholdInput label="合格" value={t.qualified_value} color="red" onChange={(v) => updateThreshold(t.id, 'qualified_value', v)} />
+                          <ThresholdInput label="良好" value={t.good_value} color="amber" onChange={(v) => updateThreshold(t.id, 'good_value', v)} />
+                          <ThresholdInput label="优秀" value={t.excellent_value} color="green" onChange={(v) => updateThreshold(t.id, 'excellent_value', v)} />
                         </div>
                       </div>
                     ))
@@ -479,21 +951,14 @@ export default function SettingsPage() {
                   disabled={thresholdsSaving}
                   className="inline-flex items-center gap-2 h-10 px-6 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-all disabled:opacity-50 disabled:pointer-events-none"
                 >
-                  {thresholdsSaving ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Save className="w-4 h-4" />
-                  )}
+                  {thresholdsSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                   保存配置
                 </button>
                 {saveMessage && (
                   <div className={`flex items-center gap-1.5 text-sm ${
                     saveMessage.type === 'success' ? 'text-[#22c55e]' : 'text-destructive'
                   }`}>
-                    {saveMessage.type === 'success'
-                      ? <CheckCircle2 className="w-4 h-4" />
-                      : <AlertCircle className="w-4 h-4" />
-                    }
+                    {saveMessage.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
                     {saveMessage.text}
                   </div>
                 )}
@@ -504,17 +969,24 @@ export default function SettingsPage() {
           {/* =========== Tab: 用户管理 =========== */}
           {activeTab === 'users' && (
             <div className="bg-card rounded-lg shadow-card overflow-hidden">
-              <div className="px-5 py-4 border-b border-border flex items-center gap-2">
-                <Users className="w-4 h-4 text-primary" />
-                <h2 className="text-base font-semibold text-foreground">用户管理</h2>
-                <span className="text-xs text-muted-foreground ml-1">{users.length} 位用户</span>
+              <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Users className="w-4 h-4 text-primary" />
+                  <h2 className="text-base font-semibold text-foreground">用户管理</h2>
+                  <span className="text-xs text-muted-foreground ml-1">{users.length} 位用户</span>
+                </div>
+                <button
+                  onClick={() => setUserDialog({ mode: 'add', user: null })}
+                  className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  添加用户
+                </button>
               </div>
 
               {usersLoading ? (
                 <div className="p-6 space-y-3">
-                  {[1, 2, 3, 4].map(i => (
-                    <div key={i} className="h-12 bg-muted animate-pulse rounded" />
-                  ))}
+                  {[1, 2, 3, 4].map(i => <div key={i} className="h-12 bg-muted animate-pulse rounded" />)}
                 </div>
               ) : users.length === 0 ? (
                 <div className="py-12 text-center">
@@ -536,68 +1008,58 @@ export default function SettingsPage() {
                     </thead>
                     <tbody className="divide-y divide-border/50">
                       {users.map(user => {
-                        const roleStyle = ROLE_BADGE_MAP[user.role_name] || { bg: 'bg-muted', text: 'text-muted-foreground' };
+                        const roleStyle = ROLE_BADGE_MAP[user.roleName] || { bg: 'bg-muted', text: 'text-muted-foreground' };
+                        const displayName = getRoleDisplayName(user.roleName);
                         return (
                           <tr key={user.id} className="hover:bg-muted/50 transition-colors">
-                            {/* 姓名 */}
                             <td className="px-5 py-4">
                               <div className="flex items-center gap-2.5">
                                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-medium shrink-0">
-                                  {user.real_name.charAt(0)}
+                                  {(user.realName || '?').charAt(0)}
                                 </div>
-                                <span className="text-sm font-medium text-foreground">{user.real_name}</span>
+                                <span className="text-sm font-medium text-foreground">{user.realName}</span>
                               </div>
                             </td>
-                            {/* 用户名 */}
                             <td className="px-5 py-4">
                               <span className="text-sm text-muted-foreground font-mono">{user.username}</span>
                             </td>
-                            {/* 角色 */}
                             <td className="px-5 py-4 text-center">
                               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${roleStyle.bg} ${roleStyle.text}`}>
-                                {user.role_display_name}
+                                {displayName}
                               </span>
                             </td>
-                            {/* 阶段 */}
                             <td className="px-5 py-4 text-center">
                               <span className="inline-flex items-center px-2.5 py-0.5 rounded-sm text-xs font-medium bg-muted text-muted-foreground">
                                 {getStageLabel(user.stage)}
                               </span>
                             </td>
-                            {/* 状态 */}
                             <td className="px-5 py-4 text-center">
                               <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${
-                                user.is_active ? 'text-[#22c55e]' : 'text-muted-foreground'
+                                user.status === 'active' ? 'text-[#22c55e]' : 'text-muted-foreground'
                               }`}>
                                 <span className={`w-1.5 h-1.5 rounded-full ${
-                                  user.is_active ? 'bg-[#22c55e]' : 'bg-muted-foreground/40'
+                                  user.status === 'active' ? 'bg-[#22c55e]' : 'bg-muted-foreground/40'
                                 }`} />
-                                {user.is_active ? '在职' : '停用'}
+                                {user.status === 'active' ? '在职' : '停用'}
                               </span>
                             </td>
-                            {/* 操作 - 状态切换 */}
                             <td className="px-5 py-4 text-center">
-                              <button
-                                id={`toggle-user-${user.id}`}
-                                onClick={() => toggleUserActive(user.id)}
-                                disabled={userToggling === user.id}
-                                className={`relative inline-flex h-[1.15rem] w-8 shrink-0 items-center rounded-full border border-transparent shadow-xs transition-all cursor-pointer disabled:opacity-50 ${
-                                  user.is_active
-                                    ? 'bg-primary'
-                                    : 'bg-input'
-                                }`}
-                                role="switch"
-                                aria-checked={user.is_active}
-                                aria-label={`切换 ${user.real_name} 状态`}
-                              >
-                                <span
-                                  className={`pointer-events-none block size-4 rounded-full bg-background ring-0 transition-transform ${
-                                    user.is_active
-                                      ? 'translate-x-[calc(100%-2px)]'
-                                      : 'translate-x-0'
-                                  }`}
-                                />
-                              </button>
+                              <div className="flex items-center justify-center gap-1">
+                                <button
+                                  onClick={() => setUserDialog({ mode: 'edit', user })}
+                                  className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-primary transition-colors"
+                                  title="编辑"
+                                >
+                                  <Pencil className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteUser(user.id)}
+                                  className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                                  title="删除"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         );
@@ -614,15 +1076,23 @@ export default function SettingsPage() {
             <div className="space-y-6">
               {/* 晋升规则 */}
               <div className="bg-card rounded-lg shadow-card overflow-hidden">
-                <div className="px-5 py-4 border-b border-border flex items-center gap-2">
-                  <GitBranch className="w-4 h-4 text-[#22c55e]" />
-                  <h2 className="text-base font-semibold text-foreground">晋升规则</h2>
+                <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <GitBranch className="w-4 h-4 text-[#22c55e]" />
+                    <h2 className="text-base font-semibold text-foreground">晋升规则</h2>
+                    <span className="text-xs text-muted-foreground ml-1">{promotionRules.length} 条</span>
+                  </div>
+                  <button
+                    onClick={() => setRuleDialog({ rule_type: 'promotion', from_stage: 1, to_stage: 2 })}
+                    className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md bg-[#22c55e] text-white text-xs font-medium hover:bg-[#22c55e]/90 transition-colors"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    新增
+                  </button>
                 </div>
                 <div className="p-5">
                   {rulesLoading ? (
-                    <div className="space-y-3">
-                      {[1, 2].map(i => <div key={i} className="h-16 bg-muted animate-pulse rounded-lg" />)}
-                    </div>
+                    <div className="space-y-3">{[1, 2].map(i => <div key={i} className="h-16 bg-muted animate-pulse rounded-lg" />)}</div>
                   ) : promotionRules.length === 0 ? (
                     <div className="py-8 text-center">
                       <GitBranch className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
@@ -631,21 +1101,12 @@ export default function SettingsPage() {
                   ) : (
                     <div className="space-y-4">
                       {promotionRules.map(rule => (
-                        <div
-                          key={rule.id}
-                          className="flex items-center gap-4 p-4 rounded-lg border border-[#22c55e]/20 bg-[#22c55e]/5"
-                        >
-                          {/* Stage badge from */}
+                        <div key={rule.id} className="flex items-center gap-4 p-4 rounded-lg border border-[#22c55e]/20 bg-[#22c55e]/5">
                           <div className="flex items-center gap-3 shrink-0">
-                            <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-[#22c55e]/15 text-[#22c55e] text-sm font-bold">
-                              {rule.from_stage}
-                            </span>
+                            <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-[#22c55e]/15 text-[#22c55e] text-sm font-bold">{rule.from_stage}</span>
                             <ArrowRight className="w-5 h-5 text-[#22c55e]/60" />
-                            <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-[#22c55e]/15 text-[#22c55e] text-sm font-bold">
-                              {rule.to_stage}
-                            </span>
+                            <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-[#22c55e]/15 text-[#22c55e] text-sm font-bold">{rule.to_stage}</span>
                           </div>
-                          {/* Rule description */}
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-semibold text-foreground">{rule.description}</p>
                             {rule.rule_config && (
@@ -663,13 +1124,18 @@ export default function SettingsPage() {
                               </div>
                             )}
                           </div>
-                          {/* Active status */}
-                          <span className={`shrink-0 inline-flex items-center gap-1 text-xs font-medium ${
-                            rule.is_active ? 'text-[#22c55e]' : 'text-muted-foreground'
-                          }`}>
-                            <span className={`w-1.5 h-1.5 rounded-full ${rule.is_active ? 'bg-[#22c55e]' : 'bg-muted-foreground/40'}`} />
-                            {rule.is_active ? '生效中' : '已停用'}
-                          </span>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className={`inline-flex items-center gap-1 text-xs font-medium ${rule.is_active ? 'text-[#22c55e]' : 'text-muted-foreground'}`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${rule.is_active ? 'bg-[#22c55e]' : 'bg-muted-foreground/40'}`} />
+                              {rule.is_active ? '生效中' : '已停用'}
+                            </span>
+                            <button onClick={() => setRuleDialog(rule)} className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-primary transition-colors" title="编辑">
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            <button onClick={() => handleDeleteRule(rule.id)} className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors" title="删除">
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -679,15 +1145,23 @@ export default function SettingsPage() {
 
               {/* 预警规则 */}
               <div className="bg-card rounded-lg shadow-card overflow-hidden">
-                <div className="px-5 py-4 border-b border-border flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4 text-[#f59e0b]" />
-                  <h2 className="text-base font-semibold text-foreground">预警规则</h2>
+                <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 text-[#f59e0b]" />
+                    <h2 className="text-base font-semibold text-foreground">预警规则</h2>
+                    <span className="text-xs text-muted-foreground ml-1">{warningRules.length} 条</span>
+                  </div>
+                  <button
+                    onClick={() => setRuleDialog({ rule_type: 'warning', from_stage: 0, to_stage: 0 })}
+                    className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md bg-[#f59e0b] text-white text-xs font-medium hover:bg-[#f59e0b]/90 transition-colors"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    新增
+                  </button>
                 </div>
                 <div className="p-5">
                   {rulesLoading ? (
-                    <div className="space-y-3">
-                      {[1].map(i => <div key={i} className="h-16 bg-muted animate-pulse rounded-lg" />)}
-                    </div>
+                    <div className="space-y-3">{[1].map(i => <div key={i} className="h-16 bg-muted animate-pulse rounded-lg" />)}</div>
                   ) : warningRules.length === 0 ? (
                     <div className="py-8 text-center">
                       <AlertTriangle className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
@@ -696,10 +1170,7 @@ export default function SettingsPage() {
                   ) : (
                     <div className="space-y-4">
                       {warningRules.map(rule => (
-                        <div
-                          key={rule.id}
-                          className="flex items-start gap-4 p-4 rounded-lg border border-[#f59e0b]/20 bg-[#f59e0b]/5"
-                        >
+                        <div key={rule.id} className="flex items-start gap-4 p-4 rounded-lg border border-[#f59e0b]/20 bg-[#f59e0b]/5">
                           <div className="w-10 h-10 rounded-full bg-[#f59e0b]/15 flex items-center justify-center shrink-0">
                             <AlertTriangle className="w-5 h-5 text-[#f59e0b]" />
                           </div>
@@ -719,10 +1190,18 @@ export default function SettingsPage() {
                               </div>
                             )}
                           </div>
-                          <span className="shrink-0 inline-flex items-center gap-1 text-xs font-medium text-[#f59e0b]">
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#f59e0b]" />
-                            生效中
-                          </span>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-[#f59e0b]">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#f59e0b]" />
+                              生效中
+                            </span>
+                            <button onClick={() => setRuleDialog(rule)} className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-primary transition-colors" title="编辑">
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            <button onClick={() => handleDeleteRule(rule.id)} className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors" title="删除">
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -731,27 +1210,35 @@ export default function SettingsPage() {
               </div>
 
               {/* 降级规则 */}
-              {demotionRules.length > 0 && (
-                <div className="bg-card rounded-lg shadow-card overflow-hidden">
-                  <div className="px-5 py-4 border-b border-border flex items-center gap-2">
+              <div className="bg-card rounded-lg shadow-card overflow-hidden">
+                <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+                  <div className="flex items-center gap-2">
                     <AlertCircle className="w-4 h-4 text-destructive" />
                     <h2 className="text-base font-semibold text-foreground">降级规则</h2>
+                    <span className="text-xs text-muted-foreground ml-1">{demotionRules.length} 条</span>
                   </div>
-                  <div className="p-5">
+                  <button
+                    onClick={() => setRuleDialog({ rule_type: 'demotion', from_stage: 3, to_stage: 2 })}
+                    className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md bg-destructive text-destructive-foreground text-xs font-medium hover:bg-destructive/90 transition-colors"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    新增
+                  </button>
+                </div>
+                <div className="p-5">
+                  {demotionRules.length === 0 ? (
+                    <div className="py-8 text-center">
+                      <AlertCircle className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
+                      <p className="text-sm text-muted-foreground">暂无降级规则</p>
+                    </div>
+                  ) : (
                     <div className="space-y-4">
                       {demotionRules.map(rule => (
-                        <div
-                          key={rule.id}
-                          className="flex items-start gap-4 p-4 rounded-lg border border-destructive/20 bg-destructive/5"
-                        >
+                        <div key={rule.id} className="flex items-start gap-4 p-4 rounded-lg border border-destructive/20 bg-destructive/5">
                           <div className="flex items-center gap-3 shrink-0">
-                            <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-destructive/15 text-destructive text-sm font-bold">
-                              {rule.from_stage}
-                            </span>
+                            <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-destructive/15 text-destructive text-sm font-bold">{rule.from_stage}</span>
                             <ArrowRight className="w-5 h-5 text-destructive/60" />
-                            <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-destructive/15 text-destructive text-sm font-bold">
-                              {rule.to_stage}
-                            </span>
+                            <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-destructive/15 text-destructive text-sm font-bold">{rule.to_stage}</span>
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-semibold text-foreground">{rule.description}</p>
@@ -768,16 +1255,24 @@ export default function SettingsPage() {
                               </div>
                             )}
                           </div>
-                          <span className="shrink-0 inline-flex items-center gap-1 text-xs font-medium text-destructive">
-                            <span className="w-1.5 h-1.5 rounded-full bg-destructive" />
-                            生效中
-                          </span>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-destructive">
+                              <span className="w-1.5 h-1.5 rounded-full bg-destructive" />
+                              生效中
+                            </span>
+                            <button onClick={() => setRuleDialog(rule)} className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-primary transition-colors" title="编辑">
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            <button onClick={() => handleDeleteRule(rule.id)} className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors" title="删除">
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>
-                  </div>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           )}
 
@@ -874,6 +1369,23 @@ export default function SettingsPage() {
           )}
         </div>
       </div>
+
+      {/* === Dialogs === */}
+      {userDialog && (
+        <UserDialog
+          mode={userDialog.mode}
+          user={userDialog.user}
+          onClose={() => setUserDialog(null)}
+          onSaved={() => { setUserDialog(null); fetchUsers(); }}
+        />
+      )}
+      {ruleDialog !== null && (
+        <StageRuleDialog
+          rule={ruleDialog}
+          onClose={() => setRuleDialog(null)}
+          onSaved={() => { setRuleDialog(null); fetchStageRules(); }}
+        />
+      )}
     </div>
   );
 }

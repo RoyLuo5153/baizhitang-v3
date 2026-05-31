@@ -8,7 +8,7 @@ function simpleHash(password: string): string {
 
 export async function POST(request: NextRequest) {
   try {
-    const { username, real_name, password, role, department, position } = await request.json();
+    const { username, real_name, password, role, roleId, department, position } = await request.json();
 
     if (!username || !real_name || !password) {
       return NextResponse.json({ error: '缺少必要参数' }, { status: 400 });
@@ -27,14 +27,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '用户名已存在' }, { status: 400 });
     }
 
-    // Get trainee role id
-    const { data: roleData } = await supabase
-      .from('roles')
-      .select('id')
-      .eq('name', role || 'trainee')
-      .maybeSingle();
-
-    const roleId = roleData?.id || 1;
+    // Resolve roleId: prefer explicit roleId, fallback to role name lookup
+    let resolvedRoleId = roleId;
+    if (!resolvedRoleId) {
+      const { data: roleData } = await supabase
+        .from('roles')
+        .select('id')
+        .eq('name', role || 'trainee')
+        .maybeSingle();
+      resolvedRoleId = roleData?.id || 1;
+    }
 
     // Hash password
     const passwordHash = simpleHash(password);
@@ -46,7 +48,7 @@ export async function POST(request: NextRequest) {
         username,
         real_name,
         password_hash: passwordHash,
-        role_id: roleId,
+        role_id: resolvedRoleId,
         stage: 1,
         is_active: true,
         department: department || null,
