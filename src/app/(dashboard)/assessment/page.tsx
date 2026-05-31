@@ -3,9 +3,10 @@
 import { useEffect, useState, useCallback } from 'react';
 import {
   ClipboardCheck, Plus, FileText, Clock, CheckCircle2,
-  BarChart3, Users, Calendar, ChevronDown, X, Loader2,
-  AlertTriangle,
+  BarChart3, Calendar, ChevronDown, X, Loader2,
+  AlertTriangle, Star,
 } from 'lucide-react';
+import { useAuth } from '@/lib/auth/context';
 
 // === Types ===
 
@@ -16,7 +17,7 @@ interface AssessmentTask {
   id: string;
   title: string;
   type: AssessmentType;
-  trainees: string[];
+  traineeNames: string[];
   dueDate: string;
   completionRate: number;
   totalTrainees: number;
@@ -24,20 +25,25 @@ interface AssessmentTask {
 }
 
 interface ScoreDimension {
-  knowledge: number;
-  communication: number;
-  attitude: number;
-  professional: number;
+  knowledge?: number;
+  communication?: number;
+  attitude?: number;
+  professional?: number;
+  [key: string]: number | undefined;
 }
 
 interface AssessmentRecord {
   id: string;
+  traineeId: string;
   traineeName: string;
+  assessorName: string;
   assessmentTitle: string;
+  type: string;
   date: string;
+  dueDate: string;
   scores: ScoreDimension;
   overallScore: number;
-  overallComment: string;
+  comment: string;
   status: RecordStatus;
 }
 
@@ -46,157 +52,35 @@ interface NewAssessmentForm {
   type: AssessmentType;
   traineeIds: string[];
   dueDate: string;
-  dimensions: string[];
+}
+
+interface TraineeOption {
+  id: string;
+  name: string;
 }
 
 // === Constants ===
 
-const ASSESSMENT_TYPE_CONFIG: Record<AssessmentType, { label: string; badgeClass: string }> = {
+const ASSESSMENT_TYPE_CONFIG: Record<string, { label: string; badgeClass: string }> = {
   daily: { label: '日常考核', badgeClass: 'bg-primary/15 text-primary' },
   special: { label: '专项考核', badgeClass: 'bg-[#f59e0b]/15 text-[#f59e0b]' },
   stage: { label: '阶段考核', badgeClass: 'bg-destructive/15 text-destructive' },
 };
 
-const RECORD_STATUS_CONFIG: Record<RecordStatus, { label: string; badgeClass: string }> = {
+const RECORD_STATUS_CONFIG: Record<string, { label: string; badgeClass: string }> = {
   completed: { label: '已完成', badgeClass: 'bg-[#22c55e]/15 text-[#22c55e]' },
   in_progress: { label: '进行中', badgeClass: 'bg-primary/15 text-primary' },
   pending: { label: '待考核', badgeClass: 'bg-[#f59e0b]/15 text-[#f59e0b]' },
 };
 
-const SCORE_DIMENSION_LABELS: Record<keyof ScoreDimension, string> = {
+const SCORE_DIMENSION_LABELS: Record<string, string> = {
   knowledge: '专业知识',
   communication: '沟通表达',
   attitude: '服务态度',
   professional: '专业能力',
 };
 
-const AVAILABLE_DIMENSIONS = [
-  { key: 'knowledge', label: '专业知识' },
-  { key: 'communication', label: '沟通表达' },
-  { key: 'attitude', label: '服务态度' },
-  { key: 'professional', label: '专业能力' },
-];
-
-const AVAILABLE_TRAINEES = [
-  { id: '1', name: '王小明' },
-  { id: '2', name: '李婷婷' },
-  { id: '3', name: '赵大力' },
-  { id: '4', name: '刘小芳' },
-  { id: '5', name: '陈思远' },
-  { id: '6', name: '张美丽' },
-  { id: '7', name: '周建国' },
-  { id: '8', name: '吴晓丽' },
-];
-
 type TabType = 'tasks' | 'records';
-
-// === Mock Data ===
-
-const MOCK_TASKS: AssessmentTask[] = [
-  {
-    id: 't1',
-    title: '新员工入职日常考核 - 第3周',
-    type: 'daily',
-    trainees: ['王小明', '李婷婷', '赵大力', '刘小芳'],
-    dueDate: '2025-02-28',
-    completionRate: 75,
-    totalTrainees: 4,
-    completedTrainees: 3,
-  },
-  {
-    id: 't2',
-    title: '加微话术专项考核',
-    type: 'special',
-    trainees: ['王小明', '陈思远', '张美丽'],
-    dueDate: '2025-02-20',
-    completionRate: 33,
-    totalTrainees: 3,
-    completedTrainees: 1,
-  },
-  {
-    id: 't3',
-    title: '阶段二综合能力考核',
-    type: 'stage',
-    trainees: ['赵大力', '刘小芳', '周建国', '吴晓丽', '陈思远'],
-    dueDate: '2025-03-15',
-    completionRate: 0,
-    totalTrainees: 5,
-    completedTrainees: 0,
-  },
-  {
-    id: 't4',
-    title: '咨询转化流程日常考核',
-    type: 'daily',
-    trainees: ['李婷婷', '张美丽'],
-    dueDate: '2025-02-25',
-    completionRate: 100,
-    totalTrainees: 2,
-    completedTrainees: 2,
-  },
-  {
-    id: 't5',
-    title: '用药方案表达专项考核',
-    type: 'special',
-    trainees: ['周建国', '吴晓丽', '王小明'],
-    dueDate: '2025-03-05',
-    completionRate: 67,
-    totalTrainees: 3,
-    completedTrainees: 2,
-  },
-];
-
-const MOCK_RECORDS: AssessmentRecord[] = [
-  {
-    id: 'r1',
-    traineeName: '王小明',
-    assessmentTitle: '新员工入职日常考核 - 第2周',
-    date: '2025-02-14',
-    scores: { knowledge: 82, communication: 78, attitude: 90, professional: 75 },
-    overallScore: 81,
-    overallComment: '综合表现良好，沟通表达需加强',
-    status: 'completed',
-  },
-  {
-    id: 'r2',
-    traineeName: '李婷婷',
-    assessmentTitle: '加微话术专项考核',
-    date: '2025-02-18',
-    scores: { knowledge: 70, communication: 85, attitude: 88, professional: 72 },
-    overallScore: 79,
-    overallComment: '沟通能力突出，专业知识需巩固',
-    status: 'completed',
-  },
-  {
-    id: 'r3',
-    traineeName: '赵大力',
-    assessmentTitle: '阶段一综合能力考核',
-    date: '2025-02-10',
-    scores: { knowledge: 55, communication: 60, attitude: 75, professional: 50 },
-    overallScore: 60,
-    overallComment: '多项不达标，需重点辅导',
-    status: 'completed',
-  },
-  {
-    id: 'r4',
-    traineeName: '刘小芳',
-    assessmentTitle: '新员工入职日常考核 - 第2周',
-    date: '2025-02-20',
-    scores: { knowledge: 0, communication: 0, attitude: 0, professional: 0 },
-    overallScore: 0,
-    overallComment: '',
-    status: 'in_progress',
-  },
-  {
-    id: 'r5',
-    traineeName: '陈思远',
-    assessmentTitle: '阶段二综合能力考核',
-    date: '2025-03-15',
-    scores: { knowledge: 0, communication: 0, attitude: 0, professional: 0 },
-    overallScore: 0,
-    overallComment: '',
-    status: 'pending',
-  },
-];
 
 // === Helper Functions ===
 
@@ -214,42 +98,33 @@ function getScoreBadgeClass(score: number): string {
   return 'bg-muted text-muted-foreground';
 }
 
+function getOverallColor(score: number): string {
+  if (score >= 80) return 'text-[#22c55e]';
+  if (score >= 60) return 'text-[#f59e0b]';
+  return 'text-destructive';
+}
+
 // === Main Component ===
 
 export default function AssessmentPage() {
+  const { user } = useAuth();
   const [tasks, setTasks] = useState<AssessmentTask[]>([]);
   const [records, setRecords] = useState<AssessmentRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabType>('tasks');
   const [showPublishDialog, setShowPublishDialog] = useState(false);
+  const [scoringRecord, setScoringRecord] = useState<AssessmentRecord | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
-      const [tasksRes, recordsRes] = await Promise.all([
-        fetch('/api/assessment?userId=1&view=own'),
-        fetch('/api/assessment?view=team'),
-      ]);
-
-      let fetchedTasks: AssessmentTask[] = [];
-      let fetchedRecords: AssessmentRecord[] = [];
-
-      if (tasksRes.ok) {
-        const tasksJson = await tasksRes.json();
-        fetchedTasks = transformTasksFromApi(tasksJson.assessments || tasksJson.data || []);
+      const res = await fetch('/api/assessment');
+      if (res.ok) {
+        const json = await res.json();
+        setTasks(json.tasks || []);
+        setRecords(json.assessments || []);
       }
-
-      if (recordsRes.ok) {
-        const recordsJson = await recordsRes.json();
-        fetchedRecords = transformRecordsFromApi(recordsJson.assessments || recordsJson.data || []);
-      }
-
-      // Use API data if available, otherwise fallback to mock
-      setTasks(fetchedTasks.length > 0 ? fetchedTasks : MOCK_TASKS);
-      setRecords(fetchedRecords.length > 0 ? fetchedRecords : MOCK_RECORDS);
     } catch {
-      // Fallback to mock data on any error
-      setTasks(MOCK_TASKS);
-      setRecords(MOCK_RECORDS);
+      // empty
     }
     setLoading(false);
   }, []);
@@ -275,7 +150,7 @@ export default function AssessmentPage() {
         </div>
         <div className="bg-card rounded-lg shadow-card p-5">
           <div className="space-y-4">
-            {[1, 2, 3, 4].map(i => (
+            {[1, 2, 3].map(i => (
               <div key={i} className="h-14 bg-muted animate-pulse rounded" />
             ))}
           </div>
@@ -284,9 +159,17 @@ export default function AssessmentPage() {
     );
   }
 
+  // Stats
+  const totalTasks = tasks.length;
+  const completedCount = records.filter(r => r.status === 'completed').length;
+  const pendingCount = records.filter(r => r.status === 'pending' || r.status === 'in_progress').length;
+  const avgScore = records.length > 0
+    ? Math.round(records.filter(r => r.overallScore > 0).reduce((s, r) => s + r.overallScore, 0) / Math.max(records.filter(r => r.overallScore > 0).length, 1))
+    : 0;
+
   return (
     <div className="p-6 space-y-6">
-      {/* === Header === */}
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2">
@@ -295,16 +178,41 @@ export default function AssessmentPage() {
           </div>
           <p className="text-sm text-muted-foreground mt-1">管理新人考核任务，发布考核并查看考核结果</p>
         </div>
-        <button
-          id="btn-publish-assessment"
-          onClick={() => setShowPublishDialog(true)}
-          className="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all inline-flex items-center gap-2"
-        >
-          <Plus className="w-3.5 h-3.5" />发布考核
-        </button>
+        {(user?.primaryRole === 'training_manager' || user?.primaryRole === 'mentor' || user?.primaryRole === 'teacher') && (
+          <button
+            id="btn-publish-assessment"
+            onClick={() => setShowPublishDialog(true)}
+            className="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all inline-flex items-center gap-2"
+          >
+            <Plus className="w-3.5 h-3.5" />发布考核
+          </button>
+        )}
       </div>
 
-      {/* === Tab Switcher === */}
+      {/* Stats Cards */}
+      <div className="grid grid-cols-4 gap-4">
+        {[
+          { label: '考核任务', value: totalTasks, icon: FileText, color: 'text-primary' },
+          { label: '已完成', value: completedCount, icon: CheckCircle2, color: 'text-[#22c55e]' },
+          { label: '待完成', value: pendingCount, icon: Clock, color: 'text-[#f59e0b]' },
+          { label: '平均分', value: avgScore, icon: Star, color: 'text-primary' },
+        ].map(stat => {
+          const Icon = stat.icon;
+          return (
+            <div key={stat.label} className="bg-card rounded-lg shadow-card p-4 flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${stat.color}/10`}>
+                <Icon className={`w-5 h-5 ${stat.color}`} />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-foreground">{stat.value}</p>
+                <p className="text-xs text-muted-foreground">{stat.label}</p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Tab Switcher */}
       <div className="flex items-center gap-1 bg-muted rounded-lg p-1 w-fit">
         {([
           { key: 'tasks' as TabType, label: '考核任务', icon: FileText },
@@ -328,21 +236,33 @@ export default function AssessmentPage() {
         })}
       </div>
 
-      {/* === Tab Content === */}
+      {/* Tab Content */}
       {activeTab === 'tasks' && (
         <TasksTable tasks={tasks} />
       )}
 
       {activeTab === 'records' && (
-        <RecordsTable records={records} />
+        <RecordsTable records={records} onScore={(r) => setScoringRecord(r)} />
       )}
 
-      {/* === Publish Assessment Dialog === */}
+      {/* Publish Dialog */}
       {showPublishDialog && (
         <PublishAssessmentDialog
           onClose={() => setShowPublishDialog(false)}
           onPublished={() => {
             setShowPublishDialog(false);
+            fetchData();
+          }}
+        />
+      )}
+
+      {/* Scoring Dialog */}
+      {scoringRecord && (
+        <ScoringDialog
+          record={scoringRecord}
+          onClose={() => setScoringRecord(null)}
+          onSaved={() => {
+            setScoringRecord(null);
             fetchData();
           }}
         />
@@ -370,244 +290,55 @@ function TasksTable({ tasks }: { tasks: AssessmentTask[] }) {
         <table className="w-full">
           <thead>
             <tr className="bg-muted">
-              <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">
-                任务名称
-              </th>
-              <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">
-                考核类型
-              </th>
-              <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">
-                适用新人
-              </th>
-              <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">
-                截止日期
-              </th>
-              <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3 w-52">
-                完成率
-              </th>
+              <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">任务名称</th>
+              <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">考核类型</th>
+              <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">适用新人</th>
+              <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">截止日期</th>
+              <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3 w-52">完成率</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border/50">
-            {/* 列表-考核任务1 */}
-            <tr className="hover:bg-muted/50 transition-colors">
-              <td className="px-5 py-4">
-                <div className="flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-muted-foreground shrink-0" />
-                  <span className="text-sm font-medium text-foreground">{tasks[0].title}</span>
-                </div>
-              </td>
-              <td className="px-5 py-4">
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-sm text-xs font-medium ${ASSESSMENT_TYPE_CONFIG[tasks[0].type].badgeClass}`}>
-                  {ASSESSMENT_TYPE_CONFIG[tasks[0].type].label}
-                </span>
-              </td>
-              <td className="px-5 py-4">
-                <div className="flex flex-wrap gap-1">
-                  {tasks[0].trainees.map(name => (
-                    <span key={name} className="inline-flex items-center px-2 py-0.5 rounded-sm text-xs bg-muted text-muted-foreground">
-                      {name}
-                    </span>
-                  ))}
-                </div>
-              </td>
-              <td className="px-5 py-4">
-                <span className="text-sm text-muted-foreground inline-flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5" />{tasks[0].dueDate}
-                </span>
-              </td>
-              <td className="px-5 py-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all ${getProgressColor(tasks[0].completionRate)}`}
-                      style={{ width: `${tasks[0].completionRate}%` }}
-                    />
+            {tasks.map(task => (
+              <tr key={task.id} className="hover:bg-muted/50 transition-colors">
+                <td className="px-5 py-4">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-muted-foreground shrink-0" />
+                    <span className="text-sm font-medium text-foreground">{task.title}</span>
                   </div>
-                  <span className="text-sm font-medium text-foreground w-12 text-right">
-                    {tasks[0].completionRate}%
+                </td>
+                <td className="px-5 py-4">
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-sm text-xs font-medium ${(ASSESSMENT_TYPE_CONFIG[task.type] || ASSESSMENT_TYPE_CONFIG.daily).badgeClass}`}>
+                    {(ASSESSMENT_TYPE_CONFIG[task.type] || ASSESSMENT_TYPE_CONFIG.daily).label}
                   </span>
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {tasks[0].completedTrainees}/{tasks[0].totalTrainees} 人已完成
-                </p>
-              </td>
-            </tr>
-            {/* 列表-考核任务2 */}
-            <tr className="hover:bg-muted/50 transition-colors">
-              <td className="px-5 py-4">
-                <div className="flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-muted-foreground shrink-0" />
-                  <span className="text-sm font-medium text-foreground">{tasks[1].title}</span>
-                </div>
-              </td>
-              <td className="px-5 py-4">
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-sm text-xs font-medium ${ASSESSMENT_TYPE_CONFIG[tasks[1].type].badgeClass}`}>
-                  {ASSESSMENT_TYPE_CONFIG[tasks[1].type].label}
-                </span>
-              </td>
-              <td className="px-5 py-4">
-                <div className="flex flex-wrap gap-1">
-                  {tasks[1].trainees.map(name => (
-                    <span key={name} className="inline-flex items-center px-2 py-0.5 rounded-sm text-xs bg-muted text-muted-foreground">
-                      {name}
-                    </span>
-                  ))}
-                </div>
-              </td>
-              <td className="px-5 py-4">
-                <span className="text-sm text-muted-foreground inline-flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5" />{tasks[1].dueDate}
-                </span>
-              </td>
-              <td className="px-5 py-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all ${getProgressColor(tasks[1].completionRate)}`}
-                      style={{ width: `${tasks[1].completionRate}%` }}
-                    />
+                </td>
+                <td className="px-5 py-4">
+                  <div className="flex flex-wrap gap-1">
+                    {task.traineeNames.map(name => (
+                      <span key={name} className="inline-flex items-center px-2 py-0.5 rounded-sm text-xs bg-muted text-muted-foreground">
+                        {name}
+                      </span>
+                    ))}
                   </div>
-                  <span className="text-sm font-medium text-foreground w-12 text-right">
-                    {tasks[1].completionRate}%
+                </td>
+                <td className="px-5 py-4">
+                  <span className="text-sm text-muted-foreground inline-flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5" />{task.dueDate || '—'}
                   </span>
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {tasks[1].completedTrainees}/{tasks[1].totalTrainees} 人已完成
-                </p>
-              </td>
-            </tr>
-            {/* 列表-考核任务3 */}
-            <tr className="hover:bg-muted/50 transition-colors">
-              <td className="px-5 py-4">
-                <div className="flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-muted-foreground shrink-0" />
-                  <span className="text-sm font-medium text-foreground">{tasks[2].title}</span>
-                </div>
-              </td>
-              <td className="px-5 py-4">
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-sm text-xs font-medium ${ASSESSMENT_TYPE_CONFIG[tasks[2].type].badgeClass}`}>
-                  {ASSESSMENT_TYPE_CONFIG[tasks[2].type].label}
-                </span>
-              </td>
-              <td className="px-5 py-4">
-                <div className="flex flex-wrap gap-1">
-                  {tasks[2].trainees.map(name => (
-                    <span key={name} className="inline-flex items-center px-2 py-0.5 rounded-sm text-xs bg-muted text-muted-foreground">
-                      {name}
-                    </span>
-                  ))}
-                </div>
-              </td>
-              <td className="px-5 py-4">
-                <span className="text-sm text-muted-foreground inline-flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5" />{tasks[2].dueDate}
-                </span>
-              </td>
-              <td className="px-5 py-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all ${getProgressColor(tasks[2].completionRate)}`}
-                      style={{ width: `${Math.max(tasks[2].completionRate, 2)}%` }}
-                    />
+                </td>
+                <td className="px-5 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all ${getProgressColor(task.completionRate)}`}
+                        style={{ width: `${Math.max(task.completionRate, 2)}%` }}
+                      />
+                    </div>
+                    <span className="text-sm font-medium text-foreground w-12 text-right">{task.completionRate}%</span>
                   </div>
-                  <span className="text-sm font-medium text-foreground w-12 text-right">
-                    {tasks[2].completionRate}%
-                  </span>
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {tasks[2].completedTrainees}/{tasks[2].totalTrainees} 人已完成
-                </p>
-              </td>
-            </tr>
-            {/* 列表-考核任务4 */}
-            <tr className="hover:bg-muted/50 transition-colors">
-              <td className="px-5 py-4">
-                <div className="flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-muted-foreground shrink-0" />
-                  <span className="text-sm font-medium text-foreground">{tasks[3].title}</span>
-                </div>
-              </td>
-              <td className="px-5 py-4">
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-sm text-xs font-medium ${ASSESSMENT_TYPE_CONFIG[tasks[3].type].badgeClass}`}>
-                  {ASSESSMENT_TYPE_CONFIG[tasks[3].type].label}
-                </span>
-              </td>
-              <td className="px-5 py-4">
-                <div className="flex flex-wrap gap-1">
-                  {tasks[3].trainees.map(name => (
-                    <span key={name} className="inline-flex items-center px-2 py-0.5 rounded-sm text-xs bg-muted text-muted-foreground">
-                      {name}
-                    </span>
-                  ))}
-                </div>
-              </td>
-              <td className="px-5 py-4">
-                <span className="text-sm text-muted-foreground inline-flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5" />{tasks[3].dueDate}
-                </span>
-              </td>
-              <td className="px-5 py-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all ${getProgressColor(tasks[3].completionRate)}`}
-                      style={{ width: `${tasks[3].completionRate}%` }}
-                    />
-                  </div>
-                  <span className="text-sm font-medium text-foreground w-12 text-right">
-                    {tasks[3].completionRate}%
-                  </span>
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {tasks[3].completedTrainees}/{tasks[3].totalTrainees} 人已完成
-                </p>
-              </td>
-            </tr>
-            {/* 列表-考核任务5 */}
-            <tr className="hover:bg-muted/50 transition-colors">
-              <td className="px-5 py-4">
-                <div className="flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-muted-foreground shrink-0" />
-                  <span className="text-sm font-medium text-foreground">{tasks[4].title}</span>
-                </div>
-              </td>
-              <td className="px-5 py-4">
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-sm text-xs font-medium ${ASSESSMENT_TYPE_CONFIG[tasks[4].type].badgeClass}`}>
-                  {ASSESSMENT_TYPE_CONFIG[tasks[4].type].label}
-                </span>
-              </td>
-              <td className="px-5 py-4">
-                <div className="flex flex-wrap gap-1">
-                  {tasks[4].trainees.map(name => (
-                    <span key={name} className="inline-flex items-center px-2 py-0.5 rounded-sm text-xs bg-muted text-muted-foreground">
-                      {name}
-                    </span>
-                  ))}
-                </div>
-              </td>
-              <td className="px-5 py-4">
-                <span className="text-sm text-muted-foreground inline-flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5" />{tasks[4].dueDate}
-                </span>
-              </td>
-              <td className="px-5 py-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all ${getProgressColor(tasks[4].completionRate)}`}
-                      style={{ width: `${tasks[4].completionRate}%` }}
-                    />
-                  </div>
-                  <span className="text-sm font-medium text-foreground w-12 text-right">
-                    {tasks[4].completionRate}%
-                  </span>
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {tasks[4].completedTrainees}/{tasks[4].totalTrainees} 人已完成
-                </p>
-              </td>
-            </tr>
+                  <p className="text-xs text-muted-foreground mt-1">{task.completedTrainees}/{task.totalTrainees} 人已完成</p>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
@@ -617,7 +348,7 @@ function TasksTable({ tasks }: { tasks: AssessmentTask[] }) {
 
 // === Records Table Component ===
 
-function RecordsTable({ records }: { records: AssessmentRecord[] }) {
+function RecordsTable({ records, onScore }: { records: AssessmentRecord[]; onScore: (r: AssessmentRecord) => void }) {
   if (records.length === 0) {
     return (
       <div className="bg-card rounded-lg shadow-card p-12 text-center">
@@ -634,199 +365,88 @@ function RecordsTable({ records }: { records: AssessmentRecord[] }) {
         <table className="w-full">
           <thead>
             <tr className="bg-muted">
-              <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">
-                被考核人
-              </th>
-              <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">
-                考核名称
-              </th>
-              <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">
-                日期
-              </th>
-              <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">
-                各项评分
-              </th>
-              <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">
-                总评
-              </th>
-              <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">
-                状态
-              </th>
+              <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">被考核人</th>
+              <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">考核名称</th>
+              <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">考核人</th>
+              <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">日期</th>
+              <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">各项评分</th>
+              <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">总评</th>
+              <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">状态</th>
+              <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">操作</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border/50">
-            {/* 列表-考核记录1 */}
-            <tr className="hover:bg-muted/50 transition-colors">
-              <td className="px-5 py-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-medium shrink-0">
-                    {records[0].traineeName.charAt(0)}
+            {records.map(record => (
+              <tr key={record.id} className="hover:bg-muted/50 transition-colors">
+                <td className="px-5 py-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-medium shrink-0">
+                      {record.traineeName.charAt(0)}
+                    </div>
+                    <span className="text-sm font-medium text-foreground">{record.traineeName}</span>
                   </div>
-                  <span className="text-sm font-medium text-foreground">{records[0].traineeName}</span>
-                </div>
-              </td>
-              <td className="px-5 py-4">
-                <span className="text-sm text-foreground">{records[0].assessmentTitle}</span>
-              </td>
-              <td className="px-5 py-4">
-                <span className="text-sm text-muted-foreground">{records[0].date}</span>
-              </td>
-              <td className="px-5 py-4">
-                <div className="flex flex-wrap gap-1.5">
-                  {Object.entries(records[0].scores).map(([key, val]) => (
-                    <span key={key} className={`inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium ${getScoreBadgeClass(val)}`}>
-                      {SCORE_DIMENSION_LABELS[key as keyof ScoreDimension]} {val}
+                </td>
+                <td className="px-5 py-4">
+                  <span className="text-sm text-foreground">{record.assessmentTitle}</span>
+                </td>
+                <td className="px-5 py-4">
+                  <span className="text-sm text-muted-foreground">{record.assessorName || '—'}</span>
+                </td>
+                <td className="px-5 py-4">
+                  <span className="text-sm text-muted-foreground">{record.date || '—'}</span>
+                </td>
+                <td className="px-5 py-4">
+                  {record.status === 'completed' && Object.keys(record.scores).length > 0 ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {Object.entries(record.scores).map(([key, val]) => (
+                        val !== undefined && val > 0 ? (
+                          <span key={key} className={`inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium ${getScoreBadgeClass(val)}`}>
+                            {SCORE_DIMENSION_LABELS[key] || key} {val}
+                          </span>
+                        ) : null
+                      ))}
+                    </div>
+                  ) : record.status === 'in_progress' ? (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-muted text-muted-foreground">
+                      考核中...
                     </span>
-                  ))}
-                </div>
-              </td>
-              <td className="px-5 py-4 text-center">
-                <span className={`text-lg font-bold ${records[0].overallScore >= 80 ? 'text-[#22c55e]' : records[0].overallScore >= 60 ? 'text-[#f59e0b]' : 'text-destructive'}`}>
-                  {records[0].overallScore}
-                </span>
-              </td>
-              <td className="px-5 py-4 text-center">
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-sm text-xs font-medium ${RECORD_STATUS_CONFIG[records[0].status].badgeClass}`}>
-                  {RECORD_STATUS_CONFIG[records[0].status].label}
-                </span>
-              </td>
-            </tr>
-            {/* 列表-考核记录2 */}
-            <tr className="hover:bg-muted/50 transition-colors">
-              <td className="px-5 py-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-medium shrink-0">
-                    {records[1].traineeName.charAt(0)}
-                  </div>
-                  <span className="text-sm font-medium text-foreground">{records[1].traineeName}</span>
-                </div>
-              </td>
-              <td className="px-5 py-4">
-                <span className="text-sm text-foreground">{records[1].assessmentTitle}</span>
-              </td>
-              <td className="px-5 py-4">
-                <span className="text-sm text-muted-foreground">{records[1].date}</span>
-              </td>
-              <td className="px-5 py-4">
-                <div className="flex flex-wrap gap-1.5">
-                  {Object.entries(records[1].scores).map(([key, val]) => (
-                    <span key={key} className={`inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium ${getScoreBadgeClass(val)}`}>
-                      {SCORE_DIMENSION_LABELS[key as keyof ScoreDimension]} {val}
+                  ) : (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-muted text-muted-foreground">
+                      待评分
                     </span>
-                  ))}
-                </div>
-              </td>
-              <td className="px-5 py-4 text-center">
-                <span className={`text-lg font-bold ${records[1].overallScore >= 80 ? 'text-[#22c55e]' : records[1].overallScore >= 60 ? 'text-[#f59e0b]' : 'text-destructive'}`}>
-                  {records[1].overallScore}
-                </span>
-              </td>
-              <td className="px-5 py-4 text-center">
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-sm text-xs font-medium ${RECORD_STATUS_CONFIG[records[1].status].badgeClass}`}>
-                  {RECORD_STATUS_CONFIG[records[1].status].label}
-                </span>
-              </td>
-            </tr>
-            {/* 列表-考核记录3 */}
-            <tr className="hover:bg-muted/50 transition-colors">
-              <td className="px-5 py-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-medium shrink-0">
-                    {records[2].traineeName.charAt(0)}
-                  </div>
-                  <span className="text-sm font-medium text-foreground">{records[2].traineeName}</span>
-                </div>
-              </td>
-              <td className="px-5 py-4">
-                <span className="text-sm text-foreground">{records[2].assessmentTitle}</span>
-              </td>
-              <td className="px-5 py-4">
-                <span className="text-sm text-muted-foreground">{records[2].date}</span>
-              </td>
-              <td className="px-5 py-4">
-                <div className="flex flex-wrap gap-1.5">
-                  {Object.entries(records[2].scores).map(([key, val]) => (
-                    <span key={key} className={`inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium ${getScoreBadgeClass(val)}`}>
-                      {SCORE_DIMENSION_LABELS[key as keyof ScoreDimension]} {val}
+                  )}
+                </td>
+                <td className="px-5 py-4 text-center">
+                  {record.overallScore > 0 ? (
+                    <span className={`text-lg font-bold ${getOverallColor(record.overallScore)}`}>
+                      {record.overallScore}
                     </span>
-                  ))}
-                </div>
-              </td>
-              <td className="px-5 py-4 text-center">
-                <span className={`text-lg font-bold ${records[2].overallScore >= 80 ? 'text-[#22c55e]' : records[2].overallScore >= 60 ? 'text-[#f59e0b]' : 'text-destructive'}`}>
-                  {records[2].overallScore}
-                </span>
-              </td>
-              <td className="px-5 py-4 text-center">
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-sm text-xs font-medium ${RECORD_STATUS_CONFIG[records[2].status].badgeClass}`}>
-                  {RECORD_STATUS_CONFIG[records[2].status].label}
-                </span>
-              </td>
-            </tr>
-            {/* 列表-考核记录4 */}
-            <tr className="hover:bg-muted/50 transition-colors">
-              <td className="px-5 py-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-medium shrink-0">
-                    {records[3].traineeName.charAt(0)}
-                  </div>
-                  <span className="text-sm font-medium text-foreground">{records[3].traineeName}</span>
-                </div>
-              </td>
-              <td className="px-5 py-4">
-                <span className="text-sm text-foreground">{records[3].assessmentTitle}</span>
-              </td>
-              <td className="px-5 py-4">
-                <span className="text-sm text-muted-foreground">{records[3].date}</span>
-              </td>
-              <td className="px-5 py-4">
-                <div className="flex flex-wrap gap-1.5">
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-muted text-muted-foreground">
-                    考核中...
+                  ) : (
+                    <span className="text-lg font-bold text-muted-foreground">—</span>
+                  )}
+                </td>
+                <td className="px-5 py-4 text-center">
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-sm text-xs font-medium ${(RECORD_STATUS_CONFIG[record.status] || RECORD_STATUS_CONFIG.pending).badgeClass}`}>
+                    {(RECORD_STATUS_CONFIG[record.status] || RECORD_STATUS_CONFIG.pending).label}
                   </span>
-                </div>
-              </td>
-              <td className="px-5 py-4 text-center">
-                <span className="text-lg font-bold text-muted-foreground">—</span>
-              </td>
-              <td className="px-5 py-4 text-center">
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-sm text-xs font-medium ${RECORD_STATUS_CONFIG[records[3].status].badgeClass}`}>
-                  {RECORD_STATUS_CONFIG[records[3].status].label}
-                </span>
-              </td>
-            </tr>
-            {/* 列表-考核记录5 */}
-            <tr className="hover:bg-muted/50 transition-colors">
-              <td className="px-5 py-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-medium shrink-0">
-                    {records[4].traineeName.charAt(0)}
-                  </div>
-                  <span className="text-sm font-medium text-foreground">{records[4].traineeName}</span>
-                </div>
-              </td>
-              <td className="px-5 py-4">
-                <span className="text-sm text-foreground">{records[4].assessmentTitle}</span>
-              </td>
-              <td className="px-5 py-4">
-                <span className="text-sm text-muted-foreground">{records[4].date}</span>
-              </td>
-              <td className="px-5 py-4">
-                <div className="flex flex-wrap gap-1.5">
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-muted text-muted-foreground">
-                    待评分
-                  </span>
-                </div>
-              </td>
-              <td className="px-5 py-4 text-center">
-                <span className="text-lg font-bold text-muted-foreground">—</span>
-              </td>
-              <td className="px-5 py-4 text-center">
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-sm text-xs font-medium ${RECORD_STATUS_CONFIG[records[4].status].badgeClass}`}>
-                  {RECORD_STATUS_CONFIG[records[4].status].label}
-                </span>
-              </td>
-            </tr>
+                </td>
+                <td className="px-5 py-4 text-center">
+                  {record.status !== 'completed' && (
+                    <button
+                      onClick={() => onScore(record)}
+                      className="text-xs text-primary hover:text-primary/80 font-medium"
+                    >
+                      评分
+                    </button>
+                  )}
+                  {record.status === 'completed' && record.comment && (
+                    <span className="text-xs text-muted-foreground" title={record.comment}>
+                      {record.comment.length > 10 ? record.comment.slice(0, 10) + '...' : record.comment}
+                    </span>
+                  )}
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
@@ -843,17 +463,34 @@ function PublishAssessmentDialog({
   onClose: () => void;
   onPublished: () => void;
 }) {
+  const { user } = useAuth();
   const [form, setForm] = useState<NewAssessmentForm>({
     title: '',
     type: 'daily',
     traineeIds: [],
     dueDate: '',
-    dimensions: ['knowledge', 'communication', 'attitude', 'professional'],
   });
+  const [trainees, setTrainees] = useState<TraineeOption[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showTraineeDropdown, setShowTraineeDropdown] = useState(false);
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
+
+  // 获取新人列表
+  useEffect(() => {
+    fetch('/api/trainee-profiles')
+      .then(r => r.json())
+      .then(json => {
+        const profiles = json.profiles || [];
+        setTrainees(profiles.map((p: Record<string, unknown>) => ({
+          id: p.user_id as string,
+          name: p.real_name as string,
+        })));
+      })
+      .catch(() => {
+        // fallback empty
+      });
+  }, []);
 
   function toggleTrainee(traineeId: string) {
     setForm(prev => ({
@@ -864,59 +501,34 @@ function PublishAssessmentDialog({
     }));
   }
 
-  function toggleDimension(key: string) {
-    setForm(prev => ({
-      ...prev,
-      dimensions: prev.dimensions.includes(key)
-        ? prev.dimensions.filter(d => d !== key)
-        : [...prev.dimensions, key],
-    }));
-  }
-
   async function handlePublish() {
-    // Validation
-    if (!form.title.trim()) {
-      setError('请输入考核标题');
-      return;
-    }
-    if (form.traineeIds.length === 0) {
-      setError('请选择至少一位新人');
-      return;
-    }
-    if (!form.dueDate) {
-      setError('请选择截止日期');
-      return;
-    }
-    if (form.dimensions.length === 0) {
-      setError('请选择至少一个评分维度');
-      return;
-    }
+    if (!form.title.trim()) { setError('请输入考核标题'); return; }
+    if (form.traineeIds.length === 0) { setError('请选择至少一位新人'); return; }
+    if (!form.dueDate) { setError('请选择截止日期'); return; }
 
     setSaving(true);
     setError(null);
 
     try {
-      // Publish for each selected trainee
-      const publishPromises = form.traineeIds.map(traineeId =>
-        fetch('/api/assessment', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            traineeId,
-            type: form.type,
-            title: form.title.trim(),
-            dueDate: form.dueDate,
-            scores: {},
-            comment: '',
-            dimensions: form.dimensions,
-          }),
-        })
+      const results = await Promise.all(
+        form.traineeIds.map(traineeId =>
+          fetch('/api/assessment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              traineeId,
+              type: form.type,
+              title: form.title.trim(),
+              dueDate: form.dueDate,
+              assessorId: user?.id,
+              scores: {},
+              comment: '',
+            }),
+          })
+        )
       );
 
-      const results = await Promise.all(publishPromises);
-      const allSuccess = results.every(r => r.ok);
-
-      if (allSuccess) {
+      if (results.every(r => r.ok)) {
         onPublished();
       } else {
         setError('部分考核发布失败，请重试');
@@ -927,28 +539,20 @@ function PublishAssessmentDialog({
     setSaving(false);
   }
 
-  const selectedTraineeNames = AVAILABLE_TRAINEES
+  const selectedTraineeNames = trainees
     .filter(t => form.traineeIds.includes(t.id))
     .map(t => t.name);
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center" onClick={onClose}>
-      <div
-        className="bg-card rounded-xl shadow-dialog p-6 w-full max-w-lg"
-        onClick={e => e.stopPropagation()}
-      >
+      <div className="bg-card rounded-xl shadow-dialog p-6 w-full max-w-lg" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-lg font-bold text-foreground">发布考核</h2>
-          <button
-            id="btn-close-dialog"
-            onClick={onClose}
-            className="p-1 rounded-md hover:bg-muted transition-colors"
-          >
+          <button onClick={onClose} className="p-1 rounded-md hover:bg-muted transition-colors">
             <X className="w-4 h-4 text-muted-foreground" />
           </button>
         </div>
 
-        {/* Error Banner */}
         {error && (
           <div className="mb-4 bg-destructive/5 border border-destructive/15 rounded-lg px-4 py-3 flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 text-destructive shrink-0" />
@@ -959,9 +563,7 @@ function PublishAssessmentDialog({
         <div className="space-y-5">
           {/* Title */}
           <div>
-            <label className="text-sm font-medium text-foreground" htmlFor="input-assessment-title">
-              考核标题
-            </label>
+            <label className="text-sm font-medium text-foreground" htmlFor="input-assessment-title">考核标题</label>
             <input
               id="input-assessment-title"
               type="text"
@@ -976,11 +578,7 @@ function PublishAssessmentDialog({
           <div>
             <label className="text-sm font-medium text-foreground">考核类型</label>
             <div className="relative mt-1.5">
-              <button
-                id="btn-type-dropdown"
-                onClick={() => setShowTypeDropdown(!showTypeDropdown)}
-                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm text-left flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
-              >
+              <button onClick={() => setShowTypeDropdown(!showTypeDropdown)} className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm text-left flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary">
                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-sm text-xs font-medium ${ASSESSMENT_TYPE_CONFIG[form.type].badgeClass}`}>
                   {ASSESSMENT_TYPE_CONFIG[form.type].label}
                 </span>
@@ -991,17 +589,10 @@ function PublishAssessmentDialog({
                   {Object.entries(ASSESSMENT_TYPE_CONFIG).map(([key, config]) => (
                     <button
                       key={key}
-                      onClick={() => {
-                        setForm(prev => ({ ...prev, type: key as AssessmentType }));
-                        setShowTypeDropdown(false);
-                      }}
-                      className={`w-full px-3 py-2.5 text-sm text-left hover:bg-muted transition-colors flex items-center gap-2 ${
-                        form.type === key ? 'bg-primary/5 text-primary' : 'text-foreground'
-                      }`}
+                      onClick={() => { setForm(prev => ({ ...prev, type: key as AssessmentType })); setShowTypeDropdown(false); }}
+                      className={`w-full px-3 py-2.5 text-sm text-left hover:bg-muted transition-colors flex items-center gap-2 ${form.type === key ? 'bg-primary/5 text-primary' : 'text-foreground'}`}
                     >
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium ${config.badgeClass}`}>
-                        {config.label}
-                      </span>
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium ${config.badgeClass}`}>{config.label}</span>
                       {form.type === key && <CheckCircle2 className="w-3.5 h-3.5 text-primary ml-auto" />}
                     </button>
                   ))}
@@ -1014,19 +605,13 @@ function PublishAssessmentDialog({
           <div>
             <label className="text-sm font-medium text-foreground">适用新人</label>
             <div className="relative mt-1.5">
-              <button
-                id="btn-trainee-dropdown"
-                onClick={() => setShowTraineeDropdown(!showTraineeDropdown)}
-                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm text-left flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary min-h-[38px]"
-              >
+              <button onClick={() => setShowTraineeDropdown(!showTraineeDropdown)} className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm text-left flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary min-h-[38px]">
                 <div className="flex flex-wrap gap-1 flex-1">
                   {selectedTraineeNames.length === 0 ? (
                     <span className="text-muted-foreground">选择新人...</span>
                   ) : (
                     selectedTraineeNames.map(name => (
-                      <span key={name} className="inline-flex items-center px-2 py-0.5 rounded-sm text-xs bg-primary/10 text-primary font-medium">
-                        {name}
-                      </span>
+                      <span key={name} className="inline-flex items-center px-2 py-0.5 rounded-sm text-xs bg-primary/10 text-primary font-medium">{name}</span>
                     ))
                   )}
                 </div>
@@ -1034,43 +619,26 @@ function PublishAssessmentDialog({
               </button>
               {showTraineeDropdown && (
                 <div className="absolute top-full left-0 right-0 mt-1 bg-card rounded-md border border-border shadow-float z-10 max-h-48 overflow-y-auto">
-                  {AVAILABLE_TRAINEES.map(trainee => {
+                  {trainees.map(trainee => {
                     const isSelected = form.traineeIds.includes(trainee.id);
                     return (
-                      <button
-                        key={trainee.id}
-                        onClick={() => toggleTrainee(trainee.id)}
-                        className={`w-full px-3 py-2.5 text-sm text-left hover:bg-muted transition-colors flex items-center gap-2 ${
-                          isSelected ? 'bg-primary/5' : ''
-                        }`}
-                      >
-                        <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
-                          isSelected ? 'bg-primary border-primary' : 'border-border'
-                        }`}>
+                      <button key={trainee.id} onClick={() => toggleTrainee(trainee.id)} className={`w-full px-3 py-2.5 text-sm text-left hover:bg-muted transition-colors flex items-center gap-2 ${isSelected ? 'bg-primary/5' : ''}`}>
+                        <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${isSelected ? 'bg-primary border-primary' : 'border-border'}`}>
                           {isSelected && <CheckCircle2 className="w-3 h-3 text-primary-foreground" />}
                         </div>
-                        <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-medium shrink-0">
-                          {trainee.name.charAt(0)}
-                        </div>
-                        <span className={isSelected ? 'text-primary font-medium' : 'text-foreground'}>
-                          {trainee.name}
-                        </span>
+                        <span className={isSelected ? 'text-primary font-medium' : 'text-foreground'}>{trainee.name}</span>
                       </button>
                     );
                   })}
                 </div>
               )}
             </div>
-            {form.traineeIds.length > 0 && (
-              <p className="text-xs text-muted-foreground mt-1">已选择 {form.traineeIds.length} 位新人</p>
-            )}
+            {form.traineeIds.length > 0 && <p className="text-xs text-muted-foreground mt-1">已选择 {form.traineeIds.length} 位新人</p>}
           </div>
 
           {/* Due Date */}
           <div>
-            <label className="text-sm font-medium text-foreground" htmlFor="input-due-date">
-              截止日期
-            </label>
+            <label className="text-sm font-medium text-foreground" htmlFor="input-due-date">截止日期</label>
             <input
               id="input-due-date"
               type="date"
@@ -1080,127 +648,137 @@ function PublishAssessmentDialog({
             />
           </div>
 
-          {/* Scoring Dimensions */}
-          <div>
-            <label className="text-sm font-medium text-foreground">评分维度</label>
-            <div className="mt-1.5 flex flex-wrap gap-2">
-              {AVAILABLE_DIMENSIONS.map(dim => {
-                const isSelected = form.dimensions.includes(dim.key);
-                return (
-                  <button
-                    key={dim.key}
-                    onClick={() => toggleDimension(dim.key)}
-                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                      isSelected
-                        ? 'bg-primary/15 text-primary border border-primary/30'
-                        : 'bg-muted text-muted-foreground border border-transparent hover:text-foreground'
-                    }`}
-                  >
-                    {dim.label}
-                  </button>
-                );
-              })}
-            </div>
-            {form.dimensions.length === 0 && (
-              <p className="text-xs text-destructive mt-1">请至少选择一个评分维度</p>
-            )}
+          {/* Submit */}
+          <div className="flex items-center justify-end gap-3 pt-2">
+            <button onClick={onClose} className="px-4 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+              取消
+            </button>
+            <button onClick={handlePublish} disabled={saving} className="bg-primary text-primary-foreground px-5 py-2 rounded-md text-sm font-medium hover:opacity-90 transition-all inline-flex items-center gap-2 disabled:opacity-50">
+              {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              {saving ? '发布中...' : '发布考核'}
+            </button>
           </div>
-        </div>
-
-        {/* Actions */}
-        <div className="flex justify-end gap-3 mt-6 pt-5 border-t border-border/50">
-          <button
-            id="btn-cancel-publish"
-            onClick={onClose}
-            className="px-4 py-2 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-          >
-            取消
-          </button>
-          <button
-            id="btn-confirm-publish"
-            onClick={handlePublish}
-            disabled={saving || !form.title.trim() || form.traineeIds.length === 0 || !form.dueDate || form.dimensions.length === 0}
-            className="px-4 py-2 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all inline-flex items-center gap-2"
-          >
-            {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-            {saving ? '发布中...' : '确认发布'}
-          </button>
         </div>
       </div>
     </div>
   );
 }
 
-// === API Transform Helpers ===
+// === Scoring Dialog ===
 
-function transformTasksFromApi(apiData: any[]): AssessmentTask[] {
-  if (!Array.isArray(apiData)) return [];
-  return apiData.map(item => ({
-    id: item.id || String(Math.random()),
-    title: item.title || '未命名考核',
-    type: mapAssessmentType(item.assessment_type || item.type),
-    trainees: item.trainees || item.trainee_names || ['未分配'],
-    dueDate: item.due_date || item.dueDate || '—',
-    completionRate: item.completion_rate ?? item.completionRate ?? 0,
-    totalTrainees: item.total_trainees ?? item.totalTrainees ?? 1,
-    completedTrainees: item.completed_trainees ?? item.completedTrainees ?? 0,
-  }));
-}
+function ScoringDialog({
+  record,
+  onClose,
+  onSaved,
+}: {
+  record: AssessmentRecord;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [scores, setScores] = useState<ScoreDimension>(record.scores);
+  const [comment, setComment] = useState(record.comment);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-function transformRecordsFromApi(apiData: any[]): AssessmentRecord[] {
-  if (!Array.isArray(apiData)) return [];
-  return apiData.map(item => {
-    const scores = item.scores || {};
-    const knowledge = scores.knowledge ?? 0;
-    const communication = scores.communication ?? 0;
-    const attitude = scores.attitude ?? scores.service ?? 0;
-    const professional = scores.professional ?? 0;
-    const allScores = [knowledge, communication, attitude, professional].filter(s => s > 0);
-    const overallScore = allScores.length > 0
-      ? Math.round(allScores.reduce((a: number, b: number) => a + b, 0) / allScores.length)
-      : 0;
+  const dimensions = Object.keys(SCORE_DIMENSION_LABELS);
 
-    return {
-      id: item.id || String(Math.random()),
-      traineeName: item.trainee_name || item.traineeName || item.users?.real_name || '未知',
-      assessmentTitle: item.title || '未命名考核',
-      date: item.assessment_date || item.date || '—',
-      scores: { knowledge, communication, attitude, professional },
-      overallScore,
-      overallComment: item.comment || '',
-      status: mapRecordStatus(item.status),
-    };
-  });
-}
+  async function handleSave() {
+    setSaving(true);
+    setError(null);
 
-function mapAssessmentType(type: string): AssessmentType {
-  switch (type) {
-    case 'daily':
-    case '日常考核':
-      return 'daily';
-    case 'special':
-    case '专项考核':
-      return 'special';
-    case 'stage':
-    case '阶段考核':
-      return 'stage';
-    default:
-      return 'daily';
+    try {
+      const res = await fetch('/api/assessment', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: record.id,
+          scores,
+          comment,
+          status: 'completed',
+        }),
+      });
+
+      if (res.ok) {
+        onSaved();
+      } else {
+        setError('保存失败');
+      }
+    } catch {
+      setError('保存失败，请重试');
+    }
+    setSaving(false);
   }
-}
 
-function mapRecordStatus(status: string): RecordStatus {
-  switch (status) {
-    case 'completed':
-    case '已完成':
-      return 'completed';
-    case 'in_progress':
-    case '进行中':
-      return 'in_progress';
-    case 'pending':
-    case '待考核':
-      return 'pending';
-    default:
-      return 'pending';
-  }
+  const currentAvg = Object.values(scores).filter((v): v is number => v !== undefined && v > 0);
+  const avgScore = currentAvg.length > 0 ? Math.round(currentAvg.reduce((s, v) => s + v, 0) / currentAvg.length) : 0;
+
+  return (
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center" onClick={onClose}>
+      <div className="bg-card rounded-xl shadow-dialog p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-lg font-bold text-foreground">考核评分</h2>
+          <button onClick={onClose} className="p-1 rounded-md hover:bg-muted transition-colors">
+            <X className="w-4 h-4 text-muted-foreground" />
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          <div className="bg-muted rounded-lg p-3">
+            <p className="text-sm font-medium text-foreground">{record.assessmentTitle}</p>
+            <p className="text-xs text-muted-foreground mt-1">被考核人：{record.traineeName}</p>
+          </div>
+
+          {dimensions.map(dim => (
+            <div key={dim}>
+              <label className="text-sm font-medium text-foreground">{SCORE_DIMENSION_LABELS[dim]}</label>
+              <div className="flex items-center gap-3 mt-1.5">
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={scores[dim] ?? 0}
+                  onChange={e => setScores(prev => ({ ...prev, [dim]: Number(e.target.value) }))}
+                  className="flex-1"
+                />
+                <span className={`text-sm font-bold w-10 text-right ${getOverallColor(scores[dim] ?? 0)}`}>
+                  {scores[dim] ?? 0}
+                </span>
+              </div>
+            </div>
+          ))}
+
+          <div className="text-center py-2 bg-muted rounded-lg">
+            <p className="text-xs text-muted-foreground">综合评分</p>
+            <p className={`text-3xl font-bold ${getOverallColor(avgScore)}`}>{avgScore}</p>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-foreground">评语</label>
+            <textarea
+              value={comment}
+              onChange={e => setComment(e.target.value)}
+              className="w-full mt-1.5 px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary resize-none"
+              rows={3}
+              placeholder="输入评语..."
+            />
+          </div>
+
+          {error && (
+            <div className="bg-destructive/5 border border-destructive/15 rounded-lg px-4 py-3 flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-destructive shrink-0" />
+              <span className="text-sm text-destructive">{error}</span>
+            </div>
+          )}
+
+          <div className="flex items-center justify-end gap-3 pt-2">
+            <button onClick={onClose} className="px-4 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">取消</button>
+            <button onClick={handleSave} disabled={saving} className="bg-primary text-primary-foreground px-5 py-2 rounded-md text-sm font-medium hover:opacity-90 transition-all inline-flex items-center gap-2 disabled:opacity-50">
+              {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              {saving ? '保存中...' : '提交评分'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
