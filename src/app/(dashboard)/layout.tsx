@@ -47,12 +47,30 @@ const ALL_NAV_ITEMS: NavItem[] = [
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { user, logout, hasPermission } = useAuth();
+  const { user, logout, hasPermission, loading: authLoading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
 
-  if (!user) return null;
+  // 加载中显示骨架屏
+  if (authLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-[#F8F6F0]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#2978B5] border-t-transparent" />
+          <span className="text-sm text-[#667085]">加载中...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // 未登录重定向到登录页
+  if (!user) {
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login';
+    }
+    return null;
+  }
 
   // 过滤导航项
   const visibleItems = ALL_NAV_ITEMS.filter(item => {
