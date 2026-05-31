@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
+import { onQuizFailed, onQuizPassed } from '@/lib/triggers';
 
 export const dynamic = 'force-dynamic';
 
@@ -127,6 +128,41 @@ export async function POST(
       last_attempt_at: new Date().toISOString(),
       passed_at: passed ? new Date().toISOString() : null,
     });
+  }
+
+  // 联动触发：闯关失败/通过通知
+  try {
+    const { data: userData } = await client
+      .from('users')
+      .select('real_name')
+      .eq('id', userId)
+      .maybeSingle();
+    const traineeName = userData?.real_name || userId;
+
+    const levelNames: Record<number, string> = {
+      1: '初心启航', 2: '角色认知', 3: '糖尿病基础', 4: '血糖监测原理', 5: '药物分类认知',
+      6: '营养饮食指导', 7: '并发症预防', 8: '首诊话术实训', 9: '加微承接话术', 10: '用药关怀话术',
+      11: '实战话术演练', 12: '复诊邀约话术', 13: '续方确认话术', 14: '综合实战考核',
+      15: '全流程模拟', 16: '紧急情况应对', 17: '患者异议处理', 18: '服务质量达标',
+      19: '业务指标达标', 20: '独立接诊验证', 21: '综合能力达标',
+    };
+
+    if (!passed) {
+      // 计算该关失败次数
+      const failCount = (existingProgress?.attempts || 0) + 1;
+      await onQuizFailed(userId, traineeName, level, levelNames[level] || `第${level}关`, failCount);
+    } else {
+      // 统计总通过数
+      const { data: allProgress } = await client
+        .from('level_progress')
+        .select('status')
+        .eq('user_id', userId);
+      const totalPassed = (allProgress || []).filter((p: any) => p.status === 'passed').length;
+      await onQuizPassed(userId, traineeName, level, totalPassed);
+    }
+  } catch (triggerErr) {
+    // 联动触发失败不影响答题结果
+    console.error('Trigger error:', triggerErr);
   }
 
   return NextResponse.json({

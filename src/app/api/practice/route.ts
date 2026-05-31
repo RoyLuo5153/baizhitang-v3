@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
+import { onPracticeSubmitted } from '@/lib/triggers';
 
 export async function GET(request: NextRequest) {
   try {
@@ -55,6 +56,27 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) throw error;
+
+    // 联动触发：通知导师点评
+    try {
+      if (body.traineeId) {
+        const { data: userData } = await supabase
+          .from('users')
+          .select('real_name')
+          .eq('id', body.traineeId)
+          .maybeSingle();
+        const traineeName = (userData as any)?.real_name || body.traineeId;
+        await onPracticeSubmitted(
+          body.traineeId,
+          traineeName,
+          (data as any)?.id || 0,
+          body.title || '录音演练'
+        );
+      }
+    } catch (triggerErr) {
+      console.error('Practice trigger error:', triggerErr);
+    }
+
     return NextResponse.json({ submission: data });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : 'Unknown error';

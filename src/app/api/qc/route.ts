@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
+import { onQcLowScore } from '@/lib/triggers';
 
 export const dynamic = 'force-dynamic';
 
@@ -103,5 +104,25 @@ export async function POST(request: NextRequest) {
     .maybeSingle();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // 联动触发：质检低分自动赋能
+  try {
+    const scores = [scoreBusiness, scoreService, scoreCommunication, scoreProcess].filter((s: any) => s != null);
+    if (scores.length > 0) {
+      const avgScore = scores.reduce((a: number, b: number) => a + b, 0) / scores.length;
+      if (avgScore <= 2) {
+        const { data: userData } = await client
+          .from('users')
+          .select('real_name')
+          .eq('id', userId)
+          .maybeSingle();
+        const traineeName = (userData as any)?.real_name || userId;
+        await onQcLowScore(userId, traineeName, (data as any)?.id || 0, Math.round(avgScore * 10) / 10);
+      }
+    }
+  } catch (triggerErr) {
+    console.error('QC trigger error:', triggerErr);
+  }
+
   return NextResponse.json({ data });
 }

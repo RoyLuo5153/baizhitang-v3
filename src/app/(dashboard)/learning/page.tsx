@@ -6,6 +6,7 @@ import { useEffect, useState, useCallback } from 'react';
 import {
   Check, Lock, Swords, Play, Star, Flame, Trophy, ChevronRight,
   Calendar, Clock, BookOpen, Zap, ClipboardCheck, Flag, Circle, CheckCircle2,
+  Eye,
 } from 'lucide-react';
 
 interface DayTask {
@@ -66,6 +67,7 @@ function getLevelDifficulty(levelId: number): number {
 export default function LearningPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const isTrainee = String(user?.role) === '1'; // role_id 1 = trainee
   const [levels, setLevels] = useState<LevelInfo[]>([]);
   const [stageProgress, setStageProgress] = useState<Record<number, StageProgress>>({});
   const [totalPassed, setTotalPassed] = useState(0);
@@ -174,7 +176,7 @@ export default function LearningPage() {
             const pct = sp.total > 0 ? (sp.completed / sp.total) * 100 : 0;
             const isComplete = sp.completed === sp.total;
             const isCurrent = !isComplete && sp.completed > 0;
-            const isLocked = stage === 3 && (stageProgress[2]?.completed || 0) < 7;
+            const isLocked = !isTrainee ? false : stage === 3 && (stageProgress[2]?.completed || 0) < 7;
 
             return (
               <div key={stage} className="space-y-2">
@@ -213,7 +215,7 @@ export default function LearningPage() {
                   />
                 </div>
                 <p className={`text-xs ${isLocked ? 'text-muted-foreground/50' : 'text-muted-foreground'}`}>
-                  {isLocked && stage === 3 ? '完成阶段二后解锁' : `${sp.completed}/${sp.total} 关已通过`}
+                  {isLocked && stage === 3 && isTrainee ? '完成阶段二后解锁' : `${sp.completed}/${sp.total} 关已通过`}
                 </p>
               </div>
             );
@@ -330,7 +332,7 @@ export default function LearningPage() {
           {[1, 2, 3].map(stage => {
             const startLevel = (stage - 1) * 7 + 1;
             const stageLevels = levels.filter(l => l.stage === stage);
-            const isStageLocked = stage === 3 && (stageProgress[2]?.completed || 0) < 7;
+            const isStageLocked = !isTrainee ? false : stage === 3 && (stageProgress[2]?.completed || 0) < 7;
 
             return (
               <div key={stage}>
@@ -351,7 +353,10 @@ export default function LearningPage() {
                       <div
                         key={level.levelId}
                         onClick={() => {
-                          if (level.status === 'locked-stage') {
+                          if (!isTrainee) {
+                            // 非trainee可以预览任何关卡
+                            setSelectedLevel(level.levelId);
+                          } else if (level.status === 'locked-stage') {
                             const prevStage = level.stage - 1;
                             const sp = stageProgress[prevStage] || { completed: 0, total: 7 };
                             setStageUnlockTip(`需完成阶段${prevStage}全部${sp.total}关（当前已通过${sp.completed}关）`);
@@ -365,9 +370,11 @@ export default function LearningPage() {
                             ? `bg-green-500/8 border border-green-500/20 hover:bg-green-500/12 ${isSelected ? 'ring-2 ring-green-500/40' : ''}`
                             : isActive
                               ? `bg-primary/8 border-2 border-primary/60 hover:bg-primary/12 ${isSelected ? 'ring-2 ring-primary/40' : ''}`
-                              : level.status === 'locked-stage'
+                              : level.status === 'locked-stage' && isTrainee
                                 ? 'bg-muted/30 border border-border/10 cursor-not-allowed opacity-50'
-                                : 'bg-muted/50 border border-border/15 cursor-not-allowed'
+                                : level.status === 'locked' && isTrainee
+                                  ? 'bg-muted/50 border border-border/15 cursor-not-allowed'
+                                  : `bg-muted/20 border border-border/20 hover:bg-muted/30 ${isSelected ? 'ring-2 ring-primary/20' : ''}`
                         }`}
                       >
                         <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
@@ -375,12 +382,16 @@ export default function LearningPage() {
                             ? 'bg-green-500/15'
                             : isActive
                               ? 'bg-primary/15'
-                              : 'bg-muted/60'
+                              : !isTrainee && (level.status === 'locked' || level.status === 'locked-stage')
+                                ? 'bg-primary/8'
+                                : 'bg-muted/60'
                         }`}>
                           {level.status === 'passed' ? (
                             <Check className="w-5 h-5 text-green-500" />
                           ) : isActive ? (
                             <Swords className="w-5 h-5 text-primary" />
+                          ) : !isTrainee && (level.status === 'locked' || level.status === 'locked-stage') ? (
+                            <Eye className="w-5 h-5 text-primary/50" />
                           ) : (
                             <Lock className="w-5 h-5 text-muted-foreground/40" />
                           )}
@@ -392,7 +403,7 @@ export default function LearningPage() {
                         }`}>
                           第{level.levelId}关
                         </span>
-                        {level.status === 'locked-stage' && (
+                        {level.status === 'locked-stage' && isTrainee && (
                           <span className="text-[10px] text-muted-foreground/60 text-center leading-tight mt-0.5">
                             需完成阶段{level.stage - 1}
                           </span>
@@ -502,7 +513,15 @@ export default function LearningPage() {
 
             {/* 操作按钮 */}
             <div className="flex flex-col items-end gap-2 shrink-0">
-              {(selected.status === 'active' || selected.status === 'in_progress' || selected.status === 'passed') && (
+              {!isTrainee ? (
+                <button
+                  onClick={() => router.push(`/learning/${selected.levelId}`)}
+                  className="bg-primary text-primary-foreground px-6 py-2.5 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all inline-flex items-center gap-2"
+                >
+                  <Eye className="w-4 h-4" />
+                  预览关卡
+                </button>
+              ) : (selected.status === 'active' || selected.status === 'in_progress' || selected.status === 'passed') ? (
                 <button
                   onClick={() => router.push(`/learning/${selected.levelId}`)}
                   className="bg-primary text-primary-foreground px-6 py-2.5 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all inline-flex items-center gap-2"
@@ -510,9 +529,9 @@ export default function LearningPage() {
                   <Play className="w-4 h-4" />
                   {selected.status === 'passed' ? '再战一次' : '开始闯关'}
                 </button>
-              )}
+              ) : null}
               <p className="text-xs text-muted-foreground">
-                {selected.status === 'passed' ? '已通过，可重新挑战' : '80分及格，通过后解锁下一关'}
+                {!isTrainee ? '培训负责人/导师可预览所有关卡内容' : selected.status === 'passed' ? '已通过，可重新挑战' : '80分及格，通过后解锁下一关'}
               </p>
             </div>
           </div>
