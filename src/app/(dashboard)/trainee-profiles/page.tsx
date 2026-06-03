@@ -398,7 +398,7 @@ export default function TraineeProfilesPage() {
                     <td className="px-1 py-1 border-b border-r border-border">
                       {renderSelect('mentor_id', p.user_id, p.mentor_id || '',
                         mentors.map(m => ({ value: m.id, label: m.real_name })),
-                        '选择导师'
+                        '选择带教老师'
                       )}
                     </td>
                     {renderMonthlyCell(p.user_id, 1, p.monthly_data['1'], 'training')}
@@ -492,7 +492,7 @@ export default function TraineeProfilesPage() {
                   value={newTrainee.mentor_id}
                   onChange={(e) => setNewTrainee(prev => ({ ...prev, mentor_id: e.target.value }))}
                 >
-                  <option value="">选择导师</option>
+                  <option value="">选择带教老师</option>
                   {mentors.map(m => <option key={m.id} value={m.id}>{m.real_name}</option>)}
                 </select>
               </div>

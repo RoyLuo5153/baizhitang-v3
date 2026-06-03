@@ -285,7 +285,7 @@ export default function TraineeBoardPage() {
                             </span>
                           )}
                           {alert.mentorName && (
-                            <span>导师: {alert.mentorName}</span>
+                            <span>带教老师: {alert.mentorName}</span>
                           )}
                           {alert.stage && (
                             <span>阶段{alert.stage}</span>

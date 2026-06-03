@@ -79,7 +79,7 @@ const PROCESS_ATTRIBUTIONS: Record<string, Omit<AttributionEntry, 'currentValue'
     problemDesc: '质检评分不达标，沟通表达与流程执行需强化',
     planName: '质检提分专项',
     planHours: 6,
-    planSteps: ['回放低分录音找问题', '针对性话术强化训练', '模拟质检互评练习'],
+    planSteps: ['回放低分录音找问题', '针对性服务用语强化训练', '模拟质检互评练习'],
   },
   rolePlay: {
     metricKey: 'rolePlay',
@@ -112,10 +112,10 @@ const RESULT_ATTRIBUTIONS: Record<string, Omit<AttributionEntry, 'currentValue'>
     unit: '%',
     threshold: 90,
     problemLabel: '加V率不达标',
-    problemDesc: '话术运用不熟练，需加强场景模拟训练',
-    planName: '加V话术强化',
+    problemDesc: '服务用语运用不熟练，需加强场景模拟训练',
+    planName: '加V服务用语强化',
     planHours: 3,
-    planSteps: ['优化开场白话术', '模拟加V场景演练', 'A/B测试不同话术'],
+    planSteps: ['优化开场白服务用语', '模拟加V场景演练', 'A/B测试不同服务用语'],
   },
   consultationRate: {
     metricKey: 'consultationRate',
@@ -126,7 +126,7 @@ const RESULT_ATTRIBUTIONS: Record<string, Omit<AttributionEntry, 'currentValue'>
     problemDesc: '面诊邀约技巧欠缺，需提升客户说服力',
     planName: '面诊邀约特训',
     planHours: 4,
-    planSteps: ['面诊价值话术训练', '邀约时机把握演练', '异议处理专项'],
+    planSteps: ['面诊价值服务用语训练', '邀约时机把握演练', '异议处理专项'],
   },
   receptionRate: {
     metricKey: 'receptionRate',
@@ -159,7 +159,7 @@ const RESULT_ATTRIBUTIONS: Record<string, Omit<AttributionEntry, 'currentValue'>
     problemDesc: '用药方案解读能力不足，需加强专业沟通',
     planName: '用药沟通专项',
     planHours: 4,
-    planSteps: ['用药方案解读训练', '患者疑虑应对话术', '用药跟踪回访规范'],
+    planSteps: ['用药方案解读训练', '患者疑虑应对服务用语', '用药跟踪回访规范'],
   },
   registrationRate: {
     metricKey: 'registrationRate',
@@ -170,7 +170,7 @@ const RESULT_ATTRIBUTIONS: Record<string, Omit<AttributionEntry, 'currentValue'>
     problemDesc: '复诊引导意识薄弱，需强化长期管理思维',
     planName: '挂号引导训练',
     planHours: 3,
-    planSteps: ['复诊价值传递话术', '挂号时机把握训练', '患者管理计划制定'],
+    planSteps: ['复诊价值传递服务用语', '挂号时机把握训练', '患者管理计划制定'],
   },
 };
 

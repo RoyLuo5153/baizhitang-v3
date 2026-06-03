@@ -134,7 +134,7 @@ function getMockAlerts(): AlertItem[] {
     },
     {
       id: 'alert-7', type: 'empower_deadline', severity: 'warning',
-      title: '赋能方案即将到期', description: '「加微话术专项训练」还剩2天截止',
+      title: '赋能方案即将到期', description: '「加微服务用语专项训练」还剩2天截止',
       personName: '吴十', personId: 'u-20', dueDate: '2025-01-20', link: '/empowerment',
     },
     {

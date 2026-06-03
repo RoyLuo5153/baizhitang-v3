@@ -194,7 +194,7 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ data });
 }
 
-// PATCH /api/qc - 审核质检记录（导师/负责人审核）
+// PATCH /api/qc - 审核质检记录（带教老师/负责人审核）
 export async function PATCH(request: NextRequest) {
   const token = request.headers.get('authorization')?.replace('Bearer ', '');
   const client = getSupabaseClient(token);

@@ -2,53 +2,26 @@
 
 import { useAuth } from '@/lib/auth/context';
 import { useRouter, usePathname } from 'next/navigation';
+import { getNavForRole, NAV_ITEMS, ROLE_DISPLAY, RoleCode } from '@/lib/auth/permissions';
 import {
-  Home, BookOpen, UserCircle, Users, Activity, Zap,
+  Home, BookOpen, UserCheck, Users, Activity, Zap,
   BarChart3, Eye, FileQuestion, FolderOpen, ClipboardCheck,
   ClipboardList, TrendingUp, Settings, LogOut, HeartPulse, ChevronDown, Bell,
-  Mic, GraduationCap, BookMarked
+  Mic, GraduationCap, BookMarked, ShieldCheck, UserCircle, Gamepad2
 } from 'lucide-react';
 import { useState } from 'react';
 import Link from 'next/link';
 
-type NavItem = {
-  label: string;
-  href: string;
-  icon: React.ElementType;
-  permission?: string | string[];
-  group?: string;
+// icon字符串到lucide组件的映射
+const ICON_MAP: Record<string, React.ElementType> = {
+  Home, BookOpen, UserCheck, Users, Activity, Zap,
+  BarChart3, Eye, FileQuestion, FolderOpen, ClipboardCheck,
+  ClipboardList, TrendingUp, Settings, Bell,
+  Mic, GraduationCap, BookMarked, ShieldCheck, UserCircle, Gamepad2,
 };
 
-const ALL_NAV_ITEMS: NavItem[] = [
-  { label: '首页', href: '/', icon: Home },
-  // 学习
-  { label: '闯关学习', href: '/learning', icon: BookOpen, permission: 'take_quiz', group: '学习' },
-  { label: '成长档案', href: '/growth', icon: UserCircle, permission: 'view_own_diagnosis', group: '学习' },
-  // 管理
-  { label: '新人看板', href: '/trainee-board', icon: Bell, permission: ['view_trainee_board', 'view_all_trainees', 'take_quiz'], group: '管理' },
-  { label: '新人档案', href: '/trainee-profiles', icon: Users, permission: ['view_all_trainees', 'view_trainee_board'], group: '管理' },
-  { label: '双轨诊断', href: '/diagnosis', icon: Activity, permission: 'view_team_diagnosis', group: '管理' },
-  { label: '赋能中心', href: '/empowerment', icon: Zap, permission: ['push_plans', 'view_own_empower'], group: '管理' },
-  // 数据
-  { label: '数据看板', href: '/dashboard', icon: BarChart3, permission: 'view_dashboard', group: '数据' },
-  { label: '全局概览', href: '/overview', icon: Eye, permission: ['view_boss_dashboard', 'view_all_trainees'], group: '数据' },
-  // 教务
-  { label: '题库管理', href: '/question-bank', icon: FileQuestion, permission: 'manage_questions', group: '教务' },
-  { label: '资料中心', href: '/resources', icon: FolderOpen, permission: 'view_resources', group: '教务' },
-  { label: '质检审核', href: '/qc-review', icon: ClipboardCheck, permission: ['qc_review', 'perform_qc', 'view_own_qc'], group: '教务' },
-  { label: '日常考核', href: '/assessment', icon: ClipboardList, permission: 'manage_assessments', group: '教务' },
-  { label: '业务数据', href: '/scrm-import', icon: TrendingUp, permission: 'input_business_data', group: '教务' },
-  // 设置
-  { label: '演练任务', href: '/practice', icon: Mic, permission: ['take_quiz', 'qc_review', 'perform_qc'], group: '教务' },
-  { label: '课程管理', href: '/courses', icon: GraduationCap, permission: ['manage_users', 'view_resources'], group: '教务' },
-  { label: '知识库', href: '/knowledge-base', icon: BookMarked, permission: ['access_resources', 'view_resources'], group: '教务' },
-  // 设置
-  { label: '系统设置', href: '/settings', icon: Settings, permission: 'manage_users', group: '设置' },
-  { label: '通知中心', href: '/notifications', icon: Bell, group: '设置' },
-];
-
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { user, logout, hasPermission, loading: authLoading } = useAuth();
+  const { user, logout, loading: authLoading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
@@ -73,34 +46,25 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return null;
   }
 
-  // 过滤导航项
-  const visibleItems = ALL_NAV_ITEMS.filter(item => {
-    if (!item.permission) return true;
-    const perms = Array.isArray(item.permission) ? item.permission : [item.permission];
-    return perms.some(p => hasPermission(p));
-  });
+  // 基于角色的导航过滤 — 统一使用 permissions.ts 的 getNavForRole
+  const userRole = (user.role || 'trainee') as RoleCode;
+  const visibleItems = getNavForRole(userRole);
 
   // 按group分组
-  const groups: Record<string, NavItem[]> = {};
+  const groups: Record<string, typeof visibleItems> = {};
   for (const item of visibleItems) {
     const g = item.group || 'main';
     if (!groups[g]) groups[g] = [];
     groups[g].push(item);
   }
-  const groupOrder = ['main', '学习', '管理', '数据', '教务', '设置'];
+  const groupOrder = ['main', '学习', '管理', '教务', '数据', '设置'];
 
   async function handleLogout() {
     await logout();
     router.push('/login');
   }
 
-  const roleLabel: Record<string, string> = {
-    training_manager: '培训负责人',
-    boss: '总经理',
-    teacher: '培训老师',
-    mentor: '带教老师',
-    trainee: '新人',
-  };
+  const roleLabel = ROLE_DISPLAY;
 
   return (
     <div className="flex h-screen bg-background overflow-hidden" suppressHydrationWarning>
@@ -122,7 +86,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               {group !== 'main' && collapsed && <div className="my-2 border-t border-border/20 mx-2" />}
               {groups[group].map(item => {
                 const isActive = pathname === item.href;
-                const Icon = item.icon;
+                const Icon = ICON_MAP[item.icon] || Home;
                 return (
                   <Link
                     key={item.href}
@@ -159,7 +123,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Top bar */}
         <header className="h-14 flex items-center justify-between px-6 bg-card border-b border-border/30">
           <h2 className="text-sm font-medium text-muted-foreground">
-            {ALL_NAV_ITEMS.find(i => i.href === pathname)?.label || '首页'}
+            {NAV_ITEMS.find(i => i.href === pathname)?.label || '首页'}
           </h2>
           <div className="flex items-center gap-3">
             <a
@@ -171,7 +135,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-destructive rounded-full" />
             </a>
             <span className="text-xs text-muted-foreground">
-              {user.realName} · {roleLabel[user.role] || user.role}
+              {user.realName} · {roleLabel[userRole] || user.role}
             </span>
             <button
               onClick={handleLogout}

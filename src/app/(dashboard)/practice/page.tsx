@@ -119,7 +119,7 @@ export default function PracticePage() {
     }
   };
 
-  /* ── 导师审核 ── */
+  /* ── 带教老师审核 ── */
   const handleReview = async () => {
     if (!reviewModal?.submission?.id || reviewScore === null) return;
     try {
@@ -264,7 +264,7 @@ export default function PracticePage() {
                     </p>
                   )}
                   {task.task_type === 'temp_task' && task.assigned_by && (
-                    <p className="text-xs mt-1" style={{ color: '#667085' }}>布置人：导师</p>
+                    <p className="text-xs mt-1" style={{ color: '#667085' }}>布置人：带教老师</p>
                   )}
                 </div>
                 {task.status === 'pending' && (
@@ -327,7 +327,7 @@ export default function PracticePage() {
         </div>
       )}
 
-      {/* ── 导师/负责人：待审核 ── */}
+      {/* ── 带教老师/负责人：待审核 ── */}
       {!isTrainee && activeTab === 'review' && (
         <div className="space-y-3">
           {pendingReview.length === 0 ? (
@@ -369,7 +369,7 @@ export default function PracticePage() {
         </div>
       )}
 
-      {/* ── 导师/负责人：审核历史 ── */}
+      {/* ── 带教老师/负责人：审核历史 ── */}
       {!isTrainee && activeTab === 'reviewed' && (
         <div className="space-y-3">
           {reviewedHistory.length === 0 ? (

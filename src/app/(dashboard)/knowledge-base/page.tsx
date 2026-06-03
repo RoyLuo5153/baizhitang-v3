@@ -31,14 +31,14 @@ interface Article {
 
 const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
   '糖尿病基础': { bg: 'bg-[#2978B5]/10', text: 'text-[#2978B5]' },
-  '话术技巧': { bg: 'bg-[#F59E0B]/10', text: 'text-[#F59E0B]' },
+  '服务用语技巧': { bg: 'bg-[#F59E0B]/10', text: 'text-[#F59E0B]' },
   '业务流程': { bg: 'bg-[#22c55e]/10', text: 'text-[#22c55e]' },
   '案例分析': { bg: 'bg-destructive/10', text: 'text-destructive' },
   '制度规范': { bg: 'bg-[#2978B5]/10', text: 'text-[#2978B5]' },
   '产品知识': { bg: 'bg-purple-500/10', text: 'text-purple-500' },
 };
 
-const ALL_CATEGORIES = ['糖尿病基础', '话术技巧', '业务流程', '案例分析', '制度规范', '产品知识'];
+const ALL_CATEGORIES = ['糖尿病基础', '服务用语技巧', '业务流程', '案例分析', '制度规范', '产品知识'];
 
 // ─── Edit/Create Dialog ─────────────────────────────────
 
@@ -136,7 +136,7 @@ function ArticleEditor({
               <input
                 value={tagsStr}
                 onChange={e => setTagsStr(e.target.value)}
-                placeholder="如: 糖尿病, 诊断, 话术"
+                placeholder="如: 糖尿病, 诊断, 服务用语"
                 className="w-full px-3 py-2 rounded-md border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#2978B5]/30"
               />
             </div>

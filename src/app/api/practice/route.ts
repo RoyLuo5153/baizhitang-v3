@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
         stats: { pending: pendingCount, submitted: submittedCount, reviewed: reviewedCount },
       });
     } else {
-      // ── 导师/培训负责人视角：待审核 + 已审核 ──
+      // ── 带教老师/培训负责人视角：待审核 + 已审核 ──
       // 待审核：status=submitted的practice_tasks，关联trainee信息
       const { data: pendingReview } = await supabase
         .from('practice_tasks')
@@ -229,7 +229,7 @@ export async function POST(request: NextRequest) {
       })
       .eq('id', body.taskId);
 
-    // 联动触发：通知导师点评
+    // 联动触发：通知带教老师点评
     try {
       const { data: userData } = await supabase
         .from('users')
@@ -271,7 +271,7 @@ export async function POST(request: NextRequest) {
 }
 
 // ============================================================
-// PATCH /api/practice — 导师审核评分
+// PATCH /api/practice — 带教老师审核评分
 //   body: { submissionId, reviewScore(0-5), reviewComment, reviewDetail, pass }
 // ============================================================
 export async function PATCH(request: NextRequest) {

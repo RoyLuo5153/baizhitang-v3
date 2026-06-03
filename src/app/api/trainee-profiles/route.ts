@@ -126,7 +126,7 @@ export async function PUT(request: NextRequest) {
 
       if (error) {
         console.error('[trainee-profiles] PUT mentor update error:', error);
-        return NextResponse.json({ error: '更新导师失败' }, { status: 500 });
+        return NextResponse.json({ error: '更新带教老师失败' }, { status: 500 });
       }
       return NextResponse.json({ message: '更新成功', success: true });
     }

@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
       .eq('role_id', 1)
       .eq('is_active', true);
 
-    // 导师只看自己带的新人
+    // 带教老师只看自己带的新人
     if (roleId === 3) {
       traineeQuery = traineeQuery.eq('mentor_id', userId);
     }
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: '获取新人列表失败' }, { status: 500 });
     }
 
-    // 获取导师映射
+    // 获取带教老师映射
     const mentorIds = [...new Set((trainees || []).map((t: { mentor_id: string | null }) => t.mentor_id).filter(Boolean))] as string[];
     const mentorMap: Record<string, string> = {};
     if (mentorIds.length > 0) {
@@ -226,7 +226,7 @@ export async function GET(request: NextRequest) {
         }
       });
 
-      // 7. 检查待审核演练（导师视角）
+      // 7. 检查待审核演练（带教老师视角）
       if (roleId === 3 || roleId === 4) {
         const { data: pendingReviews } = await supabase
           .from('practice_submissions')

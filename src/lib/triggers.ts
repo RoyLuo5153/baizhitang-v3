@@ -45,7 +45,7 @@ export async function sendNotification(payload: NotificationPayload): Promise<vo
 }
 
 /**
- * 获取新人的导师ID
+ * 获取新人的带教老师ID
  */
 async function getMentorId(traineeId: string): Promise<string | null> {
   const client = getSupabaseClient();
@@ -72,7 +72,7 @@ async function getTrainingManagerIds(): Promise<string[]> {
 
 /**
  * 闯关失败联动
- * 同一关卡失败3次 → 通知导师 + 培训负责人
+ * 同一关卡失败3次 → 通知带教老师 + 培训负责人
  */
 export async function onQuizFailed(
   traineeId: string,
@@ -88,7 +88,7 @@ export async function onQuizFailed(
     const title = `${traineeName}闯关多次未通过`;
     const message = `${traineeName}在第${levelId}关「${levelName}」已失败${failCount}次，需要辅导支持`;
 
-    // 通知导师
+    // 通知带教老师
     if (mentorId) {
       await sendNotification({
         userId: mentorId,
@@ -118,7 +118,7 @@ export async function onQuizFailed(
 
 /**
  * 演练低分联动
- * 演练评分≤2分 → 通知导师安排辅导 + 可创建临时演练任务
+ * 演练评分≤2分 → 通知带教老师安排辅导 + 可创建临时演练任务
  */
 export async function onPracticeLowScore(
   traineeId: string,
@@ -149,7 +149,7 @@ export async function onPracticeLowScore(
         userId: mgrId,
         type: 'practice_submitted',
         title: `${traineeName}演练评分不达标`,
-        message: `${traineeName}在「${taskTitle}」的演练评分仅${score}分，导师：${mentorId || '未分配'}`,
+        message: `${traineeName}在「${taskTitle}」的演练评分仅${score}分，带教老师：${mentorId || '未分配'}`,
         relatedUserId: traineeId,
         relatedId: submissionId,
         priority: 'medium',
@@ -192,7 +192,7 @@ export async function onStageTransition(
   const title = `${traineeName}进入${stageNames[toStage]}`;
   const message = `${traineeName}已完成${stageNames[fromStage]}，正式进入${stageNames[toStage]}`;
 
-  // 通知导师
+  // 通知带教老师
   const mentorId = await getMentorId(traineeId);
   if (mentorId) {
     await sendNotification({
@@ -252,7 +252,7 @@ export async function onQcLowScore(
       });
     }
 
-    // 通知导师
+    // 通知带教老师
     const mentorId = await getMentorId(traineeId);
     if (mentorId) {
       await sendNotification({
@@ -270,7 +270,7 @@ export async function onQcLowScore(
 
 /**
  * 演练提交联动
- * 新人提交录音 → 通知导师点评
+ * 新人提交录音 → 通知带教老师点评
  */
 export async function onPracticeSubmitted(
   traineeId: string,
@@ -294,7 +294,7 @@ export async function onPracticeSubmitted(
 
 /**
  * 任务逾期联动
- * 任务逾期未完成 → 通知导师 + 培训负责人
+ * 任务逾期未完成 → 通知带教老师 + 培训负责人
  */
 export async function onTaskOverdue(
   traineeId: string,

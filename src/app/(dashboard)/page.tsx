@@ -267,7 +267,7 @@ function TrainingManagerHome({ data }: { data: any }) {
   );
 }
 
-// ========== 导师看板 ==========
+// ========== 带教老师看板 ==========
 function MentorHome({ data }: { data: any }) {
   const stageNames: Record<number, string> = { 1: '学习期', 2: '练习期', 3: '独立期', 4: '熟练期' };
   return (
@@ -498,7 +498,7 @@ export default function HomePage() {
   const roleLabels: Record<string, string> = {
     trainee: '成长计划',
     training_manager: '培训管理驾驶舱',
-    mentor: '导师工作台',
+    mentor: '带教老师工作台',
     teacher: '教务工作台',
     boss: '经营概览',
   };

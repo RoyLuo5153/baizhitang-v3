@@ -51,9 +51,9 @@ interface CoachingRecord {
 }
 
 const MOCK_COACHING: CoachingRecord[] = [
-  { id: 1, mentor_id: '6', mentor_name: '陈导师', trainee_id: '1', trainee_name: '张小红', coaching_date: '2025-06-05', topic: '微信加V沟通改善', content: '分析了近一周微信沟通记录，发现开场白过于生硬，需调整为更自然的问候方式', action_items: '1. 练习自然开场白话术\n2. 录制3段加V沟通演练\n3. 下周提交改进效果', next_date: '2025-06-12', created_at: '2025-06-05T10:00:00Z' },
-  { id: 2, mentor_id: '6', mentor_name: '陈导师', trainee_id: '2', trainee_name: '李大伟', coaching_date: '2025-06-04', topic: '质检扣分项分析', content: '梳理了最近3次质检扣分点，主要集中在规范执行维度，需要加强流程合规意识', action_items: '1. 复习质检标准细则\n2. 每日自查清单\n3. 连续2周规范执行评分达85+', next_date: '2025-06-11', created_at: '2025-06-04T14:00:00Z' },
-  { id: 3, mentor_id: '7', mentor_name: '周导师', trainee_id: '3', trainee_name: '王美玲', coaching_date: '2025-06-03', topic: '面诊邀约率提升', content: '面诊邀约率连续2周不达标，分析原因为邀约话术不够有说服力', action_items: '1. 学习优秀面诊邀约话术模板\n2. 角色扮演练习\n3. 记录每日邀约结果', next_date: '2025-06-10', created_at: '2025-06-03T09:00:00Z' },
+  { id: 1, mentor_id: '6', mentor_name: '陈带教老师', trainee_id: '1', trainee_name: '张小红', coaching_date: '2025-06-05', topic: '微信加V沟通改善', content: '分析了近一周微信沟通记录，发现开场白过于生硬，需调整为更自然的问候方式', action_items: '1. 练习自然开场白服务用语\n2. 录制3段加V沟通演练\n3. 下周提交改进效果', next_date: '2025-06-12', created_at: '2025-06-05T10:00:00Z' },
+  { id: 2, mentor_id: '6', mentor_name: '陈带教老师', trainee_id: '2', trainee_name: '李大伟', coaching_date: '2025-06-04', topic: '质检扣分项分析', content: '梳理了最近3次质检扣分点，主要集中在规范执行维度，需要加强流程合规意识', action_items: '1. 复习质检标准细则\n2. 每日自查清单\n3. 连续2周规范执行评分达85+', next_date: '2025-06-11', created_at: '2025-06-04T14:00:00Z' },
+  { id: 3, mentor_id: '7', mentor_name: '周带教老师', trainee_id: '3', trainee_name: '王美玲', coaching_date: '2025-06-03', topic: '面诊邀约率提升', content: '面诊邀约率连续2周不达标，分析原因为邀约服务用语不够有说服力', action_items: '1. 学习优秀面诊邀约服务用语模板\n2. 角色扮演练习\n3. 记录每日邀约结果', next_date: '2025-06-10', created_at: '2025-06-03T09:00:00Z' },
 ];
 
 const PLAN_ICONS: Record<string, any> = {
@@ -221,7 +221,7 @@ export default function EmpowermentPage() {
       {activeTab === 'coaching' && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">导师与学员的一对一辅导记录，包含问题分析与行动计划</p>
+            <p className="text-sm text-muted-foreground">带教老师与学员的一对一辅导记录，包含问题分析与行动计划</p>
             <button
               onClick={() => setShowNewCoachingDialog(true)}
               className="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all inline-flex items-center gap-2"
@@ -246,7 +246,7 @@ export default function EmpowermentPage() {
                     <div>
                       <h4 className="text-sm font-semibold text-foreground">{record.topic}</h4>
                       <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
-                        <span className="flex items-center gap-1"><User className="w-3 h-3" />导师: {record.mentor_name}</span>
+                        <span className="flex items-center gap-1"><User className="w-3 h-3" />带教老师: {record.mentor_name}</span>
                         <span className="flex items-center gap-1"><User className="w-3 h-3" />学员: {record.trainee_name}</span>
                         <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{record.coaching_date}</span>
                       </div>
@@ -283,9 +283,9 @@ export default function EmpowermentPage() {
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-sm font-medium text-foreground">导师</label>
+                      <label className="text-sm font-medium text-foreground">带教老师</label>
                       <select className="w-full mt-1 px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm">
-                        <option>陈导师</option><option>周导师</option>
+                        <option>陈带教老师</option><option>周带教老师</option>
                       </select>
                     </div>
                     <div>
@@ -622,7 +622,7 @@ function NewPlanDialog({ onClose, onCreated }: { onClose: () => void; onCreated:
               value={name}
               onChange={e => setName(e.target.value)}
               className="w-full mt-1 px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm"
-              placeholder="如：加微话术专项训练"
+              placeholder="如：加微服务用语专项训练"
             />
           </div>
           <div>

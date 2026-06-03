@@ -274,11 +274,11 @@ const MOCK_COURSES: Course[] = [
     { id: 1, course_id: 1, session_date: '2025-06-15', start_time: '09:00', end_time: '12:00', location: '培训室A', max_attendees: 20, status: 'scheduled', notes: '', attendee_count: 5 },
     { id: 2, course_id: 1, session_date: '2025-06-16', start_time: '09:00', end_time: '12:00', location: '培训室A', max_attendees: 20, status: 'scheduled', notes: '', attendee_count: 4 },
   ]},
-  { id: 2, name: '服务助理话术实训', description: '电话沟通话术、微信沟通技巧、场景模拟', category: '技能实训', instructor: '陈导师', duration_hours: 16, target_stage: 1, is_active: true, sessions: [
+  { id: 2, name: '服务助理服务用语实训', description: '电话沟通服务用语、微信沟通技巧、场景模拟', category: '技能实训', instructor: '陈带教老师', duration_hours: 16, target_stage: 1, is_active: true, sessions: [
     { id: 3, course_id: 2, session_date: '2025-06-20', start_time: '14:00', end_time: '17:00', location: '演练室B', max_attendees: 10, status: 'scheduled', notes: '', attendee_count: 0 },
     { id: 4, course_id: 2, session_date: '2025-06-21', start_time: '14:00', end_time: '17:00', location: '演练室B', max_attendees: 10, status: 'scheduled', notes: '', attendee_count: 0 },
   ]},
-  { id: 3, name: '用药指导专项培训', description: '常用降糖药机制、用药方案、不良反应处理', category: '专业进阶', instructor: '周导师', duration_hours: 12, target_stage: 2, is_active: true, sessions: [
+  { id: 3, name: '用药指导专项培训', description: '常用降糖药机制、用药方案、不良反应处理', category: '专业进阶', instructor: '周带教老师', duration_hours: 12, target_stage: 2, is_active: true, sessions: [
     { id: 5, course_id: 3, session_date: '2025-06-25', start_time: '09:00', end_time: '12:00', location: '培训室A', max_attendees: 15, status: 'scheduled', notes: '', attendee_count: 0 },
     { id: 6, course_id: 3, session_date: '2025-06-26', start_time: '09:00', end_time: '12:00', location: '培训室A', max_attendees: 15, status: 'scheduled', notes: '', attendee_count: 0 },
   ]},

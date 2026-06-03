@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     return await getTrainingManagerDashboard(client, userId);
   }
 
-  // 导师看板
+  // 带教老师看板
   if (roleId === 2) {
     return await getMentorDashboard(client, userId);
   }

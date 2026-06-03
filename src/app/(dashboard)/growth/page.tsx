@@ -94,12 +94,12 @@ const MOCK_DATA: GrowthData = {
   processMetrics: [
     { key: 'learning_passed', label: '闯关通过数', value: 12, threshold: 7, unit: '关', qualified: true },
     { key: 'qc_score', label: '录音质检分数', value: 75, threshold: 70, unit: '分', qualified: true },
-    { key: 'wechat_skill', label: '加微话术得分', value: 82, threshold: 80, unit: '分', qualified: true },
+    { key: 'wechat_skill', label: '加微服务用语得分', value: 82, threshold: 80, unit: '分', qualified: true },
     { key: 'daily_assessment', label: '日常考核均分', value: 78, threshold: 75, unit: '分', qualified: true },
     { key: 'attendance_rate', label: '出勤率', value: 96, threshold: 90, unit: '%', qualified: true },
   ],
   resultMetrics: [
-    { key: 'wechat_add_rate', label: '加V率', value: 85, threshold: 90, unit: '%', qualified: false, diagnosis: '加微承接话术不熟练，高峰期遗漏较多，需强化场景化话术训练' },
+    { key: 'wechat_add_rate', label: '加V率', value: 85, threshold: 90, unit: '%', qualified: false, diagnosis: '加微承接服务用语不熟练，高峰期遗漏较多，需强化场景化服务用语训练' },
     { key: 'consultation_rate', label: '咨询转化率', value: 58, threshold: 60, unit: '%', qualified: false, diagnosis: '客户需求挖掘深度不足，产品价值传递不够清晰' },
     { key: 'reception_rate', label: '接待完成率', value: 75, threshold: 70, unit: '%', qualified: true },
     { key: 'delivery_rate', label: '交付达成率', value: 82, threshold: 80, unit: '%', qualified: true },
@@ -109,8 +109,8 @@ const MOCK_DATA: GrowthData = {
   empowerPlans: [
     {
       id: 1,
-      title: '加微话术专项训练',
-      description: '针对加V率不达标，通过场景化话术演练和模拟训练，提升加微承接能力',
+      title: '加微服务用语专项训练',
+      description: '针对加V率不达标，通过场景化服务用语演练和模拟训练，提升加微承接能力',
       targetMetrics: ['加V率'],
       duration: '2周',
       priority: 'high',
@@ -626,7 +626,7 @@ export default function GrowthProfilePage() {
                     </span>
                   </td>
                 </tr>
-                {/* 列表-过程线指标3: 加微话术得分 */}
+                {/* 列表-过程线指标3: 加微服务用语得分 */}
                 <tr className={data.processMetrics[2]?.qualified ? '' : 'bg-destructive/5'}>
                   <td className="px-3 py-2.5 text-sm text-foreground">{data.processMetrics[2]?.label}</td>
                   <td className="px-3 py-2.5 text-sm text-center font-medium text-foreground">{data.processMetrics[2]?.value}{data.processMetrics[2]?.unit}</td>
@@ -1161,11 +1161,11 @@ function transformApiResponse(raw: any, currentUser: any): GrowthData {
       threshold: 70,
       unit: '分',
       qualified: processDetails.qcPassed ?? false,
-      diagnosis: !processDetails.qcPassed ? '录音质检均分未达到70分合格线，需加强电话沟通话术训练' : undefined,
+      diagnosis: !processDetails.qcPassed ? '录音质检均分未达到70分合格线，需加强电话沟通服务用语训练' : undefined,
     },
     {
       key: 'wechat_skill',
-      label: '加微话术得分',
+      label: '加微服务用语得分',
       value: processDetails.wechatSkillScore ?? null,
       threshold: 80,
       unit: '分',
@@ -1201,7 +1201,7 @@ function transformApiResponse(raw: any, currentUser: any): GrowthData {
   ];
 
   const DIAGNOSES: Record<string, string> = {
-    wechat_add_rate: '加微承接话术不熟练，高峰期遗漏较多，需强化场景化话术训练',
+    wechat_add_rate: '加微承接服务用语不熟练，高峰期遗漏较多，需强化场景化服务用语训练',
     consultation_rate: '客户需求挖掘深度不足，产品价值传递不够清晰',
     reception_rate: '接待流程执行不够规范，建议加强接待SOP训练',
     delivery_rate: '交付流程存在薄弱环节，需优化交付节奏把控',
@@ -1230,8 +1230,8 @@ function transformApiResponse(raw: any, currentUser: any): GrowthData {
     ? [
         ...(resultMetrics.find(m => m.key === 'wechat_add_rate' && !m.qualified) ? [{
           id: 1,
-          title: '加微话术专项训练',
-          description: '针对加V率不达标，通过场景化话术演练和模拟训练，提升加微承接能力',
+          title: '加微服务用语专项训练',
+          description: '针对加V率不达标，通过场景化服务用语演练和模拟训练，提升加微承接能力',
           targetMetrics: ['加V率'],
           duration: '2周',
           priority: 'high' as const,

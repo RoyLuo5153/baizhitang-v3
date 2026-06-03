@@ -172,7 +172,7 @@ function UploadDialog({ categories, onClose, onSaved }: { categories: Category[]
           <div>
             <label className="text-xs font-medium text-muted-foreground mb-1.5 block">标签（逗号分隔）</label>
             <input value={form.tagsInput} onChange={e => setForm(p => ({ ...p, tagsInput: e.target.value }))}
-              className="w-full h-9 rounded-md border border-border bg-transparent px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30" placeholder="例：糖尿病,话术,首通电话" />
+              className="w-full h-9 rounded-md border border-border bg-transparent px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30" placeholder="例：糖尿病,服务用语,首通电话" />
           </div>
         </div>
         {error && <div className="mt-3 flex items-center gap-1.5 text-sm text-destructive"><X className="w-3.5 h-3.5" />{error}</div>}

@@ -281,7 +281,7 @@ export default function QcReviewPage() {
           <h1 className="text-xl font-bold text-foreground">我的质检</h1>
         </div>
         <p className="text-sm text-muted-foreground">
-          质检由系统自动触发：当你提交演练录音、上传截图或完成日常考核时，系统会自动创建质检任务交由导师审核。
+          质检由系统自动触发：当你提交演练录音、上传截图或完成日常考核时，系统会自动创建质检任务交由带教老师审核。
         </p>
 
         {/* Stats */}

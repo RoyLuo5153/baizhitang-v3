@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
 
-// GET /api/users — 获取用户列表（支持?roleId=2筛选导师）
+// GET /api/users — 获取用户列表（支持?roleId=2筛选带教老师）
 export async function GET(req: NextRequest) {
   try {
     const supabase = getSupabaseClient();
