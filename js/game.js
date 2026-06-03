@@ -643,6 +643,7 @@ class Game {
       loadingBar: document.getElementById('loadingBar'),
       loadingFill: document.getElementById('loadingFill'),
       controlsPanel: document.getElementById('controlsPanel'),
+      clickToPlay: document.getElementById('clickToPlay'),
     };
 
     // 可选方块列表
@@ -745,9 +746,11 @@ class Game {
       this.camera.position.z + lookDir.z
     );
 
-    // 桌面端自动请求指针锁定
-    if (!this.isMobile) {
-      this.canvas.requestPointerLock();
+    // 不自动锁定指针，等用户点击画布再进入游戏
+    // 这样用户可以正常操作聊天等界面
+    // 显示"点击画面开始游戏"提示
+    if (!this.isMobile && this.ui.clickToPlay) {
+      this.ui.clickToPlay.style.display = 'block';
     }
 
     // 显示游戏HUD
@@ -1000,8 +1003,10 @@ class Game {
         this.isPointerLocked = document.pointerLockElement === this.canvas;
         if (this.isPointerLocked) {
           this.ui.pauseScreen.style.display = 'none';
+          if (this.ui.clickToPlay) this.ui.clickToPlay.style.display = 'none';
           this._showGameUI(true);
         } else if (this.isRunning) {
+          // 退出指针锁定时显示小浮动条，不遮挡页面
           this.ui.pauseScreen.style.display = 'flex';
         }
       });
@@ -1012,9 +1017,10 @@ class Game {
         }
       };
 
-      // 暂停界面或画布点击 → 请求指针锁定
+      // 暂停界面、点击提示或画布点击 → 请求指针锁定
       this.ui.pauseScreen.addEventListener('click', requestLock);
       this.canvas.addEventListener('click', requestLock);
+      if (this.ui.clickToPlay) this.ui.clickToPlay.addEventListener('click', requestLock);
     }
 
     // ----- 移动端：直接进入游戏 + 触摸控制 -----

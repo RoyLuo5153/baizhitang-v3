@@ -299,30 +299,65 @@ html, body {
 /* 暂停界面 */
 #pauseScreen {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 90;
   display: none;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.6);
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.7);
+  border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 12px;
+  padding: 10px 24px;
   cursor: pointer;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: background 0.2s;
+}
+
+#pauseScreen:hover {
+  background: rgba(0, 0, 0, 0.85);
+  border-color: rgba(255,255,255,0.5);
 }
 
 #pauseScreen .pause-text {
-  font-size: 36px;
+  font-size: 16px;
   color: #fff;
-  margin-bottom: 16px;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
 }
 
 #pauseScreen .pause-hint {
+  font-size: 14px;
+  color: rgba(255,255,255,0.6);
+}
+
+/* 点击进入游戏提示 */
+#clickToPlay {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 95;
+  display: none;
+  background: rgba(0, 0, 0, 0.7);
+  border: 2px solid rgba(255,255,255,0.4);
+  border-radius: 12px;
+  padding: 12px 28px;
+  color: #fff;
   font-size: 16px;
-  color: rgba(255,255,255,0.7);
+  font-family: 'Courier New', monospace;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   animation: hintBlink 2s ease-in-out infinite;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+#clickToPlay:hover {
+  background: rgba(0, 0, 0, 0.85);
+  border-color: rgba(255,255,255,0.6);
 }
 
 /* 加载提示 */
@@ -568,11 +603,11 @@ html, body {
 /* 移动端暂停界面适配 */
 @media (max-width: 768px) {
   #pauseScreen .pause-text {
-    font-size: 28px;
+    font-size: 14px;
   }
 
   #pauseScreen .pause-hint {
-    font-size: 14px;
+    font-size: 12px;
   }
 
   #crosshair {

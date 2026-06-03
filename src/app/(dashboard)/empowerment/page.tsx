@@ -1,10 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useAuth } from '@/lib/auth/context';
 import {
   Zap, Plus, Library, PlayCircle, CheckCircle2, Clock, Users, Target,
   MessageCirclePlus, Pill, Mic, BookOpen, ChevronRight, ArrowRight, TrendingUp,
-  MessageSquare, User, Calendar, Star,
+  MessageSquare, User, Calendar, Star, X,
 } from 'lucide-react';
 
 interface EmpowerPlan {
@@ -15,8 +16,11 @@ interface EmpowerPlan {
   duration_days: number;
   target_metrics: string[];
   target_quadrants: string[];
-  content: any;
+  content: { steps?: string[]; [key: string]: unknown };
   is_active: boolean;
+  estimated_hours?: number;
+  indicator_key?: string;
+  target_indicators?: string[];
 }
 
 interface Execution {
@@ -65,6 +69,7 @@ const PLAN_ICONS: Record<string, any> = {
 };
 
 export default function EmpowermentPage() {
+  const { user } = useAuth();
   const [plans, setPlans] = useState<EmpowerPlan[]>([]);
   const [executions, setExecutions] = useState<Execution[]>([]);
   const [coachingRecords, setCoachingRecords] = useState<CoachingRecord[]>([]);
@@ -75,6 +80,7 @@ export default function EmpowermentPage() {
   const [showTempTaskDialog, setShowTempTaskDialog] = useState(false);
   const [tempTask, setTempTask] = useState({ title: '', description: '', taskTag: '', assignedTo: '', deadline: '' });
   const [trainees, setTrainees] = useState<{id: string; name: string}[]>([]);
+  const [selectedPlan, setSelectedPlan] = useState<EmpowerPlan | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -182,7 +188,7 @@ export default function EmpowermentPage() {
             </div>
           ) : (
             plans.map(plan => (
-              <PlanCard key={plan.id} plan={plan} />
+              <PlanCard key={plan.id} plan={plan} onSelect={(p) => setSelectedPlan(p)} />
             ))
           )}
         </div>
@@ -422,16 +428,111 @@ export default function EmpowermentPage() {
           </div>
         </div>
       )}
+
+        {/* 方案详情弹窗 */}
+        {selectedPlan && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center" onClick={() => setSelectedPlan(null)}>
+            <div className="bg-card rounded-xl shadow-float max-w-2xl w-full mx-4 max-h-[85vh] overflow-y-auto" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+              <div className="p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="px-2 py-0.5 rounded text-xs font-medium bg-primary/10 text-primary">
+                        {selectedPlan.indicator_key || '综合提升'}
+                      </span>
+                      {selectedPlan.estimated_hours && (
+                        <span className="text-sm text-muted-foreground">预计 {selectedPlan.estimated_hours} 学时</span>
+                      )}
+                    </div>
+                    <h2 className="text-xl font-bold text-foreground">{selectedPlan.name}</h2>
+                  </div>
+                  <button onClick={() => setSelectedPlan(null)} className="text-muted-foreground hover:text-foreground p-1">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="mb-4">
+                  <h3 className="text-sm font-semibold text-foreground mb-1">方案目标</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{selectedPlan.description || '暂无描述'}</p>
+                </div>
+
+                {selectedPlan.target_indicators && Array.isArray(selectedPlan.target_indicators) && selectedPlan.target_indicators.length > 0 && (
+                  <div className="mb-4">
+                    <h3 className="text-sm font-semibold text-foreground mb-2">关联指标</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {(selectedPlan.target_indicators as unknown[]).map((m: unknown, i: number) => (
+                        <span key={i} className="px-2.5 py-1 rounded-md bg-primary/10 text-primary text-xs font-medium">
+                          {typeof m === 'string' ? m : String((m as Record<string, unknown>)?.name ?? (m as Record<string, unknown>)?.key ?? JSON.stringify(m))}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {selectedPlan.content && typeof selectedPlan.content === 'object' && (
+                  <div className="mb-4">
+                    <h3 className="text-sm font-semibold text-foreground mb-2">方案内容</h3>
+                    <div className="space-y-3">
+                      {(Array.isArray(selectedPlan.content) ? (selectedPlan.content as unknown[]) : [{title: '执行内容', description: String(selectedPlan.content)}]).map((item: unknown, i: number) => {
+                        const step = item as Record<string, unknown>;
+                        return (
+                        <div key={i} className="flex gap-3 items-start">
+                          <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
+                          <div>
+                            <p className="text-sm font-medium text-foreground">{(step.title as string) || (step.name as string) || `步骤${i + 1}`}</p>
+                            {step.description ? <p className="text-xs text-muted-foreground mt-0.5">{String(step.description)}</p> : null}
+                          </div>
+                        </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-border">
+                  <button onClick={() => setSelectedPlan(null)} className="px-4 py-2 rounded-md text-sm text-muted-foreground hover:text-foreground">
+                    关闭
+                  </button>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const res = await fetch('/api/empower', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ planId: selectedPlan.id, userIds: [], assignedBy: user?.id })
+                        });
+                        const data = await res.json();
+                        if (data.success || data.execution) {
+                          alert('方案已启动执行！');
+                          setSelectedPlan(null);
+                          fetchData();
+                        } else {
+                          alert(data.error || '启动失败');
+                        }
+                      } catch { alert('操作失败'); }
+                    }}
+                    className="px-5 py-2 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:opacity-90"
+                  >
+                    立即执行
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
     </div>
   );
 }
 
-function PlanCard({ plan }: { plan: EmpowerPlan }) {
+function PlanCard({ plan, onSelect }: { plan: EmpowerPlan; onSelect: (plan: EmpowerPlan) => void }) {
   const primaryMetric = plan.target_metrics?.[0] || 'default';
   const Icon = PLAN_ICONS[primaryMetric] || Target;
 
   return (
-    <div className="bg-card rounded-lg shadow-card p-5 hover:shadow-float transition-shadow border border-border/50">
+    <div
+      className="bg-card rounded-lg shadow-card p-5 hover:shadow-float transition-shadow border border-border/50 cursor-pointer"
+      onClick={() => onSelect(plan)}
+    >
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
           <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -446,12 +547,17 @@ function PlanCard({ plan }: { plan: EmpowerPlan }) {
         )}
       </div>
       <p className="text-sm text-muted-foreground mb-4">{plan.description}</p>
-      <div className="flex items-center gap-4 text-xs text-muted-foreground">
-        <span className="inline-flex items-center gap-1">
-          <Clock className="w-3.5 h-3.5" />预计{plan.duration_days}天
-        </span>
-        <span className="inline-flex items-center gap-1">
-          <Target className="w-3.5 h-3.5" />{(plan.target_metrics || []).join(', ')}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+          <span className="inline-flex items-center gap-1">
+            <Clock className="w-3.5 h-3.5" />预计{plan.duration_days}天
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <Target className="w-3.5 h-3.5" />{(plan.target_metrics || []).join(', ')}
+          </span>
+        </div>
+        <span className="text-xs font-medium text-[#f59e0b] inline-flex items-center gap-1">
+          查看详情 <ChevronRight className="w-3.5 h-3.5" />
         </span>
       </div>
     </div>
