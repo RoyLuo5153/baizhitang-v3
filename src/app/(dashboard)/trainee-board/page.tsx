@@ -131,7 +131,7 @@ export default function TraineeBoardPage() {
             <h1 className="text-xl font-bold text-foreground">{roleLabel}</h1>
           </div>
           <p className="text-sm text-muted-foreground mt-1">
-            {currentUser?.role === '1' ? '系统在关注你的进度，及时完成待办任务' : '系统盯人 — 自动发现异常，驱动赋能'}
+            {currentUser?.role === 'trainee' ? '系统在关注你的进度，及时完成待办任务' : '系统盯人 — 自动发现异常，驱动赋能'}
           </p>
         </div>
         <button
@@ -336,7 +336,7 @@ export default function TraineeBoardPage() {
       )}
 
       {/* New person's quick actions */}
-      {currentUser?.role === '1' && (
+      {currentUser?.role === 'trainee' && (
         <div className="bg-card rounded-lg p-4 shadow-card">
           <h3 className="text-sm font-medium text-foreground mb-3">我的快捷入口</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

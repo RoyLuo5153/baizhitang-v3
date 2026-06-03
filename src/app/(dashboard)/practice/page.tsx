@@ -49,7 +49,7 @@ const SCORE_LABELS: Record<number, { label: string; color: string }> = {
 
 export default function PracticePage() {
   const { user } = useAuth();
-  const isTrainee = user?.role === '1';
+  const isTrainee = user?.role === 'trainee';
   const [activeTab, setActiveTab] = useState(isTrainee ? 'pending' : 'review');
   const [pendingTasks, setPendingTasks] = useState<PracticeTask[]>([]);
   const [history, setHistory] = useState<PracticeTask[]>([]);

@@ -238,7 +238,7 @@ export default function QcReviewPage() {
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [reviewRecord, setReviewRecord] = useState<QcRecord | null>(null);
 
-  const isTrainee = user?.role === '1';
+  const isTrainee = user?.role === 'trainee';
 
   const fetchRecords = useCallback(async () => {
     try {
