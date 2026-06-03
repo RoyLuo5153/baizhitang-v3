@@ -85,7 +85,7 @@ export default function LoginPage() {
             <p className="text-xs text-[#667085] mb-2">测试账号（密码：bt2026）</p>
             <div className="grid grid-cols-2 gap-2 text-xs text-[#667085]">
               <span>zhangxh - 新人</span>
-              <span>chends - 带教</span>
+              <span>chends - 带教老师</span>
               <span>wupx - 培训老师</span>
               <span>zhengl - 培训负责人</span>
               <span>sunz - 总经理</span>
