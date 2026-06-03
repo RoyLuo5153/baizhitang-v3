@@ -91,7 +91,7 @@ const ROLE_OPTIONS = [
   { id: 2, name: 'mentor', displayName: '带教导师' },
   { id: 3, name: 'teacher', displayName: '培训师' },
   { id: 4, name: 'training_manager', displayName: '培训负责人' },
-  { id: 5, name: 'boss', displayName: '老板' },
+  { id: 5, name: 'boss', displayName: '总经理' },
 ];
 
 const ROLE_BADGE_MAP: Record<string, { bg: string; text: string }> = {

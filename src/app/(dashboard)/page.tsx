@@ -389,7 +389,7 @@ function TeacherHome({ data }: { data: any }) {
   );
 }
 
-// ========== 老板概览 ==========
+// ========== 总经理概览 ==========
 function BossHome({ data }: { data: any }) {
   const stageNames: Record<number, string> = { 1: '学习期', 2: '练习期', 3: '独立期', 4: '熟练期' };
   const metricLabels: Record<string, string> = {

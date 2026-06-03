@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
     return await getTeacherDashboard(client, userId);
   }
 
-  // 老板概览
+  // 总经理概览
   if (roleId === 5) {
     return await getBossDashboard(client);
   }

@@ -28,7 +28,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: '数据看板', href: '/dashboard', icon: 'BarChart3', roles: ['training_manager'], group: '数据' },
   { label: '业务数据', href: '/scrm-import', icon: 'TrendingUp', roles: ['training_manager'], group: '数据' },
 
-  // 老板专属
+  // 总经理专属
   { label: '全局概览', href: '/overview', icon: 'Eye', roles: ['boss', 'training_manager'], group: '决策' },
 
   // 设置
