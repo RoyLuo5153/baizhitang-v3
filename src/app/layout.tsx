@@ -4,7 +4,7 @@ import { AuthProvider } from '@/lib/auth/context';
 
 export const metadata: Metadata = {
   title: '百芝堂赋能系统',
-  description: '培训赋能 · 双轨驱动',
+  description: '百芝堂新人培训管理系统',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

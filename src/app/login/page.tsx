@@ -32,7 +32,7 @@ export default function LoginPage() {
             <span className="text-white text-2xl font-bold">BZ</span>
           </div>
           <h1 className="text-2xl font-semibold text-[#102A43]">百芝堂培训管理系统</h1>
-          <p className="text-sm text-[#667085] mt-2">双轨驱动赋能平台</p>
+          <p className="text-sm text-[#667085] mt-2">百芝堂新人培训管理系统</p>
         </div>
 
         {/* 登录表单 */}
