@@ -4,7 +4,7 @@ import type { NextRequest } from 'next/server';
 /**
  * 路由级权限保护
  * 每个路径显式声明允许访问的角色白名单
- * 未登录用户访问任何/dashboard路径都重定向到/login
+ * 未登录用户访问任何dashboard路径都重定向到/login
  */
 
 type RoleCode = 'trainee' | 'mentor' | 'teacher' | 'training_manager' | 'boss';
@@ -29,19 +29,23 @@ const ROUTE_PERMISSIONS: Record<string, RoleCode[]> = {
   '/settings': ['training_manager'],
 };
 
-// 角色ID到角色代码的映射（与数据库一致）
-const ROLE_ID_MAP: Record<string, RoleCode> = {
-  '1': 'trainee',
-  '2': 'mentor',
-  '3': 'teacher',
-  '4': 'training_manager',
-  '5': 'boss',
-};
+function parseToken(token: string): { role: string } | null {
+  try {
+    const decoded = Buffer.from(token, 'base64').toString('utf-8');
+    const parsed = JSON.parse(decoded);
+    if (parsed.role) {
+      return { role: parsed.role };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // 静态资源和API跳过
+  // 静态资源、API、登录页跳过
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api') ||
@@ -60,31 +64,38 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // 解析token获取角色（当前为base64编码，后续升级JWT）
-  try {
-    const decoded = Buffer.from(token, 'base64').toString('utf-8');
-    const parts = decoded.split(':');
-    const roleId = parts[2]; // userId:username:roleId
-    const userRole = ROLE_ID_MAP[roleId];
+  // 解析token获取角色
+  const parsed = parseToken(token);
+  if (!parsed || !parsed.role) {
+    // token无效，重定向到登录页
+    const loginUrl = new URL('/login', request.url);
+    const response = NextResponse.redirect(loginUrl);
+    // 清除无效cookie
+    response.cookies.set('auth_token', '', { maxAge: 0 });
+    return response;
+  }
 
-    if (!userRole) {
-      const loginUrl = new URL('/login', request.url);
-      return NextResponse.redirect(loginUrl);
+  const userRole = parsed.role as RoleCode;
+
+  // 检查当前路径的权限（找到最长匹配的路径前缀）
+  let matchedPath = '';
+  for (const routePath of Object.keys(ROUTE_PERMISSIONS)) {
+    if (pathname.startsWith(routePath) && routePath.length > matchedPath.length) {
+      matchedPath = routePath;
     }
+  }
 
-    // 检查当前路径的权限
-    const allowedRoles = ROUTE_PERMISSIONS[pathname];
-    if (allowedRoles && !allowedRoles.includes(userRole)) {
+  if (matchedPath) {
+    const allowedRoles = ROUTE_PERMISSIONS[matchedPath];
+    if (!allowedRoles.includes(userRole)) {
       // 无权限，重定向到首页
       const homeUrl = new URL('/', request.url);
       return NextResponse.redirect(homeUrl);
     }
-
-    return NextResponse.next();
-  } catch {
-    const loginUrl = new URL('/login', request.url);
-    return NextResponse.redirect(loginUrl);
   }
+
+  // 首页(/)和其他未在ROUTE_PERMISSIONS中的路径放行（已登录即可访问）
+  return NextResponse.next();
 }
 
 export const config = {
