@@ -609,9 +609,11 @@ export default function ResourcesPage() {
                           <Download className="w-4 h-4" />
                         </a>
                       )}
+                      {!isTrainee && (
                       <button onClick={() => handleDeleteResource(r.id)} className="p-2 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100" title="删除">
                         <Trash2 className="w-4 h-4" />
                       </button>
+                      )}
                     </div>
                   </div>
                 );

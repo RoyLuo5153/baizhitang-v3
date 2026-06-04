@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/lib/auth/context';
 import {
   BookOpen, Search, Tag, Bookmark, BookmarkCheck, Eye,
-  ChevronRight, Filter, Plus, Edit2, Trash2, X, Target, HelpCircle
+  ChevronRight, Filter, Plus, Edit2, Trash2, X, Target, HelpCircle,
+  CheckCircle, XCircle, Clock, AlertCircle
 } from 'lucide-react';
 
 // ─── Types ──────────────────────────────────────────────
@@ -19,6 +20,8 @@ interface Article {
   problemSolved: string;
   authorId: string;
   status: string;
+  reviewedBy: number | null;
+  reviewedAt: string | null;
   viewCount: number;
   bookmarkCount: number;
   createdAt: string;
@@ -26,6 +29,16 @@ interface Article {
   publishedAt: string | null;
   isBookmarked: boolean;
 }
+
+// ─── Status config ──────────────────────────────────────
+
+const STATUS_CONFIG: Record<string, { label: string; color: string; bgColor: string; icon: typeof Clock }> = {
+  draft: { label: '草稿', color: 'text-muted-foreground', bgColor: 'bg-muted', icon: Edit2 },
+  pending_review: { label: '待审核', color: 'text-[#F59E0B]', bgColor: 'bg-[#F59E0B]/10', icon: Clock },
+  approved: { label: '已通过', color: 'text-[#22c55e]', bgColor: 'bg-[#22c55e]/10', icon: CheckCircle },
+  rejected: { label: '已驳回', color: 'text-destructive', bgColor: 'bg-destructive/10', icon: XCircle },
+  published: { label: '已发布', color: 'text-[#22c55e]', bgColor: 'bg-[#22c55e]/10', icon: CheckCircle },
+};
 
 // ─── Category colors ────────────────────────────────────
 
@@ -46,19 +59,21 @@ function ArticleEditor({
   article,
   onClose,
   onSaved,
+  userRole,
 }: {
   article: Article | null;
   onClose: () => void;
-  onSaved: () => void;
+  onSaved: (reviewStatus?: string) => void;
+  userRole: string;
 }) {
   const isEdit = !!article;
+  const isTrainingManager = userRole === 'training_manager';
   const [title, setTitle] = useState(article?.title || '');
   const [content, setContent] = useState(article?.content || '');
   const [category, setCategory] = useState(article?.category || '');
   const [tagsStr, setTagsStr] = useState(article?.tags?.join(', ') || '');
   const [scenario, setScenario] = useState(article?.scenario || '');
   const [problemSolved, setProblemSolved] = useState(article?.problemSolved || '');
-  const [status, setStatus] = useState(article?.status || 'draft');
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
@@ -73,8 +88,12 @@ function ArticleEditor({
         tags,
         scenario,
         problemSolved,
-        status,
+        // 培训负责人选择发布则直接approved，否则draft
+        // 非培训负责人强制pending_review
+        status: isTrainingManager ? undefined : undefined, // 后端根据角色自动设置
       };
+
+      let reviewStatus: string | undefined;
 
       if (isEdit) {
         body.articleId = article!.id;
@@ -83,15 +102,22 @@ function ArticleEditor({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
         });
-        if (res.ok) onSaved();
+        if (res.ok) {
+          const json = await res.json();
+          reviewStatus = json.reviewStatus;
+        }
       } else {
         const res = await fetch('/api/knowledge', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
         });
-        if (res.ok) onSaved();
+        if (res.ok) {
+          const json = await res.json();
+          reviewStatus = json.reviewStatus;
+        }
       }
+      onSaved(reviewStatus);
     } catch {
       // ignore
     }
@@ -179,20 +205,13 @@ function ArticleEditor({
             />
           </div>
 
-          {/* Status */}
-          <div>
-            <label className="text-sm font-medium text-foreground block mb-1">状态</label>
-            <div className="flex items-center gap-3">
-              <label className="flex items-center gap-1.5 text-sm">
-                <input type="radio" name="status" checked={status === 'draft'} onChange={() => setStatus('draft')} />
-                <span className="text-muted-foreground">草稿</span>
-              </label>
-              <label className="flex items-center gap-1.5 text-sm">
-                <input type="radio" name="status" checked={status === 'published'} onChange={() => setStatus('published')} />
-                <span className="text-muted-foreground">发布</span>
-              </label>
+          {/* 审核提示 */}
+          {!isTrainingManager && (
+            <div className="flex items-center gap-2 p-3 bg-[#F59E0B]/5 border border-[#F59E0B]/20 rounded-lg">
+              <AlertCircle className="w-4 h-4 text-[#F59E0B] shrink-0" />
+              <span className="text-sm text-[#F59E0B]">提交后将进入审核流程，由培训负责人审核通过后发布</span>
             </div>
-          </div>
+          )}
         </div>
 
         <div className="p-5 border-t border-border flex justify-end gap-3">
@@ -218,14 +237,24 @@ function ArticleDetail({
   onEdit,
   onDelete,
   onToggleBookmark,
+  onApprove,
+  onReject,
+  isTrainingManager,
+  isTrainee,
 }: {
   article: Article;
   onBack: () => void;
   onEdit: () => void;
   onDelete: () => void;
   onToggleBookmark: () => void;
+  onApprove: () => void;
+  onReject: () => void;
+  isTrainingManager: boolean;
+  isTrainee: boolean;
 }) {
   const catColor = CATEGORY_COLORS[article.category] || { bg: 'bg-muted', text: 'text-muted-foreground' };
+  const statusCfg = STATUS_CONFIG[article.status] || STATUS_CONFIG.draft;
+  const StatusIcon = statusCfg.icon;
 
   return (
     <div className="space-y-5">
@@ -234,12 +263,23 @@ function ArticleDetail({
           <ChevronRight className="w-3 h-3 rotate-180" />返回知识库
         </button>
         <div className="flex items-center gap-2">
-          <button onClick={onEdit} className="p-2 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground">
-            <Edit2 className="w-4 h-4" />
-          </button>
-          <button onClick={onDelete} className="p-2 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive">
-            <Trash2 className="w-4 h-4" />
-          </button>
+          {/* 状态标签 */}
+          <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded ${statusCfg.bgColor} ${statusCfg.color}`}>
+            <StatusIcon className="w-3 h-3" />{statusCfg.label}
+          </span>
+          {/* 编辑/删除按钮：仅非trainee可见 */}
+          {!isTrainee && (
+            <>
+              <button onClick={onEdit} className="p-2 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground">
+                <Edit2 className="w-4 h-4" />
+              </button>
+              {isTrainingManager && (
+                <button onClick={onDelete} className="p-2 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive">
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
+            </>
+          )}
         </div>
       </div>
 
@@ -287,9 +327,6 @@ function ArticleDetail({
         <div className="flex items-center gap-4 text-sm text-muted-foreground mb-6">
           <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{article.viewCount}</span>
           <span>{new Date(article.updatedAt).toLocaleDateString('zh-CN')}</span>
-          {article.status === 'draft' && (
-            <span className="text-xs bg-muted px-2 py-0.5 rounded">草稿</span>
-          )}
         </div>
 
         {/* Content */}
@@ -308,7 +345,131 @@ function ArticleDetail({
             {article.isBookmarked ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
             {article.isBookmarked ? '已收藏' : '收藏'}
           </button>
+
+          {/* 审核按钮：仅培训负责人可见且文章状态为pending_review */}
+          {isTrainingManager && article.status === 'pending_review' && (
+            <div className="flex items-center gap-2 ml-auto">
+              <button
+                onClick={onReject}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md border border-destructive/30 text-destructive hover:bg-destructive/10 transition"
+              >
+                <XCircle className="w-4 h-4" />驳回
+              </button>
+              <button
+                onClick={onApprove}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md bg-[#22c55e] text-white hover:bg-[#22c55e]/90 transition"
+              >
+                <CheckCircle className="w-4 h-4" />通过
+              </button>
+            </div>
+          )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Review Panel (for training_manager) ────────────────
+
+interface PendingArticle {
+  id: number;
+  title: string;
+  category: string;
+  authorId: string;
+  authorName: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+function ReviewPanel({ onApprove, onReject }: { onApprove: (id: number) => void; onReject: (id: number) => void }) {
+  const [pendingArticles, setPendingArticles] = useState<PendingArticle[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchPending = useCallback(async () => {
+    try {
+      const res = await fetch('/api/knowledge/review');
+      if (res.ok) {
+        const data = await res.json();
+        setPendingArticles(data.articles || []);
+      }
+    } catch {
+      // ignore
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { fetchPending(); }, [fetchPending]);
+
+  const handleApprove = async (id: number) => {
+    const res = await fetch('/api/knowledge/review', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ articleId: id, action: 'approve' }),
+    });
+    if (res.ok) {
+      setPendingArticles(prev => prev.filter(a => a.id !== id));
+      onApprove(id);
+    }
+  };
+
+  const handleReject = async (id: number) => {
+    const res = await fetch('/api/knowledge/review', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ articleId: id, action: 'reject' }),
+    });
+    if (res.ok) {
+      setPendingArticles(prev => prev.filter(a => a.id !== id));
+      onReject(id);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="bg-card rounded-lg shadow-card p-4 mb-5">
+        <div className="h-6 w-32 bg-muted animate-pulse rounded" />
+      </div>
+    );
+  }
+
+  if (pendingArticles.length === 0) return null;
+
+  return (
+    <div className="bg-[#F59E0B]/5 border border-[#F59E0B]/20 rounded-lg p-4 mb-5">
+      <div className="flex items-center gap-2 mb-3">
+        <Clock className="w-4 h-4 text-[#F59E0B]" />
+        <h3 className="text-sm font-semibold text-[#F59E0B]">待审核文章 ({pendingArticles.length})</h3>
+      </div>
+      <div className="space-y-2">
+        {pendingArticles.map(a => (
+          <div key={a.id} className="bg-card rounded-lg p-3 flex items-center justify-between border border-border/50">
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-foreground truncate">{a.title}</p>
+              <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                <span>{a.category}</span>
+                <span>·</span>
+                <span>提交人: {a.authorName}</span>
+                <span>·</span>
+                <span>{new Date(a.updatedAt).toLocaleDateString('zh-CN')}</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 ml-3 shrink-0">
+              <button
+                onClick={() => handleReject(a.id)}
+                className="flex items-center gap-1 px-2.5 py-1 text-xs rounded-md border border-destructive/30 text-destructive hover:bg-destructive/10 transition"
+              >
+                <XCircle className="w-3.5 h-3.5" />驳回
+              </button>
+              <button
+                onClick={() => handleApprove(a.id)}
+                className="flex items-center gap-1 px-2.5 py-1 text-xs rounded-md bg-[#22c55e] text-white hover:bg-[#22c55e]/90 transition"
+              >
+                <CheckCircle className="w-3.5 h-3.5" />通过
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -318,6 +479,11 @@ function ArticleDetail({
 
 export default function KnowledgeBasePage() {
   const { user } = useAuth();
+  const role = user?.role || 'trainee';
+  const isTrainee = role === 'trainee';
+  const isTrainingManager = role === 'training_manager';
+  const canEdit = !isTrainee; // 非trainee可创建/编辑
+
   const [articles, setArticles] = useState<Article[]>([]);
   const [dbCategories, setDbCategories] = useState<string[]>([]);
   const [dbTags, setDbTags] = useState<string[]>([]);
@@ -328,8 +494,8 @@ export default function KnowledgeBasePage() {
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [showBookmarks, setShowBookmarks] = useState(false);
   const [editorArticle, setEditorArticle] = useState<Article | null | 'new'>(null);
-
-  const isManager = user?.role !== 'trainee'; // non-trainees can edit
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [reviewToast, setReviewToast] = useState<string | null>(null);
 
   const fetchArticles = useCallback(async () => {
     try {
@@ -338,8 +504,8 @@ export default function KnowledgeBasePage() {
       if (activeCategory !== 'all') params.set('category', activeCategory);
       if (activeTag) params.set('tag', activeTag);
       if (searchQuery) params.set('search', searchQuery);
-      // For managers, show all including drafts
-      if (isManager) params.set('status', '');
+      // 非trainee可以按status过滤
+      if (statusFilter && statusFilter !== 'all') params.set('status', statusFilter);
 
       const res = await fetch(`/api/knowledge?${params}`);
       if (res.ok) {
@@ -347,13 +513,12 @@ export default function KnowledgeBasePage() {
         setArticles(data.articles || []);
         setDbCategories(data.categories || []);
         setDbTags(data.tags || []);
-        return;
       }
     } catch {
       // ignore
     }
     setLoading(false);
-  }, [user?.id, activeCategory, activeTag, searchQuery, isManager]);
+  }, [user?.id, activeCategory, activeTag, searchQuery, statusFilter]);
 
   useEffect(() => {
     fetchArticles();
@@ -361,7 +526,15 @@ export default function KnowledgeBasePage() {
 
   useEffect(() => {
     setLoading(true);
-  }, [activeCategory, activeTag, searchQuery]);
+  }, [activeCategory, activeTag, searchQuery, statusFilter]);
+
+  // 审核操作后的toast自动消失
+  useEffect(() => {
+    if (reviewToast) {
+      const timer = setTimeout(() => setReviewToast(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [reviewToast]);
 
   const toggleBookmark = async (id: number) => {
     const article = articles.find(a => a.id === id);
@@ -383,6 +556,33 @@ export default function KnowledgeBasePage() {
     if (res.ok) {
       setSelectedArticle(null);
       fetchArticles();
+    } else {
+      const data = await res.json();
+      alert(data.error || '删除失败');
+    }
+  };
+
+  const handleReview = async (articleId: number, action: 'approve' | 'reject') => {
+    const res = await fetch('/api/knowledge/review', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ articleId, action }),
+    });
+    if (res.ok) {
+      fetchArticles();
+      if (selectedArticle?.id === articleId) {
+        setSelectedArticle(prev => prev ? { ...prev, status: action === 'approve' ? 'approved' : 'rejected' } : null);
+      }
+    }
+  };
+
+  const handleEditorSaved = (reviewStatus?: string) => {
+    setEditorArticle(null);
+    fetchArticles();
+    if (reviewStatus === 'pending_review') {
+      setReviewToast('已提交审核，等待培训负责人审核通过后发布');
+    } else if (reviewStatus === 'approved') {
+      setReviewToast('文章已直接发布');
     }
   };
 
@@ -397,13 +597,33 @@ export default function KnowledgeBasePage() {
   // Detail view
   if (selectedArticle) {
     return (
-      <ArticleDetail
-        article={selectedArticle}
-        onBack={() => setSelectedArticle(null)}
-        onEdit={() => setEditorArticle(selectedArticle)}
-        onDelete={() => handleDelete(selectedArticle.id)}
-        onToggleBookmark={() => toggleBookmark(selectedArticle.id)}
-      />
+      <div className="space-y-5 relative">
+        {reviewToast && (
+          <div className="fixed top-4 right-4 z-50 bg-card border border-[#F59E0B]/30 rounded-lg shadow-lg p-3 flex items-center gap-2 max-w-sm">
+            <CheckCircle className="w-4 h-4 text-[#22c55e] shrink-0" />
+            <span className="text-sm text-foreground">{reviewToast}</span>
+          </div>
+        )}
+        <ArticleDetail
+          article={selectedArticle}
+          onBack={() => setSelectedArticle(null)}
+          onEdit={() => setEditorArticle(selectedArticle)}
+          onDelete={() => handleDelete(selectedArticle.id)}
+          onToggleBookmark={() => toggleBookmark(selectedArticle.id)}
+          onApprove={() => handleReview(selectedArticle.id, 'approve')}
+          onReject={() => handleReview(selectedArticle.id, 'reject')}
+          isTrainingManager={isTrainingManager}
+          isTrainee={isTrainee}
+        />
+        {editorArticle !== null && (
+          <ArticleEditor
+            article={editorArticle === 'new' ? null : editorArticle}
+            onClose={() => setEditorArticle(null)}
+            onSaved={handleEditorSaved}
+            userRole={role}
+          />
+        )}
+      </div>
     );
   }
 
@@ -413,13 +633,22 @@ export default function KnowledgeBasePage() {
       <ArticleEditor
         article={editorArticle === 'new' ? null : editorArticle}
         onClose={() => setEditorArticle(null)}
-        onSaved={() => { setEditorArticle(null); fetchArticles(); }}
+        onSaved={handleEditorSaved}
+        userRole={role}
       />
     );
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 relative">
+      {/* Review toast */}
+      {reviewToast && (
+        <div className="fixed top-4 right-4 z-50 bg-card border border-[#2978B5]/30 rounded-lg shadow-lg p-3 flex items-center gap-2 max-w-sm animate-in slide-in-from-top-2">
+          <CheckCircle className="w-4 h-4 text-[#22c55e] shrink-0" />
+          <span className="text-sm text-foreground">{reviewToast}</span>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -436,7 +665,7 @@ export default function KnowledgeBasePage() {
             {showBookmarks ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
             {showBookmarks ? '我的收藏' : '收藏'}
           </button>
-          {isManager && (
+          {canEdit && (
             <button
               onClick={() => setEditorArticle('new')}
               className="bg-[#2978B5] text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:opacity-90 inline-flex items-center gap-1.5"
@@ -446,6 +675,14 @@ export default function KnowledgeBasePage() {
           )}
         </div>
       </div>
+
+      {/* 待审核面板 — 仅培训负责人可见 */}
+      {isTrainingManager && (
+        <ReviewPanel
+          onApprove={() => fetchArticles()}
+          onReject={() => fetchArticles()}
+        />
+      )}
 
       {/* Search */}
       <div className="relative">
@@ -504,12 +741,38 @@ export default function KnowledgeBasePage() {
         </div>
       )}
 
+      {/* Status filter — 非trainee可见 */}
+      {!isTrainee && (
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">状态筛选：</span>
+          {[
+            { key: 'all', label: '全部' },
+            { key: 'pending_review', label: '待审核' },
+            { key: 'approved', label: '已通过' },
+            { key: 'rejected', label: '已驳回' },
+            { key: 'draft', label: '草稿' },
+          ].map(s => (
+            <button
+              key={s.key}
+              onClick={() => setStatusFilter(s.key)}
+              className={`px-2.5 py-1 text-xs rounded-md transition ${
+                statusFilter === s.key
+                  ? 'bg-[#2978B5]/15 text-[#2978B5] font-medium'
+                  : 'bg-muted text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: '文章总数', value: articles.length, icon: BookOpen, color: 'text-[#2978B5]', bg: 'bg-[#2978B5]/10' },
-          { label: '总阅读量', value: articles.reduce((s, a) => s + a.viewCount, 0), icon: Eye, color: 'text-[#F59E0B]', bg: 'bg-[#F59E0B]/10' },
-          { label: '我的收藏', value: articles.filter(a => a.isBookmarked).length, icon: Bookmark, color: 'text-[#22c55e]', bg: 'bg-[#22c55e]/10' },
+          { label: '文章总数', value: filtered.length, icon: BookOpen, color: 'text-[#2978B5]', bg: 'bg-[#2978B5]/10' },
+          { label: '总阅读量', value: filtered.reduce((s, a) => s + a.viewCount, 0), icon: Eye, color: 'text-[#F59E0B]', bg: 'bg-[#F59E0B]/10' },
+          { label: '我的收藏', value: filtered.filter(a => a.isBookmarked).length, icon: Bookmark, color: 'text-[#22c55e]', bg: 'bg-[#22c55e]/10' },
         ].map((s, i) => (
           <div key={i} className="bg-card rounded-lg shadow-card p-4 flex items-center gap-3">
             <div className={`w-9 h-9 rounded-lg ${s.bg} flex items-center justify-center`}>
@@ -532,6 +795,9 @@ export default function KnowledgeBasePage() {
           </div>
         ) : filtered.map(article => {
           const catColor = CATEGORY_COLORS[article.category] || { bg: 'bg-muted', text: 'text-muted-foreground' };
+          const statusCfg = STATUS_CONFIG[article.status] || STATUS_CONFIG.draft;
+          const StatusIcon = statusCfg.icon;
+
           return (
             <div
               key={article.id}
@@ -551,8 +817,11 @@ export default function KnowledgeBasePage() {
                       </span>
                     ))}
                     {article.isBookmarked && <BookmarkCheck className="w-3.5 h-3.5 text-[#F59E0B]" />}
-                    {article.status === 'draft' && (
-                      <span className="text-xs bg-muted px-1.5 py-0.5 rounded text-muted-foreground">草稿</span>
+                    {/* 状态标签 — 非approved的都显示 */}
+                    {article.status !== 'approved' && article.status !== 'published' && (
+                      <span className={`inline-flex items-center gap-1 text-xs font-medium px-1.5 py-0.5 rounded ${statusCfg.bgColor} ${statusCfg.color}`}>
+                        <StatusIcon className="w-3 h-3" />{statusCfg.label}
+                      </span>
                     )}
                   </div>
 
@@ -594,13 +863,32 @@ export default function KnowledgeBasePage() {
                   >
                     {article.isBookmarked ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
                   </button>
-                  {isManager && (
+                  {canEdit && (
                     <button
                       onClick={e => { e.stopPropagation(); setEditorArticle(article); }}
                       className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition"
                     >
                       <Edit2 className="w-4 h-4" />
                     </button>
+                  )}
+                  {/* 快捷审核按钮 — 培训负责人看待审核文章 */}
+                  {isTrainingManager && article.status === 'pending_review' && (
+                    <>
+                      <button
+                        onClick={e => { e.stopPropagation(); handleReview(article.id, 'reject'); }}
+                        className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition"
+                        title="驳回"
+                      >
+                        <XCircle className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={e => { e.stopPropagation(); handleReview(article.id, 'approve'); }}
+                        className="p-1.5 rounded-lg text-muted-foreground hover:text-[#22c55e] hover:bg-[#22c55e]/10 transition"
+                        title="通过"
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                      </button>
+                    </>
                   )}
                 </div>
               </div>
