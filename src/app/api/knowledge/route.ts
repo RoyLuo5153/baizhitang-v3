@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
+import { S3Storage } from 'coze-coding-dev-sdk';
 
 // 从cookie解析用户身份
 function getUserFromCookie(request: NextRequest) {
@@ -10,6 +11,29 @@ function getUserFromCookie(request: NextRequest) {
   } catch {
     return null;
   }
+}
+
+// 为附件key生成签名URL
+async function signAttachmentUrls(attachments: unknown[]): Promise<unknown[]> {
+  if (!Array.isArray(attachments) || attachments.length === 0) return attachments;
+  const storage = new S3Storage({
+    endpointUrl: process.env.COZE_BUCKET_ENDPOINT_URL,
+    accessKey: '',
+    secretKey: '',
+    bucketName: process.env.COZE_BUCKET_NAME,
+    region: 'cn-beijing',
+  });
+  return Promise.all(attachments.map(async (item: unknown) => {
+    const att = item as Record<string, unknown>;
+    if (att.key) {
+      try {
+        att.url = await storage.generatePresignedUrl({ key: att.key as string, expireTime: 86400 });
+      } catch {
+        att.url = '';
+      }
+    }
+    return att;
+  }));
 }
 
 // GET /api/knowledge — 获取文章列表（按角色过滤）
@@ -23,7 +47,8 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
-    const category = searchParams.get('category');
+    const categoryId = searchParams.get('categoryId');
+    const category = searchParams.get('category'); // 兼容旧参数
     const tag = searchParams.get('tag');
     const search = searchParams.get('search');
     const statusFilter = searchParams.get('status');
@@ -41,9 +66,13 @@ export async function GET(request: NextRequest) {
     } else if (statusFilter) {
       query = query.eq('status', statusFilter);
     }
-    // 无statusFilter时，非trainee看全部（含pending_review/approved/draft）
 
-    if (category) query = query.eq('category', category);
+    // 支持categoryId和category(兼容旧参数)两种过滤
+    if (categoryId) {
+      query = query.eq('category_id', Number(categoryId));
+    } else if (category) {
+      query = query.eq('category', category);
+    }
     if (search) query = query.textSearch('title', search);
 
     const { data, error } = await query;
@@ -58,6 +87,16 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    // 获取分类映射（id → name）
+    const { data: categoryData } = await supabase
+      .from('knowledge_categories')
+      .select('id, name')
+      .neq('status', 'archived');
+    const categoryMap: Record<number, string> = {};
+    (categoryData || []).forEach((c: { id: number; name: string }) => {
+      categoryMap[c.id] = c.name;
+    });
+
     // Get user's bookmarks
     let bookmarkIds: number[] = [];
     if (userId) {
@@ -68,11 +107,19 @@ export async function GET(request: NextRequest) {
       bookmarkIds = (bookmarks || []).map((b: { article_id: number }) => b.article_id);
     }
 
-    const result = articles.map((a: Record<string, unknown>) => ({
+    // 为所有文章的附件生成签名URL
+    const articlesWithSignedUrls = await Promise.all(articles.map(async (a: Record<string, unknown>) => {
+      const signedAttachments = await signAttachmentUrls((a.attachments || []) as unknown[]);
+      return { ...a, attachments: signedAttachments };
+    }));
+
+    const result = articlesWithSignedUrls.map((a: Record<string, unknown>) => ({
       id: a.id,
       title: a.title,
       content: a.content,
-      category: a.category,
+      categoryId: a.category_id,
+      categoryName: a.category_id ? categoryMap[a.category_id as number] || a.category : a.category,
+      category: a.category, // 兼容旧字段
       tags: a.tags || [],
       scenario: a.scenario || '',
       problemSolved: a.problem_solved || '',
@@ -82,14 +129,15 @@ export async function GET(request: NextRequest) {
       reviewedAt: a.reviewed_at,
       viewCount: a.view_count || 0,
       bookmarkCount: a.bookmark_count || 0,
+      attachments: a.attachments || [],
       createdAt: a.created_at,
       updatedAt: a.updated_at,
       publishedAt: a.published_at,
       isBookmarked: bookmarkIds.includes(a.id as number),
     }));
 
-    // Distinct categories and tags for filters
-    const categories = [...new Set(result.map(a => a.category).filter(Boolean))];
+    // 从分类表取分类列表（替代从文章中distinct）
+    const categories = (categoryData || []).map((c: { id: number; name: string }) => c.name);
     const allTags = [...new Set(result.flatMap(a => a.tags))];
 
     // 统计待审核数量（非trainee角色可见）
@@ -143,10 +191,12 @@ export async function POST(request: NextRequest) {
       title: body.title,
       content: body.content || '',
       category: body.category || '',
+      category_id: body.categoryId || body.category_id || null,
       author_id: String(userId),
       tags: body.tags || [],
       scenario: body.scenario || '',
       problem_solved: body.problemSolved || '',
+      attachments: body.attachments || [],
       status: finalStatus,
       view_count: 0,
       bookmark_count: 0,
@@ -201,9 +251,13 @@ export async function PATCH(request: NextRequest) {
     if (body.title !== undefined) updateData.title = body.title;
     if (body.content !== undefined) updateData.content = body.content;
     if (body.category !== undefined) updateData.category = body.category;
+    if (body.categoryId !== undefined || body.category_id !== undefined) {
+      updateData.category_id = body.categoryId || body.category_id || null;
+    }
     if (body.tags !== undefined) updateData.tags = body.tags;
     if (body.scenario !== undefined) updateData.scenario = body.scenario;
     if (body.problemSolved !== undefined) updateData.problem_solved = body.problemSolved;
+    if (body.attachments !== undefined) updateData.attachments = body.attachments;
 
     // 处理status：非培训负责人编辑后回到pending_review
     if (body.status !== undefined) {

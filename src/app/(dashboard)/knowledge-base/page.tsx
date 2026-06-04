@@ -1,19 +1,30 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/lib/auth/context';
 import {
   BookOpen, Search, Tag, Bookmark, BookmarkCheck, Eye,
   ChevronRight, Filter, Plus, Edit2, Trash2, X, Target, HelpCircle,
-  CheckCircle, XCircle, Clock, AlertCircle
+  CheckCircle, XCircle, Clock, AlertCircle, Upload, FileText, File,
+  Image, Music, Video, Download, Paperclip, Loader2
 } from 'lucide-react';
 
 // ─── Types ──────────────────────────────────────────────
+
+interface Attachment {
+  key: string;
+  url?: string;
+  type: string;
+  name: string;
+  size: number;
+}
 
 interface Article {
   id: number;
   title: string;
   content: string;
+  categoryId: number | null;
+  categoryName: string;
   category: string;
   tags: string[];
   scenario: string;
@@ -24,10 +35,21 @@ interface Article {
   reviewedAt: string | null;
   viewCount: number;
   bookmarkCount: number;
+  attachments: Attachment[];
   createdAt: string;
   updatedAt: string;
   publishedAt: string | null;
   isBookmarked: boolean;
+}
+
+interface Category {
+  id: number;
+  name: string;
+  parentId: number | null;
+  sortOrder: number;
+  status: string | null;
+  articleCount: number;
+  createdAt: string | null;
 }
 
 // ─── Status config ──────────────────────────────────────
@@ -40,7 +62,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bgColor: str
   published: { label: '已发布', color: 'text-[#22c55e]', bgColor: 'bg-[#22c55e]/10', icon: CheckCircle },
 };
 
-// ─── Category colors ────────────────────────────────────
+// ─── Category colors (dynamic fallback) ─────────────────
 
 const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
   '糖尿病基础': { bg: 'bg-[#2978B5]/10', text: 'text-[#2978B5]' },
@@ -51,7 +73,132 @@ const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
   '产品知识': { bg: 'bg-purple-500/10', text: 'text-purple-500' },
 };
 
-const ALL_CATEGORIES = ['糖尿病基础', '服务用语技巧', '业务流程', '案例分析', '制度规范', '产品知识'];
+const FALLBACK_CAT_COLOR = { bg: 'bg-muted', text: 'text-muted-foreground' };
+
+function getCatColor(name: string) {
+  return CATEGORY_COLORS[name] || FALLBACK_CAT_COLOR;
+}
+
+// ─── Helpers ────────────────────────────────────────────
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return bytes + 'B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + 'KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + 'MB';
+}
+
+function getFileIcon(type: string) {
+  switch (type) {
+    case 'image': return Image;
+    case 'audio': return Music;
+    case 'video': return Video;
+    default: return FileText;
+  }
+}
+
+// ─── Attachment Renderer ────────────────────────────────
+
+function AttachmentList({ attachments }: { attachments: Attachment[] }) {
+  if (!attachments || attachments.length === 0) return null;
+
+  return (
+    <div className="mt-6 pt-5 border-t border-border/40">
+      <div className="flex items-center gap-2 mb-3">
+        <Paperclip className="w-4 h-4 text-muted-foreground" />
+        <span className="text-sm font-medium text-foreground">附件 ({attachments.length})</span>
+      </div>
+      <div className="grid grid-cols-1 gap-2">
+        {attachments.map((att, idx) => {
+          const Icon = getFileIcon(att.type);
+          // 图片：内联缩略图
+          if (att.type === 'image' && att.url) {
+            return (
+              <div key={idx} className="bg-muted/30 rounded-lg p-3 border border-border/30">
+                <div className="flex items-center gap-2 mb-2">
+                  <Icon className="w-4 h-4 text-[#2978B5]" />
+                  <span className="text-sm text-foreground">{att.name}</span>
+                  <span className="text-xs text-muted-foreground">({formatFileSize(att.size)})</span>
+                </div>
+                <a href={att.url} target="_blank" rel="noopener noreferrer">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={att.url}
+                    alt={att.name}
+                    className="max-w-xs max-h-48 rounded-md border border-border/50 cursor-pointer hover:opacity-90 transition"
+                  />
+                </a>
+              </div>
+            );
+          }
+
+          // 音频：内嵌播放器
+          if (att.type === 'audio' && att.url) {
+            return (
+              <div key={idx} className="bg-muted/30 rounded-lg p-3 border border-border/30">
+                <div className="flex items-center gap-2 mb-2">
+                  <Icon className="w-4 h-4 text-[#F59E0B]" />
+                  <span className="text-sm text-foreground">{att.name}</span>
+                  <span className="text-xs text-muted-foreground">({formatFileSize(att.size)})</span>
+                </div>
+                <audio controls className="w-full max-w-md" src={att.url}>
+                  您的浏览器不支持音频播放
+                </audio>
+              </div>
+            );
+          }
+
+          // 视频：内嵌播放器
+          if (att.type === 'video' && att.url) {
+            return (
+              <div key={idx} className="bg-muted/30 rounded-lg p-3 border border-border/30">
+                <div className="flex items-center gap-2 mb-2">
+                  <Icon className="w-4 h-4 text-[#22c55e]" />
+                  <span className="text-sm text-foreground">{att.name}</span>
+                  <span className="text-xs text-muted-foreground">({formatFileSize(att.size)})</span>
+                </div>
+                <video controls className="w-full max-w-lg rounded-md" src={att.url}>
+                  您的浏览器不支持视频播放
+                </video>
+              </div>
+            );
+          }
+
+          // 文档/表格：文件名+大小+下载按钮
+          return (
+            <div key={idx} className="bg-muted/30 rounded-lg p-3 border border-border/30 flex items-center justify-between">
+              <div className="flex items-center gap-2 min-w-0">
+                <Icon className="w-4 h-4 text-[#2978B5] shrink-0" />
+                <span className="text-sm text-foreground truncate">{att.name}</span>
+                <span className="text-xs text-muted-foreground shrink-0">({formatFileSize(att.size)})</span>
+              </div>
+              {att.url && (
+                <button
+                  onClick={async () => {
+                    try {
+                      const response = await fetch(att.url!);
+                      const blob = await response.blob();
+                      const blobUrl = window.URL.createObjectURL(blob);
+                      const link = document.createElement('a');
+                      link.href = blobUrl;
+                      link.download = att.name;
+                      link.click();
+                      window.URL.revokeObjectURL(blobUrl);
+                    } catch {
+                      window.open(att.url, '_blank');
+                    }
+                  }}
+                  className="flex items-center gap-1 px-2.5 py-1 text-xs rounded-md bg-[#2978B5]/10 text-[#2978B5] hover:bg-[#2978B5]/20 transition shrink-0 ml-2"
+                >
+                  <Download className="w-3 h-3" />下载
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 // ─── Edit/Create Dialog ─────────────────────────────────
 
@@ -60,21 +207,87 @@ function ArticleEditor({
   onClose,
   onSaved,
   userRole,
+  categories,
 }: {
   article: Article | null;
   onClose: () => void;
   onSaved: (reviewStatus?: string) => void;
   userRole: string;
+  categories: Category[];
 }) {
   const isEdit = !!article;
   const isTrainingManager = userRole === 'training_manager';
   const [title, setTitle] = useState(article?.title || '');
   const [content, setContent] = useState(article?.content || '');
-  const [category, setCategory] = useState(article?.category || '');
+  const [categoryId, setCategoryId] = useState<number | null>(article?.categoryId || null);
   const [tagsStr, setTagsStr] = useState(article?.tags?.join(', ') || '');
   const [scenario, setScenario] = useState(article?.scenario || '');
   const [problemSolved, setProblemSolved] = useState(article?.problemSolved || '');
+  const [attachments, setAttachments] = useState<Attachment[]>(article?.attachments || []);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [showNewCat, setShowNewCat] = useState(false);
+  const [newCatName, setNewCatName] = useState('');
+  const [newCatStatus, setNewCatStatus] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleUpload = async (files: FileList) => {
+    setUploading(true);
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const formData = new FormData();
+        formData.append('file', file);
+        const res = await fetch('/api/upload', { method: 'POST', body: formData });
+        if (res.ok) {
+          const data = await res.json();
+          setAttachments(prev => [...prev, {
+            key: data.key,
+            type: data.type,
+            name: data.name,
+            size: data.size,
+          }]);
+        } else {
+          const data = await res.json();
+          alert(data.error || '上传失败');
+        }
+      }
+    } catch {
+      alert('上传出错');
+    }
+    setUploading(false);
+  };
+
+  const handleRemoveAttachment = (idx: number) => {
+    setAttachments(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  const handleCreateCategory = async () => {
+    if (!newCatName.trim()) return;
+    try {
+      const res = await fetch('/api/knowledge/categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newCatName.trim() }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setCategoryId(data.category.id);
+        setNewCatStatus(data.reviewStatus);
+        setShowNewCat(false);
+        setNewCatName('');
+        // 通知父组件刷新分类
+        setTimeout(() => {
+          // 父组件通过categories prop自动更新
+        }, 500);
+      } else {
+        const data = await res.json();
+        alert(data.error || '创建分类失败');
+      }
+    } catch {
+      alert('创建分类出错');
+    }
+  };
 
   const handleSave = async () => {
     if (!title.trim()) return;
@@ -84,13 +297,13 @@ function ArticleEditor({
       const body: Record<string, unknown> = {
         title: title.trim(),
         content,
-        category,
+        categoryId,
+        // 兼容旧category字段：从分类中查找名称
+        category: categories.find(c => c.id === categoryId)?.name || '',
         tags,
         scenario,
         problemSolved,
-        // 培训负责人选择发布则直接approved，否则draft
-        // 非培训负责人强制pending_review
-        status: isTrainingManager ? undefined : undefined, // 后端根据角色自动设置
+        attachments,
       };
 
       let reviewStatus: string | undefined;
@@ -148,14 +361,45 @@ function ArticleEditor({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium text-foreground block mb-1">分类</label>
-              <select
-                value={category}
-                onChange={e => setCategory(e.target.value)}
-                className="w-full px-3 py-2 rounded-md border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#2978B5]/30"
-              >
-                <option value="">选择分类</option>
-                {ALL_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
+              <div className="flex items-center gap-1">
+                <select
+                  value={categoryId || ''}
+                  onChange={e => setCategoryId(e.target.value ? Number(e.target.value) : null)}
+                  className="flex-1 px-3 py-2 rounded-md border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#2978B5]/30"
+                >
+                  <option value="">选择分类</option>
+                  {categories.filter(c => c.status === 'active').map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+                <button
+                  onClick={() => setShowNewCat(!showNewCat)}
+                  className="p-2 rounded-md border border-border bg-background text-muted-foreground hover:text-[#2978B5] hover:border-[#2978B5]/30 transition"
+                  title="新建分类"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
+              {newCatStatus && (
+                <p className="text-xs text-[#22c55e] mt-1">{newCatStatus}</p>
+              )}
+              {showNewCat && (
+                <div className="flex items-center gap-1 mt-2">
+                  <input
+                    value={newCatName}
+                    onChange={e => setNewCatName(e.target.value)}
+                    placeholder="新分类名称"
+                    className="flex-1 px-2 py-1 text-sm rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-[#2978B5]/30"
+                    onKeyDown={e => { if (e.key === 'Enter') handleCreateCategory(); }}
+                  />
+                  <button
+                    onClick={handleCreateCategory}
+                    className="px-2 py-1 text-xs rounded-md bg-[#2978B5] text-white hover:opacity-90"
+                  >
+                    创建
+                  </button>
+                </div>
+              )}
             </div>
             <div>
               <label className="text-sm font-medium text-foreground block mb-1">标签（逗号分隔）</label>
@@ -205,6 +449,59 @@ function ArticleEditor({
             />
           </div>
 
+          {/* Attachments */}
+          <div>
+            <label className="text-sm font-medium text-foreground flex items-center gap-1 mb-2">
+              <Paperclip className="w-3.5 h-3.5 text-[#2978B5]" />附件
+            </label>
+            <div className="space-y-2">
+              {/* Upload button */}
+              <div className="flex items-center gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept="image/*,audio/*,video/*,.pdf,.doc,.docx,.xlsx,.xls,.csv"
+                  className="hidden"
+                  onChange={e => { if (e.target.files) handleUpload(e.target.files); e.target.value = ''; }}
+                />
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md border border-dashed border-border bg-muted/30 text-muted-foreground hover:text-[#2978B5] hover:border-[#2978B5]/30 transition disabled:opacity-50"
+                >
+                  {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+                  {uploading ? '上传中...' : '上传文件'}
+                </button>
+                <span className="text-xs text-muted-foreground">
+                  支持图片/音频/视频/文档/表格
+                </span>
+              </div>
+
+              {/* Uploaded list */}
+              {attachments.length > 0 && (
+                <div className="space-y-1">
+                  {attachments.map((att, idx) => {
+                    const Icon = getFileIcon(att.type);
+                    return (
+                      <div key={idx} className="flex items-center gap-2 p-2 rounded-md bg-muted/20 border border-border/30">
+                        <Icon className="w-3.5 h-3.5 text-[#2978B5] shrink-0" />
+                        <span className="text-sm text-foreground truncate flex-1">{att.name}</span>
+                        <span className="text-xs text-muted-foreground shrink-0">({formatFileSize(att.size)})</span>
+                        <button
+                          onClick={() => handleRemoveAttachment(idx)}
+                          className="text-muted-foreground hover:text-destructive transition shrink-0"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* 审核提示 */}
           {!isTrainingManager && (
             <div className="flex items-center gap-2 p-3 bg-[#F59E0B]/5 border border-[#F59E0B]/20 rounded-lg">
@@ -252,7 +549,8 @@ function ArticleDetail({
   isTrainingManager: boolean;
   isTrainee: boolean;
 }) {
-  const catColor = CATEGORY_COLORS[article.category] || { bg: 'bg-muted', text: 'text-muted-foreground' };
+  const displayName = article.categoryName || article.category;
+  const catColor = getCatColor(displayName);
   const statusCfg = STATUS_CONFIG[article.status] || STATUS_CONFIG.draft;
   const StatusIcon = statusCfg.icon;
 
@@ -263,11 +561,9 @@ function ArticleDetail({
           <ChevronRight className="w-3 h-3 rotate-180" />返回知识库
         </button>
         <div className="flex items-center gap-2">
-          {/* 状态标签 */}
           <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded ${statusCfg.bgColor} ${statusCfg.color}`}>
             <StatusIcon className="w-3 h-3" />{statusCfg.label}
           </span>
-          {/* 编辑/删除按钮：仅非trainee可见 */}
           {!isTrainee && (
             <>
               <button onClick={onEdit} className="p-2 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground">
@@ -287,7 +583,7 @@ function ArticleDetail({
         {/* Tags row */}
         <div className="flex items-center gap-2 mb-3 flex-wrap">
           <span className={`text-xs font-medium px-2 py-0.5 rounded ${catColor.bg} ${catColor.text}`}>
-            {article.category}
+            {displayName}
           </span>
           {article.tags.map(t => (
             <span key={t} className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded flex items-center gap-1">
@@ -334,6 +630,9 @@ function ArticleDetail({
           {article.content}
         </div>
 
+        {/* Attachments */}
+        <AttachmentList attachments={article.attachments} />
+
         {/* Bottom actions */}
         <div className="flex items-center gap-4 mt-8 pt-6 border-t border-border/40">
           <button
@@ -346,7 +645,6 @@ function ArticleDetail({
             {article.isBookmarked ? '已收藏' : '收藏'}
           </button>
 
-          {/* 审核按钮：仅培训负责人可见且文章状态为pending_review */}
           {isTrainingManager && article.status === 'pending_review' && (
             <div className="flex items-center gap-2 ml-auto">
               <button
@@ -482,14 +780,14 @@ export default function KnowledgeBasePage() {
   const role = user?.role || 'trainee';
   const isTrainee = role === 'trainee';
   const isTrainingManager = role === 'training_manager';
-  const canEdit = !isTrainee; // 非trainee可创建/编辑
+  const canEdit = !isTrainee;
 
   const [articles, setArticles] = useState<Article[]>([]);
-  const [dbCategories, setDbCategories] = useState<string[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [dbTags, setDbTags] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeCategory, setActiveCategory] = useState('all');
+  const [activeCategoryId, setActiveCategoryId] = useState<number | null>(null);
   const [activeTag, setActiveTag] = useState('');
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [showBookmarks, setShowBookmarks] = useState(false);
@@ -501,34 +799,48 @@ export default function KnowledgeBasePage() {
     try {
       const params = new URLSearchParams();
       if (user?.id) params.set('userId', user.id);
-      if (activeCategory !== 'all') params.set('category', activeCategory);
+      if (activeCategoryId) params.set('categoryId', String(activeCategoryId));
       if (activeTag) params.set('tag', activeTag);
       if (searchQuery) params.set('search', searchQuery);
-      // 非trainee可以按status过滤
       if (statusFilter && statusFilter !== 'all') params.set('status', statusFilter);
 
       const res = await fetch(`/api/knowledge?${params}`);
       if (res.ok) {
         const data = await res.json();
         setArticles(data.articles || []);
-        setDbCategories(data.categories || []);
         setDbTags(data.tags || []);
       }
     } catch {
       // ignore
     }
     setLoading(false);
-  }, [user?.id, activeCategory, activeTag, searchQuery, statusFilter]);
+  }, [user?.id, activeCategoryId, activeTag, searchQuery, statusFilter]);
+
+  // 获取分类列表
+  const fetchCategories = useCallback(async () => {
+    try {
+      const res = await fetch('/api/knowledge/categories');
+      if (res.ok) {
+        const data = await res.json();
+        setCategories(data.categories || []);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
 
   useEffect(() => {
     fetchArticles();
   }, [fetchArticles]);
 
   useEffect(() => {
-    setLoading(true);
-  }, [activeCategory, activeTag, searchQuery, statusFilter]);
+    fetchCategories();
+  }, [fetchCategories]);
 
-  // 审核操作后的toast自动消失
+  useEffect(() => {
+    setLoading(true);
+  }, [activeCategoryId, activeTag, searchQuery, statusFilter]);
+
   useEffect(() => {
     if (reviewToast) {
       const timer = setTimeout(() => setReviewToast(null), 3000);
@@ -579,6 +891,7 @@ export default function KnowledgeBasePage() {
   const handleEditorSaved = (reviewStatus?: string) => {
     setEditorArticle(null);
     fetchArticles();
+    fetchCategories(); // 刷新分类（可能新建了分类）
     if (reviewStatus === 'pending_review') {
       setReviewToast('已提交审核，等待培训负责人审核通过后发布');
     } else if (reviewStatus === 'approved') {
@@ -591,8 +904,7 @@ export default function KnowledgeBasePage() {
     return true;
   });
 
-  const categories = ['all', ...dbCategories];
-  const tags = dbTags;
+  const activeCategories = categories.filter(c => c.status === 'active');
 
   // Detail view
   if (selectedArticle) {
@@ -621,6 +933,7 @@ export default function KnowledgeBasePage() {
             onClose={() => setEditorArticle(null)}
             onSaved={handleEditorSaved}
             userRole={role}
+            categories={activeCategories}
           />
         )}
       </div>
@@ -635,13 +948,13 @@ export default function KnowledgeBasePage() {
         onClose={() => setEditorArticle(null)}
         onSaved={handleEditorSaved}
         userRole={role}
+        categories={activeCategories}
       />
     );
   }
 
   return (
     <div className="space-y-5 relative">
-      {/* Review toast */}
       {reviewToast && (
         <div className="fixed top-4 right-4 z-50 bg-card border border-[#2978B5]/30 rounded-lg shadow-lg p-3 flex items-center gap-2 max-w-sm animate-in slide-in-from-top-2">
           <CheckCircle className="w-4 h-4 text-[#22c55e] shrink-0" />
@@ -676,7 +989,7 @@ export default function KnowledgeBasePage() {
         </div>
       </div>
 
-      {/* 待审核面板 — 仅培训负责人可见 */}
+      {/* 待审核面板 */}
       {isTrainingManager && (
         <ReviewPanel
           onApprove={() => fetchArticles()}
@@ -695,26 +1008,34 @@ export default function KnowledgeBasePage() {
         />
       </div>
 
-      {/* Category filters */}
+      {/* Category filters — 动态分类 */}
       <div className="flex items-center gap-2 flex-wrap">
         <Filter className="w-3.5 h-3.5 text-muted-foreground" />
-        {categories.map(cat => (
+        <button
+          onClick={() => setActiveCategoryId(null)}
+          className={`px-3 py-1.5 text-xs font-medium rounded-lg transition ${
+            !activeCategoryId ? 'bg-[#2978B5] text-white' : 'bg-muted text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          全部
+        </button>
+        {activeCategories.map(cat => (
           <button
-            key={cat}
-            onClick={() => setActiveCategory(cat)}
+            key={cat.id}
+            onClick={() => setActiveCategoryId(cat.id)}
             className={`px-3 py-1.5 text-xs font-medium rounded-lg transition ${
-              activeCategory === cat
+              activeCategoryId === cat.id
                 ? 'bg-[#2978B5] text-white'
                 : 'bg-muted text-muted-foreground hover:text-foreground'
             }`}
           >
-            {cat === 'all' ? '全部' : cat}
+            {cat.name}
           </button>
         ))}
       </div>
 
       {/* Tag filters */}
-      {tags.length > 0 && (
+      {dbTags.length > 0 && (
         <div className="flex items-center gap-2 flex-wrap">
           <Tag className="w-3.5 h-3.5 text-muted-foreground" />
           <button
@@ -725,7 +1046,7 @@ export default function KnowledgeBasePage() {
           >
             全部标签
           </button>
-          {tags.map(tag => (
+          {dbTags.map(tag => (
             <button
               key={tag}
               onClick={() => setActiveTag(activeTag === tag ? '' : tag)}
@@ -741,7 +1062,7 @@ export default function KnowledgeBasePage() {
         </div>
       )}
 
-      {/* Status filter — 非trainee可见 */}
+      {/* Status filter */}
       {!isTrainee && (
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground">状态筛选：</span>
@@ -794,9 +1115,11 @@ export default function KnowledgeBasePage() {
             <p className="text-muted-foreground text-sm">{showBookmarks ? '暂无收藏的文章' : '暂无匹配的文章'}</p>
           </div>
         ) : filtered.map(article => {
-          const catColor = CATEGORY_COLORS[article.category] || { bg: 'bg-muted', text: 'text-muted-foreground' };
+          const displayName = article.categoryName || article.category;
+          const catColor = getCatColor(displayName);
           const statusCfg = STATUS_CONFIG[article.status] || STATUS_CONFIG.draft;
           const StatusIcon = statusCfg.icon;
+          const hasAttachments = article.attachments && article.attachments.length > 0;
 
           return (
             <div
@@ -806,10 +1129,9 @@ export default function KnowledgeBasePage() {
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
-                  {/* Tags row */}
                   <div className="flex items-center gap-2 mb-2 flex-wrap">
                     <span className={`text-xs font-medium px-2 py-0.5 rounded ${catColor.bg} ${catColor.text}`}>
-                      {article.category}
+                      {displayName}
                     </span>
                     {article.tags.slice(0, 3).map(t => (
                       <span key={t} className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded flex items-center gap-0.5">
@@ -817,7 +1139,11 @@ export default function KnowledgeBasePage() {
                       </span>
                     ))}
                     {article.isBookmarked && <BookmarkCheck className="w-3.5 h-3.5 text-[#F59E0B]" />}
-                    {/* 状态标签 — 非approved的都显示 */}
+                    {hasAttachments && (
+                      <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                        <Paperclip className="w-2.5 h-2.5" />{article.attachments.length}
+                      </span>
+                    )}
                     {article.status !== 'approved' && article.status !== 'published' && (
                       <span className={`inline-flex items-center gap-1 text-xs font-medium px-1.5 py-0.5 rounded ${statusCfg.bgColor} ${statusCfg.color}`}>
                         <StatusIcon className="w-3 h-3" />{statusCfg.label}
@@ -825,10 +1151,8 @@ export default function KnowledgeBasePage() {
                     )}
                   </div>
 
-                  {/* Title */}
                   <h3 className="font-semibold text-foreground mb-1.5 hover:text-[#2978B5] transition">{article.title}</h3>
 
-                  {/* Scenario & Problem preview */}
                   {(article.scenario || article.problemSolved) && (
                     <div className="flex items-center gap-4 mb-2">
                       {article.scenario && (
@@ -844,14 +1168,12 @@ export default function KnowledgeBasePage() {
                     </div>
                   )}
 
-                  {/* Meta */}
                   <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{article.viewCount}</span>
                     <span>{new Date(article.updatedAt).toLocaleDateString('zh-CN')}</span>
                   </div>
                 </div>
 
-                {/* Actions */}
                 <div className="flex items-center gap-1 ml-4">
                   <button
                     onClick={e => { e.stopPropagation(); toggleBookmark(article.id); }}
@@ -871,7 +1193,6 @@ export default function KnowledgeBasePage() {
                       <Edit2 className="w-4 h-4" />
                     </button>
                   )}
-                  {/* 快捷审核按钮 — 培训负责人看待审核文章 */}
                   {isTrainingManager && article.status === 'pending_review' && (
                     <>
                       <button
