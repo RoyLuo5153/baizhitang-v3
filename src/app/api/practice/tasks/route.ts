@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
 
     if (error) throw error;
 
-    // 写入通知：告知新人有新任务
+    // 写入通知：告知新人有新任务 + 通知所有培训负责人
     try {
       const { data: assignerData } = await supabase
         .from('users')
@@ -42,15 +42,53 @@ export async function POST(request: NextRequest) {
         .eq('id', body.assignedBy)
         .maybeSingle();
       const assignerName = (assignerData as Record<string, unknown>)?.real_name || '培训负责人';
-      await supabase.from('notifications').insert({
-        user_id: body.assignedTo,
-        type: 'new_task',
-        title: '新演练任务',
-        message: `${assignerName} 给你布置了新的演练任务：${body.title}`,
-        related_type: 'practice_task',
-        related_id: Number((data as Record<string, unknown>).id),
-        is_read: false,
-      });
+
+      const { data: traineeData } = await supabase
+        .from('users')
+        .select('real_name')
+        .eq('id', body.assignedTo)
+        .maybeSingle();
+      const traineeName = (traineeData as Record<string, unknown>)?.real_name || '新人';
+
+      const taskId = Number((data as Record<string, unknown>).id);
+
+      // 1. 通知新人
+      const notifications: Record<string, unknown>[] = [
+        {
+          user_id: body.assignedTo,
+          type: 'new_task',
+          title: '新演练任务',
+          message: `${assignerName} 给你布置了新的演练任务：${body.title}`,
+          related_type: 'practice_task',
+          related_id: taskId,
+          is_read: false,
+        },
+      ];
+
+      // 2. 通知所有培训负责人（role_id=4）
+      const { data: managers } = await supabase
+        .from('users')
+        .select('id')
+        .eq('role_id', 4)
+        .eq('is_active', true);
+
+      if (managers && managers.length > 0) {
+        for (const m of managers) {
+          // 不重复通知分配人自己（如果分配人恰好是培训负责人）
+          if (String(m.id) === String(body.assignedBy)) continue;
+          notifications.push({
+            user_id: m.id,
+            type: 'practice_created',
+            title: '演练任务创建通知',
+            message: `${assignerName} 给 ${traineeName} 布置了演练任务：${body.title}`,
+            related_type: 'practice_task',
+            related_id: taskId,
+            is_read: false,
+          });
+        }
+      }
+
+      await supabase.from('notifications').insert(notifications);
     } catch (nErr) {
       console.error('Notification error:', nErr);
     }
