@@ -54,6 +54,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!res.ok) throw new Error(data.error || '登录失败');
     setUser(data.user);
     router.push('/');
+
+    // 兜底检测：如果 router.push 后 1.5 秒仍在 /login 页面，强制刷新跳转
+    // 这可以处理 Next.js 软导航失败的情况
+    setTimeout(() => {
+      if (window.location.pathname === '/login') {
+        window.location.href = '/';
+      }
+    }, 1500);
   };
 
   const logout = async () => {

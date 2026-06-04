@@ -9,6 +9,12 @@ DEPLOY_RUN_PORT="${DEPLOY_RUN_PORT:-${PORT}}"
 
 cd "${COZE_WORKSPACE_PATH}"
 
+# 清除 .next 缓存目录，防止旧编译产物导致浏览器端异常
+if [ -d ".next" ]; then
+  echo "Removing .next cache directory to prevent stale build artifacts..."
+  rm -rf .next
+fi
+
 kill_port_if_listening() {
     local pids
     pids=$(ss -H -lntp 2>/dev/null | awk -v port="${DEPLOY_RUN_PORT}" '$4 ~ ":"port"$"' | grep -o 'pid=[0-9]*' | cut -d= -f2 | paste -sd' ' - || true)

@@ -16,8 +16,23 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await login(username, password);
-    } catch (err: any) {
-      setError(err.message || '登录失败');
+    } catch (err: unknown) {
+      if (err instanceof TypeError) {
+        // 网络错误：fetch 本身抛出 TypeError（网络断开、DNS 失败等）
+        setError('网络连接失败，请检查网络后重试');
+      } else if (err instanceof Error) {
+        // 服务端返回的错误（login 函数中 throw new Error）
+        const msg = err.message || '登录失败';
+        if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('Network request failed')) {
+          setError('网络连接失败，请检查网络后重试');
+        } else if (msg.includes('500') || msg.includes('服务器')) {
+          setError('服务器异常，请稍后重试');
+        } else {
+          setError(msg);
+        }
+      } else {
+        setError('登录失败，请稍后重试');
+      }
     } finally {
       setLoading(false);
     }
@@ -47,7 +62,8 @@ export default function LoginPage() {
                 value={username}
                 onChange={e => setUsername(e.target.value)}
                 placeholder="请输入用户名"
-                className="w-full px-4 py-2.5 rounded-md border border-[#E6E1D8] bg-[#F8F6F0] text-[#1D2733] placeholder:text-[#667085]/60 focus:outline-none focus:ring-2 focus:ring-[#2978B5]/30 focus:border-[#2978B5] text-sm"
+                disabled={loading}
+                className="w-full px-4 py-2.5 rounded-md border border-[#E6E1D8] bg-[#F8F6F0] text-[#1D2733] placeholder:text-[#667085]/60 focus:outline-none focus:ring-2 focus:ring-[#2978B5]/30 focus:border-[#2978B5] text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 required
               />
             </div>
@@ -60,7 +76,8 @@ export default function LoginPage() {
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 placeholder="请输入密码"
-                className="w-full px-4 py-2.5 rounded-md border border-[#E6E1D8] bg-[#F8F6F0] text-[#1D2733] placeholder:text-[#667085]/60 focus:outline-none focus:ring-2 focus:ring-[#2978B5]/30 focus:border-[#2978B5] text-sm"
+                disabled={loading}
+                className="w-full px-4 py-2.5 rounded-md border border-[#E6E1D8] bg-[#F8F6F0] text-[#1D2733] placeholder:text-[#667085]/60 focus:outline-none focus:ring-2 focus:ring-[#2978B5]/30 focus:border-[#2978B5] text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 required
               />
             </div>
@@ -74,7 +91,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 bg-[#102A43] text-white rounded-md font-medium text-sm hover:bg-[#1a3a5c] transition-colors disabled:opacity-50"
+              className="w-full py-2.5 bg-[#102A43] text-white rounded-md font-medium text-sm hover:bg-[#1a3a5c] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? '登录中...' : '登 录'}
             </button>
