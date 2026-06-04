@@ -39,9 +39,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   // 未登录重定向到登录页
+  // 用router.replace而非window.location.href，因为：
+  // 1. 此时无cookie依赖问题，只需跳转到登录页
+  // 2. replace不会产生历史记录，避免用户按后退键回到需要认证的页面
+  // 3. 避免硬跳转导致的循环（硬跳转会重新mount整个应用）
   if (!user) {
     if (typeof window !== 'undefined') {
-      window.location.href = '/login';
+      router.replace('/login');
     }
     return null;
   }

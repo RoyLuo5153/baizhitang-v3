@@ -52,22 +52,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || '登录失败');
-    setUser(data.user);
-    router.push('/');
 
-    // 兜底检测：如果 router.push 后 1.5 秒仍在 /login 页面，强制刷新跳转
-    // 这可以处理 Next.js 软导航失败的情况
-    setTimeout(() => {
-      if (window.location.pathname === '/login') {
-        window.location.href = '/';
-      }
-    }, 1500);
+    // 硬导航：认证成功后必须走完整HTTP请求
+    // 原因：router.push是软导航，不触发middleware验证，不保证cookie随请求发送
+    // 硬导航确保：cookie随请求发送 → middleware校验通过 → auth context从/api/auth/me重新初始化
+    window.location.href = '/';
   };
 
   const logout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
     setUser(null);
-    router.push('/login');
+    // 登出也用硬导航，确保清除所有客户端状态
+    window.location.href = '/login';
   };
 
   const hasPermission = (permission: string): boolean => {

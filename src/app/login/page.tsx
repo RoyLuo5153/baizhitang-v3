@@ -1,14 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth/context';
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { user, login } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // 已登录用户访问登录页，自动跳转首页
+  // 防止"已登录还停在登录页"的状态不一致
+  useEffect(() => {
+    if (user && !loading) {
+      window.location.href = '/';
+    }
+  }, [user, loading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -16,27 +24,36 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await login(username, password);
+      // login成功后login函数内部会执行window.location.href='/'
+      // 此处不需要额外跳转逻辑
     } catch (err: unknown) {
       if (err instanceof TypeError) {
-        // 网络错误：fetch 本身抛出 TypeError（网络断开、DNS 失败等）
+        // fetch本身抛出的网络错误（断网、DNS失败等）
         setError('网络连接失败，请检查网络后重试');
       } else if (err instanceof Error) {
-        // 服务端返回的错误（login 函数中 throw new Error）
-        const msg = err.message || '登录失败';
-        if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('Network request failed')) {
-          setError('网络连接失败，请检查网络后重试');
-        } else if (msg.includes('500') || msg.includes('服务器')) {
-          setError('服务器异常，请稍后重试');
-        } else {
-          setError(msg);
-        }
+        // 服务端返回的业务错误（用户名密码错误、账号停用等）
+        setError(err.message || '登录失败');
       } else {
         setError('登录失败，请稍后重试');
       }
     } finally {
+      // 只有在登录失败时才恢复loading状态
+      // 成功时不需要恢复，因为页面即将被硬导航替换
       setLoading(false);
     }
   };
+
+  // 加载中或已登录时显示加载状态
+  if (loading || user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F8F6F0]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#2978B5] border-t-transparent" />
+          <span className="text-sm text-[#667085]">正在跳转...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F8F6F0]">
