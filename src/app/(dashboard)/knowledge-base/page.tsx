@@ -329,7 +329,7 @@ export default function KnowledgeBasePage() {
   const [showBookmarks, setShowBookmarks] = useState(false);
   const [editorArticle, setEditorArticle] = useState<Article | null | 'new'>(null);
 
-  const isManager = user?.role !== '1'; // non-trainees can edit
+  const isManager = user?.role !== 'trainee'; // non-trainees can edit
 
   const fetchArticles = useCallback(async () => {
     try {

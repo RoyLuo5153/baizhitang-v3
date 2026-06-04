@@ -311,7 +311,7 @@ export default function TraineeBoardPage() {
       </div>
 
       {/* Quick Actions (for manager/mentor) */}
-      {currentUser?.role && currentUser.role !== '1' && (
+      {currentUser?.role && currentUser.role !== 'trainee' && (
         <div className="bg-card rounded-lg p-4 shadow-card">
           <h3 className="text-sm font-medium text-foreground mb-3">快捷操作</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

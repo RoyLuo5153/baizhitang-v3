@@ -1,68 +1,56 @@
-# 登录页面浏览器端无反应修复
+# 成长计划天数切换 + 任务动态管理 + 资料库/知识库权限
 
 ## 概述
-
-修复登录页面在浏览器端无响应的问题。根因为浏览器缓存旧版 JS 代码。从四个层面加固：启动脚本清缓存、登录页错误处理与状态反馈、认证上下文跳转验证、Next.js 构建缓存策略。平台：Web。
+修复成长计划页面点击D2-D7不显示对应任务内容的问题，增加任务解锁机制；实现成长阶段任务的动态管理（培训负责人编辑/带教老师建议/审核机制）；资料中心和知识库按角色控制权限。
 
 ## 技术方案
 
 | 维度 | 选择 | 理由 |
 |------|------|------|
-| 缓存清理 | dev.sh 启动时 `rm -rf .next` | 根因修复，杜绝旧编译产物 |
-| 错误分类 | 网络错误 vs 服务端错误分开提示 | 用户体验，快速定位问题 |
-| 跳转验证 | router.push 后 1s 检测 pathname | 兜底保护，发现跳转失败 |
-| 构建ID | `generateBuildId` 用 timestamp | 确保每次部署产生新 buildId，浏览器不命中旧缓存 |
+| 天数切换 | API新增dayIndex参数，前端切换时重新请求 | 当前API只返回todayPlans，切换无数据源 |
+| 任务解锁 | 前端锁定状态+禁用完成按钮，后端验证前置完成 | 可查看但不可操作，解锁才能完成 |
+| 任务动态管理 | daily_plans表增is_suggested字段+审核流程 | 区分正式任务和建议任务，培训负责人审核 |
+| 权限控制 | 前端按role隐藏按钮+后端按role拒绝写入 | 双重保障 |
 
 ## 功能模块
 
-### 1. 启动脚本清缓存 (scripts/dev.sh)
-在 `kill_port_if_listening` 之前增加 `.next` 目录清理逻辑：
-```bash
-if [ -d ".next" ]; then
-  echo "Removing .next cache directory..."
-  rm -rf .next
-fi
+### 1. 成长计划天数切换与解锁
+- API: GET /api/growth-plan 新增 dayIndex 参数，返回指定天任务+解锁状态
+- 解锁规则: Day N可查看，但Day N-1全部完成后才能标记完成
+- 前端: 切换天数时重新fetch，未解锁任务显示锁定图标+禁用完成按钮
+
+### 2. 任务动态管理（角色分化）
+- **培训负责人**：可编辑/新增/删除/调整任意天数的任务（直接生效）
+- **带教老师/培训老师**：可提交任务建议（进入待审核状态）
+- **培训负责人审核**：审核通过→建议变为正式任务；驳回→删除
+- **新人**：只读+完成操作
+
+数据结构：
+```
+daily_plans新增字段:
+- is_suggested: boolean (是否为建议任务，默认false)
+- suggested_by: varchar (建议人user_id)
+- suggested_at: timestamp (建议时间)
+- review_status: varchar ('pending'/'approved'/'rejected'/null)
+- review_by: varchar (审核人user_id)
+- review_at: timestamp (审核时间)
 ```
 
-### 2. 登录页增强 (src/app/login/page.tsx)
-handleSubmit 中区分错误类型：
-- `fetch` 抛出 TypeError（网络断开/DNS失败）→ "网络连接失败，请检查网络后重试"
-- 服务端返回非 200（login 函数 throw）→ 显示服务端返回的 error 信息
-- 未知错误 → "登录失败，请稍后重试"
+### 3. 资料中心权限
+- 新人: 隐藏上传/删除/分类管理按钮，只保留查看/预览/下载
+- 其他角色: 保持全部权限
 
-loading 状态增强：
-- 按钮 `disabled` + 显示"登录中..."
-- 输入框在 loading 时也 `disabled`
-
-### 3. 认证上下文跳转验证 (src/lib/auth/context.tsx)
-login 函数中 `router.push('/')` 后加延迟检测：
-```typescript
-router.push('/');
-setTimeout(() => {
-  if (window.location.pathname === '/login') {
-    // 跳转失败，强制刷新
-    window.location.href = '/';
-  }
-}, 1500);
-```
-
-### 4. Next.js 缓存策略 (next.config.ts)
-添加 `generateBuildId`：
-```typescript
-generateBuildId: async () => {
-  return Date.now().toString();
-},
-```
-添加 headers 对 JS/CSS 资源设置 `Cache-Control: no-cache`（开发环境）。
+### 4. 知识库权限
+- 新人: 隐藏新建/编辑/删除按钮，只保留查看/搜索
+- 其他角色: 保持全部权限
 
 ## 是否有原型设计
-
-否 — 这是已有页面的 bug 修复和体验加固，不涉及新页面或 UI 结构变更。且项目首次开发已完成，后续 bug 修复不需要原型设计。
+否 — 已有页面的bug修复、权限控制和功能增强，不涉及新页面设计。
 
 ## 实施步骤
 
-1. 修改 scripts/dev.sh，启动前自动删除 .next 目录（scripts/dev.sh）
-2. 增强 login/page.tsx 错误处理——网络错误/服务端错误/未知错误分类提示，loading 时禁用按钮和输入框（src/app/login/page.tsx）
-3. 增强 auth/context.tsx login 函数——router.push('/') 后加延迟检测，跳转失败时强制 window.location.href 刷新（src/lib/auth/context.tsx）
-4. 修改 next.config.ts——添加 generateBuildId + 开发环境 Cache-Control headers（next.config.ts）
-5. 执行代码检查与验证，清除 .next 缓存重启服务，测试登录流程（test_run）
+1. 数据库daily_plans表新增is_suggested/suggested_by/review_status等字段（exec_sql）
+2. 修改growth-plan API支持dayIndex参数+返回解锁状态+任务CRUD接口+建议审核接口（src/app/api/growth-plan/route.ts）
+3. 修改首页成长计划：天数切换重新取数+未解锁禁用+培训负责人编辑模式+带教/培训老师建议模式（src/app/(dashboard)/page.tsx）
+4. 修改资料中心和知识库：新人只读权限控制（src/app/(dashboard)/resources/page.tsx, knowledge-base/page.tsx）
+5. 执行代码检查与验证（test_run）

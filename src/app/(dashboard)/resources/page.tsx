@@ -2,6 +2,7 @@
 
 import { BookOpen, FileText, Video, Search, Upload, Headphones, FolderTree, ChevronRight, ChevronDown, Plus, Trash2, Pencil, X, Eye, ArrowUp, ArrowDown, Download, Loader2, Shield, Phone, MessageSquare, AlertCircle, UserPlus, ListChecks, Star, ShieldCheck, Pill } from 'lucide-react';
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useAuth } from '@/lib/auth/context';
 
 // === Types ===
 
@@ -297,6 +298,8 @@ function PreviewDialog({ resource, onClose }: { resource: Resource; onClose: () 
 // === Main Page ===
 
 export default function ResourcesPage() {
+  const { user } = useAuth();
+  const isTrainee = user?.role === 'trainee';
   const [categories, setCategories] = useState<Category[]>([]);
   const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
@@ -441,7 +444,8 @@ export default function ResourcesPage() {
               )}
               <span className="text-xs text-muted-foreground shrink-0">{node.cat.resourceCount}</span>
             </button>
-            {/* Hover actions */}
+            {/* Hover actions - hidden for trainee */}
+            {!isTrainee && (
             <div className="hidden group-hover:flex items-center gap-0.5 shrink-0">
               <button onClick={() => { setEditingCatId(node.cat.id); setEditCatName(node.cat.name); }} className="p-0.5 rounded hover:bg-muted text-muted-foreground" title="重命名">
                 <Pencil className="w-2.5 h-2.5" />
@@ -459,6 +463,7 @@ export default function ResourcesPage() {
                 <Trash2 className="w-2.5 h-2.5" />
               </button>
             </div>
+            )}
           </div>
           {hasChildren && isExpanded && renderTree(node.children)}
         </div>
@@ -477,6 +482,7 @@ export default function ResourcesPage() {
           </div>
           <p className="text-sm text-muted-foreground mt-1">学习资料管理与知识库</p>
         </div>
+        {!isTrainee && (
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowAddCatDialog({ parentId: null })}
@@ -493,6 +499,7 @@ export default function ResourcesPage() {
             上传资料
           </button>
         </div>
+        )}
       </div>
 
       {/* Stats */}
