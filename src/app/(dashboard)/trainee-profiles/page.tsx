@@ -30,6 +30,7 @@ interface TraineeProfile {
   mentor_name: string | null;
   profile_status: string;
   remark: string;
+  cohort: string;
   passed_levels: number;
   completed_tasks: number;
   open_weaknesses: number;
@@ -91,7 +92,30 @@ export default function TraineeProfilesPage() {
       const res = await fetch('/api/trainee-profiles');
       if (res.ok) {
         const json = await res.json();
-        setProfiles(json.profiles || []);
+        const list = json.trainees || [];
+        // 转换API字段名为页面内部使用的格式
+        setProfiles(list.map((p: Record<string, unknown>) => ({
+          user_id: String(p.id),
+          real_name: (p.realName as string) || '',
+          username: (p.username as string) || '',
+          hire_date: (p.hireDate as string) || '',
+          expected_group_date: (p.expectedGroupDate as string) || '',
+          group_date: (p.groupDate as string) || null,
+          department: (p.department as string) || '',
+          position: (p.position as string) || '',
+          phone: '',
+          mentor_id: (p.mentorId as string) || null,
+          mentor_name: (p.mentorName as string) || null,
+          profile_status: (p.profileStatus as string) || 'training',
+          remark: (p.remarks as string) || '',
+          cohort: (p.cohort as string) || '',
+          passed_levels: 0,
+          completed_tasks: 0,
+          open_weaknesses: 0,
+          monthly_data: {},
+          user_status: 'active',
+          created_at: '',
+        })));
       }
     } catch { /* ignore */ }
     setLoading(false);
@@ -116,7 +140,7 @@ export default function TraineeProfilesPage() {
     setSaving(userId + field);
     try {
       await fetch('/api/trainee-profiles', {
-        method: 'PUT',
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, field, value }),
       });
@@ -128,6 +152,7 @@ export default function TraineeProfilesPage() {
           const mentor = mentors.find(m => m.id === value);
           return { ...p, mentor_id: value, mentor_name: mentor?.real_name || null };
         }
+        if (field === 'cohort') return { ...p, cohort: value };
         return { ...p, [field]: value };
       }));
     } catch { /* ignore */ }
@@ -341,6 +366,7 @@ export default function TraineeProfilesPage() {
                 <th rowSpan={3} className="px-2 py-2 text-center border-r border-white/20 font-medium" style={{ minWidth: '100px' }}>部门</th>
                 <th rowSpan={3} className="px-2 py-2 text-center border-r border-white/20 font-medium" style={{ minWidth: '100px' }}>职位</th>
                 <th rowSpan={3} className="px-2 py-2 text-center border-r border-white/20 font-medium" style={{ minWidth: '100px' }}>带教老师</th>
+                <th rowSpan={3} className="px-2 py-2 text-center border-r border-white/20 font-medium" style={{ minWidth: '80px' }}>期数</th>
                 <th colSpan={10} className="px-2 py-2 text-center border-r border-white/20 font-medium" style={{ background: '#2978B5' }}>新人培训周期</th>
                 <th rowSpan={3} className="px-2 py-2 text-center border-r border-white/20 font-medium" style={{ minWidth: '120px' }}>入组日期</th>
                 <th rowSpan={3} className="px-2 py-2 text-center border-r border-white/20 font-medium" style={{ minWidth: '80px' }}>状态</th>
@@ -367,7 +393,7 @@ export default function TraineeProfilesPage() {
             <tbody>
               {profiles.length === 0 ? (
                 <tr>
-                  <td colSpan={31} className="text-center py-12 text-muted-foreground">
+                  <td colSpan={32} className="text-center py-12 text-muted-foreground">
                     暂无新人数据，点击上方「添加新人」创建
                   </td>
                 </tr>
@@ -400,6 +426,15 @@ export default function TraineeProfilesPage() {
                         mentors.map(m => ({ value: m.id, label: m.real_name })),
                         '选择带教老师'
                       )}
+                    </td>
+                    <td className="px-1 py-1 border-b border-r border-border">
+                      <input
+                        type="text"
+                        className="w-full text-xs text-center px-1 py-1 border border-transparent hover:border-border rounded bg-transparent"
+                        defaultValue={p.cohort || ''}
+                        placeholder="如：第1期"
+                        onBlur={(e) => updateProfile(p.user_id, 'cohort', e.target.value)}
+                      />
                     </td>
                     {renderMonthlyCell(p.user_id, 1, p.monthly_data['1'], 'training')}
                     {renderMonthlyCell(p.user_id, 2, p.monthly_data['2'], 'training')}

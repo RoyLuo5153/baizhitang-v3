@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import {
   ClipboardCheck, Plus, FileText, Clock, CheckCircle2,
   BarChart3, Calendar, ChevronDown, X, Loader2,
-  AlertTriangle, Star,
+  AlertTriangle, Star, Users,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth/context';
 
@@ -57,6 +57,7 @@ interface NewAssessmentForm {
 interface TraineeOption {
   id: string;
   name: string;
+  cohort: string;
 }
 
 // === Constants ===
@@ -475,16 +476,21 @@ function PublishAssessmentDialog({
   const [error, setError] = useState<string | null>(null);
   const [showTraineeDropdown, setShowTraineeDropdown] = useState(false);
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
+  const [traineeSearch, setTraineeSearch] = useState('');
+
+  // 期数列表（从新人数据中提取去重）
+  const cohortList = [...new Set(trainees.map(t => t.cohort).filter(Boolean))].sort();
 
   // 获取新人列表
   useEffect(() => {
     fetch('/api/trainee-profiles')
       .then(r => r.json())
       .then(json => {
-        const profiles = json.profiles || [];
-        setTrainees(profiles.map((p: Record<string, unknown>) => ({
-          id: p.user_id as string,
-          name: p.real_name as string,
+        const list = json.trainees || [];
+        setTrainees(list.map((p: Record<string, unknown>) => ({
+          id: String(p.id),
+          name: (p.realName as string) || (p.real_name as string) || '',
+          cohort: (p.cohort as string) || '',
         })));
       })
       .catch(() => {
@@ -499,6 +505,26 @@ function PublishAssessmentDialog({
         ? prev.traineeIds.filter(id => id !== traineeId)
         : [...prev.traineeIds, traineeId],
     }));
+  }
+
+  function selectCohort(cohort: string) {
+    const cohortIds = trainees.filter(t => t.cohort === cohort).map(t => t.id);
+    // 如果该期所有人都已选中，则取消全选该期；否则全选该期
+    const allSelected = cohortIds.every(id => form.traineeIds.includes(id));
+    if (allSelected) {
+      setForm(prev => ({ ...prev, traineeIds: prev.traineeIds.filter(id => !cohortIds.includes(id)) }));
+    } else {
+      const newIds = [...new Set([...form.traineeIds, ...cohortIds])];
+      setForm(prev => ({ ...prev, traineeIds: newIds }));
+    }
+  }
+
+  function selectAll() {
+    setForm(prev => ({ ...prev, traineeIds: trainees.map(t => t.id) }));
+  }
+
+  function clearAll() {
+    setForm(prev => ({ ...prev, traineeIds: [] }));
   }
 
   async function handlePublish() {
@@ -604,7 +630,42 @@ function PublishAssessmentDialog({
           {/* Trainee Multi-Select */}
           <div>
             <label className="text-sm font-medium text-foreground">适用新人</label>
-            <div className="relative mt-1.5">
+
+            {/* 期数快捷选择 */}
+            {cohortList.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2 mt-1.5">
+                <span className="text-xs text-muted-foreground shrink-0">按期选择：</span>
+                {cohortList.map(cohort => {
+                  const cohortIds = trainees.filter(t => t.cohort === cohort).map(t => t.id);
+                  const allSelected = cohortIds.length > 0 && cohortIds.every(id => form.traineeIds.includes(id));
+                  const someSelected = cohortIds.some(id => form.traineeIds.includes(id));
+                  return (
+                    <button
+                      key={cohort}
+                      onClick={() => selectCohort(cohort)}
+                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium transition ${
+                        allSelected
+                          ? 'bg-primary text-primary-foreground'
+                          : someSelected
+                            ? 'bg-primary/15 text-primary border border-primary/30'
+                            : 'bg-muted text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      <Users className="w-3 h-3" />
+                      {cohort}
+                      <span className="opacity-70">({cohortIds.length}人)</span>
+                    </button>
+                  );
+                })}
+                <div className="flex items-center gap-1 ml-auto">
+                  <button onClick={selectAll} className="text-xs text-primary hover:text-primary/80 font-medium">全选</button>
+                  <span className="text-muted-foreground/40">|</span>
+                  <button onClick={clearAll} className="text-xs text-muted-foreground hover:text-foreground font-medium">清空</button>
+                </div>
+              </div>
+            )}
+
+            <div className="relative mt-2">
               <button onClick={() => setShowTraineeDropdown(!showTraineeDropdown)} className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm text-left flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary min-h-[38px]">
                 <div className="flex flex-wrap gap-1 flex-1">
                   {selectedTraineeNames.length === 0 ? (
@@ -618,18 +679,33 @@ function PublishAssessmentDialog({
                 <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0 ml-2" />
               </button>
               {showTraineeDropdown && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-card rounded-md border border-border shadow-float z-10 max-h-48 overflow-y-auto">
-                  {trainees.map(trainee => {
-                    const isSelected = form.traineeIds.includes(trainee.id);
-                    return (
-                      <button key={trainee.id} onClick={() => toggleTrainee(trainee.id)} className={`w-full px-3 py-2.5 text-sm text-left hover:bg-muted transition-colors flex items-center gap-2 ${isSelected ? 'bg-primary/5' : ''}`}>
-                        <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${isSelected ? 'bg-primary border-primary' : 'border-border'}`}>
-                          {isSelected && <CheckCircle2 className="w-3 h-3 text-primary-foreground" />}
-                        </div>
-                        <span className={isSelected ? 'text-primary font-medium' : 'text-foreground'}>{trainee.name}</span>
-                      </button>
-                    );
-                  })}
+                <div className="absolute top-full left-0 right-0 mt-1 bg-card rounded-md border border-border shadow-float z-10">
+                  {/* 搜索框 */}
+                  <div className="p-2 border-b border-border/30">
+                    <input
+                      type="text"
+                      value={traineeSearch}
+                      onChange={e => setTraineeSearch(e.target.value)}
+                      placeholder="搜索新人姓名..."
+                      className="w-full px-2.5 py-1.5 rounded-md bg-muted border-none text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary/30"
+                    />
+                  </div>
+                  <div className="max-h-48 overflow-y-auto">
+                    {trainees
+                      .filter(t => !traineeSearch || t.name.includes(traineeSearch))
+                      .map(trainee => {
+                      const isSelected = form.traineeIds.includes(trainee.id);
+                      return (
+                        <button key={trainee.id} onClick={() => toggleTrainee(trainee.id)} className={`w-full px-3 py-2.5 text-sm text-left hover:bg-muted transition-colors flex items-center gap-2 ${isSelected ? 'bg-primary/5' : ''}`}>
+                          <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${isSelected ? 'bg-primary border-primary' : 'border-border'}`}>
+                            {isSelected && <CheckCircle2 className="w-3 h-3 text-primary-foreground" />}
+                          </div>
+                          <span className={isSelected ? 'text-primary font-medium' : 'text-foreground'}>{trainee.name}</span>
+                          {trainee.cohort && <span className="text-xs text-muted-foreground ml-auto">{trainee.cohort}</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </div>

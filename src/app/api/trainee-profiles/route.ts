@@ -123,6 +123,7 @@ export async function GET(request: NextRequest) {
         profileStatus: profile.profile_status || '在培训',
         expectedGroupDate: profile.expected_group_date || '',
         groupDate: profile.group_date || '',
+        cohort: profile.cohort || '',
         remarks: profile.remarks || '',
         profileId: profile.id || null,
       };
@@ -162,6 +163,7 @@ export async function PATCH(request: NextRequest) {
       expectedGroupDate: 'expected_group_date',
       groupDate: 'group_date',
       profileStatus: 'profile_status',
+      cohort: 'cohort',
       remarks: 'remarks',
     };
 
