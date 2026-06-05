@@ -4,49 +4,49 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <link href="https://lf-code-agent.coze.cn/obj/x-ai-cn/fonts/google/google-all-fonts.css" rel="stylesheet"/>
-
+  <link href="https://fonts.googleapis.cn/css2?family=Noto+Sans+SC:wght@400;500;600;700&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet"/>
   <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/jquery/jquery-3.7.1.min.js"></script>
-  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/lucide/lucide-1.11.0.min.js"></script>
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/lucide/lucide-1.0.0.min.js"></script>
   <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/tailwindcss/tailwindcss-browser-4.2.4.min.js"></script>
 
   <style type="text/tailwindcss">
     @theme {
       /* === 品牌色 === */
-      --color-primary:              #2978B5;
-      --color-primary-container:    #D4E8F5;
+      --color-primary:              #102A43;
+      --color-primary-container:    #1B3A5C;
       --color-on-primary:           #ffffff;
       /* === 背景 / 表面 === */
       --color-background:                 #F8F6F0;
-      --color-surface-container-lowest:   #FAFAF5;
+      --color-surface-container-lowest:   #FFFFFF;
       --color-surface:                    #FFFFFF;
-      --color-surface-container:          #F0EDE5;
-      --color-surface-container-high:     #E8E4DB;
-      --color-surface-container-highest:  #DDD8CE;
+      --color-surface-container:          #EFEEE8;
+      --color-surface-container-high:     #E2E0DA;
+      --color-surface-container-highest:  #D5D3CD;
       /* === 文字 === */
       --color-on-surface:           #1D2733;
       --color-on-surface-variant:   #667085;
       /* === 功能色 === */
       --color-success:  #22c55e;
       --color-error:    #ef4444;
-      --color-warning:  #f59e0b;
+      --color-warning:  #F59E0B;
+      --color-info:     #2978B5;
       /* === 边框 === */
-      --color-outline:          #D4CFC4;
-      --color-outline-variant:  #E6E1D8;
+      --color-outline:          #E6E1D8;
+      --color-outline-variant:  #D1CCC3;
       /* === 圆角 === */
-      --radius-sm:   0.375rem;
+      --radius-sm:   0.25rem;
       --radius-md:   0.5rem;
       --radius-lg:   0.75rem;
       --radius-xl:   1rem;
       --radius-2xl:  1.5rem;
       --radius-full: 9999px;
       /* === 阴影 === */
-      --shadow-card:   0 2px 8px rgba(0,0,0,0.08);
+      --shadow-card:   0 2px 8px rgba(0,0,0,0.06);
       --shadow-float:  0 10px 25px rgba(0,0,0,0.1);
       --shadow-dialog: 0 25px 50px rgba(0,0,0,0.15);
       /* === 字体 === */
       --font-sans: "Noto Sans SC", system-ui, sans-serif;
+      --font-serif: "Noto Serif SC", Georgia, serif;
     }
   </style>
 
@@ -72,522 +72,570 @@
 <body class="bg-background text-on-surface font-sans">
 
   <!-- @nav:start 导航组件 -->
-  <header class="bg-surface sticky top-0 z-40 h-14 flex items-center justify-between px-6 border-b border-outline-variant/20">
-    <div class="flex items-center gap-2">
-      <i data-lucide="heart-pulse" class="text-primary w-5 h-5"></i>
-      <span class="font-bold text-base text-on-surface">百芝堂赋能系统</span>
+  <aside class="fixed left-0 top-0 h-full w-56 bg-surface border-r border-outline-variant/20 flex flex-col z-40">
+    <div class="px-5 py-4 border-b border-outline-variant/20">
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-md bg-primary flex items-center justify-center">
+          <i data-lucide="heart-pulse" class="w-5 h-5 text-on-primary"></i>
+        </div>
+        <span class="font-serif font-bold text-base text-primary">百芝堂V3</span>
+      </div>
     </div>
-    <div class="flex items-center gap-3">
-      <span class="text-sm text-on-surface-variant">培训负责人</span>
-      <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-medium">初</div>
-    </div>
-  </header>
-  <div class="flex" style="height: calc(100vh - 3.5rem)">
-    <aside class="w-52 shrink-0 bg-surface-container-lowest overflow-y-auto border-r border-outline-variant/15">
-      <div class="p-3 space-y-0.5">
-        <p class="px-3 py-1 text-xs font-medium text-on-surface-variant/60 uppercase tracking-wider">工作台</p>
-        <a href="home.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="layout-dashboard" class="w-4 h-4"></i>首页
-        </a>
-        <p class="px-3 py-1 mt-3 text-xs font-medium text-on-surface-variant/60 uppercase tracking-wider">学习</p>
-        <a href="learning.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="trophy" class="w-4 h-4"></i>闯关学习
-        </a>
-        <a href="growth.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="user-check" class="w-4 h-4"></i>成长档案
-        </a>
-        <a href="resources.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="book-open" class="w-4 h-4"></i>资料中心
-        </a>
-        <p class="px-3 py-1 mt-3 text-xs font-medium text-on-surface-variant/60 uppercase tracking-wider">管理</p>
-        <a href="trainee-board.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="users" class="w-4 h-4"></i>新人看板
-        </a>
-        <a href="diagnosis.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="scan-search" class="w-4 h-4"></i>双轨诊断
-        </a>
-        <a href="empowerment.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="zap" class="w-4 h-4"></i>赋能中心
-        </a>
-        <a href="qc-review.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="mic" class="w-4 h-4"></i>质检审核
-        </a>
-        <a href="assessment.html" class="flex items-center gap-3 px-3 py-2 rounded-md bg-primary/10 text-primary font-medium text-sm" aria-current="page">
-          <i data-lucide="clipboard-check" class="w-4 h-4"></i>日常考核
-        </a>
-        <p class="px-3 py-1 mt-3 text-xs font-medium text-on-surface-variant/60 uppercase tracking-wider">数据</p>
-        <a href="dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="chart-bar" class="w-4 h-4"></i>数据看板
-        </a>
-        <a href="overview.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="activity" class="w-4 h-4"></i>全局概览
-        </a>
-        <a href="scrm-import.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="database" class="w-4 h-4"></i>业务数据
-        </a>
-        <p class="px-3 py-1 mt-3 text-xs font-medium text-on-surface-variant/60 uppercase tracking-wider">配置</p>
-        <a href="question-bank.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="file-question" class="w-4 h-4"></i>题库管理
-        </a>
-        <a href="settings.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="settings" class="w-4 h-4"></i>系统设置
+    <nav class="flex-1 overflow-y-auto py-3 px-3">
+      <div class="mb-1">
+        <a href="question-bank.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm text-on-surface hover:bg-surface-container transition-colors">
+          <i data-lucide="book-open" class="w-4 h-4"></i>
+          <span>题库管理</span>
         </a>
       </div>
-    </aside>
+      <div class="mb-1">
+        <a href="assessment.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium bg-primary/10 text-primary" aria-current="page">
+          <i data-lucide="clipboard-check" class="w-4 h-4"></i>
+          <span>日常考核</span>
+        </a>
+      </div>
+      <div class="mb-1">
+        <a href="trainee-profiles.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm text-on-surface hover:bg-surface-container transition-colors">
+          <i data-lucide="users" class="w-4 h-4"></i>
+          <span>新人档案</span>
+        </a>
+      </div>
+    </nav>
+  </aside>
   <!-- @nav:end 导航组件 -->
 
-  <main class="flex-1 min-w-0 overflow-y-auto bg-background p-6">
-    <!-- @main-content:start -->
+  <!-- @main-content:start -->
+  <main class="ml-56 min-h-screen p-6">
 
     <!-- 页面标题区 -->
     <div class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold text-on-surface">日常考核</h1>
-        <p class="text-sm text-on-surface-variant mt-1">管理新人考核任务，发布考核并查看考核结果</p>
+        <p class="text-sm text-on-surface-variant mt-1">发布和管理日常考核任务，跟踪新人完成情况</p>
       </div>
-      <button id="btn-publish-assessment" class="bg-primary text-on-primary px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all inline-flex items-center gap-2">
+      <button id="btn-publish" class="bg-primary text-on-primary px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all inline-flex items-center gap-2">
         <i data-lucide="plus" class="w-3.5 h-3.5"></i>发布考核
       </button>
     </div>
 
-    <!-- Tab 切换 -->
-    <div class="flex items-center gap-1 bg-surface-container rounded-lg p-1 w-fit mb-6">
-      <button id="tab-tasks" class="tab-btn px-4 py-1.5 rounded-md text-sm font-medium bg-primary text-on-primary transition-all" data-tab="tasks">考核任务</button>
-      <button id="tab-records" class="tab-btn px-4 py-1.5 rounded-md text-sm font-medium text-on-surface-variant hover:text-on-surface transition-all" data-tab="records">考核记录</button>
-    </div>
+    <!-- 考核列表 -->
+    <div class="bg-surface rounded-lg shadow-card overflow-hidden">
+      <!-- 表头 -->
+      <div class="grid grid-cols-7 px-5 py-3 bg-surface-container text-xs font-semibold text-on-surface-variant uppercase tracking-wide">
+        <span>考核标题</span>
+        <span>考核对象</span>
+        <span>考核类型</span>
+        <span>发布时间</span>
+        <span>截止时间</span>
+        <span>状态</span>
+        <span>操作</span>
+      </div>
+      <!-- 列表区 -->
+      <div id="assessment-list" class="divide-y divide-outline-variant/50">
 
-    <!-- ===== 考核任务 Tab ===== -->
-    <div id="panel-tasks">
-      <div class="bg-surface rounded-lg shadow-card overflow-hidden">
-        <!-- 表头 -->
-        <div class="grid grid-cols-12 px-5 py-3 bg-surface-container text-xs font-semibold text-on-surface-variant uppercase tracking-wide">
-          <span class="col-span-3">任务名称</span>
-          <span class="col-span-2">考核类型</span>
-          <span class="col-span-3">适用新人</span>
-          <span class="col-span-2">截止日期</span>
-          <span class="col-span-2">完成率</span>
+        <!-- 列表-考核1：按期发布，进行中 -->
+        <div class="grid grid-cols-7 items-center px-5 py-4 hover:bg-surface-container/50 transition-colors" data-id="1">
+          <span class="text-sm font-medium text-on-surface">第2期日常考核-中药方剂</span>
+          <span class="text-sm text-on-surface-variant">第2期（3人）</span>
+          <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-info/15 text-info w-fit">日常考核</span>
+          <span class="text-sm text-on-surface-variant">2025-06-10</span>
+          <span class="text-sm text-on-surface-variant">2025-06-20</span>
+          <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success w-fit">进行中</span>
+          <div class="flex gap-3">
+            <button class="text-primary text-sm font-medium hover:underline btn-detail" data-id="1">查看详情</button>
+            <button class="text-error text-sm font-medium hover:underline btn-end" data-id="1">结束考核</button>
+          </div>
         </div>
-        <div class="divide-y divide-outline-variant/50">
 
-          <!-- 列表-考核任务1 -->
-          <div class="grid grid-cols-12 px-5 py-4 hover:bg-surface-container/50 transition-colors items-center">
-            <span class="col-span-3 text-sm font-medium text-on-surface">糖尿病基础知识测试</span>
-            <div class="col-span-2">
-              <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-primary/15 text-primary">日常考核</span>
-            </div>
-            <div class="col-span-3">
-              <div class="flex flex-wrap gap-1">
-                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs bg-surface-container-high text-on-surface-variant">张小明</span>
-                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs bg-surface-container-high text-on-surface-variant">李晓华</span>
-                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs bg-surface-container-high text-on-surface-variant">王丽丽</span>
-                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs bg-surface-container-high text-on-surface-variant">+2</span>
-              </div>
-            </div>
-            <span class="col-span-2 text-sm text-on-surface-variant">2024-12-20</span>
-            <div class="col-span-2 flex items-center gap-2">
-              <div class="flex-1 h-2 bg-surface-container-high rounded-full overflow-hidden">
-                <div class="h-full bg-success rounded-full" style="width: 80%"></div>
-              </div>
-              <span class="text-xs font-medium text-success">80%</span>
-            </div>
+        <!-- 列表-考核2：按人发布，已结束 -->
+        <div class="grid grid-cols-7 items-center px-5 py-4 hover:bg-surface-container/50 transition-colors" data-id="2">
+          <span class="text-sm font-medium text-on-surface">阶段考核-中医基础理论</span>
+          <span class="text-sm text-on-surface-variant">张晓华、李明远、王思琪</span>
+          <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-warning/15 text-warning w-fit">阶段考核</span>
+          <span class="text-sm text-on-surface-variant">2025-05-20</span>
+          <span class="text-sm text-on-surface-variant">2025-05-30</span>
+          <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-surface-container-highest text-on-surface-variant w-fit">已结束</span>
+          <div class="flex gap-3">
+            <button class="text-primary text-sm font-medium hover:underline btn-detail" data-id="2">查看详情</button>
           </div>
-
-          <!-- 列表-考核任务2 -->
-          <div class="grid grid-cols-12 px-5 py-4 hover:bg-surface-container/50 transition-colors items-center">
-            <span class="col-span-3 text-sm font-medium text-on-surface">用药指导话术专项考核</span>
-            <div class="col-span-2">
-              <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-warning/15 text-warning">专项考核</span>
-            </div>
-            <div class="col-span-3">
-              <div class="flex flex-wrap gap-1">
-                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs bg-surface-container-high text-on-surface-variant">陈志远</span>
-                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs bg-surface-container-high text-on-surface-variant">刘美玲</span>
-              </div>
-            </div>
-            <span class="col-span-2 text-sm text-on-surface-variant">2024-12-18</span>
-            <div class="col-span-2 flex items-center gap-2">
-              <div class="flex-1 h-2 bg-surface-container-high rounded-full overflow-hidden">
-                <div class="h-full bg-warning rounded-full" style="width: 50%"></div>
-              </div>
-              <span class="text-xs font-medium text-warning">50%</span>
-            </div>
-          </div>
-
-          <!-- 列表-考核任务3 -->
-          <div class="grid grid-cols-12 px-5 py-4 hover:bg-surface-container/50 transition-colors items-center">
-            <span class="col-span-3 text-sm font-medium text-on-surface">阶段二综合评估</span>
-            <div class="col-span-2">
-              <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-error/15 text-error">阶段考核</span>
-            </div>
-            <div class="col-span-3">
-              <div class="flex flex-wrap gap-1">
-                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs bg-surface-container-high text-on-surface-variant">张小明</span>
-                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs bg-surface-container-high text-on-surface-variant">赵天宇</span>
-                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs bg-surface-container-high text-on-surface-variant">孙雅静</span>
-                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs bg-surface-container-high text-on-surface-variant">+4</span>
-              </div>
-            </div>
-            <span class="col-span-2 text-sm text-on-surface-variant">2024-12-25</span>
-            <div class="col-span-2 flex items-center gap-2">
-              <div class="flex-1 h-2 bg-surface-container-high rounded-full overflow-hidden">
-                <div class="h-full bg-primary rounded-full" style="width: 30%"></div>
-              </div>
-              <span class="text-xs font-medium text-primary">30%</span>
-            </div>
-          </div>
-
-          <!-- 列表-考核任务4 -->
-          <div class="grid grid-cols-12 px-5 py-4 hover:bg-surface-container/50 transition-colors items-center">
-            <span class="col-span-3 text-sm font-medium text-on-surface">服务规范流程考核</span>
-            <div class="col-span-2">
-              <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-primary/15 text-primary">日常考核</span>
-            </div>
-            <div class="col-span-3">
-              <div class="flex flex-wrap gap-1">
-                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs bg-surface-container-high text-on-surface-variant">李晓华</span>
-                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs bg-surface-container-high text-on-surface-variant">王丽丽</span>
-                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs bg-surface-container-high text-on-surface-variant">陈志远</span>
-              </div>
-            </div>
-            <span class="col-span-2 text-sm text-on-surface-variant">2024-12-15</span>
-            <div class="col-span-2 flex items-center gap-2">
-              <div class="flex-1 h-2 bg-surface-container-high rounded-full overflow-hidden">
-                <div class="h-full bg-success rounded-full" style="width: 100%"></div>
-              </div>
-              <span class="text-xs font-medium text-success">100%</span>
-            </div>
-          </div>
-
-          <!-- 列表-考核任务5 -->
-          <div class="grid grid-cols-12 px-5 py-4 hover:bg-surface-container/50 transition-colors items-center">
-            <span class="col-span-3 text-sm font-medium text-on-surface">面诊邀约话术考核</span>
-            <div class="col-span-2">
-              <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-warning/15 text-warning">专项考核</span>
-            </div>
-            <div class="col-span-3">
-              <div class="flex flex-wrap gap-1">
-                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs bg-surface-container-high text-on-surface-variant">刘美玲</span>
-                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs bg-surface-container-high text-on-surface-variant">赵天宇</span>
-                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs bg-surface-container-high text-on-surface-variant">+1</span>
-              </div>
-            </div>
-            <span class="col-span-2 text-sm text-on-surface-variant">2024-12-22</span>
-            <div class="col-span-2 flex items-center gap-2">
-              <div class="flex-1 h-2 bg-surface-container-high rounded-full overflow-hidden">
-                <div class="h-full bg-primary rounded-full" style="width: 67%"></div>
-              </div>
-              <span class="text-xs font-medium text-primary">67%</span>
-            </div>
-          </div>
-
         </div>
+
+        <!-- 列表-考核3：按期发布，进行中 -->
+        <div class="grid grid-cols-7 items-center px-5 py-4 hover:bg-surface-container/50 transition-colors" data-id="3">
+          <span class="text-sm font-medium text-on-surface">第1期日常考核-针灸学</span>
+          <span class="text-sm text-on-surface-variant">第1期（2人）</span>
+          <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-info/15 text-info w-fit">日常考核</span>
+          <span class="text-sm text-on-surface-variant">2025-06-12</span>
+          <span class="text-sm text-on-surface-variant">2025-06-25</span>
+          <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success w-fit">进行中</span>
+          <div class="flex gap-3">
+            <button class="text-primary text-sm font-medium hover:underline btn-detail" data-id="3">查看详情</button>
+            <button class="text-error text-sm font-medium hover:underline btn-end" data-id="3">结束考核</button>
+          </div>
+        </div>
+
       </div>
     </div>
 
-    <!-- ===== 考核记录 Tab ===== -->
-    <div id="panel-records" class="hidden">
-      <div class="bg-surface rounded-lg shadow-card overflow-hidden">
-        <!-- 表头 -->
-        <div class="grid grid-cols-12 px-5 py-3 bg-surface-container text-xs font-semibold text-on-surface-variant uppercase tracking-wide">
-          <span class="col-span-2">新人姓名</span>
-          <span class="col-span-3">考核名称</span>
-          <span class="col-span-2">得分</span>
-          <span class="col-span-2">是否及格</span>
-          <span class="col-span-3">完成时间</span>
-        </div>
-        <div class="divide-y divide-outline-variant/50">
-
-          <!-- 列表-考核记录1 -->
-          <div class="grid grid-cols-12 px-5 py-4 hover:bg-surface-container/50 transition-colors items-center">
-            <span class="col-span-2 text-sm font-medium text-on-surface">张小明</span>
-            <span class="col-span-3 text-sm text-on-surface-variant">糖尿病基础知识测试</span>
-            <span class="col-span-2 text-sm font-semibold text-primary">92</span>
-            <div class="col-span-2">
-              <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">及格</span>
-            </div>
-            <span class="col-span-3 text-sm text-on-surface-variant">2024-12-10 14:30</span>
-          </div>
-
-          <!-- 列表-考核记录2 -->
-          <div class="grid grid-cols-12 px-5 py-4 hover:bg-surface-container/50 transition-colors items-center">
-            <span class="col-span-2 text-sm font-medium text-on-surface">李晓华</span>
-            <span class="col-span-3 text-sm text-on-surface-variant">糖尿病基础知识测试</span>
-            <span class="col-span-2 text-sm font-semibold text-primary">88</span>
-            <div class="col-span-2">
-              <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">及格</span>
-            </div>
-            <span class="col-span-3 text-sm text-on-surface-variant">2024-12-10 15:12</span>
-          </div>
-
-          <!-- 列表-考核记录3 -->
-          <div class="grid grid-cols-12 px-5 py-4 hover:bg-surface-container/50 transition-colors items-center">
-            <span class="col-span-2 text-sm font-medium text-on-surface">陈志远</span>
-            <span class="col-span-3 text-sm text-on-surface-variant">用药指导话术专项考核</span>
-            <span class="col-span-2 text-sm font-semibold text-error">58</span>
-            <div class="col-span-2">
-              <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-error/15 text-error">不及格</span>
-            </div>
-            <span class="col-span-3 text-sm text-on-surface-variant">2024-12-09 10:45</span>
-          </div>
-
-          <!-- 列表-考核记录4 -->
-          <div class="grid grid-cols-12 px-5 py-4 hover:bg-surface-container/50 transition-colors items-center">
-            <span class="col-span-2 text-sm font-medium text-on-surface">王丽丽</span>
-            <span class="col-span-3 text-sm text-on-surface-variant">服务规范流程考核</span>
-            <span class="col-span-2 text-sm font-semibold text-primary">95</span>
-            <div class="col-span-2">
-              <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">及格</span>
-            </div>
-            <span class="col-span-3 text-sm text-on-surface-variant">2024-12-08 16:20</span>
-          </div>
-
-          <!-- 列表-考核记录5 -->
-          <div class="grid grid-cols-12 px-5 py-4 hover:bg-surface-container/50 transition-colors items-center">
-            <span class="col-span-2 text-sm font-medium text-on-surface">刘美玲</span>
-            <span class="col-span-3 text-sm text-on-surface-variant">用药指导话术专项考核</span>
-            <span class="col-span-2 text-sm font-semibold text-primary">73</span>
-            <div class="col-span-2">
-              <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">及格</span>
-            </div>
-            <span class="col-span-3 text-sm text-on-surface-variant">2024-12-09 11:30</span>
-          </div>
-
-          <!-- 列表-考核记录6 -->
-          <div class="grid grid-cols-12 px-5 py-4 hover:bg-surface-container/50 transition-colors items-center">
-            <span class="col-span-2 text-sm font-medium text-on-surface">赵天宇</span>
-            <span class="col-span-3 text-sm text-on-surface-variant">服务规范流程考核</span>
-            <span class="col-span-2 text-sm font-semibold text-error">62</span>
-            <div class="col-span-2">
-              <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-error/15 text-error">不及格</span>
-            </div>
-            <span class="col-span-3 text-sm text-on-surface-variant">2024-12-08 09:55</span>
-          </div>
-
-          <!-- 列表-考核记录7 -->
-          <div class="grid grid-cols-12 px-5 py-4 hover:bg-surface-container/50 transition-colors items-center">
-            <span class="col-span-2 text-sm font-medium text-on-surface">孙雅静</span>
-            <span class="col-span-3 text-sm text-on-surface-variant">服务规范流程考核</span>
-            <span class="col-span-2 text-sm font-semibold text-primary">81</span>
-            <div class="col-span-2">
-              <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">及格</span>
-            </div>
-            <span class="col-span-3 text-sm text-on-surface-variant">2024-12-08 14:10</span>
-          </div>
-
-        </div>
-      </div>
-    </div>
-
-    <!-- ===== 发布考核弹窗 ===== -->
+    <!-- ==================== 发布考核弹窗 ==================== -->
     <div id="modal-publish" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 hidden">
       <div class="bg-surface rounded-xl shadow-dialog max-w-lg w-full max-h-[90vh] overflow-y-auto p-6">
         <!-- 弹窗标题 -->
-        <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center justify-between mb-5">
           <h2 class="text-lg font-semibold text-on-surface">发布考核</h2>
-          <button id="btn-modal-close" class="text-on-surface-variant hover:text-on-surface transition-colors">
-            <i data-lucide="x" class="w-5 h-5"></i>
+          <button id="btn-modal-close" class="w-8 h-8 flex items-center justify-center rounded-md hover:bg-surface-container transition-colors">
+            <i data-lucide="x" class="w-4 h-4 text-on-surface-variant"></i>
           </button>
         </div>
 
-        <!-- 表单内容 -->
-        <div class="space-y-5">
-          <!-- 考核名称 -->
+        <!-- 表单 -->
+        <div class="space-y-4">
+          <!-- 考核标题 -->
           <div>
-            <label class="block text-sm font-medium text-on-surface mb-1.5">考核名称</label>
-            <input id="input-assessment-name" type="text" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" placeholder="请输入考核名称"/>
+            <label class="block text-sm font-medium text-on-surface mb-1.5">考核标题</label>
+            <input id="input-title" type="text" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" placeholder="请输入考核标题"/>
           </div>
 
-          <!-- 类型选择 -->
+          <!-- 考核类型 -->
           <div>
             <label class="block text-sm font-medium text-on-surface mb-1.5">考核类型</label>
-            <select id="select-assessment-type" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors">
-              <option value="daily">日常考核</option>
-              <option value="special">专项考核</option>
-              <option value="stage">阶段考核</option>
-            </select>
-          </div>
-
-          <!-- 选择新人 -->
-          <div>
-            <label class="block text-sm font-medium text-on-surface mb-1.5">选择新人</label>
-            <div class="bg-surface-container rounded-md p-3 space-y-2 max-h-40 overflow-y-auto">
+            <div class="flex gap-3">
               <label class="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" class="trainee-checkbox w-4 h-4 accent-primary rounded" value="张小明"/>
-                <span class="text-sm text-on-surface">张小明</span>
-                <span class="text-xs text-on-surface-variant ml-auto">阶段一</span>
+                <input type="radio" name="assess-type" value="daily" checked class="accent-primary"/>
+                <span class="text-sm text-on-surface">日常考核</span>
               </label>
               <label class="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" class="trainee-checkbox w-4 h-4 accent-primary rounded" value="李晓华"/>
-                <span class="text-sm text-on-surface">李晓华</span>
-                <span class="text-xs text-on-surface-variant ml-auto">阶段二</span>
-              </label>
-              <label class="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" class="trainee-checkbox w-4 h-4 accent-primary rounded" value="王丽丽"/>
-                <span class="text-sm text-on-surface">王丽丽</span>
-                <span class="text-xs text-on-surface-variant ml-auto">阶段一</span>
-              </label>
-              <label class="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" class="trainee-checkbox w-4 h-4 accent-primary rounded" value="陈志远"/>
-                <span class="text-sm text-on-surface">陈志远</span>
-                <span class="text-xs text-on-surface-variant ml-auto">阶段二</span>
-              </label>
-              <label class="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" class="trainee-checkbox w-4 h-4 accent-primary rounded" value="刘美玲"/>
-                <span class="text-sm text-on-surface">刘美玲</span>
-                <span class="text-xs text-on-surface-variant ml-auto">阶段一</span>
-              </label>
-              <label class="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" class="trainee-checkbox w-4 h-4 accent-primary rounded" value="赵天宇"/>
-                <span class="text-sm text-on-surface">赵天宇</span>
-                <span class="text-xs text-on-surface-variant ml-auto">阶段二</span>
+                <input type="radio" name="assess-type" value="stage" class="accent-primary"/>
+                <span class="text-sm text-on-surface">阶段考核</span>
               </label>
             </div>
           </div>
 
-          <!-- 选择题目方式 -->
+          <!-- 考核对象 -->
           <div>
-            <label class="block text-sm font-medium text-on-surface mb-1.5">选择题目</label>
-            <div class="flex gap-3 mb-3">
-              <label class="flex items-center gap-2 cursor-pointer">
-                <input id="radio-from-bank" type="radio" name="question-source" value="bank" class="accent-primary w-4 h-4" checked/>
-                <span class="text-sm text-on-surface">从题库选择</span>
-              </label>
-              <label class="flex items-center gap-2 cursor-pointer">
-                <input id="radio-random" type="radio" name="question-source" value="random" class="accent-primary w-4 h-4"/>
-                <span class="text-sm text-on-surface">随机抽取</span>
-              </label>
+            <label class="block text-sm font-medium text-on-surface mb-1.5">考核对象</label>
+
+            <!-- 期数选择器 -->
+            <div class="mb-3">
+              <p class="text-xs text-on-surface-variant mb-2">按期选择（选择期数自动锁定该期全部新人）</p>
+              <div class="flex flex-wrap gap-2" id="cohort-selector">
+                <!-- 期数按钮1 -->
+                <button type="button" class="cohort-btn px-3 py-1.5 rounded-md text-sm font-medium bg-surface-container text-on-surface-variant hover:bg-surface-container-high transition-colors" data-cohort="第1期">
+                  第1期
+                  <span class="text-xs text-on-surface-variant/70 ml-0.5">(2人)</span>
+                </button>
+                <!-- 期数按钮2 -->
+                <button type="button" class="cohort-btn px-3 py-1.5 rounded-md text-sm font-medium bg-surface-container text-on-surface-variant hover:bg-surface-container-high transition-colors" data-cohort="第2期">
+                  第2期
+                  <span class="text-xs text-on-surface-variant/70 ml-0.5">(3人)</span>
+                </button>
+                <!-- 期数按钮3 -->
+                <button type="button" class="cohort-btn px-3 py-1.5 rounded-md text-sm font-medium bg-surface-container text-on-surface-variant hover:bg-surface-container-high transition-colors" data-cohort="第3期">
+                  第3期
+                  <span class="text-xs text-on-surface-variant/70 ml-0.5">(2人)</span>
+                </button>
+              </div>
             </div>
-            <!-- 从题库选择 -->
-            <div id="question-bank-select" class="bg-surface-container rounded-md p-3">
-              <button id="btn-select-questions" class="w-full flex items-center justify-between text-sm text-on-surface-variant hover:text-on-surface transition-colors">
-                <span>点击从题库中选择题目</span>
-                <i data-lucide="chevron-right" class="w-4 h-4"></i>
-              </button>
-            </div>
-            <!-- 随机抽取 -->
-            <div id="question-random-select" class="bg-surface-container rounded-md p-3 hidden">
-              <div class="flex items-center gap-3">
-                <span class="text-sm text-on-surface">随机抽取</span>
-                <input id="input-random-count" type="number" min="1" max="100" value="20" class="w-20 bg-surface border-none rounded-md px-3 py-1.5 text-sm text-on-surface text-center focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"/>
-                <span class="text-sm text-on-surface">道题目</span>
+
+            <!-- 新人选择器 -->
+            <div class="relative" id="trainee-selector">
+              <div id="trainee-selector-trigger" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface cursor-pointer flex items-center justify-between min-h-[2.5rem]">
+                <span id="trainee-selector-placeholder" class="text-on-surface-variant/50">搜索并选择新人（可多选）</span>
+                <i data-lucide="chevron-down" class="w-4 h-4 text-on-surface-variant shrink-0"></i>
+              </div>
+              <!-- 已选标签 -->
+              <div id="selected-tags" class="flex flex-wrap gap-1.5 mt-2"></div>
+              <!-- 下拉面板 -->
+              <div id="trainee-dropdown" class="absolute left-0 right-0 top-full mt-1 bg-surface rounded-lg shadow-float border border-outline-variant/20 z-50 hidden">
+                <!-- 搜索框 -->
+                <div class="p-2 border-b border-outline-variant/10">
+                  <input id="trainee-search" type="text" class="w-full bg-surface-container border-none rounded-md px-3 py-1.5 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" placeholder="搜索新人姓名…"/>
+                </div>
+                <!-- 新人列表 -->
+                <div id="trainee-list" class="max-h-48 overflow-y-auto p-1.5">
+                  <!-- 第1期新人 -->
+                  <label class="trainee-option flex items-center gap-2.5 px-3 py-2 rounded-md hover:bg-surface-container transition-colors cursor-pointer" data-cohort="第1期" data-name="陈文静">
+                    <input type="checkbox" class="trainee-checkbox accent-primary" value="陈文静"/>
+                    <span class="text-sm text-on-surface">陈文静</span>
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-[10px] font-medium bg-primary/10 text-primary ml-auto">第1期</span>
+                  </label>
+                  <label class="trainee-option flex items-center gap-2.5 px-3 py-2 rounded-md hover:bg-surface-container transition-colors cursor-pointer" data-cohort="第1期" data-name="赵志强">
+                    <input type="checkbox" class="trainee-checkbox accent-primary" value="赵志强"/>
+                    <span class="text-sm text-on-surface">赵志强</span>
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-[10px] font-medium bg-primary/10 text-primary ml-auto">第1期</span>
+                  </label>
+                  <!-- 第2期新人 -->
+                  <label class="trainee-option flex items-center gap-2.5 px-3 py-2 rounded-md hover:bg-surface-container transition-colors cursor-pointer" data-cohort="第2期" data-name="张晓华">
+                    <input type="checkbox" class="trainee-checkbox accent-primary" value="张晓华"/>
+                    <span class="text-sm text-on-surface">张晓华</span>
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-[10px] font-medium bg-primary/10 text-primary ml-auto">第2期</span>
+                  </label>
+                  <label class="trainee-option flex items-center gap-2.5 px-3 py-2 rounded-md hover:bg-surface-container transition-colors cursor-pointer" data-cohort="第2期" data-name="李明远">
+                    <input type="checkbox" class="trainee-checkbox accent-primary" value="李明远"/>
+                    <span class="text-sm text-on-surface">李明远</span>
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-[10px] font-medium bg-primary/10 text-primary ml-auto">第2期</span>
+                  </label>
+                  <label class="trainee-option flex items-center gap-2.5 px-3 py-2 rounded-md hover:bg-surface-container transition-colors cursor-pointer" data-cohort="第2期" data-name="王思琪">
+                    <input type="checkbox" class="trainee-checkbox accent-primary" value="王思琪"/>
+                    <span class="text-sm text-on-surface">王思琪</span>
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-[10px] font-medium bg-primary/10 text-primary ml-auto">第2期</span>
+                  </label>
+                  <!-- 第3期新人 -->
+                  <label class="trainee-option flex items-center gap-2.5 px-3 py-2 rounded-md hover:bg-surface-container transition-colors cursor-pointer" data-cohort="第3期" data-name="刘佳怡">
+                    <input type="checkbox" class="trainee-checkbox accent-primary" value="刘佳怡"/>
+                    <span class="text-sm text-on-surface">刘佳怡</span>
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-[10px] font-medium bg-primary/10 text-primary ml-auto">第3期</span>
+                  </label>
+                  <label class="trainee-option flex items-center gap-2.5 px-3 py-2 rounded-md hover:bg-surface-container transition-colors cursor-pointer" data-cohort="第3期" data-name="孙浩然">
+                    <input type="checkbox" class="trainee-checkbox accent-primary" value="孙浩然"/>
+                    <span class="text-sm text-on-surface">孙浩然</span>
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-[10px] font-medium bg-primary/10 text-primary ml-auto">第3期</span>
+                  </label>
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- 截止日期 -->
+          <!-- 考核内容 -->
           <div>
-            <label class="block text-sm font-medium text-on-surface mb-1.5">截止日期</label>
-            <input id="input-deadline" type="date" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" value="2024-12-31"/>
+            <label class="block text-sm font-medium text-on-surface mb-1.5">考核内容</label>
+            <textarea id="input-content" rows="3" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors resize-none" placeholder="请输入考核内容描述…"></textarea>
           </div>
 
-          <!-- 及格分数 -->
+          <!-- 开始时间 -->
           <div>
-            <label class="block text-sm font-medium text-on-surface mb-1.5">及格分数</label>
-            <div class="flex items-center gap-3">
-              <input id="input-pass-score" type="number" min="0" max="100" value="70" class="w-24 bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"/>
-              <span class="text-sm text-on-surface-variant">分（满分100分）</span>
-            </div>
+            <label class="block text-sm font-medium text-on-surface mb-1.5">开始时间</label>
+            <input id="input-start-time" type="date" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"/>
+          </div>
+
+          <!-- 截止时间 -->
+          <div>
+            <label class="block text-sm font-medium text-on-surface mb-1.5">截止时间</label>
+            <input id="input-end-time" type="date" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"/>
           </div>
         </div>
 
-        <!-- 弹窗操作按钮 -->
-        <div class="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-outline-variant/20">
-          <button id="btn-modal-cancel" class="bg-surface-container text-on-surface px-4 py-2 rounded-md text-sm font-medium hover:bg-surface-container-high active:scale-[0.98] transition-all">取消</button>
-          <button id="btn-modal-submit" class="bg-primary text-on-primary px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all">确认发布</button>
+        <!-- 操作按钮 -->
+        <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-outline-variant/20">
+          <button id="btn-cancel" class="bg-surface-container text-on-surface border-none px-4 py-2 rounded-md text-sm font-medium hover:bg-surface-container-high active:scale-[0.98] transition-all">取消</button>
+          <button id="btn-submit" class="bg-primary text-on-primary px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all">发布</button>
         </div>
       </div>
     </div>
 
-    <!-- @main-content:end -->
+    <!-- ==================== 考核详情弹窗 ==================== -->
+    <div id="modal-detail" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 hidden">
+      <div class="bg-surface rounded-xl shadow-dialog max-w-lg w-full max-h-[90vh] overflow-y-auto p-6">
+        <!-- 弹窗标题 -->
+        <div class="flex items-center justify-between mb-5">
+          <h2 class="text-lg font-semibold text-on-surface" id="detail-title">考核详情</h2>
+          <button id="btn-detail-close" class="w-8 h-8 flex items-center justify-center rounded-md hover:bg-surface-container transition-colors">
+            <i data-lucide="x" class="w-4 h-4 text-on-surface-variant"></i>
+          </button>
+        </div>
+
+        <!-- 考核基本信息 -->
+        <div class="space-y-3 mb-5 pb-5 border-b border-outline-variant/20">
+          <div class="flex items-center gap-2">
+            <span class="text-sm text-on-surface-variant w-20 shrink-0">考核标题</span>
+            <span class="text-sm font-medium text-on-surface" id="detail-assess-title">第2期日常考核-中药方剂</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-sm text-on-surface-variant w-20 shrink-0">考核类型</span>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-info/15 text-info" id="detail-assess-type">日常考核</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-sm text-on-surface-variant w-20 shrink-0">考核对象</span>
+            <span class="text-sm text-on-surface" id="detail-assess-target">第2期（3人）</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-sm text-on-surface-variant w-20 shrink-0">发布时间</span>
+            <span class="text-sm text-on-surface-variant" id="detail-start-time">2025-06-10</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-sm text-on-surface-variant w-20 shrink-0">截止时间</span>
+            <span class="text-sm text-on-surface-variant" id="detail-end-time">2025-06-20</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-sm text-on-surface-variant w-20 shrink-0">状态</span>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success" id="detail-status">进行中</span>
+          </div>
+        </div>
+
+        <!-- 完成情况统计 -->
+        <div class="mb-4">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-semibold text-on-surface">完成情况</h3>
+            <span class="text-xs text-on-surface-variant" id="detail-progress">2/3 已提交</span>
+          </div>
+          <!-- 进度条 -->
+          <div class="w-full h-2 bg-surface-container rounded-full overflow-hidden mb-4">
+            <div class="h-full bg-success rounded-full transition-all" id="detail-progress-bar" style="width: 66%"></div>
+          </div>
+        </div>
+
+        <!-- 新人提交列表 -->
+        <div class="space-y-2" id="detail-trainee-list">
+          <!-- 已提交-张晓华 -->
+          <div class="flex items-center justify-between px-3 py-2.5 rounded-md bg-surface-container/50">
+            <div class="flex items-center gap-2.5">
+              <div class="w-7 h-7 rounded-full bg-success/15 flex items-center justify-center">
+                <i data-lucide="check" class="w-3.5 h-3.5 text-success"></i>
+              </div>
+              <span class="text-sm text-on-surface">张晓华</span>
+              <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-[10px] font-medium bg-primary/10 text-primary">第2期</span>
+            </div>
+            <span class="text-xs text-success font-medium">已提交</span>
+          </div>
+          <!-- 已提交-李明远 -->
+          <div class="flex items-center justify-between px-3 py-2.5 rounded-md bg-surface-container/50">
+            <div class="flex items-center gap-2.5">
+              <div class="w-7 h-7 rounded-full bg-success/15 flex items-center justify-center">
+                <i data-lucide="check" class="w-3.5 h-3.5 text-success"></i>
+              </div>
+              <span class="text-sm text-on-surface">李明远</span>
+              <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-[10px] font-medium bg-primary/10 text-primary">第2期</span>
+            </div>
+            <span class="text-xs text-success font-medium">已提交</span>
+          </div>
+          <!-- 未提交-王思琪 -->
+          <div class="flex items-center justify-between px-3 py-2.5 rounded-md bg-surface-container/50">
+            <div class="flex items-center gap-2.5">
+              <div class="w-7 h-7 rounded-full bg-warning/15 flex items-center justify-center">
+                <i data-lucide="clock" class="w-3.5 h-3.5 text-warning"></i>
+              </div>
+              <span class="text-sm text-on-surface">王思琪</span>
+              <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-[10px] font-medium bg-primary/10 text-primary">第2期</span>
+            </div>
+            <span class="text-xs text-warning font-medium">未提交</span>
+          </div>
+        </div>
+
+        <!-- 关闭按钮 -->
+        <div class="flex justify-end mt-5 pt-4 border-t border-outline-variant/20">
+          <button id="btn-detail-back" class="bg-surface-container text-on-surface border-none px-4 py-2 rounded-md text-sm font-medium hover:bg-surface-container-high active:scale-[0.98] transition-all">关闭</button>
+        </div>
+      </div>
+    </div>
+
   </main>
-  </div>
+  <!-- @main-content:end -->
 
   <script>
-    $(function() {
-      // 初始化 Lucide 图标
-      lucide.createIcons();
+    $(function () {
 
-      // === Tab 切换 ===
-      $('.tab-btn').on('click', function() {
-        var tab = $(this).data('tab');
-        // 更新 Tab 按钮样式
-        $('.tab-btn').removeClass('bg-primary text-on-primary').addClass('text-on-surface-variant');
-        $(this).removeClass('text-on-surface-variant').addClass('bg-primary text-on-primary');
-        // 切换面板
-        if (tab === 'tasks') {
-          $('#panel-tasks').removeClass('hidden');
-          $('#panel-records').addClass('hidden');
-        } else {
-          $('#panel-tasks').addClass('hidden');
-          $('#panel-records').removeClass('hidden');
-        }
-      });
-
-      // === 发布考核弹窗 ===
-      $('#btn-publish-assessment').on('click', function() {
+      // ========== 发布考核弹窗 ==========
+      // 打开弹窗
+      $('#btn-publish').on('click', function () {
         $('#modal-publish').removeClass('hidden');
       });
 
       // 关闭弹窗
-      $('#btn-modal-close, #btn-modal-cancel').on('click', function() {
+      $('#btn-modal-close, #btn-cancel').on('click', function () {
         $('#modal-publish').addClass('hidden');
+        resetPublishForm();
       });
 
-      // 点击遮罩关闭弹窗
-      $('#modal-publish').on('click', function(e) {
+      // 点击遮罩关闭
+      $('#modal-publish').on('click', function (e) {
         if ($(e.target).is('#modal-publish')) {
           $('#modal-publish').addClass('hidden');
+          resetPublishForm();
         }
       });
 
-      // === 题目选择方式切换 ===
-      $('input[name="question-source"]').on('change', function() {
-        if ($(this).val() === 'bank') {
-          $('#question-bank-select').removeClass('hidden');
-          $('#question-random-select').addClass('hidden');
+      // ========== 期数选择器 ==========
+      // 期数按钮点击：选中/取消该期，自动勾选/取消该期全部新人
+      $('#cohort-selector').on('click', '.cohort-btn', function () {
+        var $btn = $(this);
+        var cohort = $btn.data('cohort');
+        var isActive = $btn.hasClass('bg-primary');
+
+        if (isActive) {
+          // 取消选中该期 → 取消该期所有新人的勾选
+          $btn.removeClass('bg-primary text-on-primary').addClass('bg-surface-container text-on-surface-variant');
+          $('.trainee-checkbox').filter(function () {
+            return $(this).closest('.trainee-option').data('cohort') === cohort;
+          }).prop('checked', false);
         } else {
-          $('#question-bank-select').addClass('hidden');
-          $('#question-random-select').removeClass('hidden');
+          // 选中该期 → 勾选该期所有新人
+          $btn.removeClass('bg-surface-container text-on-surface-variant').addClass('bg-primary text-on-primary');
+          $('.trainee-checkbox').filter(function () {
+            return $(this).closest('.trainee-option').data('cohort') === cohort;
+          }).prop('checked', true);
+        }
+        updateSelectedTags();
+      });
+
+      // ========== 新人选择器 ==========
+      // 展开/收起下拉面板
+      $('#trainee-selector-trigger').on('click', function (e) {
+        e.stopPropagation();
+        $('#trainee-dropdown').toggleClass('hidden');
+        if (!$('#trainee-dropdown').hasClass('hidden')) {
+          $('#trainee-search').focus();
         }
       });
 
-      // === 从题库选择题目 ===
-      // 点击后应实现题库选择弹窗：
-      // 1. 弹出题库列表弹窗，支持按关卡/题型/难度筛选
-      // 2. 每道题目显示题号、题型、难度、内容摘要
-      // 3. 支持多选勾选题目
-      // 4. 底部显示已选题目数量，点击确认后关闭弹窗
-      // 5. 在发布弹窗中显示已选题目数量
-      $('#btn-select-questions').on('click', function() {
-        console.log('打开题库选择弹窗，跳转到题库管理页面');
-        window.location.href = 'question-bank.html';
+      // 点击外部收起
+      $(document).on('click', function (e) {
+        if (!$(e.target).closest('#trainee-selector').length) {
+          $('#trainee-dropdown').addClass('hidden');
+        }
       });
 
-      // === 确认发布 ===
-      // 点击后应实现：
-      // 1. 校验所有必填字段（考核名称、新人选择、题目选择、截止日期）
-      // 2. 校验不通过时在对应字段下方显示错误提示
-      // 3. 校验通过后创建考核任务，添加到考核任务列表
-      // 4. 关闭弹窗，显示成功提示
-      // 5. 通知对应新人（系统消息推送）
-      $('#btn-modal-submit').on('click', function() {
-        var name = $('#input-assessment-name').val().trim();
-        if (!name) {
-          alert('请输入考核名称');
+      // 搜索过滤新人
+      $('#trainee-search').on('input', function () {
+        var keyword = $(this).val().toLowerCase();
+        $('.trainee-option').each(function () {
+          var name = $(this).data('name').toLowerCase();
+          if (name.indexOf(keyword) >= 0) {
+            $(this).show();
+          } else {
+            $(this).hide();
+          }
+        });
+      });
+
+      // 单个新人勾选/取消
+      $('#trainee-list').on('change', '.trainee-checkbox', function () {
+        updateSelectedTags();
+        // 检查该期是否全选，同步期数按钮状态
+        syncCohortButtons();
+      });
+
+      // 更新已选标签展示
+      function updateSelectedTags() {
+        var $tags = $('#selected-tags');
+        $tags.empty();
+        $('.trainee-checkbox:checked').each(function () {
+          var name = $(this).val();
+          var cohort = $(this).closest('.trainee-option').data('cohort');
+          $tags.append(
+            '<span class="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-primary/10 text-primary">' +
+            name + '<span class="text-[10px] text-on-surface-variant ml-0.5">' + cohort + '</span>' +
+            '<button type="button" class="tag-remove ml-0.5 w-3.5 h-3.5 flex items-center justify-center rounded-sm hover:bg-primary/20 transition-colors" data-name="' + name + '">' +
+            '<svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
+            '</button></span>'
+          );
+        });
+        // 更新占位文字
+        if ($('.trainee-checkbox:checked').length > 0) {
+          $('#trainee-selector-placeholder').text('已选 ' + $('.trainee-checkbox:checked').length + ' 人');
+        } else {
+          $('#trainee-selector-placeholder').text('搜索并选择新人（可多选）');
+        }
+      }
+
+      // 同步期数按钮状态：如果某期新人全选，高亮期数按钮
+      function syncCohortButtons() {
+        $('.cohort-btn').each(function () {
+          var cohort = $(this).data('cohort');
+          var $checkboxes = $('.trainee-checkbox').filter(function () {
+            return $(this).closest('.trainee-option').data('cohort') === cohort;
+          });
+          var allChecked = $checkboxes.length > 0 && $checkboxes.filter(':checked').length === $checkboxes.length;
+          if (allChecked) {
+            $(this).removeClass('bg-surface-container text-on-surface-variant').addClass('bg-primary text-on-primary');
+          } else {
+            $(this).removeClass('bg-primary text-on-primary').addClass('bg-surface-container text-on-surface-variant');
+          }
+        });
+      }
+
+      // 移除已选标签
+      $('#selected-tags').on('click', '.tag-remove', function () {
+        var name = $(this).data('name');
+        $('.trainee-checkbox').filter(function () {
+          return $(this).val() === name;
+        }).prop('checked', false);
+        updateSelectedTags();
+        syncCohortButtons();
+      });
+
+      // ========== 重置发布表单 ==========
+      function resetPublishForm() {
+        $('#input-title').val('');
+        $('#input-content').val('');
+        $('#input-start-time').val('');
+        $('#input-end-time').val('');
+        $('input[name="assess-type"][value="daily"]').prop('checked', true);
+        $('.trainee-checkbox').prop('checked', false);
+        $('.cohort-btn').removeClass('bg-primary text-on-primary').addClass('bg-surface-container text-on-surface-variant');
+        $('#selected-tags').empty();
+        $('#trainee-selector-placeholder').text('搜索并选择新人（可多选）');
+        $('#trainee-search').val('');
+        $('.trainee-option').show();
+      }
+
+      // ========== 发布提交 ==========
+      $('#btn-submit').on('click', function () {
+        // 简单校验
+        var title = $('#input-title').val().trim();
+        var selectedCount = $('.trainee-checkbox:checked').length;
+        if (!title) {
+          $('#input-title').focus();
+          console.log('请输入考核标题');
           return;
         }
-        var checkedTrainees = $('.trainee-checkbox:checked');
-        if (checkedTrainees.length === 0) {
-          alert('请选择至少一位新人');
+        if (selectedCount === 0) {
+          console.log('请选择考核对象');
           return;
         }
-        console.log('发布考核:', name, '类型:', $('#select-assessment-type').val());
+        // 发布考核 - 后续应实现：
+        // 1. 收集表单数据（标题、类型、对象、内容、时间）
+        // 2. 调用 POST /api/assessments 接口
+        // 3. 成功后关闭弹窗、刷新考核列表
+        // 4. 失败显示错误提示
+        console.log('发布考核：标题=' + title + '，选择人数=' + selectedCount);
         $('#modal-publish').addClass('hidden');
+        resetPublishForm();
       });
+
+      // ========== 考核详情弹窗 ==========
+      // 打开详情（硬编码，展示第2期考核详情）
+      $('#assessment-list').on('click', '.btn-detail', function () {
+        var id = $(this).data('id');
+        // 详情页内容已硬编码在HTML中，根据id可切换展示不同详情
+        // 当前展示第2期日常考核详情
+        $('#modal-detail').removeClass('hidden');
+      });
+
+      // 关闭详情弹窗
+      $('#btn-detail-close, #btn-detail-back').on('click', function () {
+        $('#modal-detail').addClass('hidden');
+      });
+
+      // 点击遮罩关闭
+      $('#modal-detail').on('click', function (e) {
+        if ($(e.target).is('#modal-detail')) {
+          $('#modal-detail').addClass('hidden');
+        }
+      });
+
+      // ========== 结束考核 ==========
+      // 结束考核按钮 - 点击后应实现：
+      // 1. 弹出确认对话框"确认结束该考核？结束后新人将无法继续提交"
+      // 2. 确认后调用 PATCH /api/assessments/:id 接口，将状态更新为"已结束"
+      // 3. 成功后更新该行状态Badge为"已结束"，移除"结束考核"按钮
+      // 4. 失败显示错误提示
+      $('#assessment-list').on('click', '.btn-end', function () {
+        var id = $(this).data('id');
+        console.log('结束考核：id=' + id + '，需调用API更新状态');
+        // 简单交互：直接切换状态展示
+        var $row = $(this).closest('[data-id="' + id + '"]');
+        $row.find('.btn-end').remove();
+        $row.find('.btn-detail').after('');
+        // 更新状态Badge
+        var $statusCell = $row.find('span.inline-flex').eq(1);
+        if ($statusCell.hasClass('bg-success/15')) {
+          $statusCell.removeClass('bg-success/15 text-success').addClass('bg-surface-container-highest text-on-surface-variant').text('已结束');
+        }
+      });
+
     });
   </script>
 
   <script>lucide.createIcons();</script>
 </body>
-
 </html>

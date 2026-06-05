@@ -3,70 +3,6 @@
     {
       "type": "html",
       "options": {
-        "path": ".cozeproj/prototype/web/home.html"
-      },
-      "title": "首页",
-      "size": "web"
-    },
-    {
-      "type": "html",
-      "options": {
-        "path": ".cozeproj/prototype/web/learning.html"
-      },
-      "title": "闯关学习",
-      "size": "web"
-    },
-    {
-      "type": "html",
-      "options": {
-        "path": ".cozeproj/prototype/web/growth.html"
-      },
-      "title": "成长档案",
-      "size": "web"
-    },
-    {
-      "type": "html",
-      "options": {
-        "path": ".cozeproj/prototype/web/trainee-board.html"
-      },
-      "title": "新人看板",
-      "size": "web"
-    },
-    {
-      "type": "html",
-      "options": {
-        "path": ".cozeproj/prototype/web/diagnosis.html"
-      },
-      "title": "双轨诊断",
-      "size": "web"
-    },
-    {
-      "type": "html",
-      "options": {
-        "path": ".cozeproj/prototype/web/empowerment.html"
-      },
-      "title": "赋能中心",
-      "size": "web"
-    },
-    {
-      "type": "html",
-      "options": {
-        "path": ".cozeproj/prototype/web/dashboard.html"
-      },
-      "title": "数据看板",
-      "size": "web"
-    },
-    {
-      "type": "html",
-      "options": {
-        "path": ".cozeproj/prototype/web/overview.html"
-      },
-      "title": "全局概览",
-      "size": "web"
-    },
-    {
-      "type": "html",
-      "options": {
         "path": ".cozeproj/prototype/web/question-bank.html"
       },
       "title": "题库管理",
@@ -75,49 +11,9 @@
     {
       "type": "html",
       "options": {
-        "path": ".cozeproj/prototype/web/resources.html"
-      },
-      "title": "资料中心",
-      "size": "web"
-    },
-    {
-      "type": "html",
-      "options": {
-        "path": ".cozeproj/prototype/web/qc-review.html"
-      },
-      "title": "质检审核",
-      "size": "web"
-    },
-    {
-      "type": "html",
-      "options": {
         "path": ".cozeproj/prototype/web/assessment.html"
       },
       "title": "日常考核",
-      "size": "web"
-    },
-    {
-      "type": "html",
-      "options": {
-        "path": ".cozeproj/prototype/web/scrm-import.html"
-      },
-      "title": "业务数据",
-      "size": "web"
-    },
-    {
-      "type": "html",
-      "options": {
-        "path": ".cozeproj/prototype/web/settings.html"
-      },
-      "title": "系统设置",
-      "size": "web"
-    },
-    {
-      "type": "html",
-      "options": {
-        "path": ".cozeproj/prototype/web/login.html"
-      },
-      "title": "登录",
       "size": "web"
     }
   ]

@@ -4,9 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <link href="https://lf-code-agent.coze.cn/obj/x-ai-cn/fonts/google/google-all-fonts.css" rel="stylesheet"/>
-
+  <link href="https://fonts.googleapis.cn/css2?family=Noto+Sans+SC:wght@400;500;600;700&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet"/>
   <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/jquery/jquery-3.7.1.min.js"></script>
   <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/lucide/lucide-1.11.0.min.js"></script>
   <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/tailwindcss/tailwindcss-browser-4.2.4.min.js"></script>
@@ -14,39 +12,41 @@
   <style type="text/tailwindcss">
     @theme {
       /* === 品牌色 === */
-      --color-primary:              #2978B5;
-      --color-primary-container:    #D4E8F5;
+      --color-primary:              #102A43;
+      --color-primary-container:    #1B3A5C;
       --color-on-primary:           #ffffff;
       /* === 背景 / 表面 === */
       --color-background:                 #F8F6F0;
-      --color-surface-container-lowest:   #FAFAF5;
+      --color-surface-container-lowest:   #FFFFFF;
       --color-surface:                    #FFFFFF;
-      --color-surface-container:          #F0EDE5;
-      --color-surface-container-high:     #E8E4DB;
-      --color-surface-container-highest:  #DDD8CE;
+      --color-surface-container:          #EFEEE8;
+      --color-surface-container-high:     #E2E0DA;
+      --color-surface-container-highest:  #D5D3CD;
       /* === 文字 === */
       --color-on-surface:           #1D2733;
       --color-on-surface-variant:   #667085;
       /* === 功能色 === */
       --color-success:  #22c55e;
       --color-error:    #ef4444;
-      --color-warning:  #f59e0b;
+      --color-warning:  #F59E0B;
+      --color-info:     #2978B5;
       /* === 边框 === */
-      --color-outline:          #D4CFC4;
-      --color-outline-variant:  #E6E1D8;
+      --color-outline:          #E6E1D8;
+      --color-outline-variant:  #D1CCC3;
       /* === 圆角 === */
-      --radius-sm:   0.375rem;
+      --radius-sm:   0.25rem;
       --radius-md:   0.5rem;
       --radius-lg:   0.75rem;
       --radius-xl:   1rem;
       --radius-2xl:  1.5rem;
       --radius-full: 9999px;
       /* === 阴影 === */
-      --shadow-card:   0 2px 8px rgba(0,0,0,0.08);
+      --shadow-card:   0 2px 8px rgba(0,0,0,0.06);
       --shadow-float:  0 10px 25px rgba(0,0,0,0.1);
       --shadow-dialog: 0 25px 50px rgba(0,0,0,0.15);
       /* === 字体 === */
       --font-sans: "Noto Sans SC", system-ui, sans-serif;
+      --font-serif: "Noto Serif SC", Georgia, serif;
     }
   </style>
 
@@ -72,941 +72,935 @@
 <body class="bg-background text-on-surface font-sans">
 
   <!-- @nav:start 导航组件 -->
-  <header class="bg-surface sticky top-0 z-40 h-14 flex items-center justify-between px-6 border-b border-outline-variant/20">
-    <div class="flex items-center gap-2">
-      <i data-lucide="heart-pulse" class="text-primary w-5 h-5"></i>
-      <span class="font-bold text-base text-on-surface">百芝堂赋能系统</span>
+  <aside class="fixed left-0 top-0 h-full w-56 bg-surface border-r border-outline-variant/20 flex flex-col z-40">
+    <div class="px-5 py-4 border-b border-outline-variant/20">
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-md bg-primary flex items-center justify-center">
+          <i data-lucide="heart-pulse" class="w-5 h-5 text-on-primary"></i>
+        </div>
+        <span class="font-serif font-bold text-base text-primary">百芝堂V3</span>
+      </div>
     </div>
-    <div class="flex items-center gap-3">
-      <span class="text-sm text-on-surface-variant">培训负责人</span>
-      <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-medium">初</div>
-    </div>
-  </header>
-  <div class="flex" style="height: calc(100vh - 3.5rem)">
-    <aside class="w-52 shrink-0 bg-surface-container-lowest overflow-y-auto border-r border-outline-variant/15">
-      <div class="p-3 space-y-0.5">
-        <p class="px-3 py-1 text-xs font-medium text-on-surface-variant/60 uppercase tracking-wider">工作台</p>
-        <a href="home.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="layout-dashboard" class="w-4 h-4"></i>首页
-        </a>
-        <p class="px-3 py-1 mt-3 text-xs font-medium text-on-surface-variant/60 uppercase tracking-wider">学习</p>
-        <a href="learning.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="trophy" class="w-4 h-4"></i>闯关学习
-        </a>
-        <a href="growth.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="user-check" class="w-4 h-4"></i>成长档案
-        </a>
-        <a href="resources.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="book-open" class="w-4 h-4"></i>资料中心
-        </a>
-        <p class="px-3 py-1 mt-3 text-xs font-medium text-on-surface-variant/60 uppercase tracking-wider">管理</p>
-        <a href="trainee-board.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="users" class="w-4 h-4"></i>新人看板
-        </a>
-        <a href="diagnosis.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="scan-search" class="w-4 h-4"></i>双轨诊断
-        </a>
-        <a href="empowerment.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="zap" class="w-4 h-4"></i>赋能中心
-        </a>
-        <a href="qc-review.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="mic" class="w-4 h-4"></i>质检审核
-        </a>
-        <a href="assessment.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="clipboard-check" class="w-4 h-4"></i>日常考核
-        </a>
-        <p class="px-3 py-1 mt-3 text-xs font-medium text-on-surface-variant/60 uppercase tracking-wider">数据</p>
-        <a href="dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="chart-bar" class="w-4 h-4"></i>数据看板
-        </a>
-        <a href="overview.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="activity" class="w-4 h-4"></i>全局概览
-        </a>
-        <a href="scrm-import.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="database" class="w-4 h-4"></i>业务数据
-        </a>
-        <p class="px-3 py-1 mt-3 text-xs font-medium text-on-surface-variant/60 uppercase tracking-wider">配置</p>
-        <a href="question-bank.html" class="flex items-center gap-3 px-3 py-2 rounded-md bg-primary/10 text-primary font-medium text-sm" aria-current="page">
-          <i data-lucide="file-question" class="w-4 h-4"></i>题库管理
-        </a>
-        <a href="settings.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="settings" class="w-4 h-4"></i>系统设置
+    <nav class="flex-1 overflow-y-auto py-3 px-3">
+      <div class="mb-1">
+        <a href="question-bank.html" aria-current="page" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium bg-primary/10 text-primary">
+          <i data-lucide="book-open" class="w-4 h-4"></i>
+          <span>题库管理</span>
         </a>
       </div>
-    </aside>
+      <div class="mb-1">
+        <a href="assessment.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm text-on-surface-variant hover:bg-surface-container transition-colors">
+          <i data-lucide="clipboard-check" class="w-4 h-4"></i>
+          <span>日常考核</span>
+        </a>
+      </div>
+      <div class="mb-1">
+        <a href="trainee-profiles.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm text-on-surface-variant hover:bg-surface-container transition-colors">
+          <i data-lucide="users" class="w-4 h-4"></i>
+          <span>新人档案</span>
+        </a>
+      </div>
+    </nav>
+  </aside>
   <!-- @nav:end 导航组件 -->
 
-  <main class="flex-1 min-w-0 overflow-y-auto bg-background p-6">
+  <main class="ml-56 min-h-screen p-6">
     <!-- @main-content:start -->
 
-    <!-- 页面标题 & 操作按钮 -->
+    <!-- 页面标题区 -->
     <div class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold text-on-surface">题库管理</h1>
-        <p class="text-sm text-on-surface-variant mt-1">管理闯关题目，按关卡/题型/难度分类维护</p>
+        <p class="text-sm text-on-surface-variant mt-1">管理闯关学习题目，支持新增、编辑和审核</p>
       </div>
-      <div class="flex items-center gap-3">
-        <button id="btn-batch-import" class="bg-surface-container text-on-surface border-none px-4 py-2 rounded-md text-sm font-medium hover:bg-surface-container-high active:scale-[0.98] transition-all inline-flex items-center gap-2">
-          <i data-lucide="upload" class="w-3.5 h-3.5"></i>批量导入
-        </button>
-        <button id="btn-add-question" class="bg-primary text-on-primary px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all inline-flex items-center gap-2">
-          <i data-lucide="plus" class="w-3.5 h-3.5"></i>添加题目
-        </button>
-      </div>
+      <button id="btn-add-question" class="bg-primary text-on-primary px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all inline-flex items-center gap-2">
+        <i data-lucide="plus" class="w-3.5 h-3.5"></i>新增题目
+      </button>
     </div>
 
-    <!-- 统计卡片 -->
-    <div class="grid grid-cols-5 gap-4 mb-6">
-      <!-- 统计-总题数 -->
-      <div class="bg-surface rounded-lg shadow-card p-5">
-        <div class="flex items-center justify-between">
-          <span class="text-sm text-on-surface-variant">总题数</span>
-          <div class="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
-            <i data-lucide="layers" class="w-4 h-4 text-primary"></i>
-          </div>
-        </div>
-        <p class="text-2xl font-bold text-on-surface mt-2">685</p>
-      </div>
-      <!-- 统计-选择题 -->
-      <div class="bg-surface rounded-lg shadow-card p-5">
-        <div class="flex items-center justify-between">
-          <span class="text-sm text-on-surface-variant">选择题</span>
-          <div class="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
-            <i data-lucide="list" class="w-4 h-4 text-primary"></i>
-          </div>
-        </div>
-        <p class="text-2xl font-bold text-on-surface mt-2">412</p>
-      </div>
-      <!-- 统计-多选题 -->
-      <div class="bg-surface rounded-lg shadow-card p-5">
-        <div class="flex items-center justify-between">
-          <span class="text-sm text-on-surface-variant">多选题</span>
-          <div class="w-9 h-9 rounded-lg bg-warning/10 flex items-center justify-center">
-            <i data-lucide="list-checks" class="w-4 h-4 text-warning"></i>
-          </div>
-        </div>
-        <p class="text-2xl font-bold text-on-surface mt-2">156</p>
-      </div>
-      <!-- 统计-判断题 -->
-      <div class="bg-surface rounded-lg shadow-card p-5">
-        <div class="flex items-center justify-between">
-          <span class="text-sm text-on-surface-variant">判断题</span>
-          <div class="w-9 h-9 rounded-lg bg-success/10 flex items-center justify-center">
-            <i data-lucide="toggle-right" class="w-4 h-4 text-success"></i>
-          </div>
-        </div>
-        <p class="text-2xl font-bold text-on-surface mt-2">89</p>
-      </div>
-      <!-- 统计-简答题 -->
-      <div class="bg-surface rounded-lg shadow-card p-5">
-        <div class="flex items-center justify-between">
-          <span class="text-sm text-on-surface-variant">简答题</span>
-          <div class="w-9 h-9 rounded-lg bg-error/10 flex items-center justify-center">
-            <i data-lucide="pen-line" class="w-4 h-4 text-error"></i>
-          </div>
-        </div>
-        <p class="text-2xl font-bold text-on-surface mt-2">28</p>
-      </div>
+    <!-- Tab 切换 -->
+    <div class="flex items-center gap-1 mb-4 bg-surface-container rounded-md p-1 w-fit">
+      <button id="tab-all" class="px-4 py-1.5 rounded-md text-sm font-medium bg-surface text-on-surface shadow-sm transition-all" aria-pressed="true">全部题目</button>
+      <button id="tab-pending" class="px-4 py-1.5 rounded-md text-sm font-medium text-on-surface-variant hover:text-on-surface transition-all" aria-pressed="false">
+        待审核
+        <span id="pending-count" class="ml-1 inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-xs font-semibold bg-warning/20 text-warning">4</span>
+      </button>
     </div>
 
-    <!-- 筛选区 -->
-    <div class="bg-surface rounded-lg shadow-card p-5 mb-6">
-      <div class="flex items-center gap-4">
-        <!-- 关卡筛选 -->
-        <div class="flex items-center gap-2">
-          <label class="text-sm font-medium text-on-surface-variant shrink-0">关卡</label>
-          <select id="filter-level" class="bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors min-w-[140px]">
-            <option value="">全部关卡</option>
-            <option value="1">第1关</option>
-            <option value="2">第2关</option>
-            <option value="3">第3关</option>
-            <option value="4">第4关</option>
-            <option value="5">第5关</option>
-            <option value="6">第6关</option>
-            <option value="7">第7关</option>
-            <option value="8">第8关</option>
-            <option value="9">第9关</option>
-            <option value="10">第10关</option>
-            <option value="11">第11关</option>
-            <option value="12">第12关</option>
-            <option value="13">第13关</option>
-            <option value="14">第14关</option>
-            <option value="15">第15关</option>
-            <option value="16">第16关</option>
-            <option value="17">第17关</option>
-            <option value="18">第18关</option>
-            <option value="19">第19关</option>
-            <option value="20">第20关</option>
-            <option value="21">第21关</option>
-          </select>
-        </div>
-        <!-- 题型筛选 -->
-        <div class="flex items-center gap-2">
-          <label class="text-sm font-medium text-on-surface-variant shrink-0">题型</label>
-          <select id="filter-type" class="bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors min-w-[120px]">
-            <option value="">全部题型</option>
-            <option value="choice">选择题</option>
-            <option value="multi">多选题</option>
-            <option value="judge">判断题</option>
-            <option value="essay">简答题</option>
-          </select>
-        </div>
-        <!-- 难度筛选 -->
-        <div class="flex items-center gap-2">
-          <label class="text-sm font-medium text-on-surface-variant shrink-0">难度</label>
-          <select id="filter-difficulty" class="bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors min-w-[120px]">
-            <option value="">全部难度</option>
-            <option value="1">★ 简单</option>
-            <option value="2">★★ 中等</option>
-            <option value="3">★★★ 困难</option>
-          </select>
-        </div>
-        <!-- 搜索 -->
-        <div class="flex-1 flex items-center gap-2 ml-4">
-          <div class="relative flex-1 max-w-xs">
-            <i data-lucide="search" class="w-4 h-4 text-on-surface-variant/50 absolute left-3 top-1/2 -translate-y-1/2"></i>
-            <input id="filter-search" type="text" placeholder="搜索题干关键词..." class="w-full bg-surface-container border-none rounded-md pl-9 pr-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"/>
-          </div>
-        </div>
-        <button id="btn-reset-filter" class="text-sm text-on-surface-variant hover:text-on-surface transition-colors">重置筛选</button>
+    <!-- 搜索筛选区 -->
+    <div class="flex items-center gap-3 mb-4">
+      <div class="relative flex-1 max-w-sm">
+        <i data-lucide="search" class="w-4 h-4 text-on-surface-variant absolute left-3 top-1/2 -translate-y-1/2"></i>
+        <input id="search-input" type="text" placeholder="搜索题目内容..." class="w-full bg-surface-container border-none rounded-md pl-9 pr-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"/>
       </div>
+      <select id="filter-level" class="bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors">
+        <option value="">全部关卡</option>
+        <option value="1">第1关：公司简介</option>
+        <option value="2">第2关：企业文化</option>
+        <option value="3">第3关：规章制度</option>
+        <option value="4">第4关：产品知识</option>
+        <option value="5">第5关：服务规范</option>
+        <option value="6">第6关：应急处理</option>
+      </select>
+      <select id="filter-type" class="bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors">
+        <option value="">全部题型</option>
+        <option value="single">单选题</option>
+        <option value="multiple">多选题</option>
+        <option value="judge">判断题</option>
+      </select>
     </div>
 
-    <!-- 题目列表表格 -->
-    <div class="bg-surface rounded-lg shadow-card overflow-hidden">
-      <!-- 表头 -->
-      <div class="grid grid-cols-[60px_60px_1fr_80px_100px_120px_120px] px-5 py-3 bg-surface-container text-xs font-semibold text-on-surface-variant uppercase tracking-wide">
-        <span>题号</span>
-        <span>题型</span>
-        <span>题目摘要</span>
-        <span>关卡</span>
-        <span>难度</span>
-        <span>创建时间</span>
-        <span class="text-right">操作</span>
-      </div>
-      <div id="question-table-body" class="divide-y divide-outline-variant/30">
+    <!-- 全部题目列表 -->
+    <div id="list-all" class="space-y-6">
 
-        <!-- 列表-题目1 -->
-        <div class="grid grid-cols-[60px_60px_1fr_80px_100px_120px_120px] px-5 py-3.5 hover:bg-surface-container/50 transition-colors items-center">
-          <span class="text-sm text-on-surface-variant">001</span>
-          <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-xs font-medium bg-primary/10 text-primary w-fit">单选</span>
-          <span class="text-sm font-medium text-on-surface truncate pr-4">糖尿病患者的空腹血糖诊断标准是多少mmol/L？</span>
-          <span class="text-sm text-on-surface-variant">第1关</span>
-          <span class="text-sm"><span class="text-warning">★</span><span class="text-outline-variant">★★</span></span>
-          <span class="text-sm text-on-surface-variant">2024-03-15</span>
-          <div class="flex items-center justify-end gap-3">
-            <button class="btn-edit text-primary text-sm font-medium hover:underline" data-id="1">编辑</button>
-            <button class="btn-delete text-error text-sm font-medium hover:underline" data-id="1">删除</button>
+      <!-- 关卡1：公司简介 -->
+      <div class="question-group">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="inline-flex items-center justify-center w-6 h-6 rounded-md bg-primary/10 text-primary text-xs font-bold">1</span>
+          <h2 class="text-base font-semibold text-on-surface">第1关：公司简介</h2>
+          <span class="text-xs text-on-surface-variant">4 道题</span>
+        </div>
+        <div class="bg-surface rounded-lg shadow-card overflow-hidden">
+          <!-- 表头 -->
+          <div class="grid grid-cols-12 px-4 py-3 bg-surface-container text-xs font-semibold text-on-surface-variant uppercase tracking-wide">
+            <span class="col-span-4">题目内容</span>
+            <span class="col-span-1">题型</span>
+            <span class="col-span-1">难度</span>
+            <span class="col-span-2">创建者</span>
+            <span class="col-span-2">审核状态</span>
+            <span class="col-span-2">操作</span>
+          </div>
+          <div class="divide-y divide-outline-variant/30">
+            <!-- 列表-关卡1题目1 -->
+            <div class="grid grid-cols-12 px-4 py-3 hover:bg-surface-container/50 transition-colors items-center" data-id="1" data-status="approved" data-level="1" data-type="single">
+              <span class="col-span-4 text-sm font-medium text-on-surface truncate pr-2">百芝堂健康产业集团成立于哪一年？</span>
+              <span class="col-span-1"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-info/15 text-info">单选</span></span>
+              <span class="col-span-1 text-sm text-on-surface-variant">★2</span>
+              <span class="col-span-2 text-sm text-on-surface-variant">李老师</span>
+              <span class="col-span-2"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已通过</span></span>
+              <div class="col-span-2 flex gap-2">
+                <button class="btn-edit text-primary text-sm font-medium hover:underline" data-id="1">编辑</button>
+              </div>
+            </div>
+            <!-- 列表-关卡1题目2 -->
+            <div class="grid grid-cols-12 px-4 py-3 hover:bg-surface-container/50 transition-colors items-center" data-id="2" data-status="approved" data-level="1" data-type="judge">
+              <span class="col-span-4 text-sm font-medium text-on-surface truncate pr-2">百芝堂集团总部位于北京。</span>
+              <span class="col-span-1"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-warning/15 text-warning">判断</span></span>
+              <span class="col-span-1 text-sm text-on-surface-variant">★1</span>
+              <span class="col-span-2 text-sm text-on-surface-variant">王主任</span>
+              <span class="col-span-2"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已通过</span></span>
+              <div class="col-span-2 flex gap-2">
+                <button class="btn-edit text-primary text-sm font-medium hover:underline" data-id="2">编辑</button>
+              </div>
+            </div>
+            <!-- 列表-关卡1题目3 -->
+            <div class="grid grid-cols-12 px-4 py-3 hover:bg-surface-container/50 transition-colors items-center" data-id="3" data-status="pending_review" data-level="1" data-type="single">
+              <span class="col-span-4 text-sm font-medium text-on-surface truncate pr-2">百芝堂集团的核心价值观是什么？</span>
+              <span class="col-span-1"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-info/15 text-info">单选</span></span>
+              <span class="col-span-1 text-sm text-on-surface-variant">★3</span>
+              <span class="col-span-2 text-sm text-on-surface-variant">张老师</span>
+              <span class="col-span-2"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-warning/15 text-warning">待审核</span></span>
+              <div class="col-span-2 flex gap-2">
+                <button class="btn-edit text-primary text-sm font-medium hover:underline" data-id="3">编辑</button>
+                <button class="btn-approve text-success text-sm font-medium hover:underline" data-id="3">通过</button>
+                <button class="btn-reject text-error text-sm font-medium hover:underline" data-id="3">拒绝</button>
+              </div>
+            </div>
+            <!-- 列表-关卡1题目4 -->
+            <div class="grid grid-cols-12 px-4 py-3 hover:bg-surface-container/50 transition-colors items-center" data-id="4" data-status="approved" data-level="1" data-type="multiple">
+              <span class="col-span-4 text-sm font-medium text-on-surface truncate pr-2">以下哪些是百芝堂集团旗下的业务板块？</span>
+              <span class="col-span-1"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-primary/15 text-primary">多选</span></span>
+              <span class="col-span-1 text-sm text-on-surface-variant">★3</span>
+              <span class="col-span-2 text-sm text-on-surface-variant">王主任</span>
+              <span class="col-span-2"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已通过</span></span>
+              <div class="col-span-2 flex gap-2">
+                <button class="btn-edit text-primary text-sm font-medium hover:underline" data-id="4">编辑</button>
+              </div>
+            </div>
           </div>
         </div>
-
-        <!-- 列表-题目2 -->
-        <div class="grid grid-cols-[60px_60px_1fr_80px_100px_120px_120px] px-5 py-3.5 hover:bg-surface-container/50 transition-colors items-center">
-          <span class="text-sm text-on-surface-variant">002</span>
-          <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-xs font-medium bg-primary/10 text-primary w-fit">单选</span>
-          <span class="text-sm font-medium text-on-surface truncate pr-4">以下哪种口服降糖药属于双胍类药物？</span>
-          <span class="text-sm text-on-surface-variant">第2关</span>
-          <span class="text-sm"><span class="text-warning">★</span><span class="text-outline-variant">★★</span></span>
-          <span class="text-sm text-on-surface-variant">2024-03-15</span>
-          <div class="flex items-center justify-end gap-3">
-            <button class="btn-edit text-primary text-sm font-medium hover:underline" data-id="2">编辑</button>
-            <button class="btn-delete text-error text-sm font-medium hover:underline" data-id="2">删除</button>
-          </div>
-        </div>
-
-        <!-- 列表-题目3 -->
-        <div class="grid grid-cols-[60px_60px_1fr_80px_100px_120px_120px] px-5 py-3.5 hover:bg-surface-container/50 transition-colors items-center">
-          <span class="text-sm text-on-surface-variant">003</span>
-          <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-xs font-medium bg-warning/10 text-warning w-fit">多选</span>
-          <span class="text-sm font-medium text-on-surface truncate pr-4">胰岛素注射部位可选择以下哪些区域？</span>
-          <span class="text-sm text-on-surface-variant">第3关</span>
-          <span class="text-sm"><span class="text-warning">★★</span><span class="text-outline-variant">★</span></span>
-          <span class="text-sm text-on-surface-variant">2024-03-16</span>
-          <div class="flex items-center justify-end gap-3">
-            <button class="btn-edit text-primary text-sm font-medium hover:underline" data-id="3">编辑</button>
-            <button class="btn-delete text-error text-sm font-medium hover:underline" data-id="3">删除</button>
-          </div>
-        </div>
-
-        <!-- 列表-题目4 -->
-        <div class="grid grid-cols-[60px_60px_1fr_80px_100px_120px_120px] px-5 py-3.5 hover:bg-surface-container/50 transition-colors items-center">
-          <span class="text-sm text-on-surface-variant">004</span>
-          <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-xs font-medium bg-success/10 text-success w-fit">判断</span>
-          <span class="text-sm font-medium text-on-surface truncate pr-4">2型糖尿病患者不需要进行胰岛素治疗。</span>
-          <span class="text-sm text-on-surface-variant">第4关</span>
-          <span class="text-sm"><span class="text-warning">★</span><span class="text-outline-variant">★★</span></span>
-          <span class="text-sm text-on-surface-variant">2024-03-17</span>
-          <div class="flex items-center justify-end gap-3">
-            <button class="btn-edit text-primary text-sm font-medium hover:underline" data-id="4">编辑</button>
-            <button class="btn-delete text-error text-sm font-medium hover:underline" data-id="4">删除</button>
-          </div>
-        </div>
-
-        <!-- 列表-题目5 -->
-        <div class="grid grid-cols-[60px_60px_1fr_80px_100px_120px_120px] px-5 py-3.5 hover:bg-surface-container/50 transition-colors items-center">
-          <span class="text-sm text-on-surface-variant">005</span>
-          <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-xs font-medium bg-error/10 text-error w-fit">简答</span>
-          <span class="text-sm font-medium text-on-surface truncate pr-4">请简述糖尿病患者的饮食管理原则。</span>
-          <span class="text-sm text-on-surface-variant">第5关</span>
-          <span class="text-sm"><span class="text-warning">★★★</span></span>
-          <span class="text-sm text-on-surface-variant">2024-03-18</span>
-          <div class="flex items-center justify-end gap-3">
-            <button class="btn-edit text-primary text-sm font-medium hover:underline" data-id="5">编辑</button>
-            <button class="btn-delete text-error text-sm font-medium hover:underline" data-id="5">删除</button>
-          </div>
-        </div>
-
-        <!-- 列表-题目6 -->
-        <div class="grid grid-cols-[60px_60px_1fr_80px_100px_120px_120px] px-5 py-3.5 hover:bg-surface-container/50 transition-colors items-center">
-          <span class="text-sm text-on-surface-variant">006</span>
-          <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-xs font-medium bg-primary/10 text-primary w-fit">单选</span>
-          <span class="text-sm font-medium text-on-surface truncate pr-4">糖化血红蛋白(HbA1c)的控制目标一般建议在多少以下？</span>
-          <span class="text-sm text-on-surface-variant">第6关</span>
-          <span class="text-sm"><span class="text-warning">★★</span><span class="text-outline-variant">★</span></span>
-          <span class="text-sm text-on-surface-variant">2024-03-20</span>
-          <div class="flex items-center justify-end gap-3">
-            <button class="btn-edit text-primary text-sm font-medium hover:underline" data-id="6">编辑</button>
-            <button class="btn-delete text-error text-sm font-medium hover:underline" data-id="6">删除</button>
-          </div>
-        </div>
-
-        <!-- 列表-题目7 -->
-        <div class="grid grid-cols-[60px_60px_1fr_80px_100px_120px_120px] px-5 py-3.5 hover:bg-surface-container/50 transition-colors items-center">
-          <span class="text-sm text-on-surface-variant">007</span>
-          <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-xs font-medium bg-warning/10 text-warning w-fit">多选</span>
-          <span class="text-sm font-medium text-on-surface truncate pr-4">以下哪些是低血糖的常见症状表现？</span>
-          <span class="text-sm text-on-surface-variant">第7关</span>
-          <span class="text-sm"><span class="text-warning">★</span><span class="text-outline-variant">★★</span></span>
-          <span class="text-sm text-on-surface-variant">2024-03-22</span>
-          <div class="flex items-center justify-end gap-3">
-            <button class="btn-edit text-primary text-sm font-medium hover:underline" data-id="7">编辑</button>
-            <button class="btn-delete text-error text-sm font-medium hover:underline" data-id="7">删除</button>
-          </div>
-        </div>
-
-        <!-- 列表-题目8 -->
-        <div class="grid grid-cols-[60px_60px_1fr_80px_100px_120px_120px] px-5 py-3.5 hover:bg-surface-container/50 transition-colors items-center">
-          <span class="text-sm text-on-surface-variant">008</span>
-          <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-xs font-medium bg-success/10 text-success w-fit">判断</span>
-          <span class="text-sm font-medium text-on-surface truncate pr-4">糖尿病患者可以无限制地食用水果，因为水果是健康食品。</span>
-          <span class="text-sm text-on-surface-variant">第8关</span>
-          <span class="text-sm"><span class="text-warning">★</span><span class="text-outline-variant">★★</span></span>
-          <span class="text-sm text-on-surface-variant">2024-03-25</span>
-          <div class="flex items-center justify-end gap-3">
-            <button class="btn-edit text-primary text-sm font-medium hover:underline" data-id="8">编辑</button>
-            <button class="btn-delete text-error text-sm font-medium hover:underline" data-id="8">删除</button>
-          </div>
-        </div>
-
-        <!-- 列表-题目9 -->
-        <div class="grid grid-cols-[60px_60px_1fr_80px_100px_120px_120px] px-5 py-3.5 hover:bg-surface-container/50 transition-colors items-center">
-          <span class="text-sm text-on-surface-variant">009</span>
-          <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-xs font-medium bg-primary/10 text-primary w-fit">单选</span>
-          <span class="text-sm font-medium text-on-surface truncate pr-4">二甲双胍最常见的不良反应是什么？</span>
-          <span class="text-sm text-on-surface-variant">第9关</span>
-          <span class="text-sm"><span class="text-warning">★★</span><span class="text-outline-variant">★</span></span>
-          <span class="text-sm text-on-surface-variant">2024-03-28</span>
-          <div class="flex items-center justify-end gap-3">
-            <button class="btn-edit text-primary text-sm font-medium hover:underline" data-id="9">编辑</button>
-            <button class="btn-delete text-error text-sm font-medium hover:underline" data-id="9">删除</button>
-          </div>
-        </div>
-
-        <!-- 列表-题目10 -->
-        <div class="grid grid-cols-[60px_60px_1fr_80px_100px_120px_120px] px-5 py-3.5 hover:bg-surface-container/50 transition-colors items-center">
-          <span class="text-sm text-on-surface-variant">010</span>
-          <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-xs font-medium bg-error/10 text-error w-fit">简答</span>
-          <span class="text-sm font-medium text-on-surface truncate pr-4">请阐述患者出现糖尿病足时的护理方案和注意事项。</span>
-          <span class="text-sm text-on-surface-variant">第10关</span>
-          <span class="text-sm"><span class="text-warning">★★★</span></span>
-          <span class="text-sm text-on-surface-variant">2024-04-01</span>
-          <div class="flex items-center justify-end gap-3">
-            <button class="btn-edit text-primary text-sm font-medium hover:underline" data-id="10">编辑</button>
-            <button class="btn-delete text-error text-sm font-medium hover:underline" data-id="10">删除</button>
-          </div>
-        </div>
-
-        <!-- 列表-题目11 -->
-        <div class="grid grid-cols-[60px_60px_1fr_80px_100px_120px_120px] px-5 py-3.5 hover:bg-surface-container/50 transition-colors items-center">
-          <span class="text-sm text-on-surface-variant">011</span>
-          <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-xs font-medium bg-warning/10 text-warning w-fit">多选</span>
-          <span class="text-sm font-medium text-on-surface truncate pr-4">以下哪些因素会导致血糖波动较大？</span>
-          <span class="text-sm text-on-surface-variant">第12关</span>
-          <span class="text-sm"><span class="text-warning">★★</span><span class="text-outline-variant">★</span></span>
-          <span class="text-sm text-on-surface-variant">2024-04-05</span>
-          <div class="flex items-center justify-end gap-3">
-            <button class="btn-edit text-primary text-sm font-medium hover:underline" data-id="11">编辑</button>
-            <button class="btn-delete text-error text-sm font-medium hover:underline" data-id="11">删除</button>
-          </div>
-        </div>
-
-        <!-- 列表-题目12 -->
-        <div class="grid grid-cols-[60px_60px_1fr_80px_100px_120px_120px] px-5 py-3.5 hover:bg-surface-container/50 transition-colors items-center">
-          <span class="text-sm text-on-surface-variant">012</span>
-          <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-xs font-medium bg-success/10 text-success w-fit">判断</span>
-          <span class="text-sm font-medium text-on-surface truncate pr-4">胰岛素储存时可以冷冻保存以延长保质期。</span>
-          <span class="text-sm text-on-surface-variant">第14关</span>
-          <span class="text-sm"><span class="text-warning">★</span><span class="text-outline-variant">★★</span></span>
-          <span class="text-sm text-on-surface-variant">2024-04-10</span>
-          <div class="flex items-center justify-end gap-3">
-            <button class="btn-edit text-primary text-sm font-medium hover:underline" data-id="12">编辑</button>
-            <button class="btn-delete text-error text-sm font-medium hover:underline" data-id="12">删除</button>
-          </div>
-        </div>
-
-        <!-- 列表-题目13 -->
-        <div class="grid grid-cols-[60px_60px_1fr_80px_100px_120px_120px] px-5 py-3.5 hover:bg-surface-container/50 transition-colors items-center">
-          <span class="text-sm text-on-surface-variant">013</span>
-          <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-xs font-medium bg-primary/10 text-primary w-fit">单选</span>
-          <span class="text-sm font-medium text-on-surface truncate pr-4">患者服用二甲双胍期间应定期监测哪项指标？</span>
-          <span class="text-sm text-on-surface-variant">第15关</span>
-          <span class="text-sm"><span class="text-warning">★★★</span></span>
-          <span class="text-sm text-on-surface-variant">2024-04-12</span>
-          <div class="flex items-center justify-end gap-3">
-            <button class="btn-edit text-primary text-sm font-medium hover:underline" data-id="13">编辑</button>
-            <button class="btn-delete text-error text-sm font-medium hover:underline" data-id="13">删除</button>
-          </div>
-        </div>
-
-        <!-- 列表-题目14 -->
-        <div class="grid grid-cols-[60px_60px_1fr_80px_100px_120px_120px] px-5 py-3.5 hover:bg-surface-container/50 transition-colors items-center">
-          <span class="text-sm text-on-surface-variant">014</span>
-          <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-xs font-medium bg-warning/10 text-warning w-fit">多选</span>
-          <span class="text-sm font-medium text-on-surface truncate pr-4">面诊邀约时应注意哪些沟通要点？</span>
-          <span class="text-sm text-on-surface-variant">第18关</span>
-          <span class="text-sm"><span class="text-warning">★★</span><span class="text-outline-variant">★</span></span>
-          <span class="text-sm text-on-surface-variant">2024-04-15</span>
-          <div class="flex items-center justify-end gap-3">
-            <button class="btn-edit text-primary text-sm font-medium hover:underline" data-id="14">编辑</button>
-            <button class="btn-delete text-error text-sm font-medium hover:underline" data-id="14">删除</button>
-          </div>
-        </div>
-
-        <!-- 列表-题目15 -->
-        <div class="grid grid-cols-[60px_60px_1fr_80px_100px_120px_120px] px-5 py-3.5 hover:bg-surface-container/50 transition-colors items-center">
-          <span class="text-sm text-on-surface-variant">015</span>
-          <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-xs font-medium bg-primary/10 text-primary w-fit">单选</span>
-          <span class="text-sm font-medium text-on-surface truncate pr-4">微信随访中患者最常提出的用药疑问是？</span>
-          <span class="text-sm text-on-surface-variant">第20关</span>
-          <span class="text-sm"><span class="text-warning">★★</span><span class="text-outline-variant">★</span></span>
-          <span class="text-sm text-on-surface-variant">2024-04-18</span>
-          <div class="flex items-center justify-end gap-3">
-            <button class="btn-edit text-primary text-sm font-medium hover:underline" data-id="15">编辑</button>
-            <button class="btn-delete text-error text-sm font-medium hover:underline" data-id="15">删除</button>
-          </div>
-        </div>
-
-        <!-- 列表-题目16 -->
-        <div class="grid grid-cols-[60px_60px_1fr_80px_100px_120px_120px] px-5 py-3.5 hover:bg-surface-container/50 transition-colors items-center">
-          <span class="text-sm text-on-surface-variant">016</span>
-          <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-xs font-medium bg-success/10 text-success w-fit">判断</span>
-          <span class="text-sm font-medium text-on-surface truncate pr-4">签收确认环节需要核实患者身份信息。</span>
-          <span class="text-sm text-on-surface-variant">第21关</span>
-          <span class="text-sm"><span class="text-warning">★★★</span></span>
-          <span class="text-sm text-on-surface-variant">2024-04-20</span>
-          <div class="flex items-center justify-end gap-3">
-            <button class="btn-edit text-primary text-sm font-medium hover:underline" data-id="16">编辑</button>
-            <button class="btn-delete text-error text-sm font-medium hover:underline" data-id="16">删除</button>
-          </div>
-        </div>
-
-        <!-- 列表-题目17 -->
-        <div class="grid grid-cols-[60px_60px_1fr_80px_100px_120px_120px] px-5 py-3.5 hover:bg-surface-container/50 transition-colors items-center">
-          <span class="text-sm text-on-surface-variant">017</span>
-          <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-xs font-medium bg-error/10 text-error w-fit">简答</span>
-          <span class="text-sm font-medium text-on-surface truncate pr-4">请说明新患者首次加微信的沟通流程和注意事项。</span>
-          <span class="text-sm text-on-surface-variant">第1关</span>
-          <span class="text-sm"><span class="text-warning">★★</span><span class="text-outline-variant">★</span></span>
-          <span class="text-sm text-on-surface-variant">2024-04-22</span>
-          <div class="flex items-center justify-end gap-3">
-            <button class="btn-edit text-primary text-sm font-medium hover:underline" data-id="17">编辑</button>
-            <button class="btn-delete text-error text-sm font-medium hover:underline" data-id="17">删除</button>
-          </div>
-        </div>
-
-        <!-- 列表-题目18 -->
-        <div class="grid grid-cols-[60px_60px_1fr_80px_100px_120px_120px] px-5 py-3.5 hover:bg-surface-container/50 transition-colors items-center">
-          <span class="text-sm text-on-surface-variant">018</span>
-          <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-xs font-medium bg-warning/10 text-warning w-fit">多选</span>
-          <span class="text-sm font-medium text-on-surface truncate pr-4">用药关怀环节应关注患者哪些方面的反馈？</span>
-          <span class="text-sm text-on-surface-variant">第3关</span>
-          <span class="text-sm"><span class="text-warning">★★★</span></span>
-          <span class="text-sm text-on-surface-variant">2024-04-25</span>
-          <div class="flex items-center justify-end gap-3">
-            <button class="btn-edit text-primary text-sm font-medium hover:underline" data-id="18">编辑</button>
-            <button class="btn-delete text-error text-sm font-medium hover:underline" data-id="18">删除</button>
-          </div>
-        </div>
-
-        <!-- 列表-题目19 -->
-        <div class="grid grid-cols-[60px_60px_1fr_80px_100px_120px_120px] px-5 py-3.5 hover:bg-surface-container/50 transition-colors items-center">
-          <span class="text-sm text-on-surface-variant">019</span>
-          <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-xs font-medium bg-primary/10 text-primary w-fit">单选</span>
-          <span class="text-sm font-medium text-on-surface truncate pr-4">复诊邀约时以下哪种说法更合适？</span>
-          <span class="text-sm text-on-surface-variant">第11关</span>
-          <span class="text-sm"><span class="text-warning">★★</span><span class="text-outline-variant">★</span></span>
-          <span class="text-sm text-on-surface-variant">2024-04-28</span>
-          <div class="flex items-center justify-end gap-3">
-            <button class="btn-edit text-primary text-sm font-medium hover:underline" data-id="19">编辑</button>
-            <button class="btn-delete text-error text-sm font-medium hover:underline" data-id="19">删除</button>
-          </div>
-        </div>
-
-        <!-- 列表-题目20 -->
-        <div class="grid grid-cols-[60px_60px_1fr_80px_100px_120px_120px] px-5 py-3.5 hover:bg-surface-container/50 transition-colors items-center">
-          <span class="text-sm text-on-surface-variant">020</span>
-          <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-xs font-medium bg-success/10 text-success w-fit">判断</span>
-          <span class="text-sm font-medium text-on-surface truncate pr-4">续方确认时可以直接替患者下单药品。</span>
-          <span class="text-sm text-on-surface-variant">第16关</span>
-          <span class="text-sm"><span class="text-warning">★★</span><span class="text-outline-variant">★</span></span>
-          <span class="text-sm text-on-surface-variant">2024-05-01</span>
-          <div class="flex items-center justify-end gap-3">
-            <button class="btn-edit text-primary text-sm font-medium hover:underline" data-id="20">编辑</button>
-            <button class="btn-delete text-error text-sm font-medium hover:underline" data-id="20">删除</button>
-          </div>
-        </div>
-
       </div>
 
-      <!-- 分页 -->
-      <div class="flex items-center justify-between px-5 py-3.5 border-t border-outline-variant/20">
-        <span class="text-sm text-on-surface-variant">共 685 条题目，第 1/35 页</span>
-        <div class="flex items-center gap-1">
-          <button id="page-prev" class="px-3 py-1.5 rounded-md text-sm text-on-surface-variant bg-surface-container hover:bg-surface-container-high transition-colors" disabled>上一页</button>
-          <button class="page-btn px-3 py-1.5 rounded-md text-sm font-medium text-on-primary bg-primary transition-colors" data-page="1">1</button>
-          <button class="page-btn px-3 py-1.5 rounded-md text-sm text-on-surface-variant bg-surface-container hover:bg-surface-container-high transition-colors" data-page="2">2</button>
-          <button class="page-btn px-3 py-1.5 rounded-md text-sm text-on-surface-variant bg-surface-container hover:bg-surface-container-high transition-colors" data-page="3">3</button>
-          <span class="px-2 text-sm text-on-surface-variant">...</span>
-          <button class="page-btn px-3 py-1.5 rounded-md text-sm text-on-surface-variant bg-surface-container hover:bg-surface-container-high transition-colors" data-page="35">35</button>
-          <button id="page-next" class="px-3 py-1.5 rounded-md text-sm text-on-surface-variant bg-surface-container hover:bg-surface-container-high transition-colors">下一页</button>
+      <!-- 关卡2：企业文化 -->
+      <div class="question-group">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="inline-flex items-center justify-center w-6 h-6 rounded-md bg-primary/10 text-primary text-xs font-bold">2</span>
+          <h2 class="text-base font-semibold text-on-surface">第2关：企业文化</h2>
+          <span class="text-xs text-on-surface-variant">3 道题</span>
+        </div>
+        <div class="bg-surface rounded-lg shadow-card overflow-hidden">
+          <div class="grid grid-cols-12 px-4 py-3 bg-surface-container text-xs font-semibold text-on-surface-variant uppercase tracking-wide">
+            <span class="col-span-4">题目内容</span>
+            <span class="col-span-1">题型</span>
+            <span class="col-span-1">难度</span>
+            <span class="col-span-2">创建者</span>
+            <span class="col-span-2">审核状态</span>
+            <span class="col-span-2">操作</span>
+          </div>
+          <div class="divide-y divide-outline-variant/30">
+            <!-- 列表-关卡2题目1 -->
+            <div class="grid grid-cols-12 px-4 py-3 hover:bg-surface-container/50 transition-colors items-center" data-id="5" data-status="approved" data-level="2" data-type="single">
+              <span class="col-span-4 text-sm font-medium text-on-surface truncate pr-2">"以客户为中心"是百芝堂哪一层面的文化理念？</span>
+              <span class="col-span-1"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-info/15 text-info">单选</span></span>
+              <span class="col-span-1 text-sm text-on-surface-variant">★2</span>
+              <span class="col-span-2 text-sm text-on-surface-variant">王主任</span>
+              <span class="col-span-2"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已通过</span></span>
+              <div class="col-span-2 flex gap-2">
+                <button class="btn-edit text-primary text-sm font-medium hover:underline" data-id="5">编辑</button>
+              </div>
+            </div>
+            <!-- 列表-关卡2题目2 -->
+            <div class="grid grid-cols-12 px-4 py-3 hover:bg-surface-container/50 transition-colors items-center" data-id="6" data-status="pending_review" data-level="2" data-type="multiple">
+              <span class="col-span-4 text-sm font-medium text-on-surface truncate pr-2">百芝堂企业文化的三大核心要素包括哪些？</span>
+              <span class="col-span-1"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-primary/15 text-primary">多选</span></span>
+              <span class="col-span-1 text-sm text-on-surface-variant">★4</span>
+              <span class="col-span-2 text-sm text-on-surface-variant">张老师</span>
+              <span class="col-span-2"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-warning/15 text-warning">待审核</span></span>
+              <div class="col-span-2 flex gap-2">
+                <button class="btn-edit text-primary text-sm font-medium hover:underline" data-id="6">编辑</button>
+                <button class="btn-approve text-success text-sm font-medium hover:underline" data-id="6">通过</button>
+                <button class="btn-reject text-error text-sm font-medium hover:underline" data-id="6">拒绝</button>
+              </div>
+            </div>
+            <!-- 列表-关卡2题目3 -->
+            <div class="grid grid-cols-12 px-4 py-3 hover:bg-surface-container/50 transition-colors items-center" data-id="7" data-status="approved" data-level="2" data-type="judge">
+              <span class="col-span-4 text-sm font-medium text-on-surface truncate pr-2">百芝堂倡导"诚信为本、品质至上"的企业精神。</span>
+              <span class="col-span-1"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-warning/15 text-warning">判断</span></span>
+              <span class="col-span-1 text-sm text-on-surface-variant">★1</span>
+              <span class="col-span-2 text-sm text-on-surface-variant">李老师</span>
+              <span class="col-span-2"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已通过</span></span>
+              <div class="col-span-2 flex gap-2">
+                <button class="btn-edit text-primary text-sm font-medium hover:underline" data-id="7">编辑</button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+
+      <!-- 关卡3：规章制度 -->
+      <div class="question-group">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="inline-flex items-center justify-center w-6 h-6 rounded-md bg-primary/10 text-primary text-xs font-bold">3</span>
+          <h2 class="text-base font-semibold text-on-surface">第3关：规章制度</h2>
+          <span class="text-xs text-on-surface-variant">4 道题</span>
+        </div>
+        <div class="bg-surface rounded-lg shadow-card overflow-hidden">
+          <div class="grid grid-cols-12 px-4 py-3 bg-surface-container text-xs font-semibold text-on-surface-variant uppercase tracking-wide">
+            <span class="col-span-4">题目内容</span>
+            <span class="col-span-1">题型</span>
+            <span class="col-span-1">难度</span>
+            <span class="col-span-2">创建者</span>
+            <span class="col-span-2">审核状态</span>
+            <span class="col-span-2">操作</span>
+          </div>
+          <div class="divide-y divide-outline-variant/30">
+            <!-- 列表-关卡3题目1 -->
+            <div class="grid grid-cols-12 px-4 py-3 hover:bg-surface-container/50 transition-colors items-center" data-id="8" data-status="approved" data-level="3" data-type="single">
+              <span class="col-span-4 text-sm font-medium text-on-surface truncate pr-2">员工试用期一般为多长时间？</span>
+              <span class="col-span-1"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-info/15 text-info">单选</span></span>
+              <span class="col-span-1 text-sm text-on-surface-variant">★2</span>
+              <span class="col-span-2 text-sm text-on-surface-variant">王主任</span>
+              <span class="col-span-2"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已通过</span></span>
+              <div class="col-span-2 flex gap-2">
+                <button class="btn-edit text-primary text-sm font-medium hover:underline" data-id="8">编辑</button>
+              </div>
+            </div>
+            <!-- 列表-关卡3题目2 -->
+            <div class="grid grid-cols-12 px-4 py-3 hover:bg-surface-container/50 transition-colors items-center" data-id="9" data-status="rejected" data-level="3" data-type="single">
+              <span class="col-span-4 text-sm font-medium text-on-surface truncate pr-2">员工迟到一次扣多少工资？</span>
+              <span class="col-span-1"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-info/15 text-info">单选</span></span>
+              <span class="col-span-1 text-sm text-on-surface-variant">★2</span>
+              <span class="col-span-2 text-sm text-on-surface-variant">张老师</span>
+              <span class="col-span-2"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-error/15 text-error">已拒绝</span></span>
+              <div class="col-span-2 flex gap-2">
+                <button class="btn-edit text-primary text-sm font-medium hover:underline" data-id="9">编辑</button>
+              </div>
+            </div>
+            <!-- 列表-关卡3题目3 -->
+            <div class="grid grid-cols-12 px-4 py-3 hover:bg-surface-container/50 transition-colors items-center" data-id="10" data-status="pending_review" data-level="3" data-type="judge">
+              <span class="col-span-4 text-sm font-medium text-on-surface truncate pr-2">员工加班需提前申请并获得部门主管批准。</span>
+              <span class="col-span-1"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-warning/15 text-warning">判断</span></span>
+              <span class="col-span-1 text-sm text-on-surface-variant">★3</span>
+              <span class="col-span-2 text-sm text-on-surface-variant">李老师</span>
+              <span class="col-span-2"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-warning/15 text-warning">待审核</span></span>
+              <div class="col-span-2 flex gap-2">
+                <button class="btn-edit text-primary text-sm font-medium hover:underline" data-id="10">编辑</button>
+                <button class="btn-approve text-success text-sm font-medium hover:underline" data-id="10">通过</button>
+                <button class="btn-reject text-error text-sm font-medium hover:underline" data-id="10">拒绝</button>
+              </div>
+            </div>
+            <!-- 列表-关卡3题目4 -->
+            <div class="grid grid-cols-12 px-4 py-3 hover:bg-surface-container/50 transition-colors items-center" data-id="11" data-status="approved" data-level="3" data-type="multiple">
+              <span class="col-span-4 text-sm font-medium text-on-surface truncate pr-2">以下哪些属于员工考勤制度规定的迟到情形？</span>
+              <span class="col-span-1"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-primary/15 text-primary">多选</span></span>
+              <span class="col-span-1 text-sm text-on-surface-variant">★3</span>
+              <span class="col-span-2 text-sm text-on-surface-variant">王主任</span>
+              <span class="col-span-2"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已通过</span></span>
+              <div class="col-span-2 flex gap-2">
+                <button class="btn-edit text-primary text-sm font-medium hover:underline" data-id="11">编辑</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 关卡4：产品知识 -->
+      <div class="question-group">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="inline-flex items-center justify-center w-6 h-6 rounded-md bg-primary/10 text-primary text-xs font-bold">4</span>
+          <h2 class="text-base font-semibold text-on-surface">第4关：产品知识</h2>
+          <span class="text-xs text-on-surface-variant">5 道题</span>
+        </div>
+        <div class="bg-surface rounded-lg shadow-card overflow-hidden">
+          <div class="grid grid-cols-12 px-4 py-3 bg-surface-container text-xs font-semibold text-on-surface-variant uppercase tracking-wide">
+            <span class="col-span-4">题目内容</span>
+            <span class="col-span-1">题型</span>
+            <span class="col-span-1">难度</span>
+            <span class="col-span-2">创建者</span>
+            <span class="col-span-2">审核状态</span>
+            <span class="col-span-2">操作</span>
+          </div>
+          <div class="divide-y divide-outline-variant/30">
+            <!-- 列表-关卡4题目1 -->
+            <div class="grid grid-cols-12 px-4 py-3 hover:bg-surface-container/50 transition-colors items-center" data-id="12" data-status="approved" data-level="4" data-type="single">
+              <span class="col-span-4 text-sm font-medium text-on-surface truncate pr-2">百芝堂主打产品"百芝灵"的主要成分是什么？</span>
+              <span class="col-span-1"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-info/15 text-info">单选</span></span>
+              <span class="col-span-1 text-sm text-on-surface-variant">★3</span>
+              <span class="col-span-2 text-sm text-on-surface-variant">王主任</span>
+              <span class="col-span-2"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已通过</span></span>
+              <div class="col-span-2 flex gap-2">
+                <button class="btn-edit text-primary text-sm font-medium hover:underline" data-id="12">编辑</button>
+              </div>
+            </div>
+            <!-- 列表-关卡4题目2 -->
+            <div class="grid grid-cols-12 px-4 py-3 hover:bg-surface-container/50 transition-colors items-center" data-id="13" data-status="approved" data-level="4" data-type="multiple">
+              <span class="col-span-4 text-sm font-medium text-on-surface truncate pr-2">以下哪些是百芝堂产品线的核心优势？</span>
+              <span class="col-span-1"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-primary/15 text-primary">多选</span></span>
+              <span class="col-span-1 text-sm text-on-surface-variant">★4</span>
+              <span class="col-span-2 text-sm text-on-surface-variant">王主任</span>
+              <span class="col-span-2"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已通过</span></span>
+              <div class="col-span-2 flex gap-2">
+                <button class="btn-edit text-primary text-sm font-medium hover:underline" data-id="13">编辑</button>
+              </div>
+            </div>
+            <!-- 列表-关卡4题目3 -->
+            <div class="grid grid-cols-12 px-4 py-3 hover:bg-surface-container/50 transition-colors items-center" data-id="14" data-status="pending_review" data-level="4" data-type="single">
+              <span class="col-span-4 text-sm font-medium text-on-surface truncate pr-2">百芝堂产品的GMP认证是在哪一年获得的？</span>
+              <span class="col-span-1"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-info/15 text-info">单选</span></span>
+              <span class="col-span-1 text-sm text-on-surface-variant">★4</span>
+              <span class="col-span-2 text-sm text-on-surface-variant">张老师</span>
+              <span class="col-span-2"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-warning/15 text-warning">待审核</span></span>
+              <div class="col-span-2 flex gap-2">
+                <button class="btn-edit text-primary text-sm font-medium hover:underline" data-id="14">编辑</button>
+                <button class="btn-approve text-success text-sm font-medium hover:underline" data-id="14">通过</button>
+                <button class="btn-reject text-error text-sm font-medium hover:underline" data-id="14">拒绝</button>
+              </div>
+            </div>
+            <!-- 列表-关卡4题目4 -->
+            <div class="grid grid-cols-12 px-4 py-3 hover:bg-surface-container/50 transition-colors items-center" data-id="15" data-status="approved" data-level="4" data-type="judge">
+              <span class="col-span-4 text-sm font-medium text-on-surface truncate pr-2">百芝堂所有产品均已通过国家食品药品监督管理局认证。</span>
+              <span class="col-span-1"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-warning/15 text-warning">判断</span></span>
+              <span class="col-span-1 text-sm text-on-surface-variant">★2</span>
+              <span class="col-span-2 text-sm text-on-surface-variant">李老师</span>
+              <span class="col-span-2"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已通过</span></span>
+              <div class="col-span-2 flex gap-2">
+                <button class="btn-edit text-primary text-sm font-medium hover:underline" data-id="15">编辑</button>
+              </div>
+            </div>
+            <!-- 列表-关卡4题目5 -->
+            <div class="grid grid-cols-12 px-4 py-3 hover:bg-surface-container/50 transition-colors items-center" data-id="16" data-status="approved" data-level="4" data-type="single">
+              <span class="col-span-4 text-sm font-medium text-on-surface truncate pr-2">百芝堂灵芝孢子粉的推荐服用剂量是每日几粒？</span>
+              <span class="col-span-1"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-info/15 text-info">单选</span></span>
+              <span class="col-span-1 text-sm text-on-surface-variant">★3</span>
+              <span class="col-span-2 text-sm text-on-surface-variant">王主任</span>
+              <span class="col-span-2"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已通过</span></span>
+              <div class="col-span-2 flex gap-2">
+                <button class="btn-edit text-primary text-sm font-medium hover:underline" data-id="16">编辑</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 关卡5：服务规范 -->
+      <div class="question-group">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="inline-flex items-center justify-center w-6 h-6 rounded-md bg-primary/10 text-primary text-xs font-bold">5</span>
+          <h2 class="text-base font-semibold text-on-surface">第5关：服务规范</h2>
+          <span class="text-xs text-on-surface-variant">3 道题</span>
+        </div>
+        <div class="bg-surface rounded-lg shadow-card overflow-hidden">
+          <div class="grid grid-cols-12 px-4 py-3 bg-surface-container text-xs font-semibold text-on-surface-variant uppercase tracking-wide">
+            <span class="col-span-4">题目内容</span>
+            <span class="col-span-1">题型</span>
+            <span class="col-span-1">难度</span>
+            <span class="col-span-2">创建者</span>
+            <span class="col-span-2">审核状态</span>
+            <span class="col-span-2">操作</span>
+          </div>
+          <div class="divide-y divide-outline-variant/30">
+            <!-- 列表-关卡5题目1 -->
+            <div class="grid grid-cols-12 px-4 py-3 hover:bg-surface-container/50 transition-colors items-center" data-id="17" data-status="approved" data-level="5" data-type="single">
+              <span class="col-span-4 text-sm font-medium text-on-surface truncate pr-2">客户投诉时，服务人员应首先采取的行动是？</span>
+              <span class="col-span-1"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-info/15 text-info">单选</span></span>
+              <span class="col-span-1 text-sm text-on-surface-variant">★3</span>
+              <span class="col-span-2 text-sm text-on-surface-variant">王主任</span>
+              <span class="col-span-2"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已通过</span></span>
+              <div class="col-span-2 flex gap-2">
+                <button class="btn-edit text-primary text-sm font-medium hover:underline" data-id="17">编辑</button>
+              </div>
+            </div>
+            <!-- 列表-关卡5题目2 -->
+            <div class="grid grid-cols-12 px-4 py-3 hover:bg-surface-container/50 transition-colors items-center" data-id="18" data-status="approved" data-level="5" data-type="multiple">
+              <span class="col-span-4 text-sm font-medium text-on-surface truncate pr-2">服务人员的仪容仪表规范包括以下哪些？</span>
+              <span class="col-span-1"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-primary/15 text-primary">多选</span></span>
+              <span class="col-span-1 text-sm text-on-surface-variant">★2</span>
+              <span class="col-span-2 text-sm text-on-surface-variant">李老师</span>
+              <span class="col-span-2"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已通过</span></span>
+              <div class="col-span-2 flex gap-2">
+                <button class="btn-edit text-primary text-sm font-medium hover:underline" data-id="18">编辑</button>
+              </div>
+            </div>
+            <!-- 列表-关卡5题目3 -->
+            <div class="grid grid-cols-12 px-4 py-3 hover:bg-surface-container/50 transition-colors items-center" data-id="19" data-status="approved" data-level="5" data-type="judge">
+              <span class="col-span-4 text-sm font-medium text-on-surface truncate pr-2">服务人员在接待客户时可以查看手机信息。</span>
+              <span class="col-span-1"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-warning/15 text-warning">判断</span></span>
+              <span class="col-span-1 text-sm text-on-surface-variant">★1</span>
+              <span class="col-span-2 text-sm text-on-surface-variant">王主任</span>
+              <span class="col-span-2"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已通过</span></span>
+              <div class="col-span-2 flex gap-2">
+                <button class="btn-edit text-primary text-sm font-medium hover:underline" data-id="19">编辑</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 关卡6：应急处理 -->
+      <div class="question-group">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="inline-flex items-center justify-center w-6 h-6 rounded-md bg-primary/10 text-primary text-xs font-bold">6</span>
+          <h2 class="text-base font-semibold text-on-surface">第6关：应急处理</h2>
+          <span class="text-xs text-on-surface-variant">3 道题</span>
+        </div>
+        <div class="bg-surface rounded-lg shadow-card overflow-hidden">
+          <div class="grid grid-cols-12 px-4 py-3 bg-surface-container text-xs font-semibold text-on-surface-variant uppercase tracking-wide">
+            <span class="col-span-4">题目内容</span>
+            <span class="col-span-1">题型</span>
+            <span class="col-span-1">难度</span>
+            <span class="col-span-2">创建者</span>
+            <span class="col-span-2">审核状态</span>
+            <span class="col-span-2">操作</span>
+          </div>
+          <div class="divide-y divide-outline-variant/30">
+            <!-- 列表-关卡6题目1 -->
+            <div class="grid grid-cols-12 px-4 py-3 hover:bg-surface-container/50 transition-colors items-center" data-id="20" data-status="approved" data-level="6" data-type="single">
+              <span class="col-span-4 text-sm font-medium text-on-surface truncate pr-2">发生火灾时，员工应首先执行哪项操作？</span>
+              <span class="col-span-1"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-info/15 text-info">单选</span></span>
+              <span class="col-span-1 text-sm text-on-surface-variant">★5</span>
+              <span class="col-span-2 text-sm text-on-surface-variant">王主任</span>
+              <span class="col-span-2"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已通过</span></span>
+              <div class="col-span-2 flex gap-2">
+                <button class="btn-edit text-primary text-sm font-medium hover:underline" data-id="20">编辑</button>
+              </div>
+            </div>
+            <!-- 列表-关卡6题目2 -->
+            <div class="grid grid-cols-12 px-4 py-3 hover:bg-surface-container/50 transition-colors items-center" data-id="21" data-status="rejected" data-level="6" data-type="multiple">
+              <span class="col-span-4 text-sm font-medium text-on-surface truncate pr-2">以下哪些属于紧急情况的正确处理方式？</span>
+              <span class="col-span-1"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-primary/15 text-primary">多选</span></span>
+              <span class="col-span-1 text-sm text-on-surface-variant">★5</span>
+              <span class="col-span-2 text-sm text-on-surface-variant">张老师</span>
+              <span class="col-span-2"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-error/15 text-error">已拒绝</span></span>
+              <div class="col-span-2 flex gap-2">
+                <button class="btn-edit text-primary text-sm font-medium hover:underline" data-id="21">编辑</button>
+              </div>
+            </div>
+            <!-- 列表-关卡6题目3 -->
+            <div class="grid grid-cols-12 px-4 py-3 hover:bg-surface-container/50 transition-colors items-center" data-id="22" data-status="approved" data-level="6" data-type="judge">
+              <span class="col-span-4 text-sm font-medium text-on-surface truncate pr-2">遇突发停电，应立即疏散所有人员离开大楼。</span>
+              <span class="col-span-1"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-warning/15 text-warning">判断</span></span>
+              <span class="col-span-1 text-sm text-on-surface-variant">★4</span>
+              <span class="col-span-2 text-sm text-on-surface-variant">王主任</span>
+              <span class="col-span-2"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已通过</span></span>
+              <div class="col-span-2 flex gap-2">
+                <button class="btn-edit text-primary text-sm font-medium hover:underline" data-id="22">编辑</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /list-all -->
+
+    <!-- 待审核题目列表 -->
+    <div id="list-pending" class="hidden">
+      <div class="bg-surface rounded-lg shadow-card overflow-hidden">
+        <div class="grid grid-cols-12 px-4 py-3 bg-surface-container text-xs font-semibold text-on-surface-variant uppercase tracking-wide">
+          <span class="col-span-4">题目内容</span>
+          <span class="col-span-1">题型</span>
+          <span class="col-span-1">难度</span>
+          <span class="col-span-1">关卡</span>
+          <span class="col-span-2">创建者</span>
+          <span class="col-span-3">操作</span>
+        </div>
+        <div class="divide-y divide-outline-variant/30">
+          <!-- 待审核-题目1 -->
+          <div class="grid grid-cols-12 px-4 py-3 hover:bg-surface-container/50 transition-colors items-center" data-id="3" data-status="pending_review">
+            <span class="col-span-4 text-sm font-medium text-on-surface truncate pr-2">百芝堂集团的核心价值观是什么？</span>
+            <span class="col-span-1"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-info/15 text-info">单选</span></span>
+            <span class="col-span-1 text-sm text-on-surface-variant">★3</span>
+            <span class="col-span-1 text-sm text-on-surface-variant">第1关</span>
+            <span class="col-span-2 text-sm text-on-surface-variant">张老师</span>
+            <div class="col-span-3 flex gap-2">
+              <button class="btn-edit text-primary text-sm font-medium hover:underline" data-id="3">编辑</button>
+              <button class="btn-approve text-success text-sm font-medium hover:underline" data-id="3">通过</button>
+              <button class="btn-reject text-error text-sm font-medium hover:underline" data-id="3">拒绝</button>
+            </div>
+          </div>
+          <!-- 待审核-题目2 -->
+          <div class="grid grid-cols-12 px-4 py-3 hover:bg-surface-container/50 transition-colors items-center" data-id="6" data-status="pending_review">
+            <span class="col-span-4 text-sm font-medium text-on-surface truncate pr-2">百芝堂企业文化的三大核心要素包括哪些？</span>
+            <span class="col-span-1"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-primary/15 text-primary">多选</span></span>
+            <span class="col-span-1 text-sm text-on-surface-variant">★4</span>
+            <span class="col-span-1 text-sm text-on-surface-variant">第2关</span>
+            <span class="col-span-2 text-sm text-on-surface-variant">张老师</span>
+            <div class="col-span-3 flex gap-2">
+              <button class="btn-edit text-primary text-sm font-medium hover:underline" data-id="6">编辑</button>
+              <button class="btn-approve text-success text-sm font-medium hover:underline" data-id="6">通过</button>
+              <button class="btn-reject text-error text-sm font-medium hover:underline" data-id="6">拒绝</button>
+            </div>
+          </div>
+          <!-- 待审核-题目3 -->
+          <div class="grid grid-cols-12 px-4 py-3 hover:bg-surface-container/50 transition-colors items-center" data-id="10" data-status="pending_review">
+            <span class="col-span-4 text-sm font-medium text-on-surface truncate pr-2">员工加班需提前申请并获得部门主管批准。</span>
+            <span class="col-span-1"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-warning/15 text-warning">判断</span></span>
+            <span class="col-span-1 text-sm text-on-surface-variant">★3</span>
+            <span class="col-span-1 text-sm text-on-surface-variant">第3关</span>
+            <span class="col-span-2 text-sm text-on-surface-variant">李老师</span>
+            <div class="col-span-3 flex gap-2">
+              <button class="btn-edit text-primary text-sm font-medium hover:underline" data-id="10">编辑</button>
+              <button class="btn-approve text-success text-sm font-medium hover:underline" data-id="10">通过</button>
+              <button class="btn-reject text-error text-sm font-medium hover:underline" data-id="10">拒绝</button>
+            </div>
+          </div>
+          <!-- 待审核-题目4 -->
+          <div class="grid grid-cols-12 px-4 py-3 hover:bg-surface-container/50 transition-colors items-center" data-id="14" data-status="pending_review">
+            <span class="col-span-4 text-sm font-medium text-on-surface truncate pr-2">百芝堂产品的GMP认证是在哪一年获得的？</span>
+            <span class="col-span-1"><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-info/15 text-info">单选</span></span>
+            <span class="col-span-1 text-sm text-on-surface-variant">★4</span>
+            <span class="col-span-1 text-sm text-on-surface-variant">第4关</span>
+            <span class="col-span-2 text-sm text-on-surface-variant">张老师</span>
+            <div class="col-span-3 flex gap-2">
+              <button class="btn-edit text-primary text-sm font-medium hover:underline" data-id="14">编辑</button>
+              <button class="btn-approve text-success text-sm font-medium hover:underline" data-id="14">通过</button>
+              <button class="btn-reject text-error text-sm font-medium hover:underline" data-id="14">拒绝</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /list-pending -->
 
     <!-- @main-content:end -->
   </main>
-  </div>
 
-  <!-- 添加题目弹窗 -->
-  <div id="modal-add-question" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 hidden">
-    <div class="bg-surface rounded-xl shadow-dialog max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
-      <div class="flex items-center justify-between mb-5">
-        <h2 class="text-lg font-bold text-on-surface">添加题目</h2>
-        <button id="btn-close-modal" class="w-8 h-8 rounded-md flex items-center justify-center text-on-surface-variant hover:bg-surface-container transition-colors">
-          <i data-lucide="x" class="w-4 h-4"></i>
-        </button>
+  <!-- 新增/编辑题目弹窗 -->
+  <div id="modal-question-form" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-surface rounded-xl shadow-dialog max-w-lg w-full max-h-[90vh] overflow-y-auto">
+      <div class="px-6 pt-6 pb-4 border-b border-outline-variant/20">
+        <div class="flex items-center justify-between">
+          <h2 id="modal-title" class="text-lg font-semibold text-on-surface">新增题目</h2>
+          <button id="btn-close-modal" class="text-on-surface-variant hover:text-on-surface transition-colors">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
       </div>
-
-      <div class="space-y-4">
-        <!-- 题型选择 -->
+      <div class="px-6 py-5 space-y-4">
+        <!-- 所属关卡 -->
+        <div>
+          <label class="block text-sm font-medium text-on-surface mb-1.5">所属关卡</label>
+          <select id="form-level" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors">
+            <option value="">请选择关卡</option>
+            <option value="1">第1关：公司简介</option>
+            <option value="2">第2关：企业文化</option>
+            <option value="3">第3关：规章制度</option>
+            <option value="4">第4关：产品知识</option>
+            <option value="5">第5关：服务规范</option>
+            <option value="6">第6关：应急处理</option>
+          </select>
+        </div>
+        <!-- 题型 -->
         <div>
           <label class="block text-sm font-medium text-on-surface mb-1.5">题型</label>
-          <select id="form-question-type" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors">
-            <option value="choice">选择题</option>
-            <option value="multi">多选题</option>
+          <select id="form-type" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors">
+            <option value="single">单选题</option>
+            <option value="multiple">多选题</option>
             <option value="judge">判断题</option>
-            <option value="essay">简答题</option>
           </select>
         </div>
-
-        <!-- 关卡选择 -->
+        <!-- 题目内容 -->
         <div>
-          <label class="block text-sm font-medium text-on-surface mb-1.5">关卡</label>
-          <select id="form-level" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors">
-            <option value="1">第1关</option>
-            <option value="2">第2关</option>
-            <option value="3">第3关</option>
-            <option value="4">第4关</option>
-            <option value="5">第5关</option>
-            <option value="6">第6关</option>
-            <option value="7">第7关</option>
-            <option value="8">第8关</option>
-            <option value="9">第9关</option>
-            <option value="10">第10关</option>
-            <option value="11">第11关</option>
-            <option value="12">第12关</option>
-            <option value="13">第13关</option>
-            <option value="14">第14关</option>
-            <option value="15">第15关</option>
-            <option value="16">第16关</option>
-            <option value="17">第17关</option>
-            <option value="18">第18关</option>
-            <option value="19">第19关</option>
-            <option value="20">第20关</option>
-            <option value="21">第21关</option>
-          </select>
+          <label class="block text-sm font-medium text-on-surface mb-1.5">题目内容</label>
+          <textarea id="form-content" rows="3" placeholder="请输入题目内容" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors resize-none"></textarea>
         </div>
-
-        <!-- 难度选择 -->
-        <div>
-          <label class="block text-sm font-medium text-on-surface mb-1.5">难度</label>
-          <select id="form-difficulty" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors">
-            <option value="1">★ 简单</option>
-            <option value="2">★★ 中等</option>
-            <option value="3">★★★ 困难</option>
-          </select>
-        </div>
-
-        <!-- 题干输入 -->
-        <div>
-          <label class="block text-sm font-medium text-on-surface mb-1.5">题干</label>
-          <textarea id="form-content" rows="4" placeholder="请输入题干内容..." class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors resize-none"></textarea>
-        </div>
-
-        <!-- 选项输入区（选择题/多选题时显示） -->
+        <!-- 选项区（单选/多选时显示） -->
         <div id="form-options-area">
-          <div class="flex items-center justify-between mb-2">
-            <label class="text-sm font-medium text-on-surface">选项</label>
-            <button id="btn-add-option" class="text-primary text-sm font-medium hover:underline inline-flex items-center gap-1">
-              <i data-lucide="plus" class="w-3 h-3"></i>添加选项
-            </button>
-          </div>
-          <div id="form-options-list" class="space-y-2">
-            <!-- 选项A -->
-            <div class="flex items-center gap-2 option-item">
+          <label class="block text-sm font-medium text-on-surface mb-1.5">选项</label>
+          <div class="space-y-2">
+            <div class="flex items-center gap-2">
               <span class="text-sm font-medium text-on-surface-variant w-6 shrink-0">A</span>
-              <input type="text" placeholder="选项A内容" class="flex-1 bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"/>
-              <label class="flex items-center gap-1 shrink-0 cursor-pointer">
-                <input type="radio" name="correct-answer" value="A" class="accent-primary"/>
-                <span class="text-xs text-on-surface-variant">正确</span>
-              </label>
+              <input id="form-option-a" type="text" placeholder="选项A" class="flex-1 bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"/>
             </div>
-            <!-- 选项B -->
-            <div class="flex items-center gap-2 option-item">
+            <div class="flex items-center gap-2">
               <span class="text-sm font-medium text-on-surface-variant w-6 shrink-0">B</span>
-              <input type="text" placeholder="选项B内容" class="flex-1 bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"/>
-              <label class="flex items-center gap-1 shrink-0 cursor-pointer">
-                <input type="radio" name="correct-answer" value="B" class="accent-primary"/>
-                <span class="text-xs text-on-surface-variant">正确</span>
-              </label>
+              <input id="form-option-b" type="text" placeholder="选项B" class="flex-1 bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"/>
             </div>
-            <!-- 选项C -->
-            <div class="flex items-center gap-2 option-item">
+            <div class="flex items-center gap-2">
               <span class="text-sm font-medium text-on-surface-variant w-6 shrink-0">C</span>
-              <input type="text" placeholder="选项C内容" class="flex-1 bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"/>
-              <label class="flex items-center gap-1 shrink-0 cursor-pointer">
-                <input type="radio" name="correct-answer" value="C" class="accent-primary"/>
-                <span class="text-xs text-on-surface-variant">正确</span>
-              </label>
+              <input id="form-option-c" type="text" placeholder="选项C" class="flex-1 bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"/>
             </div>
-            <!-- 选项D -->
-            <div class="flex items-center gap-2 option-item">
+            <div class="flex items-center gap-2">
               <span class="text-sm font-medium text-on-surface-variant w-6 shrink-0">D</span>
-              <input type="text" placeholder="选项D内容" class="flex-1 bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"/>
-              <label class="flex items-center gap-1 shrink-0 cursor-pointer">
-                <input type="radio" name="correct-answer" value="D" class="accent-primary"/>
-                <span class="text-xs text-on-surface-variant">正确</span>
-              </label>
+              <input id="form-option-d" type="text" placeholder="选项D" class="flex-1 bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"/>
             </div>
           </div>
         </div>
-
-        <!-- 判断题答案区（判断题时显示） -->
+        <!-- 判断题选项区（判断题时显示） -->
         <div id="form-judge-area" class="hidden">
-          <label class="block text-sm font-medium text-on-surface mb-1.5">正确答案</label>
-          <div class="flex items-center gap-4">
-            <label class="flex items-center gap-2 cursor-pointer">
+          <label class="block text-sm font-medium text-on-surface mb-1.5">选项</label>
+          <div class="flex gap-3">
+            <label class="inline-flex items-center gap-2 cursor-pointer">
               <input type="radio" name="judge-answer" value="true" class="accent-primary"/>
               <span class="text-sm text-on-surface">正确</span>
             </label>
-            <label class="flex items-center gap-2 cursor-pointer">
+            <label class="inline-flex items-center gap-2 cursor-pointer">
               <input type="radio" name="judge-answer" value="false" class="accent-primary"/>
               <span class="text-sm text-on-surface">错误</span>
             </label>
           </div>
         </div>
-
-        <!-- 简答题答案区（简答题时显示） -->
-        <div id="form-essay-area" class="hidden">
-          <label class="block text-sm font-medium text-on-surface mb-1.5">参考答案</label>
-          <textarea id="form-essay-answer" rows="3" placeholder="请输入参考答案..." class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors resize-none"></textarea>
+        <!-- 正确答案 -->
+        <div id="form-answer-area">
+          <label class="block text-sm font-medium text-on-surface mb-1.5">正确答案</label>
+          <input id="form-answer" type="text" placeholder="如：A 或 A,B,C" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"/>
         </div>
-
-        <!-- 解析输入 -->
+        <!-- 解析 -->
         <div>
-          <label class="block text-sm font-medium text-on-surface mb-1.5">解析</label>
-          <textarea id="form-explanation" rows="3" placeholder="请输入题目解析..." class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors resize-none"></textarea>
+          <label class="block text-sm font-medium text-on-surface mb-1.5">解析 <span class="text-on-surface-variant font-normal">（可选）</span></label>
+          <textarea id="form-explanation" rows="2" placeholder="请输入答案解析" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors resize-none"></textarea>
+        </div>
+        <!-- 难度 -->
+        <div>
+          <label class="block text-sm font-medium text-on-surface mb-1.5">难度</label>
+          <select id="form-difficulty" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors">
+            <option value="1">★1 - 入门</option>
+            <option value="2">★2 - 基础</option>
+            <option value="3" selected>★3 - 中等</option>
+            <option value="4">★4 - 较难</option>
+            <option value="5">★5 - 困难</option>
+          </select>
         </div>
       </div>
-
-      <!-- 弹窗操作按钮 -->
-      <div class="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-outline-variant/20">
+      <div class="px-6 py-4 border-t border-outline-variant/20 flex justify-end gap-3">
         <button id="btn-cancel-form" class="bg-surface-container text-on-surface border-none px-4 py-2 rounded-md text-sm font-medium hover:bg-surface-container-high active:scale-[0.98] transition-all">取消</button>
-        <button id="btn-submit-form" class="bg-primary text-on-primary px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all">确认添加</button>
+        <button id="btn-save-form" class="bg-primary text-on-primary px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all">保存</button>
       </div>
     </div>
   </div>
 
-  <!-- 删除确认弹窗 -->
-  <div id="modal-delete-confirm" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 hidden">
-    <div class="bg-surface rounded-xl shadow-dialog max-w-sm w-full p-6">
-      <div class="flex items-center gap-3 mb-4">
-        <div class="w-10 h-10 rounded-full bg-error/10 flex items-center justify-center shrink-0">
-          <i data-lucide="trash-2" class="w-5 h-5 text-error"></i>
-        </div>
-        <div>
-          <h3 class="text-base font-semibold text-on-surface">确认删除</h3>
-          <p class="text-sm text-on-surface-variant mt-0.5">删除后无法恢复，确定要删除该题目吗？</p>
-        </div>
+  <!-- 拒绝原因弹窗 -->
+  <div id="modal-reject-reason" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-[60] hidden">
+    <div class="bg-surface rounded-xl shadow-dialog max-w-sm w-full">
+      <div class="px-6 pt-6 pb-4">
+        <h2 class="text-lg font-semibold text-on-surface mb-1">拒绝原因</h2>
+        <p class="text-sm text-on-surface-variant">请填写拒绝该题目的原因</p>
       </div>
-      <div class="flex items-center justify-end gap-3">
-        <button id="btn-cancel-delete" class="bg-surface-container text-on-surface border-none px-4 py-2 rounded-md text-sm font-medium hover:bg-surface-container-high active:scale-[0.98] transition-all">取消</button>
-        <button id="btn-confirm-delete" class="bg-error text-white px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all">确认删除</button>
+      <div class="px-6 pb-4">
+        <textarea id="reject-reason-input" rows="3" placeholder="请输入拒绝原因..." class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors resize-none"></textarea>
+      </div>
+      <div class="px-6 py-4 border-t border-outline-variant/20 flex justify-end gap-3">
+        <button id="btn-cancel-reject" class="bg-surface-container text-on-surface border-none px-4 py-2 rounded-md text-sm font-medium hover:bg-surface-container-high active:scale-[0.98] transition-all">取消</button>
+        <button id="btn-confirm-reject" class="bg-error text-white px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all">确认拒绝</button>
       </div>
     </div>
   </div>
 
-  <!-- 批量导入弹窗 -->
-  <div id="modal-batch-import" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 hidden">
-    <div class="bg-surface rounded-xl shadow-dialog max-w-md w-full p-6">
-      <div class="flex items-center justify-between mb-5">
-        <h2 class="text-lg font-bold text-on-surface">批量导入题目</h2>
-        <button id="btn-close-import" class="w-8 h-8 rounded-md flex items-center justify-center text-on-surface-variant hover:bg-surface-container transition-colors">
-          <i data-lucide="x" class="w-4 h-4"></i>
-        </button>
-      </div>
-      <div class="space-y-4">
-        <!-- 上传区域 -->
-        <div id="upload-area" class="border-2 border-dashed border-outline-variant/40 rounded-lg p-8 text-center hover:border-primary/40 transition-colors cursor-pointer">
-          <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
-            <i data-lucide="upload" class="w-6 h-6 text-primary"></i>
-          </div>
-          <p class="text-sm font-medium text-on-surface">点击或拖拽文件到此区域上传</p>
-          <p class="text-xs text-on-surface-variant mt-1">支持 Excel (.xlsx) / CSV (.csv) 格式</p>
-        </div>
-        <!-- 模板下载 -->
-        <div class="flex items-center justify-between bg-surface-container rounded-md px-4 py-3">
-          <div class="flex items-center gap-2">
-            <i data-lucide="file-spreadsheet" class="w-4 h-4 text-primary"></i>
-            <span class="text-sm text-on-surface">下载导入模板</span>
-          </div>
-          <button id="btn-download-template" class="text-primary text-sm font-medium hover:underline">下载模板</button>
-        </div>
-      </div>
-      <div class="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-outline-variant/20">
-        <button id="btn-cancel-import" class="bg-surface-container text-on-surface border-none px-4 py-2 rounded-md text-sm font-medium hover:bg-surface-container-high active:scale-[0.98] transition-all">取消</button>
-        <button id="btn-confirm-import" class="bg-primary text-on-primary px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all">开始导入</button>
-      </div>
+  <!-- 提示消息 -->
+  <div id="toast" class="fixed top-6 right-6 z-[70] hidden">
+    <div class="bg-surface rounded-lg shadow-float px-4 py-3 flex items-center gap-2 border border-outline-variant/20">
+      <i data-lucide="check-circle" class="w-4 h-4 text-success"></i>
+      <span id="toast-msg" class="text-sm font-medium text-on-surface"></span>
     </div>
   </div>
 
   <script>
     $(function() {
-      // 打开添加题目弹窗
-      $('#btn-add-question').on('click', function() {
-        $('#modal-add-question').removeClass('hidden');
-        // 默认显示选择题的选项区域
-        $('#form-options-area').removeClass('hidden');
-        $('#form-judge-area').addClass('hidden');
-        $('#form-essay-area').addClass('hidden');
-        $('#form-question-type').val('choice');
+      var currentRejectId = null;
+
+      // === Tab 切换 ===
+      $('#tab-all').on('click', function() {
+        $(this).addClass('bg-surface text-on-surface shadow-sm').removeClass('text-on-surface-variant').attr('aria-pressed', 'true');
+        $('#tab-pending').removeClass('bg-surface text-on-surface shadow-sm').addClass('text-on-surface-variant').attr('aria-pressed', 'false');
+        $('#list-all').removeClass('hidden');
+        $('#list-pending').addClass('hidden');
       });
 
-      // 关闭添加题目弹窗
-      $('#btn-close-modal').on('click', function() {
-        $('#modal-add-question').addClass('hidden');
-      });
-      $('#btn-cancel-form').on('click', function() {
-        $('#modal-add-question').addClass('hidden');
+      $('#tab-pending').on('click', function() {
+        $(this).addClass('bg-surface text-on-surface shadow-sm').removeClass('text-on-surface-variant').attr('aria-pressed', 'true');
+        $('#tab-all').removeClass('bg-surface text-on-surface shadow-sm').addClass('text-on-surface-variant').attr('aria-pressed', 'false');
+        $('#list-pending').removeClass('hidden');
+        $('#list-all').addClass('hidden');
       });
 
-      // 题型切换 - 控制选项/判断/简答区域显隐
-      $('#form-question-type').on('change', function() {
-        var type = $(this).val();
-        if (type === 'choice' || type === 'multi') {
-          $('#form-options-area').removeClass('hidden');
-          $('#form-judge-area').addClass('hidden');
-          $('#form-essay-area').addClass('hidden');
-          // 多选题使用 checkbox 代替 radio
-          if (type === 'multi') {
-            $('#form-options-area input[name="correct-answer"]').each(function() {
-              $(this).attr('type', 'checkbox');
-            });
+      // === 搜索筛选 ===
+      // 搜索框输入 - 按题目内容模糊过滤
+      // 实现说明：遍历列表中每一行，将题目内容文本与搜索关键词比对，不匹配的行隐藏
+      $('#search-input').on('input', function() {
+        var keyword = $(this).val().trim().toLowerCase();
+        $('.question-group').each(function() {
+          var $group = $(this);
+          var $rows = $group.find('[data-id]');
+          var visibleCount = 0;
+          $rows.each(function() {
+            var text = $(this).find('.truncate').text().toLowerCase();
+            if (!keyword || text.indexOf(keyword) !== -1) {
+              $(this).show();
+              visibleCount++;
+            } else {
+              $(this).hide();
+            }
+          });
+          if (visibleCount === 0 && keyword) {
+            $group.hide();
           } else {
-            $('#form-options-area input[name="correct-answer"]').each(function() {
-              $(this).attr('type', 'radio');
-            });
+            $group.show();
           }
-        } else if (type === 'judge') {
-          $('#form-options-area').addClass('hidden');
-          $('#form-judge-area').removeClass('hidden');
-          $('#form-essay-area').addClass('hidden');
-        } else if (type === 'essay') {
-          $('#form-options-area').addClass('hidden');
-          $('#form-judge-area').addClass('hidden');
-          $('#form-essay-area').removeClass('hidden');
-        }
-      });
-
-      // 添加选项（最多6个）
-      $('#btn-add-option').on('click', function() {
-        var optionCount = $('#form-options-list .option-item').length;
-        if (optionCount >= 6) {
-          return; // 最多6个选项
-        }
-        var letters = 'ABCDEF';
-        var letter = letters[optionCount];
-        var questionType = $('#form-question-type').val();
-        var inputType = questionType === 'multi' ? 'checkbox' : 'radio';
-        var newOption = $(
-          '<div class="flex items-center gap-2 option-item">' +
-            '<span class="text-sm font-medium text-on-surface-variant w-6 shrink-0">' + letter + '</span>' +
-            '<input type="text" placeholder="选项' + letter + '内容" class="flex-1 bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"/>' +
-            '<label class="flex items-center gap-1 shrink-0 cursor-pointer">' +
-              '<input type="' + inputType + '" name="correct-answer" value="' + letter + '" class="accent-primary"/>' +
-              '<span class="text-xs text-on-surface-variant">正确</span>' +
-            '</label>' +
-            '<button class="btn-remove-option text-on-surface-variant/50 hover:text-error transition-colors ml-1" title="移除选项">' +
-              '<i data-lucide="x" class="w-3.5 h-3.5"></i>' +
-            '</button>' +
-          '</div>'
-        );
-        $('#form-options-list').append(newOption);
-        lucide.createIcons();
-      });
-
-      // 移除选项（至少保留2个）
-      $('#form-options-list').on('click', '.btn-remove-option', function() {
-        var optionCount = $('#form-options-list .option-item').length;
-        if (optionCount <= 2) {
-          return; // 至少保留2个选项
-        }
-        $(this).closest('.option-item').remove();
-        // 重新标记字母序号
-        var letters = 'ABCDEF';
-        $('#form-options-list .option-item').each(function(idx) {
-          $(this).find('span').first().text(letters[idx]);
-          $(this).find('input[type="text"]').attr('placeholder', '选项' + letters[idx] + '内容');
-          $(this).find('input[name="correct-answer"]').val(letters[idx]);
+        });
+        // 待审核列表也过滤
+        $('#list-pending [data-id]').each(function() {
+          var text = $(this).find('.truncate').text().toLowerCase();
+          if (!keyword || text.indexOf(keyword) !== -1) {
+            $(this).show();
+          } else {
+            $(this).hide();
+          }
         });
       });
 
-      // 提交添加表单
-      // 编辑按钮 - 点击后应实现完整编辑交互：
-      // 1. 打开添加题目弹窗，标题改为"编辑题目"
-      // 2. 根据题目ID加载该题目的现有数据（题型、关卡、难度、题干、选项、答案、解析）
-      // 3. 将数据填充到表单各字段中
-      // 4. 提交按钮文字改为"保存修改"
-      // 5. 提交后更新列表中对应行的内容
-      $('#question-table-body').on('click', '.btn-edit', function() {
-        var questionId = $(this).data('id');
-        console.log('编辑题目 ID:', questionId);
-        // 打开弹窗模拟编辑
-        $('#modal-add-question').removeClass('hidden');
-      });
-
-      // 删除按钮 - 点击弹出确认弹窗
-      var deleteTargetId = null;
-      $('#question-table-body').on('click', '.btn-delete', function() {
-        deleteTargetId = $(this).data('id');
-        $('#modal-delete-confirm').removeClass('hidden');
-      });
-      $('#btn-cancel-delete').on('click', function() {
-        $('#modal-delete-confirm').addClass('hidden');
-        deleteTargetId = null;
-      });
-      $('#btn-confirm-delete').on('click', function() {
-        if (deleteTargetId !== null) {
-          console.log('删除题目 ID:', deleteTargetId);
-          // 从DOM中移除对应行
-          $('.btn-delete[data-id="' + deleteTargetId + '"]').closest('.grid').fadeOut(300, function() {
-            $(this).remove();
+      // 关卡筛选
+      $('#filter-level').on('change', function() {
+        var level = $(this).val();
+        $('.question-group').each(function() {
+          var $group = $(this);
+          if (!level) {
+            $group.show();
+            $group.find('[data-id]').show();
+            return;
+          }
+          var hasMatch = false;
+          $group.find('[data-id]').each(function() {
+            if ($(this).data('level') == level) {
+              $(this).show();
+              hasMatch = true;
+            } else {
+              $(this).hide();
+            }
           });
+          if (hasMatch) { $group.show(); } else { $group.hide(); }
+        });
+      });
+
+      // 题型筛选
+      $('#filter-type').on('change', function() {
+        var type = $(this).val();
+        if (!type) {
+          $('[data-id]').show();
+          $('.question-group').show();
+          return;
         }
-        $('#modal-delete-confirm').addClass('hidden');
-        deleteTargetId = null;
+        $('.question-group').each(function() {
+          var $group = $(this);
+          var hasMatch = false;
+          $group.find('[data-id]').each(function() {
+            if ($(this).data('type') == type) {
+              $(this).show();
+              hasMatch = true;
+            } else {
+              $(this).hide();
+            }
+          });
+          if (hasMatch) { $group.show(); } else { $group.hide(); }
+        });
       });
 
-      // 批量导入弹窗
-      $('#btn-batch-import').on('click', function() {
-        $('#modal-batch-import').removeClass('hidden');
-      });
-      $('#btn-close-import').on('click', function() {
-        $('#modal-batch-import').addClass('hidden');
-      });
-      $('#btn-cancel-import').on('click', function() {
-        $('#modal-batch-import').addClass('hidden');
-      });
-      // 批量导入确认 - 应实现完整导入逻辑：
-      // 1. 解析上传的 Excel/CSV 文件
-      // 2. 校验数据格式（题型、关卡、题干等必填字段）
-      // 3. 显示导入进度和结果（成功N条/失败N条）
-      // 4. 成功后刷新题目列表
-      $('#btn-confirm-import').on('click', function() {
-        console.log('批量导入：需要解析上传文件并校验导入');
-        $('#modal-batch-import').addClass('hidden');
-      });
-      // 下载模板
-      $('#btn-download-template').on('click', function() {
-        console.log('下载导入模板文件');
-      });
-      // 上传区域点击
-      $('#upload-area').on('click', function() {
-        console.log('选择文件上传：需要调用第三方文件选择接口');
+      // === 新增题目弹窗 ===
+      $('#btn-add-question').on('click', function() {
+        // 打开新增弹窗，清空所有表单字段
+        $('#modal-title').text('新增题目');
+        $('#form-level').val('');
+        $('#form-type').val('single');
+        $('#form-content').val('');
+        $('#form-option-a').val('');
+        $('#form-option-b').val('');
+        $('#form-option-c').val('');
+        $('#form-option-d').val('');
+        $('#form-answer').val('');
+        $('#form-explanation').val('');
+        $('#form-difficulty').val('3');
+        $('#form-options-area').removeClass('hidden');
+        $('#form-judge-area').addClass('hidden');
+        $('#form-answer-area').removeClass('hidden');
+        $('#modal-question-form').removeClass('hidden');
       });
 
-      // 筛选重置
-      $('#btn-reset-filter').on('click', function() {
-        $('#filter-level').val('');
-        $('#filter-type').val('');
-        $('#filter-difficulty').val('');
-        $('#filter-search').val('');
+      // 关闭弹窗
+      $('#btn-close-modal, #btn-cancel-form').on('click', function() {
+        $('#modal-question-form').addClass('hidden');
       });
 
-      // 筛选变化 - 应实现完整筛选逻辑：
-      // 1. 根据三个筛选条件组合过滤题目列表
-      // 2. 仅显示符合所有筛选条件的题目行
-      // 3. 更新分页信息
-      $('#filter-level, #filter-type, #filter-difficulty').on('change', function() {
-        console.log('筛选条件变更，应重新过滤题目列表');
-      });
-      // 搜索输入 - 应实现防抖搜索
-      $('#filter-search').on('input', function() {
-        console.log('搜索关键词:', $(this).val());
+      // 点击弹窗背景关闭
+      $('#modal-question-form').on('click', function(e) {
+        if ($(e.target).is('#modal-question-form')) {
+          $('#modal-question-form').addClass('hidden');
+        }
       });
 
-      // 分页按钮点击
-      // 分页 - 应实现完整分页逻辑：
-      // 1. 切换分页时重新加载对应页的数据
-      // 2. 更新当前页码高亮和上/下一页按钮状态
-      // 3. 滚动到列表顶部
-      $('#page-prev').on('click', function() {
-        console.log('上一页');
-      });
-      $('#page-next').on('click', function() {
-        console.log('下一页');
-      });
-      $('#question-table-body').parent().on('click', '.page-btn', function() {
-        var page = $(this).data('page');
-        console.log('跳转第', page, '页');
+      // === 题型切换 - 选项区域变化 ===
+      $('#form-type').on('change', function() {
+        var type = $(this).val();
+        if (type === 'judge') {
+          $('#form-options-area').addClass('hidden');
+          $('#form-answer-area').addClass('hidden');
+          $('#form-judge-area').removeClass('hidden');
+        } else {
+          $('#form-options-area').removeClass('hidden');
+          $('#form-answer-area').removeClass('hidden');
+          $('#form-judge-area').addClass('hidden');
+        }
       });
 
-      // 点击弹窗背景关闭弹窗
-      $('#modal-add-question').on('click', function(e) {
-        if (e.target === this) {
+      // === 保存题目 ===
+      // 保存逻辑说明：
+      // 1. 校验必填字段（所属关卡、题型、题目内容、选项/答案）
+      // 2. 当前角色为 training_manager，创建后 status 直接为 approved，提示"题目已发布"
+      // 3. 若角色为 teacher，创建后 status 为 pending_review，提示"已提交审核"
+      // 4. 编辑模式下预填数据，保存后更新对应行
+      $('#btn-save-form').on('click', function() {
+        var content = $('#form-content').val().trim();
+        var level = $('#form-level').val();
+        if (!content || !level) {
+          showToast('请填写完整信息');
+          return;
+        }
+        // 当前角色为training_manager，直接通过审核
+        $('#modal-question-form').addClass('hidden');
+        showToast('题目已发布');
+      });
+
+      // === 编辑题目 ===
+      // 编辑按钮 - 点击后应实现：
+      // 1. 打开弹窗，标题改为"编辑题目"
+      // 2. 根据题目ID预填所有表单字段（从DOM中读取当前行的数据）
+      // 3. 判断题切换选项区域显示
+      // 4. 保存后更新该行的显示内容
+      $(document).on('click', '.btn-edit', function() {
+        var qid = $(this).data('id');
+        $('#modal-title').text('编辑题目');
+        // 预填示例数据（实际应从DOM或数据源读取）
+        $('#form-level').val('1');
+        $('#form-type').val('single');
+        $('#form-content').val('百芝堂健康产业集团成立于哪一年？');
+        $('#form-option-a').val('2010年');
+        $('#form-option-b').val('2012年');
+        $('#form-option-c').val('2015年');
+        $('#form-option-d').val('2018年');
+        $('#form-answer').val('A');
+        $('#form-explanation').val('百芝堂集团于2010年正式成立。');
+        $('#form-difficulty').val('2');
+        $('#form-options-area').removeClass('hidden');
+        $('#form-judge-area').addClass('hidden');
+        $('#form-answer-area').removeClass('hidden');
+        $('#modal-question-form').removeClass('hidden');
+      });
+
+      // === 审核通过 ===
+      $(document).on('click', '.btn-approve', function() {
+        var qid = $(this).data('id');
+        // 审核通过逻辑：
+        // 1. 调用 PATCH /api/questions/review { id, action: 'approve' }
+        // 2. 成功后将该行状态改为 approved，更新Badge为"已通过"（绿色）
+        // 3. 移除"通过"和"拒绝"按钮
+        // 4. 更新待审核Tab的计数
+        var $row = $(this).closest('[data-id]');
+        $row.find('.btn-approve, .btn-reject').remove();
+        // 更新全部列表中的对应行
+        $row.find('span[class*="bg-warning"]').replaceWith('<span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已通过</span>');
+        // 同步更新待审核列表中的对应行
+        $('#list-pending [data-id="' + qid + '"]').fadeOut(300, function() { $(this).remove(); });
+        // 更新待审核计数
+        var count = $('#list-pending [data-status="pending_review"]').length;
+        $('#pending-count').text(count);
+        showToast('审核已通过');
+      });
+
+      // === 审核拒绝 - 打开拒绝原因弹窗 ===
+      $(document).on('click', '.btn-reject', function() {
+        currentRejectId = $(this).data('id');
+        $('#reject-reason-input').val('');
+        $('#modal-reject-reason').removeClass('hidden');
+      });
+
+      // 取消拒绝
+      $('#btn-cancel-reject').on('click', function() {
+        $('#modal-reject-reason').addClass('hidden');
+        currentRejectId = null;
+      });
+
+      // 点击拒绝弹窗背景关闭
+      $('#modal-reject-reason').on('click', function(e) {
+        if ($(e.target).is('#modal-reject-reason')) {
           $(this).addClass('hidden');
-        }
-      });
-      $('#modal-delete-confirm').on('click', function(e) {
-        if (e.target === this) {
-          $(this).addClass('hidden');
-        }
-      });
-      $('#modal-batch-import').on('click', function(e) {
-        if (e.target === this) {
-          $(this).addClass('hidden');
+          currentRejectId = null;
         }
       });
 
-      // 提交添加表单 - 应实现完整提交逻辑：
-      // 1. 校验必填字段（题型、关卡、题干、正确答案）
-      // 2. 选择题/多选题需校验至少2个选项且标注正确答案
-      // 3. 提交后关闭弹窗，在列表中新增一行（或刷新列表）
-      // 4. 更新顶部统计数据
-      $('#btn-submit-form').on('click', function() {
-        console.log('提交题目表单');
-        $('#modal-add-question').addClass('hidden');
+      // 确认拒绝
+      // 拒绝逻辑：
+      // 1. 调用 PATCH /api/questions/review { id, action: 'reject', reason }
+      // 2. 成功后将该行状态改为 rejected，更新Badge为"已拒绝"（红色）
+      // 3. 移除"通过"和"拒绝"按钮
+      // 4. 从待审核列表中移除该行
+      // 5. 更新待审核计数
+      $('#btn-confirm-reject').on('click', function() {
+        var reason = $('#reject-reason-input').val().trim();
+        if (!reason) {
+          showToast('请填写拒绝原因');
+          return;
+        }
+        var qid = currentRejectId;
+        // 更新全部列表中对应行
+        var $rows = $('#list-all [data-id="' + qid + '"]');
+        $rows.each(function() {
+          $(this).find('.btn-approve, .btn-reject').remove();
+          $(this).find('span[class*="bg-warning"]').replaceWith('<span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-error/15 text-error">已拒绝</span>');
+        });
+        // 从待审核列表移除
+        $('#list-pending [data-id="' + qid + '"]').fadeOut(300, function() { $(this).remove(); });
+        // 更新待审核计数
+        var count = $('#list-pending [data-status="pending_review"]').length;
+        $('#pending-count').text(count);
+        $('#modal-reject-reason').addClass('hidden');
+        currentRejectId = null;
+        showToast('已拒绝该题目');
       });
+
+      // === Toast 提示 ===
+      function showToast(msg) {
+        $('#toast-msg').text(msg);
+        $('#toast').removeClass('hidden');
+        setTimeout(function() {
+          $('#toast').addClass('hidden');
+        }, 2500);
+      }
     });
   </script>
 
