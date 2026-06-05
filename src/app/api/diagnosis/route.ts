@@ -25,12 +25,17 @@ export async function GET(request: NextRequest) {
     const results = [];
     for (const u of users || []) {
       const quad = await calculateQuadrant(client, u.id);
+      // 计算汇总分数：过程线/结果线各指标达标率的均值
+      const processScore = calcAggregateScore(quad.processDetails);
+      const resultScore = calcAggregateScore(quad.resultDetails);
       results.push({
         ...u,
         name: u.real_name || u.username || '未知',
         quadrant: quad.quadrant,
         processQualified: quad.processQualified,
         resultQualified: quad.resultQualified,
+        processScore,
+        resultScore,
         processDetails: quad.processDetails,
         resultDetails: quad.resultDetails,
       });
@@ -73,6 +78,19 @@ export async function GET(request: NextRequest) {
     unqualifiedItems,
     matchedPlans,
   });
+}
+
+/** 计算汇总分数：各指标达标率(0-100)的均值 */
+function calcAggregateScore(details: Record<string, any>): number {
+  const items = Object.values(details);
+  if (items.length === 0) return 0;
+  const scores = items.map((item: any) => {
+    const { value, threshold } = item;
+    const t = threshold?.excellent || threshold?.good || threshold?.passing || 100;
+    if (t <= 0) return value || 0;
+    return Math.min(Math.round((value / t) * 100), 100);
+  });
+  return Math.round(scores.reduce((a: number, b: number) => a + b, 0) / scores.length);
 }
 
 async function calculateQuadrant(client: any, userId: string) {
