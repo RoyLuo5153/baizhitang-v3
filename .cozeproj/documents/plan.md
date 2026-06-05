@@ -1,118 +1,104 @@
-# 工单H：题库审核 + 日常考核修复 + 期数功能
+# 赋能方案"处方化"改造 + 自动匹配推荐 + 全链路联动
 
 ## 概述
-题库管理增加审核机制（teacher创建需审核，training_manager直接生效）；修复日常考核无法选择新人的bug；给trainee_profiles加期数字段，支持按期选择新人。Web平台，使用Supabase。
+赋能中心核心改造：(1) 方案内容从笼统步骤升级为4段式处方（病情分析→调理方向→具体药方→达标标准）；(2) 系统根据新人不合格指标自动匹配推荐赋能方案；(3) 推送后全链路联动——新人看到处方、带教老师跟进、预警联动、总经理看板同步。
+
+## 影响面分析
+
+| 改动点 | 直接触及 | 关联联动 | 涉及角色 |
+|--------|---------|---------|---------|
+| 方案内容处方化 | 赋能中心(详情/创建/编辑/推送) | — | 培训负责人、带教老师 |
+| 自动匹配推荐 | 赋能中心(推荐Tab) | 双轨诊断页(不合格→查看推荐方案) | 培训负责人 |
+| 推送后新人可见 | — | 新人首页/成长计划(我的赋能任务+处方内容) | 新人 |
+| 带教老师跟进 | — | 带教首页/看板(待跟进赋能+处方摘要) | 带教老师 |
+| 预警联动 | — | 新人看板(赋能超期/未执行预警) | 培训负责人 |
+| 总经理看板 | — | 全局概览(赋能完成率指标细化) | 总经理 |
 
 ## 技术方案
 
 | 维度 | 选择 | 理由 |
 |------|------|------|
-| 审核模式 | 复用知识库审核模式 | 与knowledge_articles审核逻辑一致 |
-| 期数字段 | trainee_profiles.cohort | 按入职批次分组，独立于部门 |
+| 数据结构 | empower_plans.content 扩展为4段式处方JSON | 原有content只有steps数组 |
+| 自动匹配 | 诊断结果通过indicator_key自动关联赋能方案 | empower_plans已有indicator_key字段 |
+| 关联指标显示 | indicator_key映射为可读中文标签 | 当前"qc_communication"不可读 |
+| 处方渲染 | 4区块卡片组件(病情/方向/药方/标准) | 可复用于赋能中心、新人、带教、诊断页 |
+| 赋能执行 | empower_executions 记录推送+执行状态 | 已有表，需扩展展示处方内容 |
 
 ## 功能模块
 
-### H1. 题库审核（复用知识库模式）
-- questions表加3列：status(text default 'pending_review'), reviewed_by(integer), reviewed_at(timestamptz)
-- POST：training_manager创建直接approved，其他角色pending_review
-- 新建 review 接口：GET待审核列表 + PATCH审核操作
-- 前端：审核状态列 + 待审核Tab + 审核操作按钮
+### 1. 数据结构改造
+empower_plans.content 扩展为4段式处方：
+```json
+{
+  "diagnosis": "病情分析：加V率仅35%，远低于75%合格线。根因：首通电话话术生硬，患者尚未建立信任就急于加微信，拒绝率高",
+  "direction": "调理方向：先建立信任再引导加V，从'我要加你微信'转变为'方便后续为您提供服务'",
+  "prescription": [
+    {"step": "话术重构", "detail": "重写首通电话加V话术，从需求切入", "duration": "2天", "owner": "带教老师"},
+    {"step": "跟读训练", "detail": "跟读标准话术录音5遍，提交录音对比", "duration": "1天", "owner": "新人"},
+    {"step": "场景演练", "detail": "3种患者类型实战演练", "duration": "2天", "owner": "带教老师+新人"},
+    {"step": "实战上岗", "detail": "连续3天记录加V结果，每日复盘", "duration": "3天", "owner": "新人"}
+  ],
+  "standard": "连续5个工作日加V率≥75%，且拒绝率≤20%"
+}
+```
 
-### H2. 日常考核新人选择bug修复
-- **根因**：assessment/page.tsx第484行读取 `json.profiles`，但API返回的是 `json.trainees`，字段名不匹配导致列表永远为空
-- 修复：`json.profiles` → `json.trainees`，同时修正字段映射（id/name）
+### 2. 自动匹配推荐机制
+- 诊断API返回每个新人的不合格指标列表
+- 赋能API新增 `?view=recommendations`：按indicator_key匹配，返回"新人→不合格指标→推荐方案"
+- 前端新增"推荐方案"Tab，按新人分组展示系统推荐，支持一键推送
 
-### H3. 期数功能
-- trainee_profiles表加 cohort(text) 字段
-- trainee-profiles API返回cohort字段
-- 日常考核发布弹窗：加"按期选择"快捷按钮，点击某期自动勾选该期全部新人
-- 新人档案页：可编辑期数
+### 3. indicator_key 可读映射
+| key | 中文标签 |
+|-----|---------|
+| qc_communication | 质检-沟通能力 |
+| qc_compliance | 质检-合规性 |
+| qc_professional | 质检-专业度 |
+| qc_service | 质检-服务态度 |
+| add_v_rate | 加V率 |
+| consultation_rate | 面诊率 |
+| reception_rate | 接诊率 |
+| signing_rate | 签收率 |
+| medication_rate | 用药率 |
+| registration_rate | 挂号率 |
+
+### 4. 赋能中心改造（培训负责人/带教老师）
+- 方案详情：4区块卡片（病情分析红框/调理方向蓝框/具体药方绿框/达标标准橙框）
+- 创建/编辑弹窗：4段式结构化输入 + 关联指标多选
+- 推送预览：展示完整处方
+- 新增"推荐方案"Tab：按新人分组，不合格指标→匹配方案→一键推送
+
+### 5. 双轨诊断页联动
+- 不合格指标旁增加"查看推荐方案"按钮
+- 点击弹出该指标对应的赋能方案处方预览
+- 可直接从此处推送方案给新人
+
+### 6. 新人视图联动
+- 首页/成长计划中"我的赋能任务"展示处方摘要
+- 点击展开完整处方（4区块）
+- 每个药方步骤可标记完成状态
+
+### 7. 带教老师视图联动
+- 带教看板中"待跟进赋能"卡片显示处方摘要
+- 显示哪些步骤是"带教老师"负责的
+- 可标记步骤完成 + 填写点评
+
+### 8. 新人看板预警联动
+- 赋能方案推送后超期未执行→预警
+- 药方步骤逾期→橙色预警
+- 达标标准到期未达标→红色预警
+
+### 9. 总经理看板联动
+- 赋能完成率指标细化：执行中/已完成/超期
+- 点击可展开查看各方案的执行进度
 
 ## 是否有原型设计
-是
+否（改造现有页面，不涉及新页面）
 
 ## 实施步骤
-
-1. **阶段一：原型设计** — 加载design-canvas技能，完成题库管理+日常考核页面原型
-2. 数据库DDL — questions表加3列 + trainee_profiles表加cohort列
-3. 题库审核后端 — 改造questions API + 新建review接口 (questions/route.ts, questions/review/route.ts)
-4. 题库审核前端 — 审核状态列 + 待审核Tab + 审核操作 (question-bank/page.tsx)
-5. 日常考核bug修复 + 期数选择器 — json.trainees修复 + 期数下拉 (assessment/page.tsx)
-6. 期数功能后端+档案页 — API返回cohort + 档案编辑 (trainee-profiles/route.ts, trainee-profiles/page.tsx)
-7. 代码检查与验证
-
-## 页面规格
-
-##### @nav(web-topbar)
-> type: topbar
-> platform: web
-
-- @page(/) 首页
-- @page(/question-bank) 题库管理
-- @page(/assessment) 日常考核
-- @page(/trainee-profiles) 新人档案
-
-##### @page(/question-bank) 题库管理
-
-**核心职责**：题库CRUD与审核管理
-**访问路径**：侧边栏直达
-**布局**：顶部Tab切换（全部题目/待审核）+ 搜索筛选区 + 题目列表卡片 + 新增/编辑弹窗
-**列表项字段**：题目标题 / 题型 / 分类 / 审核状态 / 创建人 / 创建时间
-**状态**：
-- 空态：暂无题目
-- 加载态：骨架屏
-
-**交互说明**
-
-| 元素 | 动作 | 响应 | 传参 | 备注 |
-|------|------|------|------|------|
-| 新增题目按钮 | 点击 | 打开@modal(question-form) | — | teacher/training_manager可见 |
-| 题目卡片 | 点击 | 打开@modal(question-form)编辑模式 | question_id | teacher/training_manager可见 |
-| 待审核Tab | 点击 | 刷新列表显示pending_review题目 | — | training_manager可见 |
-| 审核通过按钮 | 点击 | 调用PATCH /api/questions/review approve | question_id | 仅training_manager |
-| 审核拒绝按钮 | 点击 | 调用PATCH /api/questions/review reject | question_id | 仅training_manager |
-| 搜索框 | 输入 | 按标题模糊搜索 | keyword | — |
-
-**弹窗 question-form**：
-- 表单字段：题目标题、题型(单选/多选/判断)、分类、选项(动态增减)、正确答案、解析
-- 操作：保存（teacher=提交审核，training_manager=直接发布）、取消
-
-##### @page(/assessment) 日常考核
-
-**核心职责**：发布和管理日常考核任务
-**访问路径**：侧边栏直达
-**布局**：考核任务列表 + 发布考核弹窗
-**列表项字段**：考核标题 / 类型 / 考核对象 / 状态 / 发布时间
-**状态**：
-- 空态：暂无考核任务
-- 加载态：骨架屏
-
-**交互说明**
-
-| 元素 | 动作 | 响应 | 传参 | 备注 |
-|------|------|------|------|------|
-| 发布考核按钮 | 点击 | 打开@modal(assessment-form) | — | teacher/training_manager可见 |
-| 期数快捷按钮 | 点击 | 自动勾选该期全部新人 | cohort | 新增：按期选择 |
-
-**弹窗 assessment-form**：
-- 新增"按期选择"区：获取所有期数，点击某期自动勾选该期新人
-- 保留原有单个选择功能：可单独勾选/取消个别新人
-- 表单字段：考核标题、类型、考核对象(期数批量选择+单人选择)、截止时间
-- 操作：发布、取消
-
-##### @page(/trainee-profiles) 新人档案
-
-**核心职责**：新人档案管理与业务追踪
-**访问路径**：侧边栏直达
-**布局**：统计卡片 + 筛选区 + 档案列表 + 编辑弹窗
-**列表项字段**：姓名 / 期数 / 阶段 / 入职日期 / 状态
-
-**交互说明**
-
-| 元素 | 动作 | 响应 | 传参 | 备注 |
-|------|------|------|------|------|
-| 编辑按钮 | 点击 | 打开@modal(profile-edit) | user_id | 新增：可编辑期数 |
-
-**弹窗 profile-edit**：
-- 新增期数字段（可编辑文本输入）
-- 保存后刷新列表
+1. 数据迁移 + 指标映射：更新8条方案content为处方结构 + 新建indicator-key映射常量 — empower_plans表 + src/lib/constants/indicator-labels.ts
+2. 后端改造：empower API支持处方CRUD + 推荐视图 + empower_executions扩展 — src/app/api/empower/route.ts
+3. 赋能中心前端改造：4区块处方详情 + 结构化创建/编辑 + 推送预览 + 推荐方案Tab — src/app/(dashboard)/empowerment/page.tsx
+4. 双轨诊断页联动：不合格指标→查看推荐方案 + 直接推送 — src/app/(dashboard)/diagnosis/page.tsx
+5. 新人+带教视图联动：新人看赋能处方+步骤完成 / 带教看处方摘要+跟进 — src/app/(dashboard)/page.tsx + courses/components/MentorProgress.tsx
+6. 预警+看板联动：赋能超期预警 / 总经理赋能指标细化 — src/app/(dashboard)/trainee-board/page.tsx + overview/page.tsx
+7. 代码检查与验证 + push GitHub — test_run
