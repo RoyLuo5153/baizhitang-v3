@@ -4,24 +4,26 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link href="https://fonts.googleapis.cn/css2?family=Noto+Sans+SC:wght@400;500;600;700&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet"/>
+
+  <link href="https://lf-code-agent.coze.cn/obj/x-ai-cn/fonts/google/google-all-fonts.css" rel="stylesheet"/>
+
   <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/jquery/jquery-3.7.1.min.js"></script>
   <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/lucide/lucide-1.11.0.min.js"></script>
   <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/tailwindcss/tailwindcss-browser-4.2.4.min.js"></script>
 
   <style type="text/tailwindcss">
     @theme {
-      /* === 品牌色 === */
+      /* === 品牌色 === 数据风：深蓝主色 + 数据蓝容器 */
       --color-primary:              #102A43;
-      --color-primary-container:    #1B3A5C;
+      --color-primary-container:    #2978B5;
       --color-on-primary:           #ffffff;
-      /* === 背景 / 表面 === */
+      /* === 背景 / 表面 === 暖底数据风 */
       --color-background:                 #F8F6F0;
-      --color-surface-container-lowest:   #FFFFFF;
+      --color-surface-container-lowest:   #FAF9F5;
       --color-surface:                    #FFFFFF;
-      --color-surface-container:          #EFEEE8;
-      --color-surface-container-high:     #E2E0DA;
-      --color-surface-container-highest:  #D5D3CD;
+      --color-surface-container:          #EDE9E0;
+      --color-surface-container-high:     #DDD8CD;
+      --color-surface-container-highest:  #CFC9BC;
       /* === 文字 === */
       --color-on-surface:           #1D2733;
       --color-on-surface-variant:   #667085;
@@ -29,24 +31,22 @@
       --color-success:  #22c55e;
       --color-error:    #ef4444;
       --color-warning:  #F59E0B;
-      --color-info:     #2978B5;
       /* === 边框 === */
       --color-outline:          #E6E1D8;
-      --color-outline-variant:  #D1CCC3;
+      --color-outline-variant:  #D5D0C7;
       /* === 圆角 === */
       --radius-sm:   0.25rem;
-      --radius-md:   0.5rem;
-      --radius-lg:   0.75rem;
-      --radius-xl:   1rem;
-      --radius-2xl:  1.5rem;
+      --radius-md:   0.375rem;
+      --radius-lg:   0.5rem;
+      --radius-xl:   0.75rem;
+      --radius-2xl:  1rem;
       --radius-full: 9999px;
       /* === 阴影 === */
-      --shadow-card:   0 2px 8px rgba(0,0,0,0.06);
-      --shadow-float:  0 10px 25px rgba(0,0,0,0.1);
+      --shadow-card:   0 2px 8px rgba(0,0,0,0.08);
+      --shadow-float:  0 10px 25px rgba(0,0,0,0.12);
       --shadow-dialog: 0 25px 50px rgba(0,0,0,0.15);
       /* === 字体 === */
       --font-sans: "Noto Sans SC", system-ui, sans-serif;
-      --font-serif: "Noto Serif SC", Georgia, serif;
     }
   </style>
 
@@ -71,44 +71,45 @@
 
 <body class="bg-background text-on-surface font-sans">
 
-  <!-- @nav:start 导航组件 -->
-  <aside class="fixed left-0 top-0 h-full w-56 bg-surface border-r border-outline-variant/20 flex flex-col z-40">
-    <div class="px-5 py-4 border-b border-outline-variant/20">
-      <div class="flex items-center gap-2">
-        <div class="w-8 h-8 rounded-md bg-primary flex items-center justify-center">
-          <i data-lucide="heart-pulse" class="w-5 h-5 text-on-primary"></i>
-        </div>
-        <span class="font-serif font-bold text-base text-primary">百芝堂V3</span>
-      </div>
+  <!-- @nav:start 导航组件，不需要的页面则不要复制此段 -->
+  <header class="bg-surface sticky top-0 z-40 h-14 flex items-center justify-between px-6 border-b border-outline-variant/20">
+    <div class="flex items-center gap-2">
+      <i data-lucide="graduation-cap" class="text-primary w-5 h-5"></i>
+      <span class="font-bold text-base text-on-surface">百芝堂培训系统</span>
     </div>
-    <nav class="flex-1 overflow-y-auto py-3 px-3">
-      <div class="mb-1">
-        <a href="question-bank.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm text-on-surface hover:bg-surface-container transition-colors">
-          <i data-lucide="book-open" class="w-4 h-4"></i>
-          <span>题库管理</span>
-        </a>
-      </div>
-      <div class="mb-1">
-        <a href="assessment.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm text-on-surface hover:bg-surface-container transition-colors">
-          <i data-lucide="clipboard-check" class="w-4 h-4"></i>
-          <span>日常考核</span>
-        </a>
-      </div>
-      <div class="mb-1">
-        <a href="trainee-profiles.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm text-on-surface hover:bg-surface-container transition-colors">
-          <i data-lucide="users" class="w-4 h-4"></i>
-          <span>新人档案</span>
-        </a>
-      </div>
-    </nav>
-  </aside>
-  <!-- @nav:end 导航组件 -->
+    <div class="flex items-center gap-3">
+      <span class="text-sm text-on-surface-variant" id="nav-role-label">培训负责人</span>
+      <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium text-primary">郑</div>
+    </div>
+  </header>
 
-  <main class="ml-56 min-h-screen p-6">
+  <div class="flex" style="height: calc(100vh - 3.5rem)">
+    <aside class="w-52 shrink-0 bg-surface-container overflow-y-auto border-r border-outline-variant/20">
+      <div class="p-3 space-y-0.5">
+        <a href="manager-dashboard.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-md bg-primary/10 text-primary font-medium text-sm" aria-current="page" data-page="manager-dashboard">
+          <i data-lucide="layout-dashboard" class="w-4 h-4"></i>监督仪表盘
+        </a>
+        <a href="teacher-delivery.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface font-medium text-sm transition-colors" data-page="teacher-delivery">
+          <i data-lucide="presentation" class="w-4 h-4"></i>课程交付台
+        </a>
+        <a href="mentor-progress.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface font-medium text-sm transition-colors" data-page="mentor-progress">
+          <i data-lucide="users" class="w-4 h-4"></i>学员进度
+        </a>
+        <a href="trainee-learning.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface font-medium text-sm transition-colors" data-page="trainee-learning">
+          <i data-lucide="book-open" class="w-4 h-4"></i>我的学习
+        </a>
+      </div>
+    </aside>
+
     <!-- @main-content:start -->
+    <main class="flex-1 min-w-0 overflow-y-auto bg-background p-6">
+      <!-- 页面内容 -->
+    </main>
     <!-- @main-content:end -->
-  </main>
+  </div>
+  <!-- @nav:end 导航组件，不需要的页面则不要复制此段 -->
 
   <script>lucide.createIcons();</script>
 </body>
+
 </html>

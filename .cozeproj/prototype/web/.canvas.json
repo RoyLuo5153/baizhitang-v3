@@ -3,17 +3,33 @@
     {
       "type": "html",
       "options": {
-        "path": ".cozeproj/prototype/web/question-bank.html"
+        "path": ".cozeproj/prototype/web/manager-dashboard.html"
       },
-      "title": "题库管理",
+      "title": "培训负责人监督仪表盘",
       "size": "web"
     },
     {
       "type": "html",
       "options": {
-        "path": ".cozeproj/prototype/web/assessment.html"
+        "path": ".cozeproj/prototype/web/teacher-delivery.html"
       },
-      "title": "日常考核",
+      "title": "培训老师课程交付台",
+      "size": "web"
+    },
+    {
+      "type": "html",
+      "options": {
+        "path": ".cozeproj/prototype/web/mentor-progress.html"
+      },
+      "title": "带教学员进度管理",
+      "size": "web"
+    },
+    {
+      "type": "html",
+      "options": {
+        "path": ".cozeproj/prototype/web/trainee-learning.html"
+      },
+      "title": "新人我的学习",
       "size": "web"
     }
   ]

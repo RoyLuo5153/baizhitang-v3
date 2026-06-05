@@ -23,7 +23,7 @@ const ROUTE_PERMISSIONS: Record<string, RoleCode[]> = {
   '/assessment': ['teacher', 'training_manager'],
   '/scrm-import': ['training_manager'],
   '/practice': ['trainee', 'mentor', 'teacher', 'training_manager'],
-  '/courses': ['teacher', 'training_manager'],
+  '/courses': ['trainee', 'teacher', 'training_manager', 'mentor'],
   '/dashboard': ['training_manager', 'boss'],
   '/overview': ['training_manager', 'boss'],
   '/settings': ['training_manager'],

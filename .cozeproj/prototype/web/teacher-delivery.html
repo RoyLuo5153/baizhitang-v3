@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link href="https://lf-code-agent.coze.cn/obj/x-ai-cn/fonts/google/google-all-fonts.css" rel="stylesheet"/>
+
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/jquery/jquery-3.7.1.min.js"></script>
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/lucide/lucide-1.11.0.min.js"></script>
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/tailwindcss/tailwindcss-browser-4.2.4.min.js"></script>
+
+  <style type="text/tailwindcss">
+    @theme {
+      /* === 品牌色 === 数据风：深蓝主色 + 数据蓝容器 */
+      --color-primary:              #102A43;
+      --color-primary-container:    #2978B5;
+      --color-on-primary:           #ffffff;
+      /* === 背景 / 表面 === 暖底数据风 */
+      --color-background:                 #F8F6F0;
+      --color-surface-container-lowest:   #FAF9F5;
+      --color-surface:                    #FFFFFF;
+      --color-surface-container:          #EDE9E0;
+      --color-surface-container-high:     #DDD8CD;
+      --color-surface-container-highest:  #CFC9BC;
+      /* === 文字 === */
+      --color-on-surface:           #1D2733;
+      --color-on-surface-variant:   #667085;
+      /* === 功能色 === */
+      --color-success:  #22c55e;
+      --color-error:    #ef4444;
+      --color-warning:  #F59E0B;
+      /* === 边框 === */
+      --color-outline:          #E6E1D8;
+      --color-outline-variant:  #D5D0C7;
+      /* === 圆角 === */
+      --radius-sm:   0.25rem;
+      --radius-md:   0.375rem;
+      --radius-lg:   0.5rem;
+      --radius-xl:   0.75rem;
+      --radius-2xl:  1rem;
+      --radius-full: 9999px;
+      /* === 阴影 === */
+      --shadow-card:   0 2px 8px rgba(0,0,0,0.08);
+      --shadow-float:  0 10px 25px rgba(0,0,0,0.12);
+      --shadow-dialog: 0 25px 50px rgba(0,0,0,0.15);
+      /* === 字体 === */
+      --font-sans: "Noto Sans SC", system-ui, sans-serif;
+    }
+  </style>
+
+  <!-- 图片兜底 -->
+  <script>
+    document.addEventListener('error', function (e) {
+      const img = e.target;
+      if (img.tagName !== 'IMG' || img.dataset.fallback) return;
+      img.dataset.fallback = '1';
+      const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const cat = img.getAttribute('data-category') || '其他';
+      const alt = img.getAttribute('alt') || '';
+      const label = esc(alt.length > 8 ? alt.slice(0, 8) + '…' : alt);
+      const icons = { '人物': '👤', '自然风景': '🏞', '动物': '🐾', '建筑城市': '🏙', '运动体育': '⚽', '交通工具': '🚗', '食物': '🍽', '服饰时尚': '👗', '商业科技': '💼', '游戏娱乐': '🎮', '艺术': '🎨', '其他': '🖼' };
+      const icon = icons[cat] || '🖼';
+      const w = img.width || 400, h = img.height || 300;
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="45%" text-anchor="middle" font-size="${Math.min(w, h) * 0.18}" dominant-baseline="central">${icon}</text><text x="50%" y="68%" text-anchor="middle" font-size="${Math.min(w, h) * 0.07}" fill="%239ca3af" font-family="system-ui,sans-serif" dominant-baseline="central">${label}</text></svg>`;
+      img.src = 'data:image/svg+xml,' + svg;
+    }, true);
+  </script>
+</head>
+
+<body class="bg-background text-on-surface font-sans">
+
+  <!-- @nav:start -->
+  <header class="bg-surface sticky top-0 z-40 h-14 flex items-center justify-between px-6 border-b border-outline-variant/20">
+    <div class="flex items-center gap-2">
+      <i data-lucide="graduation-cap" class="text-primary w-5 h-5"></i>
+      <span class="font-bold text-base text-on-surface">百芝堂培训系统</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="text-sm text-on-surface-variant" id="nav-role-label">培训老师</span>
+      <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium text-primary">郑</div>
+    </div>
+  </header>
+
+  <div class="flex" style="height: calc(100vh - 3.5rem)">
+    <aside class="w-52 shrink-0 bg-surface-container overflow-y-auto border-r border-outline-variant/20">
+      <div class="p-3 space-y-0.5">
+        <a href="manager-dashboard.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface font-medium text-sm transition-colors" data-page="manager-dashboard">
+          <i data-lucide="layout-dashboard" class="w-4 h-4"></i>监督仪表盘
+        </a>
+        <a href="teacher-delivery.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-md bg-primary/10 text-primary font-medium text-sm" aria-current="page" data-page="teacher-delivery">
+          <i data-lucide="presentation" class="w-4 h-4"></i>课程交付台
+        </a>
+        <a href="mentor-progress.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface font-medium text-sm transition-colors" data-page="mentor-progress">
+          <i data-lucide="users" class="w-4 h-4"></i>学员进度
+        </a>
+        <a href="trainee-learning.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface font-medium text-sm transition-colors" data-page="trainee-learning">
+          <i data-lucide="book-open" class="w-4 h-4"></i>我的学习
+        </a>
+      </div>
+    </aside>
+
+    <!-- @main-content:start -->
+    <main class="flex-1 min-w-0 overflow-y-auto bg-background p-6">
+
+      <!-- 页面标题 -->
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h1 class="text-2xl font-bold text-on-surface">课程交付台</h1>
+          <p class="text-sm text-on-surface-variant mt-1">管理您的课程排课、签到与作业</p>
+        </div>
+        <button id="btn-assign-homework-top" class="bg-primary text-on-primary px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all inline-flex items-center gap-2">
+          <i data-lucide="clipboard-list" class="w-3.5 h-3.5"></i>布置作业
+        </button>
+      </div>
+
+      <!-- 数据概览卡片 -->
+      <div class="grid grid-cols-4 gap-4 mb-8">
+        <!-- 卡片-待排课 -->
+        <div class="bg-surface rounded-lg shadow-card p-4">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-medium text-on-surface-variant">待排课</span>
+            <div class="w-7 h-7 rounded-md bg-warning/15 flex items-center justify-center">
+              <i data-lucide="calendar-clock" class="w-3.5 h-3.5 text-warning"></i>
+            </div>
+          </div>
+          <div class="text-2xl font-bold text-on-surface">2</div>
+          <div class="text-xs text-on-surface-variant mt-1">门课程待安排</div>
+        </div>
+        <!-- 卡片-进行中 -->
+        <div class="bg-surface rounded-lg shadow-card p-4">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-medium text-on-surface-variant">进行中</span>
+            <div class="w-7 h-7 rounded-md bg-primary-container/15 flex items-center justify-center">
+              <i data-lucide="play-circle" class="w-3.5 h-3.5 text-primary-container"></i>
+            </div>
+          </div>
+          <div class="text-2xl font-bold text-on-surface">1</div>
+          <div class="text-xs text-on-surface-variant mt-1">门课程授课中</div>
+        </div>
+        <!-- 卡片-待点评作业 -->
+        <div class="bg-surface rounded-lg shadow-card p-4">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-medium text-on-surface-variant">待点评作业</span>
+            <div class="w-7 h-7 rounded-md bg-error/15 flex items-center justify-center">
+              <i data-lucide="file-pen-line" class="w-3.5 h-3.5 text-error"></i>
+            </div>
+          </div>
+          <div class="text-2xl font-bold text-on-surface">8</div>
+          <div class="text-xs text-on-surface-variant mt-1">份作业待点评</div>
+        </div>
+        <!-- 卡片-平均出勤率 -->
+        <div class="bg-surface rounded-lg shadow-card p-4">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-medium text-on-surface-variant">平均出勤率</span>
+            <div class="w-7 h-7 rounded-md bg-success/15 flex items-center justify-center">
+              <i data-lucide="user-check" class="w-3.5 h-3.5 text-success"></i>
+            </div>
+          </div>
+          <div class="text-2xl font-bold text-on-surface">92%</div>
+          <div class="mt-2 w-full bg-surface-container rounded-full h-1.5">
+            <div class="bg-success rounded-full h-1.5" style="width: 92%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== 被指派课程列表 ==================== -->
+      <div class="mb-8">
+        <h2 class="text-base font-semibold text-on-surface mb-4">我被指派的课程</h2>
+
+        <!-- 期数分组-第3期 -->
+        <div class="bg-surface rounded-lg shadow-card mb-4 overflow-hidden">
+          <div class="px-5 py-3 bg-surface-container/50 flex items-center gap-2">
+            <i data-lucide="layers" class="w-4 h-4 text-primary-container"></i>
+            <span class="text-sm font-semibold text-on-surface">第3期</span>
+            <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-on-surface-variant"></i>
+            <span class="text-sm text-on-surface-variant">阶段一</span>
+          </div>
+
+          <div class="divide-y divide-outline-variant/30">
+            <!-- 课程1-糖尿病基础 -->
+            <div class="px-5 py-4 flex items-center justify-between hover:bg-surface-container/30 transition-colors">
+              <div class="flex items-center gap-4 flex-1 min-w-0">
+                <div class="w-9 h-9 rounded-lg bg-primary-container/15 flex items-center justify-center shrink-0">
+                  <i data-lucide="stethoscope" class="w-4 h-4 text-primary-container"></i>
+                </div>
+                <div class="min-w-0">
+                  <div class="text-sm font-medium text-on-surface">糖尿病基础</div>
+                  <div class="text-xs text-on-surface-variant mt-0.5">第3期 · 阶段一 · 2025-01-06 排课</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已完成</span>
+                <button id="btn-signin-1" class="bg-surface-container text-on-surface px-3 py-1.5 rounded-md text-xs font-medium hover:bg-surface-container-high active:scale-[0.98] transition-all inline-flex items-center gap-1" data-course="糖尿病基础">
+                  <i data-lucide="qr-code" class="w-3 h-3"></i>签到码
+                </button>
+                <button id="btn-homework-1" class="bg-surface-container text-on-surface px-3 py-1.5 rounded-md text-xs font-medium hover:bg-surface-container-high active:scale-[0.98] transition-all inline-flex items-center gap-1" data-course="糖尿病基础">
+                  <i data-lucide="clipboard-list" class="w-3 h-3"></i>布置作业
+                </button>
+              </div>
+            </div>
+
+            <!-- 课程2-服务用语实训 -->
+            <div class="px-5 py-4 flex items-center justify-between hover:bg-surface-container/30 transition-colors">
+              <div class="flex items-center gap-4 flex-1 min-w-0">
+                <div class="w-9 h-9 rounded-lg bg-primary-container/15 flex items-center justify-center shrink-0">
+                  <i data-lucide="headphones" class="w-4 h-4 text-primary-container"></i>
+                </div>
+                <div class="min-w-0">
+                  <div class="text-sm font-medium text-on-surface">服务用语实训</div>
+                  <div class="text-xs text-on-surface-variant mt-0.5">第3期 · 阶段一 · 2025-01-08 排课</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-primary-container/15 text-primary-container">进行中</span>
+                <button id="btn-signin-2" class="bg-surface-container text-on-surface px-3 py-1.5 rounded-md text-xs font-medium hover:bg-surface-container-high active:scale-[0.98] transition-all inline-flex items-center gap-1" data-course="服务用语实训">
+                  <i data-lucide="qr-code" class="w-3 h-3"></i>签到码
+                </button>
+                <button id="btn-homework-2" class="bg-surface-container text-on-surface px-3 py-1.5 rounded-md text-xs font-medium hover:bg-surface-container-high active:scale-[0.98] transition-all inline-flex items-center gap-1" data-course="服务用语实训">
+                  <i data-lucide="clipboard-list" class="w-3 h-3"></i>布置作业
+                </button>
+              </div>
+            </div>
+
+            <!-- 课程3-系统操作 -->
+            <div class="px-5 py-4 flex items-center justify-between hover:bg-surface-container/30 transition-colors">
+              <div class="flex items-center gap-4 flex-1 min-w-0">
+                <div class="w-9 h-9 rounded-lg bg-warning/15 flex items-center justify-center shrink-0">
+                  <i data-lucide="monitor" class="w-4 h-4 text-warning"></i>
+                </div>
+                <div class="min-w-0">
+                  <div class="text-sm font-medium text-on-surface">系统操作</div>
+                  <div class="text-xs text-on-surface-variant mt-0.5">第3期 · 阶段一 · 待排课</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-warning/15 text-warning">待排课</span>
+                <button id="btn-schedule-1" class="bg-primary text-on-primary px-3 py-1.5 rounded-md text-xs font-medium hover:opacity-90 active:scale-[0.98] transition-all inline-flex items-center gap-1" data-course="系统操作" data-period="第3期">
+                  <i data-lucide="calendar-plus" class="w-3 h-3"></i>排课
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 期数分组-第2期 -->
+        <div class="bg-surface rounded-lg shadow-card overflow-hidden">
+          <div class="px-5 py-3 bg-surface-container/50 flex items-center gap-2">
+            <i data-lucide="layers" class="w-4 h-4 text-primary-container"></i>
+            <span class="text-sm font-semibold text-on-surface">第2期</span>
+            <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-on-surface-variant"></i>
+            <span class="text-sm text-on-surface-variant">阶段二</span>
+          </div>
+
+          <div class="divide-y divide-outline-variant/30">
+            <!-- 课程4-慢病管理进阶 -->
+            <div class="px-5 py-4 flex items-center justify-between hover:bg-surface-container/30 transition-colors">
+              <div class="flex items-center gap-4 flex-1 min-w-0">
+                <div class="w-9 h-9 rounded-lg bg-success/15 flex items-center justify-center shrink-0">
+                  <i data-lucide="heart-pulse" class="w-4 h-4 text-success"></i>
+                </div>
+                <div class="min-w-0">
+                  <div class="text-sm font-medium text-on-surface">慢病管理进阶</div>
+                  <div class="text-xs text-on-surface-variant mt-0.5">第2期 · 阶段二 · 2024-12-20 排课</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已完成</span>
+                <button id="btn-signin-4" class="bg-surface-container text-on-surface px-3 py-1.5 rounded-md text-xs font-medium hover:bg-surface-container-high active:scale-[0.98] transition-all inline-flex items-center gap-1" data-course="慢病管理进阶">
+                  <i data-lucide="qr-code" class="w-3 h-3"></i>签到码
+                </button>
+                <button id="btn-homework-4" class="bg-surface-container text-on-surface px-3 py-1.5 rounded-md text-xs font-medium hover:bg-surface-container-high active:scale-[0.98] transition-all inline-flex items-center gap-1" data-course="慢病管理进阶">
+                  <i data-lucide="clipboard-list" class="w-3 h-3"></i>布置作业
+                </button>
+              </div>
+            </div>
+
+            <!-- 课程5-客户沟通技巧 -->
+            <div class="px-5 py-4 flex items-center justify-between hover:bg-surface-container/30 transition-colors">
+              <div class="flex items-center gap-4 flex-1 min-w-0">
+                <div class="w-9 h-9 rounded-lg bg-warning/15 flex items-center justify-center shrink-0">
+                  <i data-lucide="message-circle-heart" class="w-4 h-4 text-warning"></i>
+                </div>
+                <div class="min-w-0">
+                  <div class="text-sm font-medium text-on-surface">客户沟通技巧</div>
+                  <div class="text-xs text-on-surface-variant mt-0.5">第2期 · 阶段二 · 待排课</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-warning/15 text-warning">待排课</span>
+                <button id="btn-schedule-2" class="bg-primary text-on-primary px-3 py-1.5 rounded-md text-xs font-medium hover:opacity-90 active:scale-[0.98] transition-all inline-flex items-center gap-1" data-course="客户沟通技巧" data-period="第2期">
+                  <i data-lucide="calendar-plus" class="w-3 h-3"></i>排课
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== 作业管理 ==================== -->
+      <div>
+        <h2 class="text-base font-semibold text-on-surface mb-4">作业管理</h2>
+        <div class="bg-surface rounded-lg shadow-card overflow-hidden">
+          <!-- Tab 头 -->
+          <div class="flex border-b border-outline-variant/20">
+            <button id="tab-pending" class="px-5 py-3 text-sm font-semibold text-primary-container border-b-2 border-primary-container transition-colors">
+              待点评作业 <span class="ml-1 inline-flex items-center justify-center w-5 h-5 rounded-full bg-error/15 text-error text-xs font-bold">8</span>
+            </button>
+            <button id="tab-reviewed" class="px-5 py-3 text-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors">
+              已点评作业
+            </button>
+          </div>
+
+          <!-- 待点评作业列表 -->
+          <div id="panel-pending">
+            <div class="divide-y divide-outline-variant/30">
+              <!-- 作业1-李梦琪 -->
+              <div class="px-5 py-3.5 flex items-center justify-between hover:bg-surface-container/30 transition-colors homework-pending-item">
+                <div class="flex items-center gap-3 flex-1 min-w-0">
+                  <div class="w-8 h-8 rounded-full bg-primary-container/15 flex items-center justify-center text-xs font-medium text-primary-container shrink-0">李</div>
+                  <div class="min-w-0">
+                    <div class="text-sm font-medium text-on-surface">李梦琪</div>
+                    <div class="text-xs text-on-surface-variant">糖尿病基础 · 提交于 2025-01-07 14:30</div>
+                  </div>
+                </div>
+                <button class="btn-review bg-primary text-on-primary px-3 py-1.5 rounded-md text-xs font-medium hover:opacity-90 active:scale-[0.98] transition-all" data-student="李梦琪" data-course="糖尿病基础">点评</button>
+              </div>
+              <!-- 作业2-王志强 -->
+              <div class="px-5 py-3.5 flex items-center justify-between hover:bg-surface-container/30 transition-colors homework-pending-item">
+                <div class="flex items-center gap-3 flex-1 min-w-0">
+                  <div class="w-8 h-8 rounded-full bg-primary-container/15 flex items-center justify-center text-xs font-medium text-primary-container shrink-0">王</div>
+                  <div class="min-w-0">
+                    <div class="text-sm font-medium text-on-surface">王志强</div>
+                    <div class="text-xs text-on-surface-variant">糖尿病基础 · 提交于 2025-01-07 15:12</div>
+                  </div>
+                </div>
+                <button class="btn-review bg-primary text-on-primary px-3 py-1.5 rounded-md text-xs font-medium hover:opacity-90 active:scale-[0.98] transition-all" data-student="王志强" data-course="糖尿病基础">点评</button>
+              </div>
+              <!-- 作业3-赵雪 -->
+              <div class="px-5 py-3.5 flex items-center justify-between hover:bg-surface-container/30 transition-colors homework-pending-item">
+                <div class="flex items-center gap-3 flex-1 min-w-0">
+                  <div class="w-8 h-8 rounded-full bg-primary-container/15 flex items-center justify-center text-xs font-medium text-primary-container shrink-0">赵</div>
+                  <div class="min-w-0">
+                    <div class="text-sm font-medium text-on-surface">赵雪</div>
+                    <div class="text-xs text-on-surface-variant">糖尿病基础 · 提交于 2025-01-07 16:45</div>
+                  </div>
+                </div>
+                <button class="btn-review bg-primary text-on-primary px-3 py-1.5 rounded-md text-xs font-medium hover:opacity-90 active:scale-[0.98] transition-all" data-student="赵雪" data-course="糖尿病基础">点评</button>
+              </div>
+              <!-- 作业4-陈思远 -->
+              <div class="px-5 py-3.5 flex items-center justify-between hover:bg-surface-container/30 transition-colors homework-pending-item">
+                <div class="flex items-center gap-3 flex-1 min-w-0">
+                  <div class="w-8 h-8 rounded-full bg-primary-container/15 flex items-center justify-center text-xs font-medium text-primary-container shrink-0">陈</div>
+                  <div class="min-w-0">
+                    <div class="text-sm font-medium text-on-surface">陈思远</div>
+                    <div class="text-xs text-on-surface-variant">服务用语实训 · 提交于 2025-01-09 09:20</div>
+                  </div>
+                </div>
+                <button class="btn-review bg-primary text-on-primary px-3 py-1.5 rounded-md text-xs font-medium hover:opacity-90 active:scale-[0.98] transition-all" data-student="陈思远" data-course="服务用语实训">点评</button>
+              </div>
+              <!-- 作业5-孙婷婷 -->
+              <div class="px-5 py-3.5 flex items-center justify-between hover:bg-surface-container/30 transition-colors homework-pending-item">
+                <div class="flex items-center gap-3 flex-1 min-w-0">
+                  <div class="w-8 h-8 rounded-full bg-primary-container/15 flex items-center justify-center text-xs font-medium text-primary-container shrink-0">孙</div>
+                  <div class="min-w-0">
+                    <div class="text-sm font-medium text-on-surface">孙婷婷</div>
+                    <div class="text-xs text-on-surface-variant">服务用语实训 · 提交于 2025-01-09 10:05</div>
+                  </div>
+                </div>
+                <button class="btn-review bg-primary text-on-primary px-3 py-1.5 rounded-md text-xs font-medium hover:opacity-90 active:scale-[0.98] transition-all" data-student="孙婷婷" data-course="服务用语实训">点评</button>
+              </div>
+              <!-- 作业6-刘浩然 -->
+              <div class="px-5 py-3.5 flex items-center justify-between hover:bg-surface-container/30 transition-colors homework-pending-item">
+                <div class="flex items-center gap-3 flex-1 min-w-0">
+                  <div class="w-8 h-8 rounded-full bg-primary-container/15 flex items-center justify-center text-xs font-medium text-primary-container shrink-0">刘</div>
+                  <div class="min-w-0">
+                    <div class="text-sm font-medium text-on-surface">刘浩然</div>
+                    <div class="text-xs text-on-surface-variant">慢病管理进阶 · 提交于 2024-12-22 11:30</div>
+                  </div>
+                </div>
+                <button class="btn-review bg-primary text-on-primary px-3 py-1.5 rounded-md text-xs font-medium hover:opacity-90 active:scale-[0.98] transition-all" data-student="刘浩然" data-course="慢病管理进阶">点评</button>
+              </div>
+              <!-- 作业7-周敏 -->
+              <div class="px-5 py-3.5 flex items-center justify-between hover:bg-surface-container/30 transition-colors homework-pending-item">
+                <div class="flex items-center gap-3 flex-1 min-w-0">
+                  <div class="w-8 h-8 rounded-full bg-primary-container/15 flex items-center justify-center text-xs font-medium text-primary-container shrink-0">周</div>
+                  <div class="min-w-0">
+                    <div class="text-sm font-medium text-on-surface">周敏</div>
+                    <div class="text-xs text-on-surface-variant">慢病管理进阶 · 提交于 2024-12-22 14:00</div>
+                  </div>
+                </div>
+                <button class="btn-review bg-primary text-on-primary px-3 py-1.5 rounded-md text-xs font-medium hover:opacity-90 active:scale-[0.98] transition-all" data-student="周敏" data-course="慢病管理进阶">点评</button>
+              </div>
+              <!-- 作业8-张晓东 -->
+              <div class="px-5 py-3.5 flex items-center justify-between hover:bg-surface-container/30 transition-colors homework-pending-item">
+                <div class="flex items-center gap-3 flex-1 min-w-0">
+                  <div class="w-8 h-8 rounded-full bg-primary-container/15 flex items-center justify-center text-xs font-medium text-primary-container shrink-0">张</div>
+                  <div class="min-w-0">
+                    <div class="text-sm font-medium text-on-surface">张晓东</div>
+                    <div class="text-xs text-on-surface-variant">慢病管理进阶 · 提交于 2024-12-22 16:18</div>
+                  </div>
+                </div>
+                <button class="btn-review bg-primary text-on-primary px-3 py-1.5 rounded-md text-xs font-medium hover:opacity-90 active:scale-[0.98] transition-all" data-student="张晓东" data-course="慢病管理进阶">点评</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 已点评作业列表 -->
+          <div id="panel-reviewed" class="hidden">
+            <div class="divide-y divide-outline-variant/30">
+              <!-- 已点评1-杨丽 -->
+              <div class="px-5 py-3.5 flex items-center justify-between hover:bg-surface-container/30 transition-colors">
+                <div class="flex items-center gap-3 flex-1 min-w-0">
+                  <div class="w-8 h-8 rounded-full bg-success/15 flex items-center justify-center text-xs font-medium text-success shrink-0">杨</div>
+                  <div class="min-w-0">
+                    <div class="text-sm font-medium text-on-surface">杨丽</div>
+                    <div class="text-xs text-on-surface-variant">糖尿病基础 · 点评于 2025-01-08</div>
+                  </div>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="text-sm font-bold text-primary-container">85分</span>
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已点评</span>
+                </div>
+              </div>
+              <!-- 已点评2-吴凯 -->
+              <div class="px-5 py-3.5 flex items-center justify-between hover:bg-surface-container/30 transition-colors">
+                <div class="flex items-center gap-3 flex-1 min-w-0">
+                  <div class="w-8 h-8 rounded-full bg-success/15 flex items-center justify-center text-xs font-medium text-success shrink-0">吴</div>
+                  <div class="min-w-0">
+                    <div class="text-sm font-medium text-on-surface">吴凯</div>
+                    <div class="text-xs text-on-surface-variant">糖尿病基础 · 点评于 2025-01-08</div>
+                  </div>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="text-sm font-bold text-primary-container">92分</span>
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已点评</span>
+                </div>
+              </div>
+              <!-- 已点评3-黄丽娟 -->
+              <div class="px-5 py-3.5 flex items-center justify-between hover:bg-surface-container/30 transition-colors">
+                <div class="flex items-center gap-3 flex-1 min-w-0">
+                  <div class="w-8 h-8 rounded-full bg-success/15 flex items-center justify-center text-xs font-medium text-success shrink-0">黄</div>
+                  <div class="min-w-0">
+                    <div class="text-sm font-medium text-on-surface">黄丽娟</div>
+                    <div class="text-xs text-on-surface-variant">服务用语实训 · 点评于 2025-01-10</div>
+                  </div>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="text-sm font-bold text-warning">68分</span>
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已点评</span>
+                </div>
+              </div>
+              <!-- 已点评4-郑鹏飞 -->
+              <div class="px-5 py-3.5 flex items-center justify-between hover:bg-surface-container/30 transition-colors">
+                <div class="flex items-center gap-3 flex-1 min-w-0">
+                  <div class="w-8 h-8 rounded-full bg-success/15 flex items-center justify-center text-xs font-medium text-success shrink-0">郑</div>
+                  <div class="min-w-0">
+                    <div class="text-sm font-medium text-on-surface">郑鹏飞</div>
+                    <div class="text-xs text-on-surface-variant">慢病管理进阶 · 点评于 2024-12-23</div>
+                  </div>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="text-sm font-bold text-primary-container">78分</span>
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已点评</span>
+                </div>
+              </div>
+              <!-- 已点评5-林小芳 -->
+              <div class="px-5 py-3.5 flex items-center justify-between hover:bg-surface-container/30 transition-colors">
+                <div class="flex items-center gap-3 flex-1 min-w-0">
+                  <div class="w-8 h-8 rounded-full bg-success/15 flex items-center justify-center text-xs font-medium text-success shrink-0">林</div>
+                  <div class="min-w-0">
+                    <div class="text-sm font-medium text-on-surface">林小芳</div>
+                    <div class="text-xs text-on-surface-variant">慢病管理进阶 · 点评于 2024-12-23</div>
+                  </div>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="text-sm font-bold text-primary-container">95分</span>
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已点评</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== 排课弹窗 ==================== -->
+      <div id="modal-schedule" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-surface rounded-xl shadow-dialog max-w-md w-full max-h-[90vh] overflow-y-auto p-6">
+          <div class="flex items-center justify-between mb-5">
+            <h3 class="text-base font-semibold text-on-surface">排课</h3>
+            <button id="btn-close-schedule" class="w-8 h-8 rounded-md hover:bg-surface-container flex items-center justify-center transition-colors">
+              <i data-lucide="x" class="w-4 h-4 text-on-surface-variant"></i>
+            </button>
+          </div>
+
+          <div class="mb-4">
+            <div class="text-sm font-medium text-on-surface mb-1">课程</div>
+            <div id="schedule-course-name" class="text-sm text-primary-container font-medium bg-surface-container rounded-md px-3 py-2">系统操作</div>
+          </div>
+
+          <div class="mb-4">
+            <label class="text-sm font-medium text-on-surface mb-1.5 block">排课日期</label>
+            <input id="input-schedule-date" type="date" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" value="2025-01-15"/>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 mb-4">
+            <div>
+              <label class="text-sm font-medium text-on-surface mb-1.5 block">开始时间</label>
+              <input id="input-schedule-start" type="time" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" value="09:00"/>
+            </div>
+            <div>
+              <label class="text-sm font-medium text-on-surface mb-1.5 block">结束时间</label>
+              <input id="input-schedule-end" type="time" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" value="11:00"/>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label class="text-sm font-medium text-on-surface mb-1.5 block">地点</label>
+            <select id="input-schedule-location" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors">
+              <option>3楼培训室A</option>
+              <option>3楼培训室B</option>
+              <option>5楼大会议室</option>
+              <option>线上-腾讯会议</option>
+            </select>
+          </div>
+
+          <div class="bg-surface-container/60 rounded-md p-3 mb-5">
+            <div class="flex items-start gap-2">
+              <i data-lucide="info" class="w-4 h-4 text-primary-container shrink-0 mt-0.5"></i>
+              <div class="text-xs text-on-surface-variant leading-relaxed">
+                排课提交后立即生效，无需审批。系统将自动通知该期所有新人和培训负责人。
+              </div>
+            </div>
+          </div>
+
+          <div class="flex gap-3">
+            <button id="btn-cancel-schedule" class="flex-1 bg-surface-container text-on-surface px-4 py-2 rounded-md text-sm font-medium hover:bg-surface-container-high active:scale-[0.98] transition-all">取消</button>
+            <button id="btn-confirm-schedule" class="flex-1 bg-primary text-on-primary px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all">确认排课</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== 签到管理弹窗 ==================== -->
+      <div id="modal-signin" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-surface rounded-xl shadow-dialog max-w-lg w-full max-h-[90vh] overflow-y-auto p-6">
+          <div class="flex items-center justify-between mb-5">
+            <h3 class="text-base font-semibold text-on-surface">签到管理</h3>
+            <button id="btn-close-signin" class="w-8 h-8 rounded-md hover:bg-surface-container flex items-center justify-center transition-colors">
+              <i data-lucide="x" class="w-4 h-4 text-on-surface-variant"></i>
+            </button>
+          </div>
+
+          <!-- 课程信息 -->
+          <div class="mb-4">
+            <span id="signin-course-name" class="text-sm text-on-surface-variant">服务用语实训</span>
+            <span class="text-xs text-on-surface-variant ml-2">第3期 · 阶段一</span>
+          </div>
+
+          <!-- 签到码区域 -->
+          <div class="bg-primary rounded-xl p-5 mb-5 text-center">
+            <div class="text-xs text-on-primary/70 mb-2">签到码（请在5分钟内完成签到）</div>
+            <div id="signin-code" class="text-4xl font-bold text-on-primary tracking-[0.3em] mb-3">385726</div>
+            <div class="flex items-center justify-center gap-2">
+              <i data-lucide="clock" class="w-3.5 h-3.5 text-on-primary/70"></i>
+              <span id="signin-countdown" class="text-sm text-on-primary/80 font-medium">04:58</span>
+            </div>
+          </div>
+
+          <!-- 出勤统计 -->
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-4">
+              <div class="flex items-center gap-1.5">
+                <div class="w-2.5 h-2.5 rounded-full bg-success"></div>
+                <span class="text-xs text-on-surface-variant">已签到 3</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <div class="w-2.5 h-2.5 rounded-full bg-warning"></div>
+                <span class="text-xs text-on-surface-variant">迟到 1</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <div class="w-2.5 h-2.5 rounded-full bg-error"></div>
+                <span class="text-xs text-on-surface-variant">请假 1</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <div class="w-2.5 h-2.5 rounded-full bg-surface-container-highest"></div>
+                <span class="text-xs text-on-surface-variant">未签到 3</span>
+              </div>
+            </div>
+            <div class="text-sm font-bold text-primary-container">出勤率 67%</div>
+          </div>
+
+          <!-- 出勤率进度条 -->
+          <div class="w-full bg-surface-container rounded-full h-2 mb-5">
+            <div class="bg-success rounded-full h-2 transition-all" style="width: 67%"></div>
+          </div>
+
+          <!-- 新人签到列表 -->
+          <div class="divide-y divide-outline-variant/30">
+            <!-- 新人1-李梦琪 已签到 -->
+            <div class="flex items-center justify-between py-3">
+              <div class="flex items-center gap-3">
+                <div class="w-7 h-7 rounded-full bg-primary-container/15 flex items-center justify-center text-xs font-medium text-primary-container">李</div>
+                <span class="text-sm font-medium text-on-surface">李梦琪</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已签到</span>
+                <span class="text-xs text-on-surface-variant">09:02</span>
+              </div>
+            </div>
+            <!-- 新人2-王志强 已签到 -->
+            <div class="flex items-center justify-between py-3">
+              <div class="flex items-center gap-3">
+                <div class="w-7 h-7 rounded-full bg-primary-container/15 flex items-center justify-center text-xs font-medium text-primary-container">王</div>
+                <span class="text-sm font-medium text-on-surface">王志强</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已签到</span>
+                <span class="text-xs text-on-surface-variant">08:58</span>
+              </div>
+            </div>
+            <!-- 新人3-赵雪 迟到 -->
+            <div class="flex items-center justify-between py-3">
+              <div class="flex items-center gap-3">
+                <div class="w-7 h-7 rounded-full bg-warning/15 flex items-center justify-center text-xs font-medium text-warning">赵</div>
+                <span class="text-sm font-medium text-on-surface">赵雪</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-warning/15 text-warning">迟到</span>
+                <span class="text-xs text-on-surface-variant">09:18</span>
+              </div>
+            </div>
+            <!-- 新人4-陈思远 已签到 -->
+            <div class="flex items-center justify-between py-3">
+              <div class="flex items-center gap-3">
+                <div class="w-7 h-7 rounded-full bg-primary-container/15 flex items-center justify-center text-xs font-medium text-primary-container">陈</div>
+                <span class="text-sm font-medium text-on-surface">陈思远</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已签到</span>
+                <span class="text-xs text-on-surface-variant">09:00</span>
+              </div>
+            </div>
+            <!-- 新人5-孙婷婷 请假 -->
+            <div class="flex items-center justify-between py-3">
+              <div class="flex items-center gap-3">
+                <div class="w-7 h-7 rounded-full bg-error/15 flex items-center justify-center text-xs font-medium text-error">孙</div>
+                <span class="text-sm font-medium text-on-surface">孙婷婷</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-error/15 text-error">请假</span>
+              </div>
+            </div>
+            <!-- 新人6-刘浩然 未签到 -->
+            <div class="flex items-center justify-between py-3">
+              <div class="flex items-center gap-3">
+                <div class="w-7 h-7 rounded-full bg-surface-container-high flex items-center justify-center text-xs font-medium text-on-surface-variant">刘</div>
+                <span class="text-sm font-medium text-on-surface">刘浩然</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-surface-container text-on-surface-variant">未签到</span>
+                <button class="btn-manual-signin text-xs text-primary-container font-medium hover:underline" data-student="刘浩然">手动签到</button>
+              </div>
+            </div>
+            <!-- 新人7-周敏 未签到 -->
+            <div class="flex items-center justify-between py-3">
+              <div class="flex items-center gap-3">
+                <div class="w-7 h-7 rounded-full bg-surface-container-high flex items-center justify-center text-xs font-medium text-on-surface-variant">周</div>
+                <span class="text-sm font-medium text-on-surface">周敏</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-surface-container text-on-surface-variant">未签到</span>
+                <button class="btn-manual-signin text-xs text-primary-container font-medium hover:underline" data-student="周敏">手动签到</button>
+              </div>
+            </div>
+            <!-- 新人8-张晓东 未签到 -->
+            <div class="flex items-center justify-between py-3">
+              <div class="flex items-center gap-3">
+                <div class="w-7 h-7 rounded-full bg-surface-container-high flex items-center justify-center text-xs font-medium text-on-surface-variant">张</div>
+                <span class="text-sm font-medium text-on-surface">张晓东</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-surface-container text-on-surface-variant">未签到</span>
+                <button class="btn-manual-signin text-xs text-primary-container font-medium hover:underline" data-student="张晓东">手动签到</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== 布置作业弹窗 ==================== -->
+      <div id="modal-assign-homework" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-surface rounded-xl shadow-dialog max-w-md w-full max-h-[90vh] overflow-y-auto p-6">
+          <div class="flex items-center justify-between mb-5">
+            <h3 class="text-base font-semibold text-on-surface">布置作业</h3>
+            <button id="btn-close-homework" class="w-8 h-8 rounded-md hover:bg-surface-container flex items-center justify-center transition-colors">
+              <i data-lucide="x" class="w-4 h-4 text-on-surface-variant"></i>
+            </button>
+          </div>
+
+          <div class="mb-4">
+            <label class="text-sm font-medium text-on-surface mb-1.5 block">选择课程</label>
+            <select id="input-hw-course" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors">
+              <option>糖尿病基础</option>
+              <option>服务用语实训</option>
+              <option>系统操作</option>
+              <option>慢病管理进阶</option>
+              <option>客户沟通技巧</option>
+            </select>
+          </div>
+
+          <div class="mb-4">
+            <label class="text-sm font-medium text-on-surface mb-1.5 block">作业要求</label>
+            <textarea id="input-hw-requirement" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors resize-none" rows="4" placeholder="请输入作业要求和说明..."></textarea>
+          </div>
+
+          <div class="mb-5">
+            <label class="text-sm font-medium text-on-surface mb-1.5 block">截止日期</label>
+            <input id="input-hw-deadline" type="date" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" value="2025-01-20"/>
+          </div>
+
+          <div class="flex gap-3">
+            <button id="btn-cancel-homework" class="flex-1 bg-surface-container text-on-surface px-4 py-2 rounded-md text-sm font-medium hover:bg-surface-container-high active:scale-[0.98] transition-all">取消</button>
+            <button id="btn-confirm-homework" class="flex-1 bg-primary text-on-primary px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all">确认布置</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== 点评弹窗 ==================== -->
+      <div id="modal-review" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-surface rounded-xl shadow-dialog max-w-md w-full max-h-[90vh] overflow-y-auto p-6">
+          <div class="flex items-center justify-between mb-5">
+            <h3 class="text-base font-semibold text-on-surface">作业点评</h3>
+            <button id="btn-close-review" class="w-8 h-8 rounded-md hover:bg-surface-container flex items-center justify-center transition-colors">
+              <i data-lucide="x" class="w-4 h-4 text-on-surface-variant"></i>
+            </button>
+          </div>
+
+          <div class="mb-4">
+            <div id="review-student-name" class="text-sm font-medium text-on-surface">李梦琪</div>
+            <div id="review-course-name" class="text-xs text-on-surface-variant">糖尿病基础</div>
+          </div>
+
+          <div class="mb-4">
+            <label class="text-sm font-medium text-on-surface mb-1.5 block">评分（0-100）</label>
+            <div class="flex items-center gap-3">
+              <input id="input-review-score" type="number" min="0" max="100" class="w-24 bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" placeholder="0-100"/>
+              <span class="text-sm text-on-surface-variant">分</span>
+            </div>
+            <!-- 评分进度条 -->
+            <div class="mt-2 w-full bg-surface-container rounded-full h-2">
+              <div id="review-score-bar" class="bg-primary-container rounded-full h-2 transition-all" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <div class="mb-5">
+            <label class="text-sm font-medium text-on-surface mb-1.5 block">文字点评</label>
+            <textarea id="input-review-comment" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors resize-none" rows="4" placeholder="请输入点评内容..."></textarea>
+          </div>
+
+          <div class="flex gap-3">
+            <button id="btn-cancel-review" class="flex-1 bg-surface-container text-on-surface px-4 py-2 rounded-md text-sm font-medium hover:bg-surface-container-high active:scale-[0.98] transition-all">取消</button>
+            <button id="btn-confirm-review" class="flex-1 bg-primary text-on-primary px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all">提交点评</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== 排课成功提示 ==================== -->
+      <div id="toast-schedule-success" class="fixed top-20 right-6 bg-surface rounded-lg shadow-float px-5 py-3 flex items-center gap-3 z-50 hidden transition-all">
+        <div class="w-6 h-6 rounded-full bg-success/15 flex items-center justify-center">
+          <i data-lucide="check" class="w-3.5 h-3.5 text-success"></i>
+        </div>
+        <div>
+          <div class="text-sm font-medium text-on-surface">排课成功</div>
+          <div class="text-xs text-on-surface-variant">已自动通知该期新人和培训负责人</div>
+        </div>
+      </div>
+
+    </main>
+    <!-- @main-content:end -->
+  </div>
+  <!-- @nav:end -->
+
+  <script>
+  $(function() {
+
+    // ========== 排课弹窗 ==========
+    $('#btn-schedule-1, #btn-schedule-2').on('click', function() {
+      var courseName = $(this).data('course');
+      $('#schedule-course-name').text(courseName);
+      $('#modal-schedule').removeClass('hidden');
+    });
+
+    $('#btn-close-schedule, #btn-cancel-schedule').on('click', function() {
+      $('#modal-schedule').addClass('hidden');
+    });
+
+    $('#btn-confirm-schedule').on('click', function() {
+      // 排课确认：
+      // 1. 校验日期、时间、地点是否都已填写
+      // 2. 提交排课信息到后端，排课直接生效不需要审批
+      // 3. 系统自动同步通知给该期所有新人和培训负责人
+      // 4. 如调整已有排课，后端需记录变更日志（原日期→新日期+原因）
+      // 5. 更新课程列表中对应课程的状态为"已排课"
+      $('#modal-schedule').addClass('hidden');
+      $('#toast-schedule-success').removeClass('hidden');
+      setTimeout(function() {
+        $('#toast-schedule-success').addClass('hidden');
+      }, 3000);
+    });
+
+    // ========== 签到管理弹窗 ==========
+    $('[id^="btn-signin-"]').on('click', function() {
+      var courseName = $(this).data('course');
+      $('#signin-course-name').text(courseName);
+      // 生成6位随机签到码
+      var code = String(Math.floor(100000 + Math.random() * 900000));
+      $('#signin-code').text(code);
+      // 重置倒计时为5分钟
+      $('#signin-countdown').text('05:00');
+      $('#modal-signin').removeClass('hidden');
+      // 启动倒计时
+      startSigninCountdown();
+    });
+
+    $('#btn-close-signin').on('click', function() {
+      $('#modal-signin').addClass('hidden');
+    });
+
+    // 签到倒计时逻辑
+    var signinTimer = null;
+    function startSigninCountdown() {
+      if (signinTimer) clearInterval(signinTimer);
+      var totalSeconds = 5 * 60; // 5分钟
+      signinTimer = setInterval(function() {
+        totalSeconds--;
+        if (totalSeconds <= 0) {
+          clearInterval(signinTimer);
+          $('#signin-countdown').text('00:00');
+          // 倒计时结束，签到码失效，应提示老师刷新签到码
+          return;
+        }
+        var minutes = Math.floor(totalSeconds / 60);
+        var seconds = totalSeconds % 60;
+        $('#signin-countdown').text(
+          String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0')
+        );
+      }, 1000);
+    }
+
+    // 手动签到
+    $('#modal-signin').on('click', '.btn-manual-signin', function() {
+      var studentName = $(this).data('student');
+      // 手动签到逻辑：
+      // 1. 弹出确认框，确认后标记该新人为"已签到"
+      // 2. 更新该行的签到状态显示（badge + 签到时间）
+      // 3. 重新计算出勤率并更新进度条和百分比
+      // 4. 隐藏该行的"手动签到"按钮
+      var $row = $(this).closest('.flex');
+      $(this).prev('.inline-flex').removeClass('bg-surface-container text-on-surface-variant').addClass('bg-success/15 text-success').text('已签到');
+      $(this).remove();
+    });
+
+    // ========== 作业管理Tab切换 ==========
+    $('#tab-pending').on('click', function() {
+      $(this).addClass('text-primary-container font-semibold border-b-2 border-primary-container').removeClass('text-on-surface-variant font-medium');
+      $('#tab-reviewed').removeClass('text-primary-container font-semibold border-b-2 border-primary-container').addClass('text-on-surface-variant font-medium');
+      $('#panel-pending').removeClass('hidden');
+      $('#panel-reviewed').addClass('hidden');
+    });
+
+    $('#tab-reviewed').on('click', function() {
+      $(this).addClass('text-primary-container font-semibold border-b-2 border-primary-container').removeClass('text-on-surface-variant font-medium');
+      $('#tab-pending').removeClass('text-primary-container font-semibold border-b-2 border-primary-container').addClass('text-on-surface-variant font-medium');
+      $('#panel-reviewed').removeClass('hidden');
+      $('#panel-pending').addClass('hidden');
+    });
+
+    // ========== 点评弹窗 ==========
+    $('#modal-assign-homework').on('click', '.btn-review', function() {
+      var studentName = $(this).data('student');
+      var courseName = $(this).data('course');
+      $('#review-student-name').text(studentName);
+      $('#review-course-name').text(courseName);
+      $('#input-review-score').val('');
+      $('#input-review-comment').val('');
+      $('#review-score-bar').css('width', '0%');
+      $('#modal-review').removeClass('hidden');
+    });
+
+    // 列表中的点评按钮
+    $('.btn-review').on('click', function() {
+      var studentName = $(this).data('student');
+      var courseName = $(this).data('course');
+      $('#review-student-name').text(studentName);
+      $('#review-course-name').text(courseName);
+      $('#input-review-score').val('');
+      $('#input-review-comment').val('');
+      $('#review-score-bar').css('width', '0%');
+      $('#modal-review').removeClass('hidden');
+    });
+
+    $('#btn-close-review, #btn-cancel-review').on('click', function() {
+      $('#modal-review').addClass('hidden');
+    });
+
+    // 评分输入联动进度条
+    $('#input-review-score').on('input', function() {
+      var score = parseInt($(this).val()) || 0;
+      if (score > 100) score = 100;
+      if (score < 0) score = 0;
+      $('#review-score-bar').css('width', score + '%');
+    });
+
+    $('#btn-confirm-review').on('click', function() {
+      // 提交点评逻辑：
+      // 1. 校验评分是否在0-100范围内
+      // 2. 校验文字点评是否为空
+      // 3. 提交到后端保存
+      // 4. 将该作业从"待点评"列表移到"已点评"列表
+      // 5. 更新待点评数量badge
+      $('#modal-review').addClass('hidden');
+    });
+
+    // ========== 布置作业弹窗 ==========
+    $('#btn-assign-homework-top, [id^="btn-homework-"]').on('click', function() {
+      // 如果是从课程行点击，预选对应课程
+      var courseName = $(this).data('course');
+      if (courseName) {
+        $('#input-hw-course').val(courseName);
+      }
+      $('#input-hw-requirement').val('');
+      $('#input-hw-deadline').val('2025-01-20');
+      $('#modal-assign-homework').removeClass('hidden');
+    });
+
+    $('#btn-close-homework, #btn-cancel-homework').on('click', function() {
+      $('#modal-assign-homework').addClass('hidden');
+    });
+
+    $('#btn-confirm-homework').on('click', function() {
+      // 布置作业确认逻辑：
+      // 1. 校验课程是否已选、作业要求是否为空、截止日期是否合法
+      // 2. 提交到后端，系统自动通知该期所有新人
+      // 3. 关闭弹窗，显示成功提示
+      $('#modal-assign-homework').addClass('hidden');
+    });
+
+    // ========== 点击弹窗遮罩关闭 ==========
+    $('#modal-schedule, #modal-signin, #modal-assign-homework, #modal-review').on('click', function(e) {
+      if ($(e.target).is('#modal-schedule, #modal-signin, #modal-assign-homework, #modal-review')) {
+        $(this).addClass('hidden');
+        if ($(this).attr('id') === 'modal-signin' && signinTimer) {
+          clearInterval(signinTimer);
+        }
+      }
+    });
+
+  });
+  </script>
+
+  <script>lucide.createIcons();</script>
+</body>
+
+</html>

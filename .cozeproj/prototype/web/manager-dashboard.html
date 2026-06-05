@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link href="https://lf-code-agent.coze.cn/obj/x-ai-cn/fonts/google/google-all-fonts.css" rel="stylesheet"/>
+
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/jquery/jquery-3.7.1.min.js"></script>
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/lucide/lucide-1.0.0.min.js"></script>
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/tailwindcss/tailwindcss-browser-4.2.4.min.js"></script>
+
+  <style type="text/tailwindcss">
+    @theme {
+      /* === 品牌色 === 数据风：深蓝主色 + 数据蓝容器 */
+      --color-primary:              #102A43;
+      --color-primary-container:    #2978B5;
+      --color-on-primary:           #ffffff;
+      /* === 背景 / 表面 === 暖底数据风 */
+      --color-background:                 #F8F6F0;
+      --color-surface-container-lowest:   #FAF9F5;
+      --color-surface:                    #FFFFFF;
+      --color-surface-container:          #EDE9E0;
+      --color-surface-container-high:     #DDD8CD;
+      --color-surface-container-highest:  #CFC9BC;
+      /* === 文字 === */
+      --color-on-surface:           #1D2733;
+      --color-on-surface-variant:   #667085;
+      /* === 功能色 === */
+      --color-success:  #22c55e;
+      --color-error:    #ef4444;
+      --color-warning:  #F59E0B;
+      /* === 边框 === */
+      --color-outline:          #E6E1D8;
+      --color-outline-variant:  #D5D0C7;
+      /* === 圆角 === */
+      --radius-sm:   0.25rem;
+      --radius-md:   0.375rem;
+      --radius-lg:   0.5rem;
+      --radius-xl:   0.75rem;
+      --radius-2xl:  1rem;
+      --radius-full: 9999px;
+      /* === 阴影 === */
+      --shadow-card:   0 2px 8px rgba(0,0,0,0.08);
+      --shadow-float:  0 10px 25px rgba(0,0,0,0.12);
+      --shadow-dialog: 0 25px 50px rgba(0,0,0,0.15);
+      /* === 字体 === */
+      --font-sans: "Noto Sans SC", system-ui, sans-serif;
+    }
+  </style>
+
+  <!-- 图片兜底 -->
+  <script>
+    document.addEventListener('error', function (e) {
+      const img = e.target;
+      if (img.tagName !== 'IMG' || img.dataset.fallback) return;
+      img.dataset.fallback = '1';
+      const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const cat = img.getAttribute('data-category') || '其他';
+      const alt = img.getAttribute('alt') || '';
+      const label = esc(alt.length > 8 ? alt.slice(0, 8) + '…' : alt);
+      const icons = { '人物': '👤', '自然风景': '🏞', '动物': '🐾', '建筑城市': '🏙', '运动体育': '⚽', '交通工具': '🚗', '食物': '🍽', '服饰时尚': '👗', '商业科技': '💼', '游戏娱乐': '🎮', '艺术': '🎨', '其他': '🖼' };
+      const icon = icons[cat] || '🖼';
+      const w = img.width || 400, h = img.height || 300;
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="45%" text-anchor="middle" font-size="${Math.min(w, h) * 0.18}" dominant-baseline="central">${icon}</text><text x="50%" y="68%" text-anchor="middle" font-size="${Math.min(w, h) * 0.07}" fill="%239ca3af" font-family="system-ui,sans-serif" dominant-baseline="central">${label}</text></svg>`;
+      img.src = 'data:image/svg+xml,' + svg;
+    }, true);
+  </script>
+</head>
+
+<body class="bg-background text-on-surface font-sans">
+
+  <!-- @nav:start -->
+  <header class="bg-surface sticky top-0 z-40 h-14 flex items-center justify-between px-6 border-b border-outline-variant/20">
+    <div class="flex items-center gap-2">
+      <i data-lucide="graduation-cap" class="text-primary w-5 h-5"></i>
+      <span class="font-bold text-base text-on-surface">百芝堂培训系统</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="text-sm text-on-surface-variant" id="nav-role-label">培训负责人</span>
+      <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium text-primary">郑</div>
+    </div>
+  </header>
+
+  <div class="flex" style="height: calc(100vh - 3.5rem)">
+    <aside class="w-52 shrink-0 bg-surface-container overflow-y-auto border-r border-outline-variant/20">
+      <div class="p-3 space-y-0.5">
+        <a href="manager-dashboard.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-md bg-primary/10 text-primary font-medium text-sm" aria-current="page" data-page="manager-dashboard">
+          <i data-lucide="layout-dashboard" class="w-4 h-4"></i>监督仪表盘
+        </a>
+        <a href="teacher-delivery.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface font-medium text-sm transition-colors" data-page="teacher-delivery">
+          <i data-lucide="presentation" class="w-4 h-4"></i>课程交付台
+        </a>
+        <a href="mentor-progress.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface font-medium text-sm transition-colors" data-page="mentor-progress">
+          <i data-lucide="users" class="w-4 h-4"></i>学员进度
+        </a>
+        <a href="trainee-learning.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface font-medium text-sm transition-colors" data-page="trainee-learning">
+          <i data-lucide="book-open" class="w-4 h-4"></i>我的学习
+        </a>
+      </div>
+    </aside>
+
+    <!-- @main-content:start -->
+    <main class="flex-1 min-w-0 overflow-y-auto bg-background p-6">
+
+      <!-- 页面标题 + 操作 -->
+      <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-bold text-on-surface">监督仪表盘</h1>
+        <button id="btn-create-batch" class="bg-primary text-on-primary px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all inline-flex items-center gap-2">
+          <i data-lucide="plus" class="w-3.5 h-3.5"></i>从模板创建新期
+        </button>
+      </div>
+
+      <!-- ===== 统计卡片区 ===== -->
+      <div class="grid grid-cols-4 gap-4 mb-8">
+        <!-- 统计卡片-进行中的培训期数 -->
+        <div class="bg-surface rounded-lg shadow-card p-5">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-medium text-on-surface-variant uppercase tracking-wide">进行中的培训期数</span>
+            <div class="w-8 h-8 rounded-md bg-primary-container/15 flex items-center justify-center">
+              <i data-lucide="layers" class="w-4 h-4 text-primary-container"></i>
+            </div>
+          </div>
+          <div class="text-3xl font-bold text-on-surface">2</div>
+          <div class="text-xs text-on-surface-variant mt-1">共 4 期培训</div>
+        </div>
+        <!-- 统计卡片-当期新人数 -->
+        <div class="bg-surface rounded-lg shadow-card p-5">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-medium text-on-surface-variant uppercase tracking-wide">当期新人数</span>
+            <div class="w-8 h-8 rounded-md bg-primary-container/15 flex items-center justify-center">
+              <i data-lucide="user-plus" class="w-4 h-4 text-primary-container"></i>
+            </div>
+          </div>
+          <div class="text-3xl font-bold text-on-surface">18</div>
+          <div class="text-xs text-on-surface-variant mt-1">第3期 · 较上期 +3</div>
+        </div>
+        <!-- 统计卡片-平均出勤率 -->
+        <div class="bg-surface rounded-lg shadow-card p-5">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-medium text-on-surface-variant uppercase tracking-wide">平均出勤率</span>
+            <div class="w-8 h-8 rounded-md bg-primary-container/15 flex items-center justify-center">
+              <i data-lucide="calendar-check" class="w-4 h-4 text-primary-container"></i>
+            </div>
+          </div>
+          <div class="text-3xl font-bold text-on-surface">87<span class="text-lg font-semibold text-on-surface-variant">%</span></div>
+          <div class="text-xs text-success mt-1">↑ 5% 较上期</div>
+        </div>
+        <!-- 统计卡片-作业完成率 -->
+        <div class="bg-surface rounded-lg shadow-card p-5">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-medium text-on-surface-variant uppercase tracking-wide">作业完成率</span>
+            <div class="w-8 h-8 rounded-md bg-primary-container/15 flex items-center justify-center">
+              <i data-lucide="clipboard-check" class="w-4 h-4 text-primary-container"></i>
+            </div>
+          </div>
+          <div class="text-3xl font-bold text-on-surface">72<span class="text-lg font-semibold text-on-surface-variant">%</span></div>
+          <div class="text-xs text-warning mt-1">↓ 3% 较上期</div>
+        </div>
+      </div>
+
+      <!-- ===== 培训计划/实例列表 ===== -->
+      <div class="mb-8">
+        <h2 class="text-base font-semibold text-on-surface mb-4">培训批次</h2>
+        <div class="space-y-3" id="batch-list">
+
+          <!-- 列表-第4期 -->
+          <div class="batch-card bg-surface rounded-lg shadow-card" data-batch-id="4">
+            <div class="flex items-center justify-between px-5 py-4 cursor-pointer batch-header" id="batch-header-4">
+              <div class="flex items-center gap-4">
+                <div class="w-9 h-9 rounded-md bg-surface-container flex items-center justify-center text-sm font-bold text-on-surface-variant">4</div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-sm font-semibold text-on-surface">第4期</span>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-primary/10 text-primary">准备中</span>
+                  </div>
+                  <div class="text-xs text-on-surface-variant mt-0.5">2025-04-01 ~ 2025-06-30 · 新人 6 名</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-4">
+                <div class="w-32">
+                  <div class="flex items-center justify-between text-xs mb-1">
+                    <span class="text-on-surface-variant">阶段进度</span>
+                    <span class="font-medium text-on-surface-variant">0/3</span>
+                  </div>
+                  <div class="w-full h-1.5 bg-surface-container rounded-full">
+                    <div class="h-1.5 bg-primary-container/40 rounded-full" style="width: 0%"></div>
+                  </div>
+                </div>
+                <i data-lucide="chevron-down" class="w-4 h-4 text-on-surface-variant transition-transform"></i>
+              </div>
+            </div>
+
+            <!-- 第4期详情（展开内容，默认隐藏） -->
+            <div class="batch-detail hidden" id="batch-detail-4">
+              <div class="border-t border-outline-variant/20 px-5 py-5">
+                <!-- 三个阶段 -->
+                <div class="space-y-5">
+                  <!-- 阶段一 基础培训 batch模式 -->
+                  <div>
+                    <div class="flex items-center justify-between mb-3">
+                      <div class="flex items-center gap-2">
+                        <span class="text-sm font-semibold text-on-surface">阶段一 · 基础培训</span>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-surface-container text-on-surface-variant">batch 模式</span>
+                      </div>
+                      <span class="text-xs text-on-surface-variant">未开始</span>
+                    </div>
+                    <div class="bg-surface-container-lowest rounded-md p-4">
+                      <div class="grid grid-cols-4 gap-4 text-xs text-on-surface-variant mb-3">
+                        <span>课程</span><span>状态</span><span>出勤率</span><span>作业完成率</span>
+                      </div>
+                      <!-- 课程1 -->
+                      <div class="grid grid-cols-4 gap-4 py-2 border-t border-outline-variant/10">
+                        <span class="text-sm text-on-surface">入职导论</span>
+                        <span class="text-xs text-on-surface-variant">未开始</span>
+                        <span class="text-sm text-on-surface-variant">—</span>
+                        <span class="text-sm text-on-surface-variant">—</span>
+                      </div>
+                      <!-- 课程2 -->
+                      <div class="grid grid-cols-4 gap-4 py-2 border-t border-outline-variant/10">
+                        <span class="text-sm text-on-surface">企业文化与价值观</span>
+                        <span class="text-xs text-on-surface-variant">未开始</span>
+                        <span class="text-sm text-on-surface-variant">—</span>
+                        <span class="text-sm text-on-surface-variant">—</span>
+                      </div>
+                      <!-- 课程3 -->
+                      <div class="grid grid-cols-4 gap-4 py-2 border-t border-outline-variant/10">
+                        <span class="text-sm text-on-surface">规章制度与安全</span>
+                        <span class="text-xs text-on-surface-variant">未开始</span>
+                        <span class="text-sm text-on-surface-variant">—</span>
+                        <span class="text-sm text-on-surface-variant">—</span>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- 阶段二 业务实训 individual模式 -->
+                  <div>
+                    <div class="flex items-center justify-between mb-3">
+                      <div class="flex items-center gap-2">
+                        <span class="text-sm font-semibold text-on-surface">阶段二 · 业务实训</span>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-primary-container/10 text-primary-container">individual 模式</span>
+                      </div>
+                      <span class="text-xs text-on-surface-variant">未开始</span>
+                    </div>
+                    <div class="bg-surface-container-lowest rounded-md p-4">
+                      <div class="grid grid-cols-5 gap-4 text-xs text-on-surface-variant mb-3">
+                        <span>课程</span><span>带教老师</span><span>状态</span><span>出勤率</span><span>作业完成率</span>
+                      </div>
+                      <!-- 课程1 -->
+                      <div class="grid grid-cols-5 gap-4 py-2 border-t border-outline-variant/10">
+                        <span class="text-sm text-on-surface">门店运营基础</span>
+                        <span class="text-sm text-primary-container">—</span>
+                        <span class="text-xs text-on-surface-variant">未开始</span>
+                        <span class="text-sm text-on-surface-variant">—</span>
+                        <span class="text-sm text-on-surface-variant">—</span>
+                      </div>
+                      <!-- 课程2 -->
+                      <div class="grid grid-cols-5 gap-4 py-2 border-t border-outline-variant/10">
+                        <span class="text-sm text-on-surface">客户服务实操</span>
+                        <span class="text-sm text-primary-container">—</span>
+                        <span class="text-xs text-on-surface-variant">未开始</span>
+                        <span class="text-sm text-on-surface-variant">—</span>
+                        <span class="text-sm text-on-surface-variant">—</span>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- 阶段三 专业进阶 individual模式 -->
+                  <div>
+                    <div class="flex items-center justify-between mb-3">
+                      <div class="flex items-center gap-2">
+                        <span class="text-sm font-semibold text-on-surface">阶段三 · 专业进阶</span>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-primary-container/10 text-primary-container">individual 模式</span>
+                      </div>
+                      <span class="text-xs text-on-surface-variant">未开始</span>
+                    </div>
+                    <div class="bg-surface-container-lowest rounded-md p-4">
+                      <div class="grid grid-cols-5 gap-4 text-xs text-on-surface-variant mb-3">
+                        <span>课程</span><span>带教老师</span><span>状态</span><span>出勤率</span><span>作业完成率</span>
+                      </div>
+                      <!-- 课程1 -->
+                      <div class="grid grid-cols-5 gap-4 py-2 border-t border-outline-variant/10">
+                        <span class="text-sm text-on-surface">产品知识深化</span>
+                        <span class="text-sm text-primary-container">—</span>
+                        <span class="text-xs text-on-surface-variant">未开始</span>
+                        <span class="text-sm text-on-surface-variant">—</span>
+                        <span class="text-sm text-on-surface-variant">—</span>
+                      </div>
+                      <!-- 课程2 -->
+                      <div class="grid grid-cols-5 gap-4 py-2 border-t border-outline-variant/10">
+                        <span class="text-sm text-on-surface">独立上岗考核</span>
+                        <span class="text-sm text-primary-container">—</span>
+                        <span class="text-xs text-on-surface-variant">未开始</span>
+                        <span class="text-sm text-on-surface-variant">—</span>
+                        <span class="text-sm text-on-surface-variant">—</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 列表-第3期 -->
+          <div class="batch-card bg-surface rounded-lg shadow-card" data-batch-id="3">
+            <div class="flex items-center justify-between px-5 py-4 cursor-pointer batch-header" id="batch-header-3">
+              <div class="flex items-center gap-4">
+                <div class="w-9 h-9 rounded-md bg-primary-container/15 flex items-center justify-center text-sm font-bold text-primary-container">3</div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-sm font-semibold text-on-surface">第3期</span>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">进行中</span>
+                  </div>
+                  <div class="text-xs text-on-surface-variant mt-0.5">2025-01-15 ~ 2025-04-15 · 新人 18 名</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-4">
+                <div class="w-32">
+                  <div class="flex items-center justify-between text-xs mb-1">
+                    <span class="text-on-surface-variant">阶段进度</span>
+                    <span class="font-medium text-primary-container">1/3</span>
+                  </div>
+                  <div class="w-full h-1.5 bg-surface-container rounded-full">
+                    <div class="h-1.5 bg-primary-container rounded-full" style="width: 33%"></div>
+                  </div>
+                </div>
+                <i data-lucide="chevron-down" class="w-4 h-4 text-on-surface-variant transition-transform"></i>
+              </div>
+            </div>
+
+            <!-- 第3期详情（默认隐藏） -->
+            <div class="batch-detail hidden" id="batch-detail-3">
+              <div class="border-t border-outline-variant/20 px-5 py-5">
+                <div class="space-y-5">
+                  <!-- 阶段一 基础培训 batch模式 - 已完成 -->
+                  <div>
+                    <div class="flex items-center justify-between mb-3">
+                      <div class="flex items-center gap-2">
+                        <span class="text-sm font-semibold text-on-surface">阶段一 · 基础培训</span>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-surface-container text-on-surface-variant">batch 模式</span>
+                      </div>
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已完成</span>
+                    </div>
+                    <div class="bg-surface-container-lowest rounded-md p-4">
+                      <div class="grid grid-cols-4 gap-4 text-xs text-on-surface-variant mb-3">
+                        <span>课程</span><span>状态</span><span>出勤率</span><span>作业完成率</span>
+                      </div>
+                      <!-- 课程1 -->
+                      <div class="grid grid-cols-4 gap-4 py-2 border-t border-outline-variant/10">
+                        <span class="text-sm text-on-surface">入职导论</span>
+                        <span class="text-xs text-success">已完成</span>
+                        <div class="flex items-center gap-1.5">
+                          <div class="w-16 h-1.5 bg-surface-container rounded-full"><div class="h-1.5 bg-primary-container rounded-full" style="width:92%"></div></div>
+                          <span class="text-sm font-medium text-on-surface">92%</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                          <div class="w-16 h-1.5 bg-surface-container rounded-full"><div class="h-1.5 bg-primary-container rounded-full" style="width:89%"></div></div>
+                          <span class="text-sm font-medium text-on-surface">89%</span>
+                        </div>
+                      </div>
+                      <!-- 课程2 -->
+                      <div class="grid grid-cols-4 gap-4 py-2 border-t border-outline-variant/10">
+                        <span class="text-sm text-on-surface">企业文化与价值观</span>
+                        <span class="text-xs text-success">已完成</span>
+                        <div class="flex items-center gap-1.5">
+                          <div class="w-16 h-1.5 bg-surface-container rounded-full"><div class="h-1.5 bg-primary-container rounded-full" style="width:88%"></div></div>
+                          <span class="text-sm font-medium text-on-surface">88%</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                          <div class="w-16 h-1.5 bg-surface-container rounded-full"><div class="h-1.5 bg-primary-container rounded-full" style="width:83%"></div></div>
+                          <span class="text-sm font-medium text-on-surface">83%</span>
+                        </div>
+                      </div>
+                      <!-- 课程3 -->
+                      <div class="grid grid-cols-4 gap-4 py-2 border-t border-outline-variant/10">
+                        <span class="text-sm text-on-surface">规章制度与安全</span>
+                        <span class="text-xs text-success">已完成</span>
+                        <div class="flex items-center gap-1.5">
+                          <div class="w-16 h-1.5 bg-surface-container rounded-full"><div class="h-1.5 bg-primary-container rounded-full" style="width:85%"></div></div>
+                          <span class="text-sm font-medium text-on-surface">85%</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                          <div class="w-16 h-1.5 bg-surface-container rounded-full"><div class="h-1.5 bg-primary-container rounded-full" style="width:78%"></div></div>
+                          <span class="text-sm font-medium text-on-surface">78%</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- 阶段二 业务实训 individual模式 - 进行中 -->
+                  <div>
+                    <div class="flex items-center justify-between mb-3">
+                      <div class="flex items-center gap-2">
+                        <span class="text-sm font-semibold text-on-surface">阶段二 · 业务实训</span>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-primary-container/10 text-primary-container">individual 模式</span>
+                      </div>
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-primary-container/10 text-primary-container">进行中</span>
+                    </div>
+                    <div class="bg-surface-container-lowest rounded-md p-4">
+                      <div class="grid grid-cols-5 gap-4 text-xs text-on-surface-variant mb-3">
+                        <span>课程</span><span>带教老师</span><span>状态</span><span>出勤率</span><span>作业完成率</span>
+                      </div>
+                      <!-- 课程1 -->
+                      <div class="grid grid-cols-5 gap-4 py-2 border-t border-outline-variant/10">
+                        <span class="text-sm text-on-surface">门店运营基础</span>
+                        <span class="text-sm text-primary-container">王老师</span>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-primary-container/10 text-primary-container w-fit">进行中</span>
+                        <div class="flex items-center gap-1.5">
+                          <div class="w-16 h-1.5 bg-surface-container rounded-full"><div class="h-1.5 bg-primary-container rounded-full" style="width:72%"></div></div>
+                          <span class="text-sm font-medium text-on-surface">72%</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                          <div class="w-16 h-1.5 bg-surface-container rounded-full"><div class="h-1.5 bg-warning rounded-full" style="width:55%"></div></div>
+                          <span class="text-sm font-medium text-warning">55%</span>
+                        </div>
+                      </div>
+                      <!-- 课程2 -->
+                      <div class="grid grid-cols-5 gap-4 py-2 border-t border-outline-variant/10">
+                        <span class="text-sm text-on-surface">客户服务实操</span>
+                        <span class="text-sm text-primary-container">赵老师</span>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-primary-container/10 text-primary-container w-fit">进行中</span>
+                        <div class="flex items-center gap-1.5">
+                          <div class="w-16 h-1.5 bg-surface-container rounded-full"><div class="h-1.5 bg-primary-container rounded-full" style="width:80%"></div></div>
+                          <span class="text-sm font-medium text-on-surface">80%</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                          <div class="w-16 h-1.5 bg-surface-container rounded-full"><div class="h-1.5 bg-primary-container rounded-full" style="width:68%"></div></div>
+                          <span class="text-sm font-medium text-on-surface">68%</span>
+                        </div>
+                      </div>
+                      <!-- 课程3 -->
+                      <div class="grid grid-cols-5 gap-4 py-2 border-t border-outline-variant/10">
+                        <span class="text-sm text-on-surface">销售技巧训练</span>
+                        <span class="text-sm text-primary-container">孙老师</span>
+                        <span class="text-xs text-on-surface-variant">未开始</span>
+                        <span class="text-sm text-on-surface-variant">—</span>
+                        <span class="text-sm text-on-surface-variant">—</span>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- 阶段三 专业进阶 individual模式 - 未开始 -->
+                  <div>
+                    <div class="flex items-center justify-between mb-3">
+                      <div class="flex items-center gap-2">
+                        <span class="text-sm font-semibold text-on-surface">阶段三 · 专业进阶</span>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-primary-container/10 text-primary-container">individual 模式</span>
+                      </div>
+                      <span class="text-xs text-on-surface-variant">未开始</span>
+                    </div>
+                    <div class="bg-surface-container-lowest rounded-md p-4">
+                      <div class="grid grid-cols-5 gap-4 text-xs text-on-surface-variant mb-3">
+                        <span>课程</span><span>带教老师</span><span>状态</span><span>出勤率</span><span>作业完成率</span>
+                      </div>
+                      <!-- 课程1 -->
+                      <div class="grid grid-cols-5 gap-4 py-2 border-t border-outline-variant/10">
+                        <span class="text-sm text-on-surface">产品知识深化</span>
+                        <span class="text-sm text-primary-container">—</span>
+                        <span class="text-xs text-on-surface-variant">未开始</span>
+                        <span class="text-sm text-on-surface-variant">—</span>
+                        <span class="text-sm text-on-surface-variant">—</span>
+                      </div>
+                      <!-- 课程2 -->
+                      <div class="grid grid-cols-5 gap-4 py-2 border-t border-outline-variant/10">
+                        <span class="text-sm text-on-surface">独立上岗考核</span>
+                        <span class="text-sm text-primary-container">—</span>
+                        <span class="text-xs text-on-surface-variant">未开始</span>
+                        <span class="text-sm text-on-surface-variant">—</span>
+                        <span class="text-sm text-on-surface-variant">—</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 列表-第2期 -->
+          <div class="batch-card bg-surface rounded-lg shadow-card" data-batch-id="2">
+            <div class="flex items-center justify-between px-5 py-4 cursor-pointer batch-header" id="batch-header-2">
+              <div class="flex items-center gap-4">
+                <div class="w-9 h-9 rounded-md bg-success/10 flex items-center justify-center text-sm font-bold text-success">2</div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-sm font-semibold text-on-surface">第2期</span>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">进行中</span>
+                  </div>
+                  <div class="text-xs text-on-surface-variant mt-0.5">2024-09-01 ~ 2024-12-31 · 新人 15 名</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-4">
+                <div class="w-32">
+                  <div class="flex items-center justify-between text-xs mb-1">
+                    <span class="text-on-surface-variant">阶段进度</span>
+                    <span class="font-medium text-primary-container">2/3</span>
+                  </div>
+                  <div class="w-full h-1.5 bg-surface-container rounded-full">
+                    <div class="h-1.5 bg-primary-container rounded-full" style="width: 66%"></div>
+                  </div>
+                </div>
+                <i data-lucide="chevron-down" class="w-4 h-4 text-on-surface-variant transition-transform"></i>
+              </div>
+            </div>
+
+            <!-- 第2期详情（默认隐藏） -->
+            <div class="batch-detail hidden" id="batch-detail-2">
+              <div class="border-t border-outline-variant/20 px-5 py-5">
+                <div class="space-y-5">
+                  <!-- 阶段一 基础培训 batch模式 - 已完成 -->
+                  <div>
+                    <div class="flex items-center justify-between mb-3">
+                      <div class="flex items-center gap-2">
+                        <span class="text-sm font-semibold text-on-surface">阶段一 · 基础培训</span>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-surface-container text-on-surface-variant">batch 模式</span>
+                      </div>
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已完成</span>
+                    </div>
+                    <div class="bg-surface-container-lowest rounded-md p-4">
+                      <div class="grid grid-cols-4 gap-4 text-xs text-on-surface-variant mb-3">
+                        <span>课程</span><span>状态</span><span>出勤率</span><span>作业完成率</span>
+                      </div>
+                      <!-- 课程1 -->
+                      <div class="grid grid-cols-4 gap-4 py-2 border-t border-outline-variant/10">
+                        <span class="text-sm text-on-surface">入职导论</span>
+                        <span class="text-xs text-success">已完成</span>
+                        <div class="flex items-center gap-1.5">
+                          <div class="w-16 h-1.5 bg-surface-container rounded-full"><div class="h-1.5 bg-primary-container rounded-full" style="width:95%"></div></div>
+                          <span class="text-sm font-medium text-on-surface">95%</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                          <div class="w-16 h-1.5 bg-surface-container rounded-full"><div class="h-1.5 bg-primary-container rounded-full" style="width:93%"></div></div>
+                          <span class="text-sm font-medium text-on-surface">93%</span>
+                        </div>
+                      </div>
+                      <!-- 课程2 -->
+                      <div class="grid grid-cols-4 gap-4 py-2 border-t border-outline-variant/10">
+                        <span class="text-sm text-on-surface">企业文化与价值观</span>
+                        <span class="text-xs text-success">已完成</span>
+                        <div class="flex items-center gap-1.5">
+                          <div class="w-16 h-1.5 bg-surface-container rounded-full"><div class="h-1.5 bg-primary-container rounded-full" style="width:90%"></div></div>
+                          <span class="text-sm font-medium text-on-surface">90%</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                          <div class="w-16 h-1.5 bg-surface-container rounded-full"><div class="h-1.5 bg-primary-container rounded-full" style="width:87%"></div></div>
+                          <span class="text-sm font-medium text-on-surface">87%</span>
+                        </div>
+                      </div>
+                      <!-- 课程3 -->
+                      <div class="grid grid-cols-4 gap-4 py-2 border-t border-outline-variant/10">
+                        <span class="text-sm text-on-surface">规章制度与安全</span>
+                        <span class="text-xs text-success">已完成</span>
+                        <div class="flex items-center gap-1.5">
+                          <div class="w-16 h-1.5 bg-surface-container rounded-full"><div class="h-1.5 bg-primary-container rounded-full" style="width:93%"></div></div>
+                          <span class="text-sm font-medium text-on-surface">93%</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                          <div class="w-16 h-1.5 bg-surface-container rounded-full"><div class="h-1.5 bg-primary-container rounded-full" style="width:91%"></div></div>
+                          <span class="text-sm font-medium text-on-surface">91%</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- 阶段二 业务实训 individual模式 - 已完成 -->
+                  <div>
+                    <div class="flex items-center justify-between mb-3">
+                      <div class="flex items-center gap-2">
+                        <span class="text-sm font-semibold text-on-surface">阶段二 · 业务实训</span>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-primary-container/10 text-primary-container">individual 模式</span>
+                      </div>
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已完成</span>
+                    </div>
+                    <div class="bg-surface-container-lowest rounded-md p-4">
+                      <div class="grid grid-cols-5 gap-4 text-xs text-on-surface-variant mb-3">
+                        <span>课程</span><span>带教老师</span><span>状态</span><span>出勤率</span><span>作业完成率</span>
+                      </div>
+                      <!-- 课程1 -->
+                      <div class="grid grid-cols-5 gap-4 py-2 border-t border-outline-variant/10">
+                        <span class="text-sm text-on-surface">门店运营基础</span>
+                        <span class="text-sm text-primary-container">王老师</span>
+                        <span class="text-xs text-success">已完成</span>
+                        <div class="flex items-center gap-1.5">
+                          <div class="w-16 h-1.5 bg-surface-container rounded-full"><div class="h-1.5 bg-primary-container rounded-full" style="width:88%"></div></div>
+                          <span class="text-sm font-medium text-on-surface">88%</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                          <div class="w-16 h-1.5 bg-surface-container rounded-full"><div class="h-1.5 bg-primary-container rounded-full" style="width:82%"></div></div>
+                          <span class="text-sm font-medium text-on-surface">82%</span>
+                        </div>
+                      </div>
+                      <!-- 课程2 -->
+                      <div class="grid grid-cols-5 gap-4 py-2 border-t border-outline-variant/10">
+                        <span class="text-sm text-on-surface">客户服务实操</span>
+                        <span class="text-sm text-primary-container">赵老师</span>
+                        <span class="text-xs text-success">已完成</span>
+                        <div class="flex items-center gap-1.5">
+                          <div class="w-16 h-1.5 bg-surface-container rounded-full"><div class="h-1.5 bg-primary-container rounded-full" style="width:91%"></div></div>
+                          <span class="text-sm font-medium text-on-surface">91%</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                          <div class="w-16 h-1.5 bg-surface-container rounded-full"><div class="h-1.5 bg-primary-container rounded-full" style="width:85%"></div></div>
+                          <span class="text-sm font-medium text-on-surface">85%</span>
+                        </div>
+                      </div>
+                      <!-- 课程3 -->
+                      <div class="grid grid-cols-5 gap-4 py-2 border-t border-outline-variant/10">
+                        <span class="text-sm text-on-surface">销售技巧训练</span>
+                        <span class="text-sm text-primary-container">孙老师</span>
+                        <span class="text-xs text-success">已完成</span>
+                        <div class="flex items-center gap-1.5">
+                          <div class="w-16 h-1.5 bg-surface-container rounded-full"><div class="h-1.5 bg-primary-container rounded-full" style="width:86%"></div></div>
+                          <span class="text-sm font-medium text-on-surface">86%</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                          <div class="w-16 h-1.5 bg-surface-container rounded-full"><div class="h-1.5 bg-primary-container rounded-full" style="width:79%"></div></div>
+                          <span class="text-sm font-medium text-on-surface">79%</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- 阶段三 专业进阶 individual模式 - 进行中 -->
+                  <div>
+                    <div class="flex items-center justify-between mb-3">
+                      <div class="flex items-center gap-2">
+                        <span class="text-sm font-semibold text-on-surface">阶段三 · 专业进阶</span>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-primary-container/10 text-primary-container">individual 模式</span>
+                      </div>
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-primary-container/10 text-primary-container">进行中</span>
+                    </div>
+                    <div class="bg-surface-container-lowest rounded-md p-4">
+                      <div class="grid grid-cols-5 gap-4 text-xs text-on-surface-variant mb-3">
+                        <span>课程</span><span>带教老师</span><span>状态</span><span>出勤率</span><span>作业完成率</span>
+                      </div>
+                      <!-- 课程1 -->
+                      <div class="grid grid-cols-5 gap-4 py-2 border-t border-outline-variant/10">
+                        <span class="text-sm text-on-surface">产品知识深化</span>
+                        <span class="text-sm text-primary-container">李老师</span>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-primary-container/10 text-primary-container w-fit">进行中</span>
+                        <div class="flex items-center gap-1.5">
+                          <div class="w-16 h-1.5 bg-surface-container rounded-full"><div class="h-1.5 bg-primary-container rounded-full" style="width:75%"></div></div>
+                          <span class="text-sm font-medium text-on-surface">75%</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                          <div class="w-16 h-1.5 bg-surface-container rounded-full"><div class="h-1.5 bg-warning rounded-full" style="width:60%"></div></div>
+                          <span class="text-sm font-medium text-warning">60%</span>
+                        </div>
+                      </div>
+                      <!-- 课程2 -->
+                      <div class="grid grid-cols-5 gap-4 py-2 border-t border-outline-variant/10">
+                        <span class="text-sm text-on-surface">独立上岗考核</span>
+                        <span class="text-sm text-primary-container">周老师</span>
+                        <span class="text-xs text-on-surface-variant">未开始</span>
+                        <span class="text-sm text-on-surface-variant">—</span>
+                        <span class="text-sm text-on-surface-variant">—</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 列表-第1期 -->
+          <div class="batch-card bg-surface rounded-lg shadow-card" data-batch-id="1">
+            <div class="flex items-center justify-between px-5 py-4 cursor-pointer batch-header" id="batch-header-1">
+              <div class="flex items-center gap-4">
+                <div class="w-9 h-9 rounded-md bg-surface-container-high flex items-center justify-center text-sm font-bold text-on-surface-variant">1</div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-sm font-semibold text-on-surface">第1期</span>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-surface-container text-on-surface-variant">已完成</span>
+                  </div>
+                  <div class="text-xs text-on-surface-variant mt-0.5">2024-03-01 ~ 2024-08-31 · 新人 12 名</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-4">
+                <div class="w-32">
+                  <div class="flex items-center justify-between text-xs mb-1">
+                    <span class="text-on-surface-variant">阶段进度</span>
+                    <span class="font-medium text-success">3/3</span>
+                  </div>
+                  <div class="w-full h-1.5 bg-surface-container rounded-full">
+                    <div class="h-1.5 bg-success rounded-full" style="width: 100%"></div>
+                  </div>
+                </div>
+                <i data-lucide="chevron-down" class="w-4 h-4 text-on-surface-variant transition-transform"></i>
+              </div>
+            </div>
+
+            <!-- 第1期详情（默认隐藏） -->
+            <div class="batch-detail hidden" id="batch-detail-1">
+              <div class="border-t border-outline-variant/20 px-5 py-5">
+                <div class="space-y-5">
+                  <!-- 阶段一 基础培训 batch模式 - 已完成 -->
+                  <div>
+                    <div class="flex items-center justify-between mb-3">
+                      <div class="flex items-center gap-2">
+                        <span class="text-sm font-semibold text-on-surface">阶段一 · 基础培训</span>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-surface-container text-on-surface-variant">batch 模式</span>
+                      </div>
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已完成</span>
+                    </div>
+                    <div class="bg-surface-container-lowest rounded-md p-4">
+                      <div class="grid grid-cols-4 gap-4 text-xs text-on-surface-variant mb-3">
+                        <span>课程</span><span>状态</span><span>出勤率</span><span>作业完成率</span>
+                      </div>
+                      <!-- 课程1 -->
+                      <div class="grid grid-cols-4 gap-4 py-2 border-t border-outline-variant/10">
+                        <span class="text-sm text-on-surface">入职导论</span>
+                        <span class="text-xs text-success">已完成</span>
+                        <div class="flex items-center gap-1.5">
+                          <div class="w-16 h-1.5 bg-surface-container rounded-full"><div class="h-1.5 bg-primary-container rounded-full" style="width:97%"></div></div>
+                          <span class="text-sm font-medium text-on-surface">97%</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                          <div class="w-16 h-1.5 bg-surface-container rounded-full"><div class="h-1.5 bg-primary-container rounded-full" style="width:95%"></div></div>
+                          <span class="text-sm font-medium text-on-surface">95%</span>
+                        </div>
+                      </div>
+                      <!-- 课程2 -->
+                      <div class="grid grid-cols-4 gap-4 py-2 border-t border-outline-variant/10">
+                        <span class="text-sm text-on-surface">企业文化与价值观</span>
+                        <span class="text-xs text-success">已完成</span>
+                        <div class="flex items-center gap-1.5">
+                          <div class="w-16 h-1.5 bg-surface-container rounded-full"><div class="h-1.5 bg-primary-container rounded-full" style="width:92%"></div></div>
+                          <span class="text-sm font-medium text-on-surface">92%</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                          <div class="w-16 h-1.5 bg-surface-container rounded-full"><div class="h-1.5 bg-primary-container rounded-full" style="width:90%"></div></div>
+                          <span class="text-sm font-medium text-on-surface">90%</span>
+                        </div>
+                      </div>
+                      <!-- 课程3 -->
+                      <div class="grid grid-cols-4 gap-4 py-2 border-t border-outline-variant/10">
+                        <span class="text-sm text-on-surface">规章制度与安全</span>
+                        <span class="text-xs text-success">已完成</span>
+                        <div class="flex items-center gap-1.5">
+                          <div class="w-16 h-1.5 bg-surface-container rounded-full"><div class="h-1.5 bg-primary-container rounded-full" style="width:94%"></div></div>
+                          <span class="text-sm font-medium text-on-surface">94%</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                          <div class="w-16 h-1.5 bg-surface-container rounded-full"><div class="h-1.5 bg-primary-container rounded-full" style="width:92%"></div></div>
+                          <span class="text-sm font-medium text-on-surface">92%</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- 阶段二 业务实训 individual模式 - 已完成 -->
+                  <div>
+                    <div class="flex items-center justify-between mb-3">
+                      <div class="flex items-center gap-2">
+                        <span class="text-sm font-semibold text-on-surface">阶段二 · 业务实训</span>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-primary-container/10 text-primary-container">individual 模式</span>
+                      </div>
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已完成</span>
+                    </div>
+                    <div class="bg-surface-container-lowest rounded-md p-4">
+                      <div class="grid grid-cols-5 gap-4 text-xs text-on-surface-variant mb-3">
+                        <span>课程</span><span>带教老师</span><span>状态</span><span>出勤率</span><span>作业完成率</span>
+                      </div>
+                      <!-- 课程1 -->
+                      <div class="grid grid-cols-5 gap-4 py-2 border-t border-outline-variant/10">
+                        <span class="text-sm text-on-surface">门店运营基础</span>
+                        <span class="text-sm text-primary-container">王老师</span>
+                        <span class="text-xs text-success">已完成</span>
+                        <div class="flex items-center gap-1.5">
+                          <div class="w-16 h-1.5 bg-surface-container rounded-full"><div class="h-1.5 bg-primary-container rounded-full" style="width:91%"></div></div>
+                          <span class="text-sm font-medium text-on-surface">91%</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                          <div class="w-16 h-1.5 bg-surface-container rounded-full"><div class="h-1.5 bg-primary-container rounded-full" style="width:88%"></div></div>
+                          <span class="text-sm font-medium text-on-surface">88%</span>
+                        </div>
+                      </div>
+                      <!-- 课程2 -->
+                      <div class="grid grid-cols-5 gap-4 py-2 border-t border-outline-variant/10">
+                        <span class="text-sm text-on-surface">客户服务实操</span>
+                        <span class="text-sm text-primary-container">赵老师</span>
+                        <span class="text-xs text-success">已完成</span>
+                        <div class="flex items-center gap-1.5">
+                          <div class="w-16 h-1.5 bg-surface-container rounded-full"><div class="h-1.5 bg-primary-container rounded-full" style="width:89%"></div></div>
+                          <span class="text-sm font-medium text-on-surface">89%</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                          <div class="w-16 h-1.5 bg-surface-container rounded-full"><div class="h-1.5 bg-primary-container rounded-full" style="width:85%"></div></div>
+                          <span class="text-sm font-medium text-on-surface">85%</span>
+                        </div>
+                      </div>
+                      <!-- 课程3 -->
+                      <div class="grid grid-cols-5 gap-4 py-2 border-t border-outline-variant/10">
+                        <span class="text-sm text-on-surface">销售技巧训练</span>
+                        <span class="text-sm text-primary-container">孙老师</span>
+                        <span class="text-xs text-success">已完成</span>
+                        <div class="flex items-center gap-1.5">
+                          <div class="w-16 h-1.5 bg-surface-container rounded-full"><div class="h-1.5 bg-primary-container rounded-full" style="width:87%"></div></div>
+                          <span class="text-sm font-medium text-on-surface">87%</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                          <div class="w-16 h-1.5 bg-surface-container rounded-full"><div class="h-1.5 bg-primary-container rounded-full" style="width:82%"></div></div>
+                          <span class="text-sm font-medium text-on-surface">82%</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- 阶段三 专业进阶 individual模式 - 已完成 -->
+                  <div>
+                    <div class="flex items-center justify-between mb-3">
+                      <div class="flex items-center gap-2">
+                        <span class="text-sm font-semibold text-on-surface">阶段三 · 专业进阶</span>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-primary-container/10 text-primary-container">individual 模式</span>
+                      </div>
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已完成</span>
+                    </div>
+                    <div class="bg-surface-container-lowest rounded-md p-4">
+                      <div class="grid grid-cols-5 gap-4 text-xs text-on-surface-variant mb-3">
+                        <span>课程</span><span>带教老师</span><span>状态</span><span>出勤率</span><span>作业完成率</span>
+                      </div>
+                      <!-- 课程1 -->
+                      <div class="grid grid-cols-5 gap-4 py-2 border-t border-outline-variant/10">
+                        <span class="text-sm text-on-surface">产品知识深化</span>
+                        <span class="text-sm text-primary-container">李老师</span>
+                        <span class="text-xs text-success">已完成</span>
+                        <div class="flex items-center gap-1.5">
+                          <div class="w-16 h-1.5 bg-surface-container rounded-full"><div class="h-1.5 bg-primary-container rounded-full" style="width:90%"></div></div>
+                          <span class="text-sm font-medium text-on-surface">90%</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                          <div class="w-16 h-1.5 bg-surface-container rounded-full"><div class="h-1.5 bg-primary-container rounded-full" style="width:87%"></div></div>
+                          <span class="text-sm font-medium text-on-surface">87%</span>
+                        </div>
+                      </div>
+                      <!-- 课程2 -->
+                      <div class="grid grid-cols-5 gap-4 py-2 border-t border-outline-variant/10">
+                        <span class="text-sm text-on-surface">独立上岗考核</span>
+                        <span class="text-sm text-primary-container">周老师</span>
+                        <span class="text-xs text-success">已完成</span>
+                        <div class="flex items-center gap-1.5">
+                          <div class="w-16 h-1.5 bg-surface-container rounded-full"><div class="h-1.5 bg-primary-container rounded-full" style="width:88%"></div></div>
+                          <span class="text-sm font-medium text-on-surface">88%</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                          <div class="w-16 h-1.5 bg-surface-container rounded-full"><div class="h-1.5 bg-primary-container rounded-full" style="width:83%"></div></div>
+                          <span class="text-sm font-medium text-on-surface">83%</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ===== 预警项列表 ===== -->
+      <div>
+        <div class="flex items-center gap-2 mb-4">
+          <h2 class="text-base font-semibold text-on-surface">预警项</h2>
+          <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-error/15 text-error text-xs font-bold">5</span>
+        </div>
+        <div class="bg-surface rounded-lg shadow-card overflow-hidden">
+          <!-- 表头 -->
+          <div class="grid grid-cols-12 px-5 py-3 bg-surface-container text-xs font-semibold text-on-surface-variant uppercase tracking-wide">
+            <span class="col-span-1">类型</span>
+            <span class="col-span-4">预警内容</span>
+            <span class="col-span-2">所属期数</span>
+            <span class="col-span-2">时间</span>
+            <span class="col-span-3">操作</span>
+          </div>
+          <div class="divide-y divide-outline-variant/30">
+            <!-- 预警项1-进度落后 -->
+            <div class="grid grid-cols-12 px-5 py-3 hover:bg-surface-container/50 transition-colors items-center">
+              <div class="col-span-1 flex items-center">
+                <span class="w-2 h-2 rounded-full bg-error"></span>
+              </div>
+              <div class="col-span-4">
+                <span class="text-sm font-medium text-on-surface">新人陈小明阶段二进度落后</span>
+                <div class="text-xs text-on-surface-variant mt-0.5">门店运营基础出勤率仅45%，远低于期平均72%</div>
+              </div>
+              <span class="col-span-2 text-sm text-on-surface-variant">第3期</span>
+              <span class="col-span-2 text-xs text-on-surface-variant">2025-03-12</span>
+              <div class="col-span-3 flex items-center gap-3">
+                <button id="alert-view-1" class="text-primary-container text-sm font-medium hover:underline">查看详情</button>
+                <button id="alert-remind-1" class="bg-warning/10 text-warning text-xs font-medium px-2.5 py-1 rounded-md hover:bg-warning/20 transition-colors">发送提醒</button>
+              </div>
+            </div>
+            <!-- 预警项2-进度落后 -->
+            <div class="grid grid-cols-12 px-5 py-3 hover:bg-surface-container/50 transition-colors items-center">
+              <div class="col-span-1 flex items-center">
+                <span class="w-2 h-2 rounded-full bg-error"></span>
+              </div>
+              <div class="col-span-4">
+                <span class="text-sm font-medium text-on-surface">新人刘芳阶段二进度落后</span>
+                <div class="text-xs text-on-surface-variant mt-0.5">客户服务实操作业完成率仅30%</div>
+              </div>
+              <span class="col-span-2 text-sm text-on-surface-variant">第3期</span>
+              <span class="col-span-2 text-xs text-on-surface-variant">2025-03-10</span>
+              <div class="col-span-3 flex items-center gap-3">
+                <button id="alert-view-2" class="text-primary-container text-sm font-medium hover:underline">查看详情</button>
+                <button id="alert-remind-2" class="bg-warning/10 text-warning text-xs font-medium px-2.5 py-1 rounded-md hover:bg-warning/20 transition-colors">发送提醒</button>
+              </div>
+            </div>
+            <!-- 预警项3-超期未交作业 -->
+            <div class="grid grid-cols-12 px-5 py-3 hover:bg-surface-container/50 transition-colors items-center">
+              <div class="col-span-1 flex items-center">
+                <span class="w-2 h-2 rounded-full bg-warning"></span>
+              </div>
+              <div class="col-span-4">
+                <span class="text-sm font-medium text-on-surface">3名新人超期未交作业</span>
+                <div class="text-xs text-on-surface-variant mt-0.5">陈小明、刘芳、张伟 — 门店运营基础课后作业超期5天</div>
+              </div>
+              <span class="col-span-2 text-sm text-on-surface-variant">第3期</span>
+              <span class="col-span-2 text-xs text-on-surface-variant">2025-03-08</span>
+              <div class="col-span-3 flex items-center gap-3">
+                <button id="alert-view-3" class="text-primary-container text-sm font-medium hover:underline">查看详情</button>
+                <button id="alert-remind-3" class="bg-warning/10 text-warning text-xs font-medium px-2.5 py-1 rounded-md hover:bg-warning/20 transition-colors">发送提醒</button>
+              </div>
+            </div>
+            <!-- 预警项4-排课变更 -->
+            <div class="grid grid-cols-12 px-5 py-3 hover:bg-surface-container/50 transition-colors items-center">
+              <div class="col-span-1 flex items-center">
+                <span class="w-2 h-2 rounded-full bg-primary-container"></span>
+              </div>
+              <div class="col-span-4">
+                <span class="text-sm font-medium text-on-surface">排课变更通知</span>
+                <div class="text-xs text-on-surface-variant mt-0.5">「产品知识深化」授课时间从3月20日调整为3月25日</div>
+              </div>
+              <span class="col-span-2 text-sm text-on-surface-variant">第2期</span>
+              <span class="col-span-2 text-xs text-on-surface-variant">2025-03-05</span>
+              <div class="col-span-3 flex items-center gap-3">
+                <button id="alert-view-4" class="text-primary-container text-sm font-medium hover:underline">查看详情</button>
+                <button id="alert-remind-4" class="bg-warning/10 text-warning text-xs font-medium px-2.5 py-1 rounded-md hover:bg-warning/20 transition-colors">发送提醒</button>
+              </div>
+            </div>
+            <!-- 预警项5-排课变更 -->
+            <div class="grid grid-cols-12 px-5 py-3 hover:bg-surface-container/50 transition-colors items-center">
+              <div class="col-span-1 flex items-center">
+                <span class="w-2 h-2 rounded-full bg-primary-container"></span>
+              </div>
+              <div class="col-span-4">
+                <span class="text-sm font-medium text-on-surface">带教老师变更通知</span>
+                <div class="text-xs text-on-surface-variant mt-0.5">「门店运营基础」带教老师由王老师临时变更为赵老师</div>
+              </div>
+              <span class="col-span-2 text-sm text-on-surface-variant">第3期</span>
+              <span class="col-span-2 text-xs text-on-surface-variant">2025-03-01</span>
+              <div class="col-span-3 flex items-center gap-3">
+                <button id="alert-view-5" class="text-primary-container text-sm font-medium hover:underline">查看详情</button>
+                <button id="alert-remind-5" class="bg-warning/10 text-warning text-xs font-medium px-2.5 py-1 rounded-md hover:bg-warning/20 transition-colors">发送提醒</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== 创建新期弹窗 ===== -->
+      <div id="modal-create-batch" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-surface rounded-xl shadow-dialog max-w-lg w-full max-h-[90vh] overflow-y-auto">
+          <!-- 弹窗头部 -->
+          <div class="flex items-center justify-between px-6 py-4 border-b border-outline-variant/20">
+            <h3 class="text-base font-semibold text-on-surface">从模板创建新期</h3>
+            <button id="btn-close-modal" class="w-8 h-8 flex items-center justify-center rounded-md hover:bg-surface-container transition-colors">
+              <i data-lucide="x" class="w-4 h-4 text-on-surface-variant"></i>
+            </button>
+          </div>
+
+          <!-- 步骤指示 -->
+          <div class="px-6 pt-4">
+            <div class="flex items-center gap-2 mb-5" id="step-indicator">
+              <div class="step-dot w-7 h-7 rounded-full bg-primary text-on-primary flex items-center justify-center text-xs font-bold" data-step="1">1</div>
+              <div class="flex-1 h-0.5 bg-surface-container rounded"><div id="step-progress-1" class="h-0.5 bg-primary rounded" style="width:0%"></div></div>
+              <div class="step-dot w-7 h-7 rounded-full bg-surface-container text-on-surface-variant flex items-center justify-center text-xs font-bold" data-step="2">2</div>
+              <div class="flex-1 h-0.5 bg-surface-container rounded"><div id="step-progress-2" class="h-0.5 bg-primary rounded" style="width:0%"></div></div>
+              <div class="step-dot w-7 h-7 rounded-full bg-surface-container text-on-surface-variant flex items-center justify-center text-xs font-bold" data-step="3">3</div>
+            </div>
+          </div>
+
+          <!-- 步骤1：选择模板 -->
+          <div id="step-1" class="px-6 pb-4">
+            <label class="block text-sm font-medium text-on-surface mb-2">选择培训模板</label>
+            <div class="space-y-2">
+              <!-- 模板选项1 -->
+              <label class="flex items-center gap-3 p-3 rounded-md bg-surface-container cursor-pointer hover:bg-surface-container-high transition-colors">
+                <input type="radio" name="template" value="standard" class="accent-primary" checked>
+                <div>
+                  <div class="text-sm font-medium text-on-surface">标准新人培训</div>
+                  <div class="text-xs text-on-surface-variant">3阶段 · 8门课程 · 约3个月</div>
+                </div>
+              </label>
+              <!-- 模板选项2 -->
+              <label class="flex items-center gap-3 p-3 rounded-md bg-surface-container cursor-pointer hover:bg-surface-container-high transition-colors">
+                <input type="radio" name="template" value="fast-track" class="accent-primary">
+                <div>
+                  <div class="text-sm font-medium text-on-surface">快速上岗培训</div>
+                  <div class="text-xs text-on-surface-variant">2阶段 · 5门课程 · 约1.5个月</div>
+                </div>
+              </label>
+              <!-- 模板选项3 -->
+              <label class="flex items-center gap-3 p-3 rounded-md bg-surface-container cursor-pointer hover:bg-surface-container-high transition-colors">
+                <input type="radio" name="template" value="senior" class="accent-primary">
+                <div>
+                  <div class="text-sm font-medium text-on-surface">资深转岗培训</div>
+                  <div class="text-xs text-on-surface-variant">1阶段 · 3门课程 · 约2周</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- 步骤2：填写基本信息 -->
+          <div id="step-2" class="px-6 pb-4 hidden">
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-on-surface mb-1.5">期数名称</label>
+                <input id="input-batch-name" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" placeholder="例如：第5期" value="第5期">
+              </div>
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-on-surface mb-1.5">开始日期</label>
+                  <input id="input-start-date" type="date" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" value="2025-07-01">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-on-surface mb-1.5">结束日期</label>
+                  <input id="input-end-date" type="date" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" value="2025-09-30">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 步骤3：添加新人名单 -->
+          <div id="step-3" class="px-6 pb-4 hidden">
+            <div>
+              <label class="block text-sm font-medium text-on-surface mb-1.5">添加新人名单</label>
+              <p class="text-xs text-on-surface-variant mb-3">每行输入一位新人姓名，或从Excel粘贴</p>
+              <textarea id="input-trainee-list" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors resize-none" rows="6" placeholder="张小明&#10;李小红&#10;王小刚">张小明
+李小红
+王小刚
+赵丽华
+周建国</textarea>
+              <div class="flex items-center justify-between mt-2">
+                <span class="text-xs text-on-surface-variant" id="trainee-count">已添加 5 名新人</span>
+                <button id="btn-upload-file" class="text-xs text-primary-container font-medium hover:underline inline-flex items-center gap-1">
+                  <i data-lucide="upload" class="w-3 h-3"></i>从文件导入
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 弹窗底部按钮 -->
+          <div class="flex items-center justify-between px-6 py-4 border-t border-outline-variant/20">
+            <button id="btn-prev-step" class="bg-surface-container text-on-surface px-4 py-2 rounded-md text-sm font-medium hover:bg-surface-container-high active:scale-[0.98] transition-all hidden">上一步</button>
+            <div class="flex-1"></div>
+            <div class="flex items-center gap-3">
+              <button id="btn-cancel-modal" class="bg-surface-container text-on-surface px-4 py-2 rounded-md text-sm font-medium hover:bg-surface-container-high active:scale-[0.98] transition-all">取消</button>
+              <button id="btn-next-step" class="bg-primary text-on-primary px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all">下一步</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== 预警详情弹窗 ===== -->
+      <div id="modal-alert-detail" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-surface rounded-xl shadow-dialog max-w-md w-full">
+          <div class="flex items-center justify-between px-6 py-4 border-b border-outline-variant/20">
+            <h3 class="text-base font-semibold text-on-surface">预警详情</h3>
+            <button id="btn-close-alert-detail" class="w-8 h-8 flex items-center justify-center rounded-md hover:bg-surface-container transition-colors">
+              <i data-lucide="x" class="w-4 h-4 text-on-surface-variant"></i>
+            </button>
+          </div>
+          <div class="px-6 py-5">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="w-2 h-2 rounded-full bg-error"></span>
+              <span class="text-sm font-semibold text-on-surface" id="alert-detail-title">新人陈小明阶段二进度落后</span>
+            </div>
+            <div class="space-y-3">
+              <div class="bg-surface-container-lowest rounded-md p-3">
+                <div class="text-xs text-on-surface-variant mb-2">出勤详情</div>
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <div class="text-xs text-on-surface-variant">门店运营基础</div>
+                    <div class="flex items-center gap-1.5 mt-0.5">
+                      <div class="w-20 h-1.5 bg-surface-container rounded-full"><div class="h-1.5 bg-error rounded-full" style="width:45%"></div></div>
+                      <span class="text-sm font-medium text-error">45%</span>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="text-xs text-on-surface-variant">客户服务实操</div>
+                    <div class="flex items-center gap-1.5 mt-0.5">
+                      <div class="w-20 h-1.5 bg-surface-container rounded-full"><div class="h-1.5 bg-primary-container rounded-full" style="width:70%"></div></div>
+                      <span class="text-sm font-medium text-on-surface">70%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="bg-surface-container-lowest rounded-md p-3">
+                <div class="text-xs text-on-surface-variant mb-2">作业完成详情</div>
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <div class="text-xs text-on-surface-variant">门店运营基础</div>
+                    <div class="flex items-center gap-1.5 mt-0.5">
+                      <div class="w-20 h-1.5 bg-surface-container rounded-full"><div class="h-1.5 bg-error rounded-full" style="width:30%"></div></div>
+                      <span class="text-sm font-medium text-error">30%</span>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="text-xs text-on-surface-variant">客户服务实操</div>
+                    <div class="flex items-center gap-1.5 mt-0.5">
+                      <div class="w-20 h-1.5 bg-surface-container rounded-full"><div class="h-1.5 bg-warning rounded-full" style="width:60%"></div></div>
+                      <span class="text-sm font-medium text-warning">60%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="text-xs text-on-surface-variant">所属期数：第3期 · 预警时间：2025-03-12</div>
+            </div>
+          </div>
+          <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-outline-variant/20">
+            <button id="btn-close-alert-detail-2" class="bg-surface-container text-on-surface px-4 py-2 rounded-md text-sm font-medium hover:bg-surface-container-high active:scale-[0.98] transition-all">关闭</button>
+            <button id="btn-send-remind-from-detail" class="bg-primary text-on-primary px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all inline-flex items-center gap-2">
+              <i data-lucide="bell" class="w-3.5 h-3.5"></i>发送提醒
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+    <!-- @main-content:end -->
+  </div>
+  <!-- @nav:end -->
+
+  <script>
+  $(function() {
+
+    // ===== 批次展开/收起 =====
+    $('#batch-list').on('click', '.batch-header', function() {
+      var $card = $(this).closest('.batch-card');
+      var batchId = $card.data('batch-id');
+      var $detail = $('#batch-detail-' + batchId);
+      var $icon = $(this).find('[data-lucide="chevron-down"]');
+
+      if ($detail.is(':visible')) {
+        $detail.slideUp(200);
+        $icon.css('transform', 'rotate(0deg)');
+      } else {
+        $detail.slideDown(200);
+        $icon.css('transform', 'rotate(180deg)');
+      }
+    });
+
+    // ===== 创建新期弹窗 =====
+    var currentStep = 1;
+
+    // 打开弹窗
+    $('#btn-create-batch').on('click', function() {
+      currentStep = 1;
+      updateStepUI();
+      $('#modal-create-batch').removeClass('hidden');
+    });
+
+    // 关闭弹窗
+    $('#btn-close-modal, #btn-cancel-modal').on('click', function() {
+      $('#modal-create-batch').addClass('hidden');
+    });
+
+    // 点击遮罩关闭
+    $('#modal-create-batch').on('click', function(e) {
+      if ($(e.target).is('#modal-create-batch')) {
+        $('#modal-create-batch').addClass('hidden');
+      }
+    });
+
+    // 下一步
+    $('#btn-next-step').on('click', function() {
+      if (currentStep < 3) {
+        currentStep++;
+        updateStepUI();
+      } else {
+        // 第3步确认创建
+        // 后续应实现：1. 收集所有表单数据（模板、期名、日期、新人名单）
+        // 2. 调用后端API创建培训批次
+        // 3. 创建成功后刷新批次列表
+        // 4. 显示成功提示
+        $('#modal-create-batch').addClass('hidden');
+        alert('培训批次创建成功！（原型演示）');
+      }
+    });
+
+    // 上一步
+    $('#btn-prev-step').on('click', function() {
+      if (currentStep > 1) {
+        currentStep--;
+        updateStepUI();
+      }
+    });
+
+    function updateStepUI() {
+      // 显示/隐藏步骤内容
+      $('#step-1, #step-2, #step-3').addClass('hidden');
+      $('#step-' + currentStep).removeClass('hidden');
+
+      // 更新步骤指示器
+      $('#step-indicator .step-dot').each(function() {
+        var step = $(this).data('step');
+        if (step < currentStep) {
+          $(this).removeClass('bg-surface-container text-on-surface-variant').addClass('bg-success text-on-primary');
+        } else if (step === currentStep) {
+          $(this).removeClass('bg-surface-container text-on-surface-variant bg-success text-on-primary').addClass('bg-primary text-on-primary');
+        } else {
+          $(this).removeClass('bg-primary text-on-primary bg-success text-on-primary').addClass('bg-surface-container text-on-surface-variant');
+        }
+      });
+
+      // 更新进度条
+      $('#step-progress-1').css('width', currentStep > 1 ? '100%' : '0%');
+      $('#step-progress-2').css('width', currentStep > 2 ? '100%' : '0%');
+
+      // 更新按钮文字
+      if (currentStep === 3) {
+        $('#btn-next-step').text('确认创建');
+      } else {
+        $('#btn-next-step').text('下一步');
+      }
+
+      // 显示/隐藏上一步按钮
+      if (currentStep > 1) {
+        $('#btn-prev-step').removeClass('hidden');
+      } else {
+        $('#btn-prev-step').addClass('hidden');
+      }
+    }
+
+    // 新人名单计数
+    $('#input-trainee-list').on('input', function() {
+      var text = $(this).val().trim();
+      var count = text ? text.split('\n').filter(function(line) { return line.trim() !== ''; }).length : 0;
+      $('#trainee-count').text('已添加 ' + count + ' 名新人');
+    });
+
+    // 从文件导入 - 后续应实现文件上传解析
+    $('#btn-upload-file').on('click', function() {
+      console.log('需要实现文件上传功能：1. 打开文件选择对话框；2. 读取Excel/CSV文件；3. 解析姓名列；4. 填入textarea');
+    });
+
+    // ===== 预警项操作 =====
+    // 查看详情
+    $('#alert-view-1, #alert-view-2, #alert-view-3, #alert-view-4, #alert-view-5').on('click', function() {
+      // 后续应实现：根据预警项ID加载不同详情内容
+      // 当前展示硬编码的详情
+      $('#modal-alert-detail').removeClass('hidden');
+    });
+
+    // 关闭预警详情弹窗
+    $('#btn-close-alert-detail, #btn-close-alert-detail-2').on('click', function() {
+      $('#modal-alert-detail').addClass('hidden');
+    });
+
+    // 点击遮罩关闭
+    $('#modal-alert-detail').on('click', function(e) {
+      if ($(e.target).is('#modal-alert-detail')) {
+        $('#modal-alert-detail').addClass('hidden');
+      }
+    });
+
+    // 发送提醒
+    $('#alert-remind-1, #alert-remind-2, #alert-remind-3, #alert-remind-4, #alert-remind-5, #btn-send-remind-from-detail').on('click', function() {
+      // 后续应实现：
+      // 1. 调用后端API发送提醒通知（站内消息/短信/邮件）
+      // 2. 更新该预警项的状态为"已提醒"
+      // 3. 按钮文字变为"已提醒"并禁用
+      // 4. 显示发送成功提示
+      alert('提醒已发送！（原型演示）');
+    });
+
+  });
+  </script>
+
+  <script>lucide.createIcons();</script>
+</body>
+
+</html>
