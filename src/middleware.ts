@@ -18,7 +18,7 @@ const ROUTE_PERMISSIONS: Record<string, RoleCode[]> = {
   '/diagnosis': ['mentor', 'training_manager'],
   '/empowerment': ['mentor', 'training_manager'],
   '/question-bank': ['teacher', 'training_manager'],
-  '/resources': ['trainee', 'teacher', 'training_manager'],
+  '/resources': ['trainee', 'mentor', 'teacher', 'training_manager'],
   '/qc-review': ['mentor', 'teacher', 'training_manager'],
   '/assessment': ['teacher', 'training_manager'],
   '/scrm-import': ['training_manager'],
