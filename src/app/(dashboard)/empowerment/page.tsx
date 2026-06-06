@@ -6,6 +6,7 @@ import {
   Zap, Plus, Library, PlayCircle, CheckCircle2, Clock, Users, Target,
   MessageCirclePlus, Pill, Mic, BookOpen, ChevronRight, ChevronDown, ArrowRight, TrendingUp,
   MessageSquare, User, Calendar, Star, X, Send, Eye, Search, Compass, BellRing,
+  Pencil, Trash2,
 } from 'lucide-react';
 
 /* ------------------------------------------------------------------ */
@@ -101,6 +102,8 @@ export default function EmpowermentPage() {
   const [selectedPlan, setSelectedPlan] = useState<EmpowerPlan | null>(null);
   const [expandedPlanId, setExpandedPlanId] = useState<string | null>(null);
   const [previewPlan, setPreviewPlan] = useState<{ plan: EmpowerPlan; traineeName?: string } | null>(null);
+  const [editingPlan, setEditingPlan] = useState<EmpowerPlan | null>(null);
+  const [deletingPlan, setDeletingPlan] = useState<EmpowerPlan | null>(null);
   const [pushingPlanId, setPushingPlanId] = useState<string | null>(null);
   const [trainees, setTrainees] = useState<{ id: string; name: string }[]>([]);
   const [myExecutions, setMyExecutions] = useState<Execution[]>([]);
@@ -342,6 +345,8 @@ export default function EmpowermentPage() {
                   expanded={expandedPlanId === plan.id}
                   onToggle={() => setExpandedPlanId(expandedPlanId === plan.id ? null : plan.id)}
                   onPreview={() => setPreviewPlan({ plan })}
+                  onEdit={() => setEditingPlan(plan)}
+                  onDelete={() => setDeletingPlan(plan)}
                 />
               ))
             )}
@@ -440,6 +445,214 @@ export default function EmpowermentPage() {
       {showNewPlanDialog && (
         <NewPlanDialog onClose={() => setShowNewPlanDialog(false)} onCreated={() => { setShowNewPlanDialog(false); fetchData(); }} />
       )}
+
+      {/* 编辑方案弹窗 */}
+      {editingPlan && (
+        <EditPlanDialog plan={editingPlan} onClose={() => setEditingPlan(null)} onSaved={() => { setEditingPlan(null); fetchData(); }} />
+      )}
+
+      {/* 删除确认弹窗 */}
+      {deletingPlan && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-card rounded-xl shadow-lg p-6 w-full max-w-md mx-4">
+            <h3 className="text-lg font-semibold text-foreground mb-2">确认删除</h3>
+            <p className="text-sm text-muted-foreground mb-1">确定要删除方案「{deletingPlan.name}」吗？</p>
+            <p className="text-xs text-[#ef4444] mb-6">删除后不可恢复，已有推送记录不受影响</p>
+            <div className="flex justify-end gap-3">
+              <button onClick={() => setDeletingPlan(null)} className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground">取消</button>
+              <button onClick={async () => {
+                try {
+                  const res = await fetch(`/api/empower?id=${deletingPlan.id}`, { method: 'DELETE' });
+                  if (!res.ok) throw new Error('删除失败');
+                  setDeletingPlan(null);
+                  fetchData();
+                } catch (err) {
+                  console.error('删除赋能方案失败:', err);
+                }
+              }} className="px-4 py-2 text-sm bg-[#ef4444] text-white rounded-lg hover:bg-[#dc2626]">确认删除</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  EditPlanDialog: 编辑赋能方案弹窗                                     */
+/* ------------------------------------------------------------------ */
+
+function EditPlanDialog({ plan, onClose, onSaved }: { plan: EmpowerPlan; onClose: () => void; onSaved: () => void }) {
+  const content = plan.content as Record<string, unknown>;
+  const prescriptionArr = Array.isArray(content?.prescription) ? content.prescription as Array<Record<string, string>> : [];
+  const [name, setName] = useState(plan.name);
+  const [description, setDescription] = useState(plan.description);
+  const [duration, setDuration] = useState(plan.duration_days);
+  const [targetMetrics, setTargetMetrics] = useState<string[]>(plan.target_indicators || []);
+  const [analysis, setAnalysis] = useState(String(content?.analysis || ''));
+  const [direction, setDirection] = useState(String(content?.direction || ''));
+  const [prescriptionSteps, setPrescriptionSteps] = useState(
+    prescriptionArr.length > 0
+      ? prescriptionArr.map(s => ({ step: String(s.step || ''), detail: String(s.detail || ''), duration: String(s.duration || ''), responsible: String(s.responsible || '') }))
+      : [{ step: '', detail: '', duration: '', responsible: '' }]
+  );
+  const [standard, setStandard] = useState(String(content?.standard || ''));
+  const [saving, setSaving] = useState(false);
+
+  const metricOptions = [
+    { key: 'wechatAddRate', label: '加V率' },
+    { key: 'consultationRate', label: '面诊率' },
+    { key: 'receptionRate', label: '接诊率' },
+    { key: 'deliveryRate', label: '签收率' },
+    { key: 'medicationRate', label: '用药率' },
+    { key: 'appointmentRate', label: '挂号率' },
+    { key: 'qcScore', label: '质检分数' },
+    { key: 'qc_communication', label: '沟通表达' },
+    { key: 'qc_professional', label: '流程规范' },
+    { key: 'qc_service', label: '服务态度' },
+    { key: 'general', label: '综合提升' },
+  ];
+
+  function addStep() {
+    setPrescriptionSteps(prev => [...prev, { step: '', detail: '', duration: '', responsible: '' }]);
+  }
+
+  function removeStep(index: number) {
+    setPrescriptionSteps(prev => prev.filter((_, i) => i !== index));
+  }
+
+  function updateStep(index: number, field: string, value: string) {
+    setPrescriptionSteps(prev => prev.map((s, i) => i === index ? { ...s, [field]: value } : s));
+  }
+
+  async function handleSave() {
+    if (!name.trim()) return;
+    setSaving(true);
+    try {
+      const newContent = {
+        analysis: analysis || undefined,
+        direction: direction || undefined,
+        prescription: prescriptionSteps.filter(s => s.step.trim()).map(s => ({
+          step: s.step,
+          detail: s.detail,
+          ...(s.duration ? { duration: s.duration } : {}),
+          ...(s.responsible ? { responsible: s.responsible } : {}),
+        })),
+        standard: standard || undefined,
+      };
+
+      const res = await fetch('/api/empower', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: plan.id,
+          name,
+          description,
+          durationDays: duration,
+          targetMetrics,
+          planType: targetMetrics[0] || plan.plan_type,
+          content: newContent,
+        }),
+      });
+      if (res.ok) onSaved();
+    } catch { /* ignore */ }
+    setSaving(false);
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-card rounded-xl shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold text-foreground">编辑赋能方案</h2>
+            <button onClick={onClose} className="text-muted-foreground hover:text-foreground"><X className="w-5 h-5" /></button>
+          </div>
+
+          <div className="space-y-5">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium text-foreground">方案名称 *</label>
+                <input value={name} onChange={e => setName(e.target.value)} className="w-full mt-1 px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm" placeholder="如：加V率提升方案" />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-foreground">预计天数</label>
+                <input type="number" value={duration} onChange={e => setDuration(parseInt(e.target.value) || 7)} className="w-full mt-1 px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm" min={1} max={30} />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-foreground">对标指标（可多选）</label>
+              <div className="mt-1 flex flex-wrap gap-2">
+                {metricOptions.map(opt => (
+                  <button
+                    key={opt.key}
+                    onClick={() => setTargetMetrics(prev => prev.includes(opt.key) ? prev.filter(m => m !== opt.key) : [...prev, opt.key])}
+                    className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                      targetMetrics.includes(opt.key)
+                        ? 'bg-primary/15 text-primary border border-primary/30'
+                        : 'bg-muted text-muted-foreground border border-border hover:bg-muted/80'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-foreground flex items-center gap-1.5"><Search className="w-3.5 h-3.5 text-[#102A43]" />病情分析（根本原因）</label>
+              <textarea value={analysis} onChange={e => setAnalysis(e.target.value)} className="w-full mt-1 px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm" rows={2} placeholder="如：加V率低于60%，说明首通电话未能有效传递价值..." />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-foreground flex items-center gap-1.5"><Compass className="w-3.5 h-3.5 text-primary" />调理方向</label>
+              <input value={direction} onChange={e => setDirection(e.target.value)} className="w-full mt-1 px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm" placeholder="如：强化首通电话价值传递能力" />
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-medium text-foreground flex items-center gap-1.5"><Pill className="w-3.5 h-3.5 text-[#F59E0B]" />具体药方</label>
+                <button onClick={addStep} className="text-xs text-[#2978B5] hover:underline inline-flex items-center gap-1"><Plus className="w-3 h-3" />添加步骤</button>
+              </div>
+              <div className="space-y-3">
+                {prescriptionSteps.map((step, i) => (
+                  <div key={i} className="flex gap-2 items-start">
+                    <span className="w-6 h-6 rounded-full bg-[#F59E0B]/15 text-[#F59E0B] text-xs font-bold flex items-center justify-center flex-shrink-0 mt-2">{i + 1}</span>
+                    <div className="flex-1 grid grid-cols-2 gap-2">
+                      <input value={step.step} onChange={e => updateStep(i, 'step', e.target.value)} className="px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm" placeholder="步骤名称" />
+                      <input value={step.detail} onChange={e => updateStep(i, 'detail', e.target.value)} className="px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm" placeholder="具体说明" />
+                      <input value={step.duration} onChange={e => updateStep(i, 'duration', e.target.value)} className="px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm" placeholder="如：3天" />
+                      <div className="flex gap-2">
+                        <input value={step.responsible} onChange={e => updateStep(i, 'responsible', e.target.value)} className="flex-1 px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm" placeholder="负责人：如带教老师" />
+                        {prescriptionSteps.length > 1 && (
+                          <button onClick={() => removeStep(i)} className="text-[#ef4444] hover:text-[#ef4444]/70 px-2"><X className="w-4 h-4" /></button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-foreground flex items-center gap-1.5"><Target className="w-3.5 h-3.5 text-[#22c55e]" />达标标准</label>
+              <textarea value={standard} onChange={e => setStandard(e.target.value)} className="w-full mt-1 px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm" rows={2} placeholder="如：连续2周加V率≥60%" />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-foreground">方案描述（补充说明）</label>
+              <textarea value={description} onChange={e => setDescription(e.target.value)} className="w-full mt-1 px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm" rows={2} placeholder="描述方案内容与目标..." />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-border">
+            <button onClick={onClose} className="px-4 py-2 rounded-md text-sm text-muted-foreground hover:text-foreground transition-colors">取消</button>
+            <button onClick={handleSave} disabled={saving || !name.trim()} className="px-4 py-2 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50">
+              {saving ? '保存中...' : '保存修改'}
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -514,8 +727,9 @@ function AlertCard({ alert, plans, onPreview, onPush, pushing }: {
 /*  PlanCardExpandable: 可展开方案卡片（方案库）                          */
 /* ------------------------------------------------------------------ */
 
-function PlanCardExpandable({ plan, expanded, onToggle, onPreview }: {
+function PlanCardExpandable({ plan, expanded, onToggle, onPreview, onEdit, onDelete }: {
   plan: EmpowerPlan; expanded: boolean; onToggle: () => void; onPreview: () => void;
+  onEdit: () => void; onDelete: () => void;
 }) {
   const typeConfig = PLAN_TYPE_LABELS[plan.indicator_key || ''] || { label: '专项提升', color: 'text-[#2978B5]', bg: 'bg-[#2978B5]/15' };
   const content = plan.content;
@@ -543,7 +757,15 @@ function PlanCardExpandable({ plan, expanded, onToggle, onPreview }: {
             )}
           </div>
         </div>
-        <ChevronDown className={`w-5 h-5 text-muted-foreground/50 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+        <div className="flex items-center gap-1">
+          <button onClick={(e) => { e.stopPropagation(); onEdit(); }} className="p-1.5 rounded-md hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors" title="编辑方案">
+            <Pencil className="w-4 h-4" />
+          </button>
+          <button onClick={(e) => { e.stopPropagation(); onDelete(); }} className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors" title="删除方案">
+            <Trash2 className="w-4 h-4" />
+          </button>
+          <ChevronDown className={`w-5 h-5 text-muted-foreground/50 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+        </div>
       </div>
 
       {/* 展开详情：4段式处方 */}

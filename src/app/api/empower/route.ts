@@ -106,3 +106,55 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({ results });
 }
+
+// PUT /api/empower - 更新赋能方案
+export async function PUT(request: NextRequest) {
+  const token = request.headers.get('authorization')?.replace('Bearer ', '');
+  const client = getSupabaseClient(token);
+
+  const body = await request.json();
+  const { id, name, description, indicator_key, target_indicators, content, estimated_hours, is_active } = body;
+
+  if (!id) return NextResponse.json({ error: '缺少方案ID' }, { status: 400 });
+
+  const updateData: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if (name !== undefined) updateData.name = name;
+  if (description !== undefined) updateData.description = description;
+  if (indicator_key !== undefined) updateData.indicator_key = indicator_key;
+  if (target_indicators !== undefined) updateData.target_indicators = target_indicators;
+  if (content !== undefined) updateData.content = content;
+  if (estimated_hours !== undefined) updateData.estimated_hours = estimated_hours;
+  if (is_active !== undefined) updateData.is_active = is_active;
+
+  const { data, error } = await client
+    .from('empower_plans')
+    .update(updateData)
+    .eq('id', id)
+    .select()
+    .maybeSingle();
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ data });
+}
+
+// DELETE /api/empower - 删除赋能方案（软删除）
+export async function DELETE(request: NextRequest) {
+  const token = request.headers.get('authorization')?.replace('Bearer ', '');
+  const client = getSupabaseClient(token);
+
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get('id');
+
+  if (!id) return NextResponse.json({ error: '缺少方案ID' }, { status: 400 });
+
+  // 软删除：将is_active设为false
+  const { data, error } = await client
+    .from('empower_plans')
+    .update({ is_active: false, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select()
+    .maybeSingle();
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ data, message: '方案已删除' });
+}
