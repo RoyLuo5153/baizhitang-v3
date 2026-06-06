@@ -14,7 +14,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: '首页', href: '/', icon: 'Home', roles: ['trainee', 'mentor', 'teacher', 'training_manager', 'boss'], group: 'main', alwaysVisible: true },
 
   // 学习
-  { label: '闯关学习', href: '/learning', icon: 'Gamepad2', roles: ['trainee'], group: '学习' },
+  { label: '阶段通关', href: '/learning', icon: 'GraduationCap', roles: ['trainee'], group: '学习' },
   { label: '成长档案', href: '/growth', icon: 'UserCheck', roles: ['trainee', 'mentor'], group: '学习' },
   { label: '演练任务', href: '/practice', icon: 'Mic', roles: ['trainee', 'mentor', 'teacher'], group: '学习' },
 

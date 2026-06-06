@@ -126,6 +126,9 @@ export async function GET(request: NextRequest) {
         cohort: profile.cohort || '',
         remarks: profile.remarks || '',
         profileId: profile.id || null,
+        stage: profile.stage || 'foundation',
+        processStatus: profile.process_status || 'not_started',
+        resultStatus: profile.result_status || 'not_started',
       };
     });
 

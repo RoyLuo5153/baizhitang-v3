@@ -381,6 +381,8 @@ export const questions = pgTable("questions", {
 	answer: jsonb(),
 	explanation: text(),
 	isActive: boolean("is_active").default(true).notNull(),
+	module: varchar({ length: 50 }),
+	stage: varchar({ length: 20 }).default('foundation'),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }),
 	createdBy: varchar("created_by", { length: 36 }),
@@ -388,4 +390,45 @@ export const questions = pgTable("questions", {
 	index("questions_difficulty_idx").using("btree", table.difficulty.asc().nullsLast().op("text_ops")),
 	index("questions_level_id_idx").using("btree", table.levelId.asc().nullsLast().op("int4_ops")),
 	index("questions_type_idx").using("btree", table.questionType.asc().nullsLast().op("text_ops")),
+	index("questions_module_idx").using("btree", table.module.asc().nullsLast().op("text_ops")),
+	index("questions_stage_idx").using("btree", table.stage.asc().nullsLast().op("text_ops")),
+]);
+
+export const assessmentModules = pgTable("assessment_modules", {
+	id: serial().primaryKey().notNull(),
+	code: varchar({ length: 50 }).notNull(),
+	name: varchar({ length: 100 }).notNull(),
+	stage: varchar({ length: 20 }).notNull(),
+	description: text(),
+	sortOrder: integer("sort_order").default(0),
+	isActive: boolean("is_active").default(true),
+	passThreshold: integer("pass_threshold").default(80),
+	questionCount: integer("question_count").default(10),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }),
+}, (table) => [
+	unique("assessment_modules_code_unique").on(table.code),
+]);
+
+export const moduleProgress = pgTable("module_progress", {
+	id: serial().primaryKey().notNull(),
+	userId: varchar("user_id", { length: 36 }).notNull(),
+	moduleCode: varchar("module_code", { length: 50 }).notNull(),
+	status: varchar({ length: 20 }).default('locked'),
+	bestScore: integer("best_score").default(0),
+	attempts: integer().default(0),
+	lastAttemptAt: timestamp("last_attempt_at", { withTimezone: true, mode: 'string' }),
+	passedAt: timestamp("passed_at", { withTimezone: true, mode: 'string' }),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }),
+}, (table) => [
+	index("mp_user_id_idx").using("btree", table.userId.asc().nullsLast().op("text_ops")),
+	index("mp_module_code_idx").using("btree", table.moduleCode.asc().nullsLast().op("text_ops")),
+	index("mp_status_idx").using("btree", table.status.asc().nullsLast().op("text_ops")),
+	foreignKey({
+		columns: [table.userId],
+		foreignColumns: [users.id],
+		name: "module_progress_user_id_users_id_fk"
+	}).onDelete("cascade"),
+	unique("module_progress_user_module_unique").on(table.userId, table.moduleCode),
 ]);

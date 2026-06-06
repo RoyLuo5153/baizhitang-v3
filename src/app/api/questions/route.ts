@@ -25,6 +25,8 @@ export async function GET(request: NextRequest) {
   const levelId = searchParams.get('levelId');
   const questionType = searchParams.get('questionType');
   const difficulty = searchParams.get('difficulty');
+  const moduleFilter = searchParams.get('module');
+  const stageFilter = searchParams.get('stage');
   const page = parseInt(searchParams.get('page') || '1', 10);
   const pageSize = parseInt(searchParams.get('pageSize') || '50', 10);
   const keyword = searchParams.get('keyword');
@@ -46,6 +48,8 @@ export async function GET(request: NextRequest) {
   if (levelId) query = query.eq('level_id', parseInt(levelId));
   if (questionType) query = query.eq('question_type', questionType);
   if (difficulty) query = query.eq('difficulty', difficulty);
+  if (moduleFilter) query = query.eq('module', moduleFilter);
+  if (stageFilter) query = query.eq('stage', stageFilter);
   if (keyword) query = query.ilike('content', `%${keyword}%`);
 
   const from = (page - 1) * pageSize;
@@ -99,7 +103,7 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { level_id, question_type, difficulty, content, options, answer, explanation } = body;
+  const { level_id, question_type, difficulty, content, options, answer, explanation, module: qModule, stage: qStage } = body;
 
   if (!level_id || !question_type || !content || !answer) {
     return NextResponse.json({ error: '缺少必填字段' }, { status: 400 });
@@ -121,6 +125,10 @@ export async function POST(request: NextRequest) {
     created_by: String(user.id),
     status,
   };
+
+  // 新增module和stage字段
+  if (qModule) insertData.module = qModule;
+  if (qStage) insertData.stage = qStage;
 
   if (isManager) {
     insertData.reviewed_by = user.id;

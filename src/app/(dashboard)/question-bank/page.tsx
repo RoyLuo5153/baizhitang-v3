@@ -24,6 +24,8 @@ interface Question {
   reviewed_by: number | null;
   reviewed_at: string | null;
   created_at: string;
+  module?: string;
+  stage?: string;
 }
 
 interface Level {
@@ -52,6 +54,8 @@ export default function QuestionBankPage() {
     questionType: '',
     difficulty: '',
     keyword: '',
+    module: '',
+    stage: '',
   });
   const [activeTab, setActiveTab] = useState<'all' | 'pending'>('all');
   const [showDetail, setShowDetail] = useState<Question | null>(null);
@@ -72,6 +76,8 @@ export default function QuestionBankPage() {
     optionD: '',
     correctAnswer: 'A',
     explanation: '',
+    module: '',
+    stage: '',
   });
 
   const canEdit = hasPermission('question.create') || hasPermission('question.edit');
@@ -120,6 +126,8 @@ export default function QuestionBankPage() {
       if (filters.questionType) params.set('questionType', filters.questionType);
       if (filters.difficulty) params.set('difficulty', filters.difficulty);
       if (filters.keyword) params.set('keyword', filters.keyword);
+      if (filters.module) params.set('module', filters.module);
+      if (filters.stage) params.set('stage', filters.stage);
       if (activeTab === 'pending') params.set('status', 'pending_review');
 
       const res = await fetch(`/api/questions?${params}`);
@@ -164,6 +172,8 @@ export default function QuestionBankPage() {
         options,
         answer: { correct: formData.correctAnswer },
         explanation: formData.explanation,
+        module: formData.module || undefined,
+        stage: formData.stage || undefined,
       };
 
       const res = await fetch('/api/questions', {
@@ -201,6 +211,8 @@ export default function QuestionBankPage() {
         options,
         answer: { correct: formData.correctAnswer },
         explanation: formData.explanation,
+        module: formData.module || undefined,
+        stage: formData.stage || undefined,
       };
 
       const res = await fetch('/api/questions', {
@@ -245,7 +257,7 @@ export default function QuestionBankPage() {
     setFormData({
       levelId: '', questionType: 'single_choice', difficulty: 'medium',
       content: '', optionA: '', optionB: '', optionC: '', optionD: '',
-      correctAnswer: 'A', explanation: '',
+      correctAnswer: 'A', explanation: '', module: '', stage: '',
     });
   };
 
@@ -262,6 +274,8 @@ export default function QuestionBankPage() {
       optionD: q.options?.D || '',
       correctAnswer: Array.isArray(q.answer?.correct) ? q.answer.correct.join(',') : (q.answer?.correct || 'A'),
       explanation: q.explanation || '',
+      module: q.module || '',
+      stage: q.stage || '',
     });
   };
 
@@ -507,6 +521,36 @@ export default function QuestionBankPage() {
             >
               <option value="">全部关卡</option>
               {levels.map(l => <option key={l.id} value={String(l.id)}>第{l.id}关 - {l.name}</option>)}
+            </select>
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-muted-foreground shrink-0">模块</label>
+            <select
+              value={filters.module}
+              onChange={e => { setFilters(f => ({ ...f, module: e.target.value })); setPage(1); }}
+              className="bg-muted border-none rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 min-w-[140px]"
+            >
+              <option value="">全部模块</option>
+              <option value="diabetes_basics">糖尿病基础</option>
+              <option value="service_standards">服务标准</option>
+              <option value="service_language">服务用语</option>
+              <option value="compliance">合规红线</option>
+              <option value="first_call">首通电话场景</option>
+              <option value="followup_call">回访电话场景</option>
+              <option value="appointment_call">预约电话场景</option>
+              <option value="visit_day">面诊当天场景</option>
+            </select>
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-muted-foreground shrink-0">阶段</label>
+            <select
+              value={filters.stage}
+              onChange={e => { setFilters(f => ({ ...f, stage: e.target.value })); setPage(1); }}
+              className="bg-muted border-none rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 min-w-[120px]"
+            >
+              <option value="">全部阶段</option>
+              <option value="foundation">基础通关</option>
+              <option value="practice">实操通关</option>
             </select>
           </div>
           <div className="flex items-center gap-2">

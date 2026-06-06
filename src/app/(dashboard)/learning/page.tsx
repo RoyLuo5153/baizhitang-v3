@@ -1,676 +1,803 @@
 'use client';
 
 import { useAuth } from '@/lib/auth/context';
-import { useRouter } from 'next/navigation';
 import { useEffect, useState, useCallback } from 'react';
 import {
-  Check, Lock, Swords, Play, Star, Flame, Trophy, ChevronRight,
-  Calendar, Clock, BookOpen, Zap, ClipboardCheck, Flag, Circle, CheckCircle2,
-  Eye, Settings, Users, Edit3, Save, Plus, Trash2, GripVertical, ToggleLeft, ToggleRight, Search, AlertTriangle,
+  Check, Lock, Play, Flame, BookOpen, Wrench, PencilLine,
+  User, X, ChevronRight,
 } from 'lucide-react';
 
-// === Shared Types ===
+// === Types ===
 
-interface DayTask {
-  id: number;
-  dayIndex: number;
-  taskType: string;
-  taskTitle: string;
-  taskDescription: string;
-  standard: string;
-  deadlineTime: string | null;
-  isCompleted: boolean;
-  relatedLevelId: number | null;
-  sortOrder: number;
-}
-
-interface LevelInfo {
-  levelId: number;
+interface ModuleInfo {
+  code: string;
   name: string;
-  stage: number;
+  stage: string;
   stageName: string;
-  status: 'passed' | 'active' | 'in_progress' | 'locked' | 'locked-stage';
+  description: string | null;
+  sortOrder: number;
+  questionCount: number;
+  passThreshold: number;
+  status: 'passed' | 'active' | 'in_progress' | 'locked';
   bestScore: number | null;
   attempts: number;
-  questionStats: { single: number; multi: number; tf: number; essay: number; total: number };
+  passedAt: string | null;
+  questionStats: { single: number; multi: number; tf: number; total: number } | null;
 }
 
-interface StageProgress {
+interface StageProgressInfo {
   completed: number;
   total: number;
+  allPassed: boolean;
 }
 
-interface TraineeProgress {
-  userId: string;
-  realName: string;
-  stage: number;
-  passedLevels: number;
-  totalLevels: number;
-  currentLevel: number;
-  lastAttempt: string | null;
+interface ModulesData {
+  modules: ModuleInfo[];
+  currentStage: string;
+  processStatus: string;
+  resultStatus: string;
+  stageProgress: Record<string, StageProgressInfo>;
 }
 
-const STAGE_LABELS: Record<number, string> = {
-  1: '阶段一 · 理论基础',
-  2: '阶段二 · 实战演练',
-  3: '阶段三 · 综合达标',
-};
-
-const STAGE_SHORT: Record<number, string> = {
-  1: '理论基础',
-  2: '实战演练',
-  3: '综合达标',
-};
-
-function getLevelDifficulty(levelId: number): number {
-  if (levelId <= 3) return 1;
-  if (levelId <= 7) return 2;
-  if (levelId <= 11) return 3;
-  if (levelId <= 17) return 4;
-  return 5;
+interface QuestionItem {
+  id: number;
+  question_type: string;
+  content: string;
+  options: string[] | null;
 }
 
-const DIFFICULTY_TEXT: Record<number, string> = {
-  1: '1/5 · 入门难度',
-  2: '2/5 · 基础难度',
-  3: '3/5 · 中等难度',
-  4: '4/5 · 较高难度',
-  5: '5/5 · 最高难度',
+// === Status Helpers ===
+
+const STAGE_LABELS: Record<string, string> = {
+  foundation: '基础通关',
+  practice: '实操通关',
+  qualified: '合格阶段',
 };
 
-// === Trainee View (闯关学习) ===
+const PROCESS_STATUS_MAP: Record<string, { label: string; color: string }> = {
+  not_started: { label: '未启动', color: 'text-white/60' },
+  monitoring: { label: '监控中', color: 'text-yellow-400' },
+  flagged: { label: '预警', color: 'text-red-400' },
+  passed: { label: '已通过', color: 'text-green-400' },
+};
 
-function TraineeLearningView({ user, levels, stageProgress, totalPassed, dayTasks, activeDay, setActiveDay, selectedLevel, setSelectedLevel }: {
-  user: { id: string; role: string };
-  levels: LevelInfo[];
-  stageProgress: Record<number, StageProgress>;
-  totalPassed: number;
-  dayTasks: Record<number, DayTask[]>;
-  activeDay: number;
-  setActiveDay: (d: number) => void;
-  selectedLevel: number | null;
-  setSelectedLevel: (id: number | null) => void;
+const RESULT_STATUS_MAP: Record<string, { label: string; color: string }> = {
+  not_started: { label: '未启动', color: 'text-white/60' },
+  insufficient_data: { label: '数据不足', color: 'text-white/60' },
+  monitoring: { label: '监控中', color: 'text-yellow-400' },
+  yellow_alert: { label: '黄灯预警', color: 'text-yellow-400' },
+  red_alert: { label: '红灯预警', color: 'text-red-400' },
+  passed: { label: '已达标', color: 'text-green-400' },
+};
+
+// === Module Card Component ===
+
+function ModuleCard({
+  module,
+  onClick,
+}: {
+  module: ModuleInfo;
+  onClick: () => void;
 }) {
-  const router = useRouter();
-  const [stageUnlockTip, setStageUnlockTip] = useState<string | null>(null);
-  const selected = levels.find(l => l.levelId === selectedLevel);
-  const difficulty = selectedLevel ? getLevelDifficulty(selectedLevel) : 3;
+  const isLocked = module.status === 'locked';
+  const isPassed = module.status === 'passed';
+  const isActive = module.status === 'active' || module.status === 'in_progress';
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">闯关学习</h1>
-          <p className="text-sm text-muted-foreground mt-1">完成21关挑战，从理论到实战逐步达标</p>
-        </div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Flame className="w-4 h-4 text-warning" />
-          <span>已通过 <span className="text-primary font-semibold">{totalPassed}</span> / 21 关</span>
-        </div>
+    <div
+      onClick={!isLocked ? onClick : undefined}
+      className={`relative bg-card rounded-lg shadow-card p-5 transition-all ${
+        isLocked
+          ? 'cursor-not-allowed opacity-40'
+          : 'cursor-pointer hover:shadow-float'
+      } ${isActive ? 'border-2 border-primary/40' : 'border-2 border-transparent'}`}
+    >
+      {/* Status badge */}
+      <div
+        className={`absolute top-0 left-0 rounded-tl-lg rounded-br-lg px-2.5 py-1 flex items-center gap-1 ${
+          isPassed
+            ? 'bg-green-500/90'
+            : isActive
+            ? 'bg-primary'
+            : 'bg-muted-foreground/60'
+        }`}
+      >
+        {isPassed && <Check className="w-3 h-3 text-white" />}
+        {isActive && <PencilLine className="w-3 h-3 text-white" />}
+        {isLocked && <Lock className="w-3 h-3 text-white" />}
+        <span className="text-xs font-medium text-white">
+          {isPassed ? '已通过' : isActive ? '可考核' : '锁定'}
+        </span>
       </div>
 
-      {stageUnlockTip && (
-        <div className="bg-[#f59e0b]/10 border border-[#f59e0b]/20 text-[#f59e0b] rounded-lg px-4 py-3 text-sm flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
-          <Lock className="w-4 h-4 shrink-0" />
-          <span>{stageUnlockTip}</span>
-        </div>
-      )}
-
-      {/* 阶段进度 */}
-      <div className="bg-card rounded-lg shadow-sm p-5 border border-border/30">
-        <div className="grid grid-cols-3 gap-6">
-          {[1, 2, 3].map(stage => {
-            const sp = stageProgress[stage] || { completed: 0, total: 7 };
-            const pct = sp.total > 0 ? (sp.completed / sp.total) * 100 : 0;
-            const isComplete = sp.completed === sp.total;
-            const isCurrent = !isComplete && sp.completed > 0;
-            const isLocked = stage === 3 && (stageProgress[2]?.completed || 0) < 7;
-            return (
-              <div key={stage} className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center ${isComplete ? 'bg-green-500/15' : isCurrent ? 'bg-primary/15' : 'bg-muted/60'}`}>
-                      {isComplete ? <Check className="w-3.5 h-3.5 text-green-500" /> : isLocked ? <Lock className="w-3.5 h-3.5 text-muted-foreground/50" /> : <Play className="w-3.5 h-3.5 text-primary" />}
-                    </div>
-                    <span className={`text-sm font-semibold ${isLocked ? 'text-muted-foreground/50' : 'text-foreground'}`}>阶段{['一','二','三'][stage-1]}</span>
-                    <span className={`text-xs ${isLocked ? 'text-muted-foreground/50' : 'text-muted-foreground'}`}>{[1,2,3].map(s => `${(s-1)*7+1}-${s*7}关`)[stage-1]} · {STAGE_SHORT[stage]}</span>
-                  </div>
-                  <span className={`text-xs font-medium ${isComplete ? 'text-green-500' : isCurrent ? 'text-primary' : 'text-muted-foreground/50'}`}>
-                    {isComplete ? '已完成' : isCurrent ? '进行中' : isLocked ? '未解锁' : '未开始'}
-                  </span>
-                </div>
-                <div className="h-2 bg-muted rounded-full overflow-hidden">
-                  <div className={`h-full rounded-full transition-all ${isComplete ? 'bg-green-500' : isCurrent ? 'bg-primary' : 'bg-muted-foreground/20'}`} style={{ width: `${pct}%` }} />
-                </div>
-                <p className={`text-xs ${isLocked ? 'text-muted-foreground/50' : 'text-muted-foreground'}`}>
-                  {isLocked && stage === 3 ? '完成阶段二后解锁' : `${sp.completed}/${sp.total} 关已通过`}
-                </p>
-              </div>
-            );
-          })}
-        </div>
+      {/* Module content */}
+      <div className="mt-6">
+        <h3 className="text-base font-semibold text-foreground">{module.name}</h3>
+        <p className="text-xs text-muted-foreground mt-1">{module.description || ''}</p>
       </div>
 
-      {/* 7天排课表 */}
-      {Object.keys(dayTasks).length > 0 && (
-        <div className="bg-card rounded-lg shadow-sm p-5 border border-border/30">
-          <div className="flex items-center gap-2 mb-4">
-            <Calendar className="w-4 h-4 text-[#f59e0b]" />
-            <h2 className="text-base font-semibold text-foreground">7天排课表</h2>
+      {/* Stats row */}
+      <div className="flex items-center justify-between mt-4 pt-3 border-t border-border/15">
+        <div className="flex items-center gap-4">
+          <div>
+            <span className="text-xs text-muted-foreground">最高分</span>
+            <p className={`text-lg font-bold ${isPassed ? 'text-green-500' : 'text-muted-foreground'}`}>
+              {module.bestScore !== null ? module.bestScore : '--'}
+            </p>
           </div>
-          <div className="flex gap-1.5 mb-4">
-            {[1,2,3,4,5,6,7].map(day => {
-              const tasks = dayTasks[day] || [];
-              const allDone = tasks.length > 0 && tasks.every(t => t.isCompleted);
-              const hasProgress = tasks.some(t => t.isCompleted) && !allDone;
-              const isActive = day === activeDay;
-              return (
-                <button key={day} onClick={() => setActiveDay(day)} className={`flex-1 py-2 px-1 rounded-md text-center text-xs font-medium transition-all ${isActive ? 'bg-[#2978B5]/10 text-[#2978B5] border border-[#2978B5]/30' : allDone ? 'bg-[#22c55e]/8 text-[#22c55e]' : hasProgress ? 'bg-[#f59e0b]/8 text-[#f59e0b]' : 'bg-muted/40 text-muted-foreground'}`}>
-                  <div>Day{day}</div>
-                  {allDone && <Check className="w-3 h-3 mx-auto mt-0.5" />}
-                </button>
-              );
-            })}
-          </div>
-          <div className="space-y-2">
-            {(dayTasks[activeDay] || []).map(task => {
-              const typeColors: Record<string, { bg: string; text: string }> = {
-                study: { bg: 'bg-[#2978B5]/10', text: 'text-[#2978B5]' },
-                practice: { bg: 'bg-[#f59e0b]/10', text: 'text-[#f59e0b]' },
-                quiz: { bg: 'bg-[#22c55e]/10', text: 'text-[#22c55e]' },
-                review: { bg: 'bg-purple-500/10', text: 'text-purple-500' },
-              };
-              const tc = typeColors[task.taskType] || typeColors.study;
-              return (
-                <div key={task.id} className={`flex items-center gap-3 py-2.5 px-3 rounded-md ${task.isCompleted ? 'bg-muted/20' : 'bg-background border border-border/30'}`}>
-                  {task.isCompleted ? <CheckCircle2 className="w-4 h-4 text-[#22c55e] shrink-0" /> : <Circle className="w-4 h-4 text-muted-foreground/40 shrink-0" />}
-                  <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${tc.bg} ${tc.text} shrink-0`}>
-                    {task.taskType === 'study' ? '学习' : task.taskType === 'practice' ? '实操' : task.taskType === 'quiz' ? '考核' : '复盘'}
-                  </span>
-                  <span className={`text-sm flex-1 ${task.isCompleted ? 'text-muted-foreground line-through' : 'text-foreground'}`}>{task.taskTitle}</span>
-                  {task.standard && <span className="text-xs text-[#f59e0b] flex items-center gap-1 shrink-0"><Flag className="w-3 h-3" />{task.standard}</span>}
-                  {task.relatedLevelId && !task.isCompleted && (
-                    <button onClick={() => setSelectedLevel(task.relatedLevelId!)} className="text-xs text-[#2978B5] hover:underline shrink-0">去闯关</button>
-                  )}
-                </div>
-              );
-            })}
+          <div>
+            <span className="text-xs text-muted-foreground">答题次数</span>
+            <p className="text-lg font-bold text-foreground">{module.attempts}</p>
           </div>
         </div>
-      )}
+        <span
+          className={`inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium ${
+            isPassed
+              ? 'bg-green-500/15 text-green-500'
+              : isActive
+              ? 'bg-primary/15 text-primary'
+              : 'bg-muted text-muted-foreground'
+          }`}
+        >
+          {isPassed ? '已通过' : isActive ? '可考核' : '锁定'}
+        </span>
+      </div>
+    </div>
+  );
+}
 
-      {/* 关卡地图 */}
-      <div className="bg-card rounded-lg shadow-sm p-5 border border-border/30">
-        <h2 className="text-base font-semibold text-foreground mb-4">关卡地图</h2>
+// === Quiz Modal ===
+
+function QuizStartModal({
+  module,
+  onClose,
+  onStart,
+}: {
+  module: ModuleInfo;
+  onClose: () => void;
+  onStart: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+      <div className="bg-card rounded-xl shadow-dialog max-w-md w-full p-6">
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="text-lg font-bold text-foreground">{module.name} · 模块考核</h3>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
         <div className="space-y-4">
-          {[1, 2, 3].map(stage => {
-            const stageLevels = levels.filter(l => l.stage === stage);
-            const isStageLocked = stage === 3 && (stageProgress[2]?.completed || 0) < 7;
-            return (
-              <div key={stage}>
-                <div className="flex items-center gap-1 mb-2">
-                  <span className={`text-xs font-medium ${isStageLocked ? 'text-muted-foreground/50' : 'text-primary'}`}>阶段{['一','二','三'][stage-1]}</span>
-                  <span className={`text-xs ${isStageLocked ? 'text-muted-foreground/50' : 'text-muted-foreground'}`}>· {STAGE_SHORT[stage]}</span>
-                </div>
-                <div className="grid grid-cols-7 gap-3">
-                  {stageLevels.map(level => {
-                    const isSelected = selectedLevel === level.levelId;
-                    const isActive = level.status === 'active' || level.status === 'in_progress';
-                    return (
-                      <div key={level.levelId} onClick={() => {
-                        if (level.status === 'locked-stage') {
-                          const prevStage = level.stage - 1;
-                          const sp = stageProgress[prevStage] || { completed: 0, total: 7 };
-                          setStageUnlockTip(`需完成阶段${prevStage}全部${sp.total}关（当前已通过${sp.completed}关）`);
-                          setTimeout(() => setStageUnlockTip(null), 3000);
-                        } else if (level.status !== 'locked') {
-                          setSelectedLevel(level.levelId);
-                        }
-                      }} className={`relative flex flex-col items-center gap-1.5 p-3 rounded-lg cursor-pointer transition-all ${
-                        level.status === 'passed' ? `bg-green-500/8 border border-green-500/20 ${isSelected ? 'ring-2 ring-green-500/40' : ''}`
-                          : isActive ? `bg-primary/8 border-2 border-primary/60 ${isSelected ? 'ring-2 ring-primary/40' : ''}`
-                          : level.status === 'locked-stage' || level.status === 'locked' ? 'bg-muted/50 border border-border/15 cursor-not-allowed'
-                          : `bg-muted/20 border border-border/20 ${isSelected ? 'ring-2 ring-primary/20' : ''}`
-                      }`}>
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${level.status === 'passed' ? 'bg-green-500/15' : isActive ? 'bg-primary/15' : 'bg-muted/60'}`}>
-                          {level.status === 'passed' ? <Check className="w-5 h-5 text-green-500" /> : isActive ? <Swords className="w-5 h-5 text-primary" /> : <Lock className="w-5 h-5 text-muted-foreground/40" />}
-                        </div>
-                        <span className={`text-xs font-semibold ${level.status === 'passed' ? 'text-green-500' : isActive ? 'text-primary' : 'text-muted-foreground/40'}`}>第{level.levelId}关</span>
-                        {isActive && <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-primary rounded-full flex items-center justify-center"><Flame className="w-2.5 h-2.5 text-primary-foreground" /></span>}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
+          <div className="flex items-center justify-between bg-muted rounded-lg px-4 py-3">
+            <span className="text-sm text-muted-foreground">题目数量</span>
+            <span className="text-sm font-semibold text-foreground">{module.questionCount} 题</span>
+          </div>
+          <div className="flex items-center justify-between bg-muted rounded-lg px-4 py-3">
+            <span className="text-sm text-muted-foreground">通过分数线</span>
+            <span className="text-sm font-semibold text-primary">{module.passThreshold} 分</span>
+          </div>
+          <div className="flex items-center justify-between bg-muted rounded-lg px-4 py-3">
+            <span className="text-sm text-muted-foreground">答题限时</span>
+            <span className="text-sm font-semibold text-foreground">15 分钟</span>
+          </div>
         </div>
+        <button
+          onClick={onStart}
+          className="w-full mt-6 bg-primary text-primary-foreground px-4 py-2.5 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+        >
+          <Play className="w-4 h-4" />
+          开始答题
+        </button>
       </div>
+    </div>
+  );
+}
 
-      {/* 关卡详情 */}
-      {selected && (
-        <div className="bg-card rounded-lg shadow-sm p-5 border border-border/30">
-          <div className="flex items-start justify-between gap-6">
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-4">
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${selected.status === 'passed' ? 'bg-green-500/10' : 'bg-primary/10'}`}>
-                  {selected.status === 'passed' ? <Trophy className="w-6 h-6 text-green-500" /> : <Swords className="w-6 h-6 text-primary" />}
-                </div>
-                <div>
-                  <h3 className="text-base font-semibold text-foreground">第{selected.levelId}关 · {selected.name}</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">{STAGE_LABELS[selected.stage]}</p>
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-6">
-                <div>
-                  <p className="text-xs text-muted-foreground mb-2">题型分布</p>
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-1.5"><div className="w-5 h-5 rounded bg-primary/15 flex items-center justify-center"><span className="text-[10px] font-bold text-primary">单</span></div><span className="text-sm font-medium text-foreground">{selected.questionStats.single}</span></div>
-                    <div className="flex items-center gap-1.5"><div className="w-5 h-5 rounded bg-warning/15 flex items-center justify-center"><span className="text-[10px] font-bold text-warning">多</span></div><span className="text-sm font-medium text-foreground">{selected.questionStats.multi}</span></div>
-                    <div className="flex items-center gap-1.5"><div className="w-5 h-5 rounded bg-green-500/15 flex items-center justify-center"><span className="text-[10px] font-bold text-green-500">判</span></div><span className="text-sm font-medium text-foreground">{selected.questionStats.tf}</span></div>
-                  </div>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-2">难度星级</p>
-                  <div className="flex items-center gap-0.5">
-                    {Array.from({ length: 5 }, (_, i) => <Star key={i} className={`w-4 h-4 ${i < difficulty ? 'text-warning fill-warning' : 'text-muted/50'}`} />)}
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">{DIFFICULTY_TEXT[difficulty]}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-2">最高分</p>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-2xl font-bold text-foreground">{selected.bestScore !== null ? selected.bestScore : '—'}</span>
-                    <span className="text-sm text-muted-foreground">/ 100</span>
-                  </div>
-                </div>
-              </div>
+// === History Modal ===
+
+function HistoryModal({
+  module,
+  onClose,
+  onRetake,
+}: {
+  module: ModuleInfo;
+  onClose: () => void;
+  onRetake: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+      <div className="bg-card rounded-xl shadow-dialog max-w-md w-full p-6">
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="text-lg font-bold text-foreground">{module.name} · 考核成绩</h3>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between bg-green-500/10 rounded-lg px-4 py-3">
+            <span className="text-sm text-muted-foreground">最高分</span>
+            <span className="text-xl font-bold text-green-500">{module.bestScore}</span>
+          </div>
+          <div className="flex items-center justify-between bg-muted rounded-lg px-4 py-3">
+            <span className="text-sm text-muted-foreground">通过时间</span>
+            <span className="text-sm font-semibold text-foreground">
+              {module.passedAt ? new Date(module.passedAt).toLocaleDateString('zh-CN') : '--'}
+            </span>
+          </div>
+          <div className="flex items-center justify-between bg-muted rounded-lg px-4 py-3">
+            <span className="text-sm text-muted-foreground">累计答题</span>
+            <span className="text-sm font-semibold text-foreground">{module.attempts} 次</span>
+          </div>
+        </div>
+        <button
+          onClick={onRetake}
+          className="w-full mt-6 bg-primary text-primary-foreground px-4 py-2.5 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+        >
+          <ChevronRight className="w-4 h-4" />
+          重新挑战
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// === Quiz Answering Component ===
+
+function QuizPanel({
+  module,
+  questions,
+  onSubmit,
+  onCancel,
+}: {
+  module: ModuleInfo;
+  questions: QuestionItem[];
+  onSubmit: (answers: Record<number, string | string[]>) => void;
+  onCancel: () => void;
+}) {
+  const [answers, setAnswers] = useState<Record<number, string | string[]>>({});
+  const [currentIdx, setCurrentIdx] = useState(0);
+
+  const q = questions[currentIdx];
+  if (!q) return null;
+
+  const handleSingleAnswer = (questionId: number, option: string) => {
+    setAnswers(prev => ({ ...prev, [questionId]: option }));
+  };
+
+  const handleMultiAnswer = (questionId: number, option: string) => {
+    const prev = (answers[questionId] as string[]) || [];
+    const next = prev.includes(option) ? prev.filter(o => o !== option) : [...prev, option];
+    setAnswers(prevState => ({ ...prevState, [questionId]: next }));
+  };
+
+  const handleTfAnswer = (questionId: number, val: string) => {
+    setAnswers(prev => ({ ...prev, [questionId]: val }));
+  };
+
+  const handleSubmit = () => {
+    onSubmit(answers);
+  };
+
+  const answeredCount = Object.keys(answers).length;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+      <div className="bg-card rounded-xl shadow-dialog max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-bold text-foreground">{module.name}</h3>
+          <span className="text-sm text-muted-foreground">
+            {currentIdx + 1} / {questions.length} · 已答 {answeredCount} 题
+          </span>
+        </div>
+
+        {/* Progress bar */}
+        <div className="w-full bg-muted rounded-full h-2 mb-6">
+          <div
+            className="bg-primary rounded-full h-2 transition-all"
+            style={{ width: `${((currentIdx + 1) / questions.length) * 100}%` }}
+          />
+        </div>
+
+        {/* Question */}
+        <div className="mb-6">
+          <p className="text-base font-medium text-foreground mb-4">
+            {currentIdx + 1}. {q.content}
+          </p>
+
+          {q.question_type === 'single' && q.options && (
+            <div className="space-y-2">
+              {q.options.map((opt, i) => (
+                <button
+                  key={i}
+                  onClick={() => handleSingleAnswer(q.id, String.fromCharCode(65 + i))}
+                  className={`w-full text-left px-4 py-3 rounded-lg border transition-all text-sm ${
+                    answers[q.id] === String.fromCharCode(65 + i)
+                      ? 'border-primary bg-primary/10 text-primary font-medium'
+                      : 'border-border hover:border-primary/40 text-foreground'
+                  }`}
+                >
+                  {String.fromCharCode(65 + i)}. {opt}
+                </button>
+              ))}
             </div>
-            {(selected.status === 'active' || selected.status === 'in_progress' || selected.status === 'passed') && (
-              <button onClick={() => router.push(`/learning/${selected.levelId}`)} className="bg-primary text-primary-foreground px-6 py-2.5 rounded-md text-sm font-medium hover:opacity-90 transition-all inline-flex items-center gap-2 shrink-0">
-                <Play className="w-4 h-4" />
-                {selected.status === 'passed' ? '再战一次' : '开始闯关'}
+          )}
+
+          {q.question_type === 'multi' && q.options && (
+            <div className="space-y-2">
+              {q.options.map((opt, i) => {
+                const letter = String.fromCharCode(65 + i);
+                const selected = ((answers[q.id] as string[]) || []).includes(letter);
+                return (
+                  <button
+                    key={i}
+                    onClick={() => handleMultiAnswer(q.id, letter)}
+                    className={`w-full text-left px-4 py-3 rounded-lg border transition-all text-sm ${
+                      selected
+                        ? 'border-primary bg-primary/10 text-primary font-medium'
+                        : 'border-border hover:border-primary/40 text-foreground'
+                    }`}
+                  >
+                    {letter}. {opt}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {q.question_type === 'tf' && (
+            <div className="flex gap-3">
+              {['正确', '错误'].map(val => (
+                <button
+                  key={val}
+                  onClick={() => handleTfAnswer(q.id, val === '正确' ? 'T' : 'F')}
+                  className={`flex-1 px-4 py-3 rounded-lg border transition-all text-sm ${
+                    answers[q.id] === (val === '正确' ? 'T' : 'F')
+                      ? 'border-primary bg-primary/10 text-primary font-medium'
+                      : 'border-border hover:border-primary/40 text-foreground'
+                  }`}
+                >
+                  {val}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Navigation */}
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => setCurrentIdx(i => Math.max(0, i - 1))}
+            disabled={currentIdx === 0}
+            className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground disabled:opacity-30 transition-all"
+          >
+            上一题
+          </button>
+          <div className="flex gap-3">
+            <button onClick={onCancel} className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground">
+              取消
+            </button>
+            {currentIdx < questions.length - 1 ? (
+              <button
+                onClick={() => setCurrentIdx(i => i + 1)}
+                className="px-6 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:opacity-90 transition-all"
+              >
+                下一题
+              </button>
+            ) : (
+              <button
+                onClick={handleSubmit}
+                className="px-6 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:opacity-90 transition-all"
+              >
+                提交答案
               </button>
             )}
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
 
-// === Training Manager View (课程管理后台) ===
+// === Trainee View (阶段通关) ===
 
-function ManagerLearningView({ levels }: { levels: LevelInfo[] }) {
-  const [editingLevel, setEditingLevel] = useState<number | null>(null);
-  const [editName, setEditName] = useState('');
-  const [saving, setSaving] = useState(false);
-  const [tab, setTab] = useState<'levels' | 'schedule' | 'goals'>('levels');
+function TraineeModuleView({ user }: { user: { id: string; role: string } }) {
+  const [data, setData] = useState<ModulesData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [activeModule, setActiveModule] = useState<ModuleInfo | null>(null);
+  const [modalType, setModalType] = useState<'quiz' | 'history' | 'answering' | null>(null);
+  const [questions, setQuestions] = useState<QuestionItem[]>([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
 
-  const saveLevelName = async (levelId: number, name: string) => {
-    setSaving(true);
+  const fetchModules = useCallback(async () => {
     try {
-      await fetch('/api/learning', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ levelId, name }),
-      });
-      setEditingLevel(null);
-    } catch { /* ignore */ }
-    setSaving(false);
+      const res = await fetch('/api/learning/modules');
+      if (!res.ok) throw new Error('Failed to fetch modules');
+      const json = await res.json();
+      setData(json);
+    } catch (err) {
+      console.error('Failed to load modules:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchModules();
+  }, [fetchModules]);
+
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 3000);
   };
+
+  const handleModuleClick = (mod: ModuleInfo) => {
+    if (mod.status === 'locked') {
+      showToast('完成基础通关后解锁');
+      return;
+    }
+    setActiveModule(mod);
+    if (mod.status === 'passed') {
+      setModalType('history');
+    } else {
+      setModalType('quiz');
+    }
+  };
+
+  const handleStartQuiz = async () => {
+    if (!activeModule) return;
+    try {
+      const res = await fetch(`/api/questions?module=${activeModule.code}&stage=${activeModule.stage}&limit=${activeModule.questionCount}&random=true`);
+      if (!res.ok) throw new Error('Failed to fetch questions');
+      const json = await res.json();
+      if (!json.questions || json.questions.length === 0) {
+        showToast('该模块暂无题目，请联系培训老师添加');
+        return;
+      }
+      setQuestions(json.questions);
+      setModalType('answering');
+    } catch (err) {
+      console.error('Failed to load questions:', err);
+      showToast('加载题目失败，请稍后重试');
+    }
+  };
+
+  const handleSubmitAnswers = async (answers: Record<number, string | string[]>) => {
+    if (!activeModule) return;
+    setSubmitting(true);
+    try {
+      const res = await fetch(`/api/learning/modules/${activeModule.code}/submit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answers }),
+      });
+      if (!res.ok) throw new Error('Submit failed');
+      const result = await res.json();
+
+      setModalType(null);
+      setActiveModule(null);
+      setQuestions([]);
+
+      if (result.passed) {
+        showToast(`恭喜！${activeModule.name}考核通过，得分 ${result.score} 分`);
+      } else {
+        showToast(`${activeModule.name}未通过，得分 ${result.score} 分（需 ${activeModule.passThreshold} 分），请复习后重试`);
+      }
+
+      // Refresh module data
+      fetchModules();
+    } catch (err) {
+      console.error('Submit failed:', err);
+      showToast('提交失败，请稍后重试');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleRetake = () => {
+    setModalType(null);
+    if (activeModule) {
+      handleStartQuiz();
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-muted-foreground">加载中...</div>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-destructive">加载失败，请刷新重试</div>
+      </div>
+    );
+  }
+
+  const foundationModules = data.modules.filter(m => m.stage === 'foundation');
+  const practiceModules = data.modules.filter(m => m.stage === 'practice');
+  const totalPassed = data.modules.filter(m => m.status === 'passed').length;
+
+  const foundationProgress = data.stageProgress.foundation || { completed: 0, total: foundationModules.length, allPassed: false };
+  const practiceProgress = data.stageProgress.practice || { completed: 0, total: practiceModules.length, allPassed: false };
+  const practiceUnlocked = foundationProgress.allPassed;
+
+  const processInfo = PROCESS_STATUS_MAP[data.processStatus] || PROCESS_STATUS_MAP.not_started;
+  const resultInfo = RESULT_STATUS_MAP[data.resultStatus] || RESULT_STATUS_MAP.not_started;
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
+      {/* 1. 顶部标题栏 */}
       <div className="flex items-center justify-between">
         <div>
-          <div className="flex items-center gap-2">
-            <Settings className="w-5 h-5 text-primary" />
-            <h1 className="text-2xl font-bold text-foreground">课程管理</h1>
-          </div>
-          <p className="text-sm text-muted-foreground mt-1">管理关卡内容、阶段目标与排课安排</p>
+          <h1 className="text-2xl font-bold text-foreground">阶段通关</h1>
+          <p className="text-sm text-muted-foreground mt-1">完成模块考核，从基础到实操逐步达标</p>
+        </div>
+        <div className="flex items-center gap-2 bg-card rounded-lg shadow-card px-4 py-2.5">
+          <Flame className="w-5 h-5 text-amber-500" />
+          <span className="text-sm font-semibold text-foreground">已通过</span>
+          <span className="text-lg font-bold text-primary">{totalPassed}</span>
+          <span className="text-sm text-muted-foreground">/</span>
+          <span className="text-sm font-semibold text-foreground">{data.modules.length} 模块</span>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 bg-muted/40 p-1 rounded-lg">
-        {[
-          { key: 'levels' as const, label: '关卡管理', icon: <BookOpen className="w-4 h-4" /> },
-          { key: 'schedule' as const, label: '排课配置', icon: <Calendar className="w-4 h-4" /> },
-          { key: 'goals' as const, label: '阶段目标', icon: <Flag className="w-4 h-4" /> },
-        ].map(t => (
-          <button key={t.key} onClick={() => setTab(t.key)} className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-md text-sm font-medium transition-all ${tab === t.key ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
-            {t.icon}{t.label}
-          </button>
-        ))}
-      </div>
-
-      {/* 关卡管理 Tab */}
-      {tab === 'levels' && (
-        <div className="space-y-4">
-          {[1, 2, 3].map(stage => {
-            const stageLevels = levels.filter(l => l.stage === stage);
-            return (
-              <div key={stage} className="bg-card rounded-lg shadow-sm p-5 border border-border/30">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-base font-semibold text-foreground">阶段{['一','二','三'][stage-1]} · {STAGE_SHORT[stage]}</h2>
-                  <span className="text-xs text-muted-foreground">{stageLevels.length} 关</span>
-                </div>
-                <div className="space-y-2">
-                  {stageLevels.map(level => (
-                    <div key={level.levelId} className="flex items-center gap-3 py-2.5 px-3 rounded-md bg-background border border-border/30">
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-primary/10 shrink-0">
-                        <span className="text-sm font-bold text-primary">{level.levelId}</span>
-                      </div>
-                      {editingLevel === level.levelId ? (
-                        <div className="flex-1 flex items-center gap-2">
-                          <input
-                            type="text"
-                            className="flex-1 px-2 py-1 border border-border rounded text-sm bg-background text-foreground"
-                            value={editName}
-                            onChange={(e) => setEditName(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && saveLevelName(level.levelId, editName)}
-                            autoFocus
-                          />
-                          <button onClick={() => saveLevelName(level.levelId, editName)} className="p-1 text-green-500 hover:bg-green-500/10 rounded" disabled={saving}>
-                            <Save className="w-4 h-4" />
-                          </button>
-                          <button onClick={() => setEditingLevel(null)} className="p-1 text-muted-foreground hover:bg-muted/50 rounded">
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ) : (
-                        <>
-                          <div className="flex-1">
-                            <span className="text-sm font-medium text-foreground">{level.name}</span>
-                            <div className="flex items-center gap-3 mt-0.5">
-                              <span className="text-xs text-muted-foreground">
-                                单选{level.questionStats.single} / 多选{level.questionStats.multi} / 判断{level.questionStats.tf}
-                              </span>
-                              <span className="text-xs text-muted-foreground">
-                                难度 {getLevelDifficulty(level.levelId)}/5
-                              </span>
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => { setEditingLevel(level.levelId); setEditName(level.name); }}
-                            className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded transition-colors"
-                          >
-                            <Edit3 className="w-4 h-4" />
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* 排课配置 Tab */}
-      {tab === 'schedule' && (
-        <div className="bg-card rounded-lg shadow-sm p-5 border border-border/30">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-semibold text-foreground">7天排课模板</h2>
-            <span className="text-xs text-muted-foreground">新入职新人自动按此排课表生成学习计划</span>
-          </div>
+      {/* 2. 阶段进度条区域 */}
+      <div className="bg-card rounded-lg shadow-card p-5">
+        <div className="grid grid-cols-2 gap-6">
+          {/* 基础通关 */}
           <div className="space-y-3">
-            {[1,2,3,4,5,6,7].map(day => (
-              <div key={day} className="flex items-start gap-3 py-3 px-4 rounded-md bg-background border border-border/30">
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-[#2978B5]/10 shrink-0">
-                  <span className="text-sm font-bold text-[#2978B5]">D{day}</span>
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-foreground mb-1">第{day}天</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {levels.filter(l => l.stage === 1 && l.levelId <= day + 2).map(l => (
-                      <span key={l.levelId} className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-[#2978B5]/8 text-[#2978B5]">
-                        <BookOpen className="w-3 h-3" />
-                        第{l.levelId}关·{l.name}
-                      </span>
-                    ))}
-                    {day % 2 === 0 && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-[#f59e0b]/8 text-[#f59e0b]">
-                        <Zap className="w-3 h-3" />实操演练
-                      </span>
-                    )}
-                    {day === 7 && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-[#22c55e]/8 text-[#22c55e]">
-                        <ClipboardCheck className="w-3 h-3" />综合考核
-                      </span>
-                    )}
-                  </div>
-                </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-primary" />
+                <span className="text-base font-semibold text-foreground">基础通关</span>
               </div>
+              <span className={`inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium ${
+                foundationProgress.allPassed
+                  ? 'bg-green-500/15 text-green-500'
+                  : 'bg-primary/15 text-primary'
+              }`}>
+                {foundationProgress.allPassed ? '已完成' : '进行中'}
+              </span>
+            </div>
+            <div className="w-full bg-muted rounded-full h-2.5">
+              <div
+                className="bg-primary rounded-full h-2.5 transition-all"
+                style={{ width: `${foundationProgress.total > 0 ? (foundationProgress.completed / foundationProgress.total) * 100 : 0}%` }}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">{foundationProgress.completed} / {foundationProgress.total} 模块已通过</span>
+              <span className="text-xs font-medium text-primary">
+                {foundationProgress.total > 0 ? Math.round((foundationProgress.completed / foundationProgress.total) * 100) : 0}%
+              </span>
+            </div>
+          </div>
+
+          {/* 实操通关 */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Wrench className="w-4 h-4 text-muted-foreground" />
+                <span className="text-base font-semibold text-foreground">实操通关</span>
+              </div>
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-sm text-xs font-medium ${
+                practiceUnlocked
+                  ? 'bg-primary/15 text-primary'
+                  : 'bg-muted text-muted-foreground'
+              }`}>
+                {practiceUnlocked ? (
+                  practiceProgress.allPassed ? '已完成' : '进行中'
+                ) : (
+                  <><Lock className="w-3 h-3" />未解锁</>
+                )}
+              </span>
+            </div>
+            <div className="w-full bg-muted rounded-full h-2.5">
+              <div
+                className={`rounded-full h-2.5 transition-all ${practiceUnlocked ? 'bg-primary' : 'bg-muted-foreground/20'}`}
+                style={{ width: `${practiceProgress.total > 0 ? (practiceProgress.completed / practiceProgress.total) * 100 : 0}%` }}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">{practiceProgress.completed} / {practiceProgress.total} 模块已通过</span>
+              <span className={`text-xs font-medium ${practiceUnlocked ? 'text-primary' : 'text-muted-foreground'}`}>
+                {practiceProgress.total > 0 ? Math.round((practiceProgress.completed / practiceProgress.total) * 100) : 0}%
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. 基础通关模块卡片网格 */}
+      <div>
+        <div className="flex items-center gap-2 mb-4">
+          <BookOpen className="w-4 h-4 text-primary" />
+          <h2 className="text-base font-semibold text-foreground">基础通关</h2>
+          <span className="text-xs text-muted-foreground ml-1">{foundationModules.length}个模块 · 通过分数线80分</span>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          {foundationModules.map(mod => (
+            <ModuleCard key={mod.code} module={mod} onClick={() => handleModuleClick(mod)} />
+          ))}
+        </div>
+      </div>
+
+      {/* 4. 实操通关模块卡片网格 */}
+      <div>
+        <div className="flex items-center gap-2 mb-4">
+          <Wrench className="w-4 h-4 text-muted-foreground" />
+          <h2 className="text-base font-semibold text-foreground">实操通关</h2>
+          <span className="text-xs text-muted-foreground ml-1">
+            {practiceModules.length}个模块{practiceUnlocked ? '' : ' · 完成基础通关后解锁'}
+          </span>
+        </div>
+        <div className="relative">
+          {!practiceUnlocked && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
+              <div className="bg-foreground/70 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+                <Lock className="w-4 h-4" />
+                完成基础通关后解锁
+              </div>
+            </div>
+          )}
+          <div className={`grid grid-cols-2 gap-4 ${practiceUnlocked ? '' : 'opacity-40'}`}>
+            {practiceModules.map(mod => (
+              <ModuleCard
+                key={mod.code}
+                module={practiceUnlocked ? mod : { ...mod, status: 'locked' as const }}
+                onClick={() => {
+                  if (practiceUnlocked) handleModuleClick(mod);
+                  else showToast('完成基础通关后解锁');
+                }}
+              />
             ))}
           </div>
         </div>
+      </div>
+
+      {/* 5. 底部"我的状态"卡片 */}
+      <div className="rounded-lg p-5 bg-[#102A43]">
+        <div className="flex items-center gap-2 mb-4">
+          <User className="w-4 h-4 text-white/70" />
+          <span className="text-sm font-semibold text-white/90">我的状态</span>
+        </div>
+        <div className="grid grid-cols-3 gap-6">
+          <div>
+            <span className="text-xs text-white/50 block mb-1">当前阶段</span>
+            <p className="text-xl font-bold text-white">{STAGE_LABELS[data.currentStage] || data.currentStage}</p>
+          </div>
+          <div>
+            <span className="text-xs text-white/50 block mb-1">过程线状态</span>
+            <p className={`text-base font-semibold ${processInfo.color}`}>{processInfo.label}</p>
+            <span className="text-xs text-white/40 mt-0.5 block">
+              {data.processStatus === 'not_started' ? '通过实操质检后激活' : ''}
+              {data.processStatus === 'monitoring' ? '系统正在监控中' : ''}
+              {data.processStatus === 'flagged' ? '存在预警项，请关注' : ''}
+              {data.processStatus === 'passed' ? '过程线全部达标' : ''}
+            </span>
+          </div>
+          <div>
+            <span className="text-xs text-white/50 block mb-1">结果线状态</span>
+            <p className={`text-base font-semibold ${resultInfo.color}`}>{resultInfo.label}</p>
+            <span className="text-xs text-white/40 mt-0.5 block">
+              {data.resultStatus === 'not_started' ? '业务数据达标后激活' : ''}
+              {data.resultStatus === 'insufficient_data' ? '数据积累中' : ''}
+              {data.resultStatus === 'monitoring' ? '业务指标监控中' : ''}
+              {data.resultStatus === 'yellow_alert' ? '部分指标偏低' : ''}
+              {data.resultStatus === 'red_alert' ? '多项指标预警' : ''}
+              {data.resultStatus === 'passed' ? '结果线全部达标' : ''}
+            </span>
+          </div>
+        </div>
+        {data.currentStage === 'foundation' && (
+          <div className="mt-4 pt-3 border-t border-white/10">
+            <p className="text-xs text-white/40">双线状态将在进入实操阶段后自动激活</p>
+          </div>
+        )}
+      </div>
+
+      {/* Modals */}
+      {activeModule && modalType === 'quiz' && (
+        <QuizStartModal
+          module={activeModule}
+          onClose={() => { setActiveModule(null); setModalType(null); }}
+          onStart={handleStartQuiz}
+        />
       )}
 
-      {/* 阶段目标 Tab */}
-      {tab === 'goals' && (
-        <div className="space-y-4">
-          <div className="bg-card rounded-lg shadow-sm p-5 border border-border/30">
-            <h2 className="text-base font-semibold text-foreground mb-4">阶段晋升规则</h2>
-            <div className="space-y-3">
-              <div className="flex items-center gap-4 py-3 px-4 rounded-md bg-background border border-border/30">
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-green-500/10 shrink-0">
-                  <ChevronRight className="w-5 h-5 text-green-500" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-foreground">阶段一 → 阶段二</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">闯关7关全通过</p>
-                </div>
-                <button className="px-3 py-1.5 text-xs text-primary hover:bg-primary/10 rounded-md transition-colors">
-                  编辑规则
-                </button>
-              </div>
-              <div className="flex items-center gap-4 py-3 px-4 rounded-md bg-background border border-border/30">
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-green-500/10 shrink-0">
-                  <ChevronRight className="w-5 h-5 text-green-500" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-foreground">阶段二 → 阶段三</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">连续4周A类（双轨诊断全合格）</p>
-                </div>
-                <button className="px-3 py-1.5 text-xs text-primary hover:bg-primary/10 rounded-md transition-colors">
-                  编辑规则
-                </button>
-              </div>
-              <div className="flex items-center gap-4 py-3 px-4 rounded-md bg-background border border-[#ef4444]/20">
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-[#ef4444]/10 shrink-0">
-                  <AlertTriangle className="w-5 h-5 text-[#ef4444]" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-foreground">降级触发</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">连续2周D类（过程+结果均不合格）→ 触发复训</p>
-                </div>
-                <button className="px-3 py-1.5 text-xs text-primary hover:bg-primary/10 rounded-md transition-colors">
-                  编辑规则
-                </button>
-              </div>
-            </div>
-          </div>
+      {activeModule && modalType === 'history' && (
+        <HistoryModal
+          module={activeModule}
+          onClose={() => { setActiveModule(null); setModalType(null); }}
+          onRetake={handleRetake}
+        />
+      )}
+
+      {activeModule && modalType === 'answering' && questions.length > 0 && (
+        <QuizPanel
+          module={activeModule}
+          questions={questions}
+          onSubmit={handleSubmitAnswers}
+          onCancel={() => { setModalType(null); setQuestions([]); }}
+        />
+      )}
+
+      {/* Toast */}
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-foreground text-white px-4 py-2.5 rounded-lg shadow-lg text-sm font-medium animate-in fade-in slide-in-from-bottom-2">
+          {toast}
         </div>
       )}
     </div>
   );
 }
 
-// === Mentor View (新人进度视图) ===
+// === Non-trainee View (simplified overview) ===
 
-function MentorLearningView({ user }: { user: { id: string; role: string } }) {
-  const [trainees, setTrainees] = useState<TraineeProgress[]>([]);
+function NonTraineeView({ user }: { user: { id: string; role: string } }) {
+  const [data, setData] = useState<ModulesData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
 
   useEffect(() => {
-    const fetchTraineeProgress = async () => {
-      try {
-        const res = await fetch(`/api/learning/trainees?mentorId=${user.id}`);
-        if (res.ok) {
-          const data = await res.json();
-          setTrainees(data.trainees || []);
-        }
-      } catch { /* ignore */ }
-      setLoading(false);
-    };
-    fetchTraineeProgress();
-  }, [user.id]);
+    fetch('/api/learning/modules')
+      .then(res => res.json())
+      .then(json => setData(json))
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
 
-  const filtered = trainees.filter(t =>
-    t.realName.includes(search)
-  );
-
-  if (loading) return <div className="p-6 text-center text-muted-foreground">加载中...</div>;
+  if (loading) return <div className="flex items-center justify-center h-64 text-muted-foreground">加载中...</div>;
+  if (!data) return <div className="flex items-center justify-center h-64 text-destructive">加载失败</div>;
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <Users className="w-5 h-5 text-primary" />
-            <h1 className="text-2xl font-bold text-foreground">新人学习进度</h1>
-          </div>
-          <p className="text-sm text-muted-foreground mt-1">查看自己带教新人的闯关进度与学习情况</p>
-        </div>
-        <div className="relative">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <input
-            type="text"
-            className="pl-9 pr-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm"
-            placeholder="搜索新人..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">阶段通关</h1>
+        <p className="text-sm text-muted-foreground mt-1">查看新人模块考核进度</p>
       </div>
 
-      {filtered.length === 0 ? (
-        <div className="bg-card rounded-lg p-12 text-center">
-          <Users className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
-          <p className="text-muted-foreground">暂无带教新人</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map(t => (
-            <div key={t.userId} className="bg-card rounded-lg shadow-sm p-4 border border-border/30">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                  <span className="text-sm font-bold text-primary">{t.realName.charAt(0)}</span>
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-foreground">{t.realName}</p>
-                  <p className="text-xs text-muted-foreground">阶段{t.stage} · 第{t.currentLevel}关</p>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">闯关进度</span>
-                  <span className="text-foreground font-medium">{t.passedLevels}/{t.totalLevels}</span>
-                </div>
-                <div className="h-2 bg-muted rounded-full overflow-hidden">
-                  <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${(t.passedLevels / t.totalLevels) * 100}%` }} />
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      {/* Module overview table */}
+      <div className="bg-card rounded-lg shadow-card overflow-hidden">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border">
+              <th className="text-left px-4 py-3 font-semibold text-foreground">模块</th>
+              <th className="text-left px-4 py-3 font-semibold text-foreground">阶段</th>
+              <th className="text-left px-4 py-3 font-semibold text-foreground">通过线</th>
+              <th className="text-left px-4 py-3 font-semibold text-foreground">题目数</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.modules.map(mod => (
+              <tr key={mod.code} className="border-b border-border/50 hover:bg-muted/50">
+                <td className="px-4 py-3 font-medium text-foreground">{mod.name}</td>
+                <td className="px-4 py-3 text-muted-foreground">{mod.stageName}</td>
+                <td className="px-4 py-3 text-muted-foreground">{mod.passThreshold}分</td>
+                <td className="px-4 py-3 text-muted-foreground">{mod.questionCount}题</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
 
-// === Main Page Router ===
+// === Main Page ===
 
 export default function LearningPage() {
-  const { user, loading } = useAuth();
-  const router = useRouter();
-  const roleId = Number(user?.role) || 0;
-  const isTrainee = roleId === 1;
-  const isManager = roleId === 3;
-  const isMentor = roleId === 2;
+  const { user } = useAuth();
 
-  const [levels, setLevels] = useState<LevelInfo[]>([]);
-  const [stageProgress, setStageProgress] = useState<Record<number, StageProgress>>({});
-  const [totalPassed, setTotalPassed] = useState(0);
-  const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
-  const [dataLoading, setDataLoading] = useState(true);
-  const [dayTasks, setDayTasks] = useState<Record<number, DayTask[]>>({});
-  const [activeDay, setActiveDay] = useState<number>(1);
-
-  useEffect(() => {
-    if (!loading && !user) router.push('/login');
-  }, [user, loading, router]);
-
-  const fetchProgress = useCallback(async () => {
-    if (!user) return;
-    try {
-      const res = await fetch(`/api/learning?userId=${user.id}`);
-      if (res.ok) {
-        const data = await res.json();
-        setLevels(data.levels);
-        setStageProgress(data.stageProgress);
-        setTotalPassed(data.totalPassed);
-        const activeLevel = data.levels.find((l: LevelInfo) => l.status === 'active' || l.status === 'in_progress');
-        if (activeLevel) setSelectedLevel(activeLevel.levelId);
-      }
-
-      if (isTrainee) {
-        try {
-          const planRes = await fetch(`/api/growth-plan?userId=${user.id}`);
-          if (planRes.ok) {
-            const planData = await planRes.json();
-            if (planData.todayPlans && planData.todayPlans.length > 0) {
-              const allDayTasks: Record<number, DayTask[]> = {};
-              for (const p of planData.todayPlans) {
-                if (!allDayTasks[p.dayIndex]) allDayTasks[p.dayIndex] = [];
-                allDayTasks[p.dayIndex].push(p);
-              }
-              if (planData.weekOverview) setActiveDay(planData.currentDayIndex || 1);
-              setDayTasks(allDayTasks);
-            }
-          }
-        } catch { /* non-critical */ }
-      }
-    } catch (err) {
-      console.error('Failed to fetch learning progress:', err);
-    } finally {
-      setDataLoading(false);
-    }
-  }, [user, isTrainee]);
-
-  useEffect(() => { fetchProgress(); }, [fetchProgress]);
-
-  if (loading || !user) return null;
-
-  if (dataLoading) {
-    return <div className="max-w-5xl mx-auto space-y-6 animate-pulse"><div className="h-8 bg-muted rounded w-48" /><div className="h-32 bg-muted rounded-lg" /><div className="h-64 bg-muted rounded-lg" /></div>;
+  if (!user) {
+    return <div className="flex items-center justify-center h-64 text-muted-foreground">请先登录</div>;
   }
 
-  // Role-based view routing
-  if (isMentor) {
-    return <MentorLearningView user={user} />;
+  if (user.role === 'trainee') {
+    return <TraineeModuleView user={user} />;
   }
 
-  if (isManager) {
-    return <ManagerLearningView levels={levels} />;
-  }
-
-  // Default: trainee闯关 + boss/teacher预览模式
-  return (
-    <TraineeLearningView
-      user={user}
-      levels={levels}
-      stageProgress={stageProgress}
-      totalPassed={totalPassed}
-      dayTasks={dayTasks}
-      activeDay={activeDay}
-      setActiveDay={setActiveDay}
-      selectedLevel={selectedLevel}
-      setSelectedLevel={setSelectedLevel}
-    />
-  );
+  return <NonTraineeView user={user} />;
 }

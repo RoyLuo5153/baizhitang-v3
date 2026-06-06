@@ -14,6 +14,8 @@ export type NotificationType =
   | 'empower_auto'       // 自动赋能
   | 'practice_submitted' // 演练提交待点评
   | 'level_passed'       // 闯关通过
+  | 'module_passed'      // 模块通关通过
+  | 'module_failed'      // 模块通关未通过
   | 'general';           // 通用通知
 
 interface NotificationPayload {
@@ -332,6 +334,175 @@ export async function onTaskOverdue(
         relatedUserId: traineeId,
         relatedId: planId,
         priority: 'high',
+      });
+    }
+  }
+}
+
+/**
+ * 检查同阶段所有模块是否全部通过
+ */
+async function checkAllModulesPassed(traineeId: string, stage: string): Promise<boolean> {
+  const client = getSupabaseClient();
+
+  // 获取该阶段所有模块
+  const { data: stageModules } = await client
+    .from('assessment_modules')
+    .select('code')
+    .eq('stage', stage)
+    .eq('is_active', true);
+
+  if (!stageModules || stageModules.length === 0) return false;
+
+  // 获取用户该阶段所有模块的进度
+  const moduleCodes = stageModules.map((m: { code: string }) => m.code);
+  const { data: progressList } = await client
+    .from('module_progress')
+    .select('module_code, status')
+    .eq('user_id', traineeId)
+    .in('module_code', moduleCodes);
+
+  // 检查每个模块是否都已通过
+  const passedCodes = new Set(
+    (progressList || [])
+      .filter((p: { status: string }) => p.status === 'passed')
+      .map((p: { module_code: string }) => p.module_code)
+  );
+
+  return moduleCodes.every(code => passedCodes.has(code));
+}
+
+/**
+ * 更新新人阶段和双线状态
+ */
+async function updateTraineeStage(
+  traineeId: string,
+  stage: string,
+  processStatus: string,
+  resultStatus: string
+): Promise<void> {
+  const client = getSupabaseClient();
+
+  // 更新trainee_profiles
+  await client
+    .from('trainee_profiles')
+    .update({
+      stage,
+      process_status: processStatus,
+      result_status: resultStatus,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('user_id', traineeId);
+
+  // 同步更新users.stage（向后兼容）
+  const stageMap: Record<string, number> = { foundation: 1, practice: 2, qualified: 3 };
+  await client
+    .from('users')
+    .update({ stage: stageMap[stage] || 1, updated_at: new Date().toISOString() })
+    .eq('id', traineeId);
+}
+
+/**
+ * 模块通关通过联动
+ * 通过模块 → 检查同阶段所有模块是否通过 → 触发阶段转换 + 双线状态更新
+ */
+export async function onModulePassed(
+  traineeId: string,
+  traineeName: string,
+  moduleCode: string,
+  stage: string
+): Promise<void> {
+  // 1. 检查同阶段所有模块是否全部通过
+  const allModulesPassed = await checkAllModulesPassed(traineeId, stage);
+
+  if (allModulesPassed) {
+    if (stage === 'foundation') {
+      // 基础通关全部通过 → 进入实操阶段
+      await updateTraineeStage(traineeId, 'practice', 'monitoring', 'insufficient_data');
+      await onStageTransition(traineeId, traineeName, '基础通关', '实操通关');
+    } else if (stage === 'practice') {
+      // 实操通关全部通过 → 进入合格阶段
+      await updateTraineeStage(traineeId, 'qualified', 'passed', 'passed');
+      await onStageTransition(traineeId, traineeName, '实操通关', '独立达标');
+    }
+  }
+
+  // 通知带教老师该模块已通过
+  const mentorId = await getMentorId(traineeId);
+  if (mentorId) {
+    await sendNotification({
+      userId: mentorId,
+      type: 'module_passed',
+      title: `${traineeName}模块通关通过`,
+      message: `${traineeName}已完成模块「${moduleCode}」通关考核`,
+      relatedUserId: traineeId,
+      priority: 'low',
+    });
+  }
+}
+
+/**
+ * 模块通关未通过联动
+ * 未通过 → 推送复习通知；连续3次未通过 → 通知带教老师+培训负责人
+ */
+export async function onModuleFailed(
+  traineeId: string,
+  traineeName: string,
+  moduleCode: string,
+  moduleName: string,
+  failCount: number,
+  wrongQuestionIds: number[]
+): Promise<void> {
+  // 1. 推送复习通知给新人
+  const client = getSupabaseClient();
+
+  // 查找错题关联的知识库文章
+  let knowledgeHint = '';
+  if (wrongQuestionIds.length > 0) {
+    const { data: knowledgeItems } = await client
+      .from('knowledge_base')
+      .select('title')
+      .limit(3);
+    if (knowledgeItems && knowledgeItems.length > 0) {
+      knowledgeHint = `，建议复习：${knowledgeItems.map((k: { title: string }) => k.title).join('、')}`;
+    }
+  }
+
+  await sendNotification({
+    userId: traineeId,
+    type: 'module_failed',
+    title: `${moduleName}未通过`,
+    message: `本次考核未达到通过分数线，建议复习相关知识点后重新挑战${knowledgeHint}`,
+    priority: 'medium',
+  });
+
+  // 2. 连续3次未通过 → 通知带教老师+培训负责人
+  if (failCount >= 3 && failCount % 3 === 0) {
+    const mentorId = await getMentorId(traineeId);
+    const managerIds = await getTrainingManagerIds();
+
+    const title = `${traineeName}模块多次未通过`;
+    const message = `${traineeName}在「${moduleName}」模块已失败${failCount}次，需要辅导支持`;
+
+    if (mentorId) {
+      await sendNotification({
+        userId: mentorId,
+        type: 'module_failed',
+        title,
+        message,
+        relatedUserId: traineeId,
+        priority: 'high',
+      });
+    }
+
+    for (const mgrId of managerIds) {
+      await sendNotification({
+        userId: mgrId,
+        type: 'module_failed',
+        title,
+        message,
+        relatedUserId: traineeId,
+        priority: 'medium',
       });
     }
   }

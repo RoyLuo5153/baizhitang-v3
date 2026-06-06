@@ -1,149 +1,69 @@
-# 工单J：阶段通关验证改造 + 双线状态机
+# 待落地工单执行计划
 
-## 概述
+> 机制零：工单不落地 = 系统不可用。以下为昨今讨论的所有改进方案，按优先级排序，小步快跑逐项落地。
 
-将闯关学习从21关线性推进改造为模块化阶段通关验证（4基础模块+4实操模块），同时在trainee_profiles新增双线状态字段（process_status / result_status），为后续P1实操带教和P2归因体系铺路。Web平台，Supabase数据库。
+## 工单总览
 
-## 技术方案
+| 编号 | 工单名称 | 优先级 | 状态 | 核心改动 |
+|------|---------|--------|------|---------|
+| J | 阶段通关验证改造+双线状态机 | P0 | 原型已完成，待开发 | 21关→8模块、双线状态、考后闭环 |
+| K | 赋能中心处方化改造 | P0 | 待开发 | content渲染修复、4段式处方、indicator_key可读化 |
+| L | 用户管理期数字段 | P1 | 待开发 | settings页加cohort编辑、关联trainee_profiles |
 
-| 维度 | 选择 | 理由 |
-|------|------|------|
-| 数据库变更 | 新增assessment_modules + module_progress表，扩展questions/trainee_profiles字段 | 与旧表并存，不破坏level_progress/quiz_attempts |
-| 阶段状态 | trainee_profiles.stage/process_status/result_status | 工单指定，users.stage保留向后兼容 |
-| API策略 | 新增模块化API(/api/learning/modules)，旧21关API保留 | 平滑迁移，前端依赖新API |
-| 关卡结构 | 8个模块(4基础+4实操)替代21关 | 工单J2定义 |
-| 向后兼容 | level_progress/quiz_attempts/learning_levels表保留不动 | 旧数据不丢失 |
+## 工单J：阶段通关验证改造+双线状态机
 
-## 功能模块
+### 改动范围
+1. **数据库迁移**：新建assessment_modules + module_progress表，扩展questions/learning_levels/trainee_profiles字段
+2. **后端API**：重写/api/learning为模块化、新建/api/learning/modules/[moduleCode]/submit、更新/api/questions
+3. **触发器**：新增onModulePassed/onModuleFailed
+4. **前端**：重写learning/page.tsx（21关地图→模块卡片网格+双线状态卡）
+5. **题库适配**：题库管理加module/stage筛选
 
-### M1. 数据库迁移（J1+J2+J3+J5）
+### 执行步骤
+1. 数据库迁移SQL执行 + schema.ts更新
+2. 后端API开发（模块列表+答题提交+题库筛选）
+3. 触发器升级（onModulePassed/onModuleFailed + 双线状态转换）
+4. 前端learning/page.tsx重写
+5. 题库管理页module/stage适配
+6. 联调测试
 
-**新增表：**
+## 工单K：赋能中心处方化改造
 
-```
-assessment_modules:
-  id, code(unique), name, stage(foundation/practice),
-  description, sort_order, is_active, pass_threshold(default 80),
-  question_count(default 10), created_at, updated_at
-  预置数据：4基础(diabetes_basics/service_standards/service_language/compliance)
-           +4实操(first_call/followup_call/appointment_call/visit_day)
+### 问题描述
+- content字段是{steps:[...]}对象，渲染为[object Object]（已有部分兼容但不够完善）
+- indicator_key显示内部key（如qc_communication）而非可读标签
+- 方案内容不像处方：缺乏病情分析→调理方向→具体药方→达标标准的4段式结构
+- 系统未根据不合格指标自动匹配推荐赋能方案
 
-module_progress:
-  id, user_id(→users), module_code, status(locked/active/in_progress/passed),
-  best_score, attempts, last_attempt_at, passed_at,
-  created_at, updated_at
-  UNIQUE(user_id, module_code)
-```
+### 改动范围
+1. **content渲染修复**：完善4段式处方卡片展示（病情分析/调理方向/具体药方/达标标准）
+2. **indicator_key可读化**：建立映射表，qc_communication→质检-沟通能力
+3. **数据库赋能方案内容升级**：更新现有8条empower_plans的content为4段式处方结构
+4. **自动匹配推荐**：诊断结果中不合格指标→自动关联对应赋能方案
+5. **推送弹窗增强**：展示完整处方预览而非简单方案名
 
-**扩展字段：**
-- questions: +module(varchar 50), +stage(varchar 20 default 'foundation')
-- learning_levels: +module(varchar 50), +pass_threshold(int default 80), +question_count(int default 10)
-- trainee_profiles: +stage(varchar 20 default 'foundation'), +process_status(varchar 20 default 'not_started'), +result_status(varchar 20 default 'not_started')
+### 执行步骤
+1. 前端content渲染修复 + indicator_key映射
+2. 数据库方案内容升级为4段式处方
+3. 自动匹配推荐逻辑
+4. 推送弹窗增强
+5. 测试验证
 
-**数据反填：**
-- questions按level_id反填module/stage
-- learning_levels按level_id反填module
-- trainee_profiles按users.stage反填stage/process_status/result_status
+## 工单L：用户管理期数字段
 
-### M2. 模块化API（J4+J5）
+### 改动范围
+1. **settings/page.tsx**：用户管理表格加cohort列，支持内联编辑
+2. **API**：/api/users支持cohort字段读写
+3. **关联**：cohort字段与trainee_profiles的cohort同步
 
-**GET /api/learning/modules** — 模块列表+进度
-- 读取assessment_modules表，关联module_progress
-- 返回每个模块：code, name, stage, questionCount, passThreshold, status, bestScore, attempts
-- 返回currentStage, processStatus, resultStatus, stageProgress
-- 删除FALLBACK_NAMES硬编码
+### 执行步骤
+1. API加cohort字段
+2. settings页加cohort列和编辑
+3. 测试验证
 
-**POST /api/learning/modules/[moduleCode]/submit** — 模块化答题提交
-- 按module+stage从questions表随机抽题
-- 评分逻辑不变
-- 通过→检查同stage全部模块→触发阶段转换
-- 未通过→推送错题关联知识库复习通知
+## 执行顺序（小步快跑）
 
-**GET /api/learning/modules/list** — 供题库管理用的模块定义列表
-
-### M3. 触发器升级（J6）
-
-新增onModulePassed / onModuleFailed：
-- onModulePassed：检查同stage所有模块是否passed→全部通过则更新trainee_profiles双线状态
-- onModuleFailed：推送复习通知→连续3次通知带教老师
-- 保留原有onQuizPassed/onQuizFailed（向后兼容）
-
-状态转换规则：
-```
-基础通关全通过 → stage=practice, process_status=monitoring, result_status=insufficient_data
-实操通关全通过 → stage=qualified, process_status=passed, result_status=passed
-```
-
-### M4. 前端改版（J7）
-
-learning/page.tsx：从21关地图→阶段+模块卡片网格
-- 删除STAGE_LABELS/STAGE_SHORT硬编码
-- 基础通关：4模块卡片（糖尿病基础/服务标准/服务用语/合规红线）
-- 实操通关：4模块卡片（基础通关通过后解锁）
-- 底部"我的状态"卡片：当前阶段 + process_status + result_status
-- 点击模块卡片→弹出答题面板（复用现有答题组件）
-
-### M5. 题库管理适配（J8）
-
-questions API：GET新增module/stage筛选，POST支持module/stage
-题库管理UI：题目筛选新增module/stage，创建/编辑题目可选module
-
-## 是否有原型设计
-
-是（设计引导已开启）
-
-## 实施步骤
-
-1. **数据库迁移**：执行SQL迁移（新建assessment_modules + module_progress表，扩展questions/learning_levels/trainee_profiles字段，反填数据，更新schema.ts） — 涉及 schema.ts + SQL迁移
-2. **模块化API开发**：重写/api/learning为模块化列表API，新建/api/learning/modules/[moduleCode]/submit提交API，更新/api/questions支持module/stage筛选 — 涉及 learning/route.ts + learning/modules/ + questions/route.ts
-3. **触发器升级**：新增onModulePassed/onModuleFailed，实现双线状态自动转换 — 涉及 triggers.ts
-4. **前端改版**：重写learning/page.tsx，21关地图→模块卡片网格，新增"我的状态"卡片 — 涉及 learning/page.tsx
-5. **题库管理适配**：题库管理页新增module/stage筛选和编辑字段 — 涉及 settings/page.tsx或question-bank/page.tsx
-6. **联调测试**：模块化答题+阶段转换+双线状态更新全流程验证
-
-## 页面规格
-
-##### @nav(web-topbar)
-> type: topbar
-> platform: web
-
-- @page(/) 首页
-- @page(/learning) 阶段通关
-- @page(/growth) 成长档案
-- @page(/diagnosis) 双轨诊断
-- @page(/empowerment) 赋能中心
-- @page(/dashboard) 数据看板
-- @page(/overview) 全局概览
-- @page(/question-bank) 题库管理
-- @page(/resources) 资料中心
-- @page(/qc-review) 质检审核
-- @page(/assessment) 日常考核
-- @page(/trainee-board) 新人看板
-- @page(/trainee-profiles) 新人档案
-- @page(/practice) 演练任务
-- @page(/courses) 课程管理
-- @page(/settings) 系统设置
-
-##### @page(/learning) 阶段通关
-
-**核心职责**：模块化阶段通关验证，替代原21关线性闯关
-**访问路径**：顶部导航直达
-**布局**：顶部标题栏(阶段通关+已通过数) → 阶段进度条(基础通关/实操通关) → 基础通关4模块卡片网格 → 实操通关4模块卡片(基础通关通过后解锁) → 底部"我的状态"卡片(当前阶段+过程线状态+结果线状态)
-**列表项字段**：模块名 / 模块状态(✅可考🔒已通过📋进行中) / 最高分 / 答题次数 / 题目数量
-
-**弹窗 quiz-panel**：
-- 点击模块卡片弹出答题面板
-- 随机抽取该模块题目
-- 提交后显示得分和通过/未通过
-- 未通过显示推荐复习知识点
-
-**交互说明**
-
-| 元素 | 动作 | 响应 | 传参 | 备注 |
-|------|------|------|------|------|
-| 模块卡片(可考) | 点击 | 弹出 @modal(quiz-panel) | moduleCode | status=active |
-| 模块卡片(已通过) | 点击 | 弹出 @modal(quiz-panel) 查看历史成绩 | moduleCode | status=passed，可重考 |
-| 模块卡片(锁定) | 点击 | Toast提示"完成前置阶段后解锁" | — | status=locked |
-| 答题面板提交 | 点击 | 评分→更新进度→判断阶段转换 | moduleCode, answers | 通过时检查全阶段 |
-| 答题未通过 | — | 推送复习通知 | moduleCode | 关联知识库内容 |
-| 我的状态卡片 | 展示 | 当前阶段+双线状态 | — | process_status/result_status |
+按影响面和紧迫性：
+1. **工单J**（阶段通关改造）— 已有原型，最大结构性改造，为P1/P2铺路
+2. **工单K**（赋能处方化）— 用户带截图反馈的痛点，直接影响使用体验
+3. **工单L**（期数字段）— 小改动，穿插完成
