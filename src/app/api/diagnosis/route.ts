@@ -237,12 +237,16 @@ function getUnqualifiedItems(quad: any): string[] {
 
 function matchPlansToUnqualified(items: string[], plans: any[]): any[] {
   return items.map(itemKey => {
-    const matched = plans.find(p =>
+    // 优先匹配indicator_key
+    const byKey = plans.find(p => p.indicator_key === itemKey);
+    if (byKey) return { metricKey: itemKey, plan: byKey };
+    // 其次匹配target_indicators数组包含
+    const byTarget = plans.find(p =>
       p.target_indicators && Array.isArray(p.target_indicators) && p.target_indicators.includes(itemKey)
     );
-    return {
-      metricKey: itemKey,
-      plan: matched || null,
-    };
+    if (byTarget) return { metricKey: itemKey, plan: byTarget };
+    // 兜底：通用方案
+    const general = plans.find(p => p.indicator_key === 'general');
+    return { metricKey: itemKey, plan: general || null };
   });
 }

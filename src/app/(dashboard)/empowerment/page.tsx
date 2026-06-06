@@ -16,7 +16,14 @@ interface EmpowerPlan {
   duration_days: number;
   target_metrics: string[];
   target_quadrants: string[];
-  content: { steps?: string[]; [key: string]: unknown };
+  content: {
+    analysis?: string;
+    direction?: string;
+    prescription?: { step: string; detail: string }[];
+    standard?: string;
+    steps?: string[];
+    [key: string]: unknown;
+  };
   is_active: boolean;
   estimated_hours?: number;
   indicator_key?: string;
@@ -60,6 +67,23 @@ const MOCK_COACHING: CoachingRecord[] = [
   { id: 3, mentor_id: '7', mentor_name: '周带教老师', trainee_id: '3', trainee_name: '王美玲', coaching_date: '2025-06-03', topic: '面诊邀约率提升', content: '面诊邀约率连续2周不达标，分析原因为邀约服务用语不够有说服力', action_items: '1. 学习优秀面诊邀约服务用语模板\n2. 角色扮演练习\n3. 记录每日邀约结果', next_date: '2025-06-10', created_at: '2025-06-03T09:00:00Z' },
 ];
 
+const INDICATOR_LABELS: Record<string, string> = {
+  qc_communication: '质检-沟通能力',
+  qc_professional: '质检-专业能力',
+  qc_compliance: '质检-合规执行',
+  qc_service: '质检-服务态度',
+  qc_service_attitude: '质检-服务态度',
+  wechatAddRate: '加V率',
+  consultationRate: '面诊率',
+  receptionRate: '接诊率',
+  deliveryRate: '签收率',
+  medicationRate: '用药率',
+  appointmentRate: '挂号率',
+  learning: '阶段通关',
+  qcScore: '质检分数',
+  general: '综合提升',
+};
+
 const PLAN_ICONS: Record<string, any> = {
   wechatAddRate: MessageCirclePlus,
   medicationRate: Pill,
@@ -92,7 +116,7 @@ export default function EmpowermentPage() {
       const res = await fetch('/api/trainee-profiles');
       if (res.ok) {
         const json = await res.json();
-        setTrainees((json.profiles || []).map((p: Record<string, unknown>) => ({ id: String(p.user_id), name: String(p.real_name || '') })));
+        setTrainees((json.profiles || []).map((p: Record<string, unknown>) => ({ id: String(p.user_id || p.id), name: String(p.realName || p.real_name || '') })));
       }
     } catch { /* ignore */ }
   }
@@ -429,7 +453,7 @@ export default function EmpowermentPage() {
         </div>
       )}
 
-        {/* 方案详情弹窗 */}
+        {/* 方案详情弹窗 - 处方式展示 */}
         {selectedPlan && (
           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center" onClick={() => setSelectedPlan(null)}>
             <div className="bg-card rounded-xl shadow-float max-w-2xl w-full mx-4 max-h-[85vh] overflow-y-auto" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
@@ -438,7 +462,7 @@ export default function EmpowermentPage() {
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <span className="px-2 py-0.5 rounded text-xs font-medium bg-primary/10 text-primary">
-                        {selectedPlan.indicator_key || '综合提升'}
+                        {INDICATOR_LABELS[selectedPlan.indicator_key || ''] || selectedPlan.indicator_key || '综合提升'}
                       </span>
                       {selectedPlan.estimated_hours && (
                         <span className="text-sm text-muted-foreground">预计 {selectedPlan.estimated_hours} 学时</span>
@@ -451,41 +475,104 @@ export default function EmpowermentPage() {
                   </button>
                 </div>
 
-                <div className="mb-4">
-                  <h3 className="text-sm font-semibold text-foreground mb-1">方案目标</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{selectedPlan.description || '暂无描述'}</p>
-                </div>
-
+                {/* 关联指标 */}
                 {selectedPlan.target_indicators && Array.isArray(selectedPlan.target_indicators) && selectedPlan.target_indicators.length > 0 && (
                   <div className="mb-4">
                     <h3 className="text-sm font-semibold text-foreground mb-2">关联指标</h3>
                     <div className="flex flex-wrap gap-2">
-                      {(selectedPlan.target_indicators as unknown[]).map((m: unknown, i: number) => (
-                        <span key={i} className="px-2.5 py-1 rounded-md bg-primary/10 text-primary text-xs font-medium">
-                          {typeof m === 'string' ? m : String((m as Record<string, unknown>)?.name ?? (m as Record<string, unknown>)?.key ?? JSON.stringify(m))}
-                        </span>
-                      ))}
+                      {(selectedPlan.target_indicators as unknown[]).map((m: unknown, i: number) => {
+                        const key = typeof m === 'string' ? m : String((m as Record<string, unknown>)?.key ?? (m as Record<string, unknown>)?.name ?? '');
+                        return (
+                          <span key={i} className="px-2.5 py-1 rounded-md bg-primary/10 text-primary text-xs font-medium">
+                            {INDICATOR_LABELS[key] || key}
+                          </span>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
 
+                {/* 4段式处方式内容 */}
                 {selectedPlan.content && typeof selectedPlan.content === 'object' && (
-                  <div className="mb-4">
-                    <h3 className="text-sm font-semibold text-foreground mb-2">方案内容</h3>
-                    <div className="space-y-3">
-                      {(Array.isArray(selectedPlan.content) ? (selectedPlan.content as unknown[]) : [{title: '执行内容', description: String(selectedPlan.content)}]).map((item: unknown, i: number) => {
-                        const step = item as Record<string, unknown>;
-                        return (
-                        <div key={i} className="flex gap-3 items-start">
-                          <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
-                          <div>
-                            <p className="text-sm font-medium text-foreground">{(step.title as string) || (step.name as string) || `步骤${i + 1}`}</p>
-                            {step.description ? <p className="text-xs text-muted-foreground mt-0.5">{String(step.description)}</p> : null}
+                  <div className="space-y-4">
+                    {/* 病情分析 */}
+                    {selectedPlan.content.analysis && (
+                      <div className="bg-[#102A43]/5 rounded-lg p-4 border border-[#102A43]/10">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-6 h-6 rounded-full bg-[#102A43]/10 flex items-center justify-center">
+                            <span className="text-xs font-bold text-[#102A43]">诊</span>
                           </div>
+                          <h3 className="text-sm font-semibold text-[#102A43]">病情分析</h3>
                         </div>
-                        );
-                      })}
-                    </div>
+                        <p className="text-sm text-foreground/90 leading-relaxed pl-8">{selectedPlan.content.analysis}</p>
+                      </div>
+                    )}
+
+                    {/* 调理方向 */}
+                    {selectedPlan.content.direction && (
+                      <div className="bg-primary/5 rounded-lg p-4 border border-primary/10">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-6 h-6 rounded-full bg-primary/15 flex items-center justify-center">
+                            <span className="text-xs font-bold text-primary">向</span>
+                          </div>
+                          <h3 className="text-sm font-semibold text-primary">调理方向</h3>
+                        </div>
+                        <p className="text-sm text-foreground/90 leading-relaxed pl-8">{selectedPlan.content.direction}</p>
+                      </div>
+                    )}
+
+                    {/* 具体药方 */}
+                    {selectedPlan.content.prescription && Array.isArray(selectedPlan.content.prescription) && (
+                      <div className="bg-[#f59e0b]/5 rounded-lg p-4 border border-[#f59e0b]/10">
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="w-6 h-6 rounded-full bg-[#f59e0b]/15 flex items-center justify-center">
+                            <span className="text-xs font-bold text-[#f59e0b]">方</span>
+                          </div>
+                          <h3 className="text-sm font-semibold text-[#f59e0b]">具体药方</h3>
+                        </div>
+                        <div className="space-y-3 pl-8">
+                          {selectedPlan.content.prescription.map((item, i: number) => (
+                            <div key={i} className="flex gap-3 items-start">
+                              <span className="w-6 h-6 rounded-full bg-[#f59e0b]/15 text-[#f59e0b] text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
+                                {i + 1}
+                              </span>
+                              <div>
+                                <p className="text-sm font-semibold text-foreground">{item.step}</p>
+                                <p className="text-xs text-muted-foreground mt-0.5">{item.detail}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 达标标准 */}
+                    {selectedPlan.content.standard && (
+                      <div className="bg-[#22c55e]/5 rounded-lg p-4 border border-[#22c55e]/10">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-6 h-6 rounded-full bg-[#22c55e]/15 flex items-center justify-center">
+                            <span className="text-xs font-bold text-[#22c55e]">标</span>
+                          </div>
+                          <h3 className="text-sm font-semibold text-[#22c55e]">达标标准</h3>
+                        </div>
+                        <p className="text-sm text-foreground/90 leading-relaxed pl-8">{selectedPlan.content.standard}</p>
+                      </div>
+                    )}
+
+                    {/* 兼容旧格式 steps */}
+                    {!selectedPlan.content.analysis && !selectedPlan.content.prescription && selectedPlan.content.steps && (
+                      <div className="mb-4">
+                        <h3 className="text-sm font-semibold text-foreground mb-2">方案内容</h3>
+                        <div className="space-y-3">
+                          {(selectedPlan.content.steps as string[]).map((step: string, i: number) => (
+                            <div key={i} className="flex gap-3 items-start">
+                              <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
+                              <p className="text-sm text-foreground">{step}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -525,8 +612,13 @@ export default function EmpowermentPage() {
 }
 
 function PlanCard({ plan, onSelect }: { plan: EmpowerPlan; onSelect: (plan: EmpowerPlan) => void }) {
-  const primaryMetric = plan.target_metrics?.[0] || 'default';
+  const primaryMetric = plan.target_metrics?.[0] || plan.indicator_key || 'default';
   const Icon = PLAN_ICONS[primaryMetric] || Target;
+
+  // 获取处方式的简要信息
+  const content = plan.content as Record<string, unknown> | null;
+  const analysis = content?.analysis as string | undefined;
+  const direction = content?.direction as string | undefined;
 
   return (
     <div
@@ -540,20 +632,28 @@ function PlanCard({ plan, onSelect }: { plan: EmpowerPlan; onSelect: (plan: Empo
           </div>
           <h3 className="text-base font-semibold text-foreground">{plan.name}</h3>
         </div>
-        {plan.target_metrics?.length > 0 && (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-destructive/15 text-destructive">
-            {plan.target_metrics[0]}
-          </span>
-        )}
+        <span className="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-primary/10 text-primary">
+          {INDICATOR_LABELS[plan.indicator_key || ''] || plan.indicator_key || '综合提升'}
+        </span>
       </div>
-      <p className="text-sm text-muted-foreground mb-4">{plan.description}</p>
+      {/* 处方式预览：病情分析 + 调理方向 */}
+      {analysis && (
+        <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{analysis}</p>
+      )}
+      {direction && (
+        <p className="text-xs text-primary/70 mb-3 line-clamp-1">调理方向：{direction}</p>
+      )}
+      {!analysis && !direction && plan.description && (
+        <p className="text-sm text-muted-foreground mb-3">{plan.description}</p>
+      )}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1">
             <Clock className="w-3.5 h-3.5" />预计{plan.duration_days}天
           </span>
           <span className="inline-flex items-center gap-1">
-            <Target className="w-3.5 h-3.5" />{(plan.target_metrics || []).join(', ')}
+            <Target className="w-3.5 h-3.5" />
+            {(plan.target_indicators as unknown[] | undefined)?.length || 0}个关联指标
           </span>
         </div>
         <span className="text-xs font-medium text-[#f59e0b] inline-flex items-center gap-1">
