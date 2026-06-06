@@ -673,6 +673,7 @@ export default function SettingsPage() {
   const [batchCohort, setBatchCohort] = useState('');
   const [batchStage, setBatchStage] = useState<number>(1);
   const [batchProcessing, setBatchProcessing] = useState(false);
+  const [userSubTab, setUserSubTab] = useState<'trainees' | 'staff'>('trainees');
 
   const [stageRules, setStageRules] = useState<StageRule[]>([]);
   const [rulesLoading, setRulesLoading] = useState(true);
@@ -726,6 +727,7 @@ export default function SettingsPage() {
   const cohortOptions = [...new Set(users.filter(u => u.cohort).map(u => u.cohort!))].sort();
   const filteredUsers = cohortFilter === 'all' ? users : users.filter(u => u.cohort === cohortFilter);
   const traineeUsers = filteredUsers.filter(u => u.roleId === 1);
+  const staffUsers = users.filter(u => u.roleId !== 1);
 
   const toggleSelectAll = () => {
     if (selectedUserIds.size === traineeUsers.length) {
@@ -1043,23 +1045,9 @@ export default function SettingsPage() {
                 <div className="flex items-center gap-2">
                   <Users className="w-4 h-4 text-primary" />
                   <h2 className="text-base font-semibold text-foreground">用户管理</h2>
-                  <span className="text-xs text-muted-foreground ml-1">{filteredUsers.length} 位用户</span>
+                  <span className="text-xs text-muted-foreground ml-1">{users.length} 位用户</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  {/* Cohort筛选 */}
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
-                    <select
-                      value={cohortFilter}
-                      onChange={e => setCohortFilter(e.target.value)}
-                      className="h-8 rounded-md border border-border bg-transparent px-2 text-xs text-foreground outline-none focus:border-primary"
-                    >
-                      <option value="all">全部期数</option>
-                      {cohortOptions.map(c => (
-                        <option key={c} value={c}>{c}期</option>
-                      ))}
-                    </select>
-                  </div>
                   <button
                     onClick={() => setUserDialog({ mode: 'add', user: null })}
                     className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors"
@@ -1070,32 +1058,80 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              {/* 批量操作栏 */}
-              {selectedUserIds.size > 0 && (
-                <div className="px-5 py-3 bg-primary/5 border-b border-primary/20 flex items-center gap-4">
-                  <span className="text-xs font-medium text-primary">
-                    已选择 {selectedUserIds.size} 位学员
+              {/* 子Tab: 新人管理 / 团队管理 */}
+              <div className="px-5 pt-3 pb-0 flex items-center gap-1 border-b border-border">
+                <button
+                  onClick={() => { setUserSubTab('trainees'); setSelectedUserIds(new Set()); setBatchAction(null); }}
+                  className={`px-4 py-2.5 text-xs font-medium border-b-2 transition-colors ${
+                    userSubTab === 'trainees'
+                      ? 'border-primary text-primary'
+                      : 'border-transparent text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  新人管理
+                  <span className="ml-1.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-primary/10 text-[10px] text-primary">
+                    {traineeUsers.length}
                   </span>
-                  <button
-                    onClick={() => setBatchAction('cohort')}
-                    className="h-7 px-3 rounded-md border border-border bg-card text-xs font-medium text-foreground hover:bg-muted transition-colors"
+                </button>
+                <button
+                  onClick={() => { setUserSubTab('staff'); setSelectedUserIds(new Set()); setBatchAction(null); }}
+                  className={`px-4 py-2.5 text-xs font-medium border-b-2 transition-colors ${
+                    userSubTab === 'staff'
+                      ? 'border-primary text-primary'
+                      : 'border-transparent text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  团队管理
+                  <span className="ml-1.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-muted text-[10px] text-muted-foreground">
+                    {staffUsers.length}
+                  </span>
+                </button>
+              </div>
+
+              {/* 新人管理 Tab 内容 */}
+              {userSubTab === 'trainees' && (
+              <>
+              {/* Cohort筛选 + 批量操作栏 */}
+              <div className="px-5 py-3 border-b border-border flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+                  <select
+                    value={cohortFilter}
+                    onChange={e => setCohortFilter(e.target.value)}
+                    className="h-8 rounded-md border border-border bg-transparent px-2 text-xs text-foreground outline-none focus:border-primary"
                   >
-                    批量分配期数
-                  </button>
-                  <button
-                    onClick={() => setBatchAction('stage')}
-                    className="h-7 px-3 rounded-md border border-border bg-card text-xs font-medium text-foreground hover:bg-muted transition-colors"
-                  >
-                    批量调整阶段
-                  </button>
-                  <button
-                    onClick={() => { setSelectedUserIds(new Set()); setBatchAction(null); }}
-                    className="h-7 px-2 rounded-md text-xs text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    取消选择
-                  </button>
+                    <option value="all">全部期数</option>
+                    {cohortOptions.map(c => (
+                      <option key={c} value={c}>{c}期</option>
+                    ))}
+                  </select>
                 </div>
-              )}
+                {selectedUserIds.size > 0 && (
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-medium text-primary">
+                      已选择 {selectedUserIds.size} 位学员
+                    </span>
+                    <button
+                      onClick={() => setBatchAction('cohort')}
+                      className="h-7 px-3 rounded-md border border-border bg-card text-xs font-medium text-foreground hover:bg-muted transition-colors"
+                    >
+                      批量分配期数
+                    </button>
+                    <button
+                      onClick={() => setBatchAction('stage')}
+                      className="h-7 px-3 rounded-md border border-border bg-card text-xs font-medium text-foreground hover:bg-muted transition-colors"
+                    >
+                      批量调整阶段
+                    </button>
+                    <button
+                      onClick={() => { setSelectedUserIds(new Set()); setBatchAction(null); }}
+                      className="h-7 px-2 rounded-md text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      取消选择
+                    </button>
+                  </div>
+                )}
+              </div>
 
               {/* 批量操作输入区 */}
               {batchAction && selectedUserIds.size > 0 && (
@@ -1147,10 +1183,10 @@ export default function SettingsPage() {
                 <div className="p-6 space-y-3">
                   {[1, 2, 3, 4].map(i => <div key={i} className="h-12 bg-muted animate-pulse rounded" />)}
                 </div>
-              ) : users.length === 0 ? (
+              ) : traineeUsers.length === 0 ? (
                 <div className="py-12 text-center">
                   <Users className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
-                  <p className="text-sm text-muted-foreground">暂无用户数据</p>
+                  <p className="text-sm text-muted-foreground">暂无新人数据</p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
@@ -1175,21 +1211,18 @@ export default function SettingsPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border/50">
-                      {filteredUsers.map(user => {
+                      {traineeUsers.map(user => {
                         const roleStyle = ROLE_BADGE_MAP[user.roleName] || { bg: 'bg-muted', text: 'text-muted-foreground' };
                         const displayName = getRoleDisplayName(user.roleName);
-                        const isTrainee = user.roleId === 1;
                         return (
                           <tr key={user.id} className={`hover:bg-muted/50 transition-colors ${selectedUserIds.has(user.id) ? 'bg-primary/5' : ''}`}>
                             <td className="px-3 py-4 text-center">
-                              {isTrainee && (
-                                <input
-                                  type="checkbox"
-                                  checked={selectedUserIds.has(user.id)}
-                                  onChange={() => toggleSelectUser(user.id)}
-                                  className="rounded border-border"
-                                />
-                              )}
+                              <input
+                                type="checkbox"
+                                checked={selectedUserIds.has(user.id)}
+                                onChange={() => toggleSelectUser(user.id)}
+                                className="rounded border-border"
+                              />
                             </td>
                             <td className="px-5 py-4">
                               <div className="flex items-center gap-2.5">
@@ -1253,6 +1286,92 @@ export default function SettingsPage() {
                     </tbody>
                   </table>
                 </div>
+              )}
+              </>
+              )}
+
+              {/* 团队管理 Tab 内容 */}
+              {userSubTab === 'staff' && (
+              <>
+              {usersLoading ? (
+                <div className="p-6 space-y-3">
+                  {[1, 2, 3].map(i => <div key={i} className="h-12 bg-muted animate-pulse rounded" />)}
+                </div>
+              ) : staffUsers.length === 0 ? (
+                <div className="py-12 text-center">
+                  <Users className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
+                  <p className="text-sm text-muted-foreground">暂无团队成员数据</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="bg-muted">
+                        <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">姓名</th>
+                        <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">用户名</th>
+                        <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">角色</th>
+                        <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">状态</th>
+                        <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">操作</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/50">
+                      {staffUsers.map(user => {
+                        const roleStyle = ROLE_BADGE_MAP[user.roleName] || { bg: 'bg-muted', text: 'text-muted-foreground' };
+                        const displayName = getRoleDisplayName(user.roleName);
+                        return (
+                          <tr key={user.id} className="hover:bg-muted/50 transition-colors">
+                            <td className="px-5 py-4">
+                              <div className="flex items-center gap-2.5">
+                                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-medium shrink-0">
+                                  {(user.realName || '?').charAt(0)}
+                                </div>
+                                <span className="text-sm font-medium text-foreground">{user.realName}</span>
+                              </div>
+                            </td>
+                            <td className="px-5 py-4">
+                              <span className="text-sm text-muted-foreground font-mono">{user.username}</span>
+                            </td>
+                            <td className="px-5 py-4 text-center">
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${roleStyle.bg} ${roleStyle.text}`}>
+                                {displayName}
+                              </span>
+                            </td>
+                            <td className="px-5 py-4 text-center">
+                              <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${
+                                user.status === 'active' ? 'text-[#22c55e]' : 'text-muted-foreground'
+                              }`}>
+                                <span className={`w-1.5 h-1.5 rounded-full ${
+                                  user.status === 'active' ? 'bg-[#22c55e]' : 'bg-muted-foreground/40'
+                                }`} />
+                                {user.status === 'active' ? '在职' : '停用'}
+                              </span>
+                            </td>
+                            <td className="px-5 py-4 text-center">
+                              <div className="flex items-center justify-center gap-1">
+                                <button
+                                  onClick={() => setUserDialog({ mode: 'edit', user })}
+                                  className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-primary transition-colors"
+                                  title="编辑"
+                                >
+                                  <Pencil className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteUser(user.id)}
+                                  className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                                  title="删除"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              </>
               )}
             </div>
           )}
