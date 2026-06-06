@@ -4,7 +4,7 @@ import { useAuth } from '@/lib/auth/context';
 import { useEffect, useState, useCallback } from 'react';
 import {
   Check, Lock, Play, Flame, BookOpen, Wrench, PencilLine,
-  User, X, ChevronRight,
+  User, X, ChevronRight, Zap, Activity, Send,
 } from 'lucide-react';
 
 // === Types ===
@@ -37,6 +37,8 @@ interface ModulesData {
   processStatus: string;
   resultStatus: string;
   stageProgress: Record<string, StageProgressInfo>;
+  recommendedPlans?: { planId: string; planName: string; indicatorKey: string; alreadyPushed: boolean }[];
+  hasAlert?: boolean;
 }
 
 interface QuestionItem {
@@ -695,6 +697,34 @@ function TraineeModuleView({ user }: { user: { id: string; role: string } }) {
         {data.currentStage === 'foundation' && (
           <div className="mt-4 pt-3 border-t border-white/10">
             <p className="text-xs text-white/40">双线状态将在进入实操阶段后自动激活</p>
+          </div>
+        )}
+        {/* 推荐赋能方案 — 双线异常时显示 */}
+        {data.hasAlert && data.recommendedPlans && data.recommendedPlans.length > 0 && (
+          <div className="mt-4 pt-3 border-t border-white/10">
+            <div className="flex items-center gap-1.5 mb-3">
+              <Zap className="w-3.5 h-3.5 text-yellow-400" />
+              <span className="text-xs font-medium text-yellow-400">推荐赋能方案</span>
+            </div>
+            <div className="space-y-2">
+              {data.recommendedPlans.map((rp, idx) => (
+                <div key={idx} className="flex items-center gap-3 p-2.5 rounded-md bg-white/5">
+                  <Activity className="w-4 h-4 text-white/60 shrink-0" />
+                  <span className="text-sm text-white/80 flex-1">{rp.planName}</span>
+                  {rp.alreadyPushed ? (
+                    <span className="text-xs px-2 py-1 rounded bg-green-500/20 text-green-400">
+                      <Check className="w-3 h-3 inline mr-0.5" />已推送
+                    </span>
+                  ) : (
+                    <a
+                      href="/empowerment"
+                      className="text-xs px-2 py-1 rounded bg-white/10 text-white/70 hover:bg-white/20 transition-colors flex items-center gap-1">
+                      <Send className="w-3 h-3" />去查看
+                    </a>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>

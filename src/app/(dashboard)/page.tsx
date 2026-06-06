@@ -7,7 +7,7 @@ import {
   BookOpen, Target, CheckCircle2, Clock, ChevronRight,
   Users, AlertTriangle, ClipboardCheck, BarChart3,
   PlayCircle, FileText, Settings, MessageSquare, Star,
-  TrendingUp, Shield, Zap, Eye, Calendar, Pencil, Plus, Trash2, Send, Check, X, Lock
+  TrendingUp, Shield, Zap, Eye, Calendar, Pencil, Plus, Trash2, Send, Check, X, Lock, Activity
 } from 'lucide-react';
 
 interface TodayPlan {
@@ -467,6 +467,9 @@ function TaskCard({ plan, role, canEdit, canSuggest, onToggleComplete, onPlanUpd
 
 // ========== 带教老师看板 ==========
 function MentorHome({ data }: { data: any }) {
+  const [pushingPlanId, setPushingPlanId] = useState<string | null>(null);
+  const [pushedPlans, setPushedPlans] = useState<Set<string>>(new Set());
+
   const stageNames: Record<string, string> = { foundation: '学习期', practice: '练习期', independent: '独立期', proficient: '熟练期' };
   const processLabels: Record<string, { text: string; bg: string; color: string }> = {
     not_started: { text: '未开始', bg: '#E6E1D830', color: '#667085' },
@@ -482,13 +485,93 @@ function MentorHome({ data }: { data: any }) {
     red_alert: { text: '红灯', bg: '#E5393520', color: '#E53935' },
     passed: { text: '已通过', bg: '#2E7D3215', color: '#2E7D32' },
   };
+
+  const handlePushPlan = async (planId: string, traineeId: string) => {
+    setPushingPlanId(planId);
+    try {
+      const res = await fetch('/api/empower/executions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ planId, traineeId }),
+      });
+      if (res.ok) {
+        setPushedPlans(prev => new Set([...prev, `${planId}:${traineeId}`]));
+      }
+    } catch { /* ignore */ }
+    setPushingPlanId(null);
+  };
+
+  // 预警学员数
+  const alertMentees = (data.mentees || []).filter((m: any) => m.hasAlert);
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-3 gap-4">
         <QuickStat icon={<Users className="w-5 h-5" />} label="带教新人" value={data.mentees?.length || 0} color="#2978B5" />
         <QuickStat icon={<ClipboardCheck className="w-5 h-5" />} label="待点评任务" value={data.pendingReviews?.length || 0} color="#F59E0B" />
-        <QuickStat icon={<MessageSquare className="w-5 h-5" />} label="未读通知" value={data.alerts?.length || 0} color="#E65100" />
+        <QuickStat icon={<AlertTriangle className="w-5 h-5" />} label="预警学员" value={alertMentees.length} color="#E65100" />
       </div>
+
+      {/* 预警学员赋能面板 — 只显示有异常的学员及其推荐赋能方案 */}
+      {alertMentees.length > 0 && (
+        <div className="bg-card rounded-xl p-6 shadow-[0_1px_3px_rgba(0,0,0,0.08)]" style={{ borderLeft: '4px solid #E65100' }}>
+          <div className="flex items-center gap-2 mb-4">
+            <Zap className="w-5 h-5" style={{ color: '#E65100' }} />
+            <h2 className="text-lg font-semibold" style={{ color: '#102A43' }}>待赋能学员</h2>
+            <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: '#E6510015', color: '#E65100' }}>{alertMentees.length}人</span>
+          </div>
+          <div className="space-y-3">
+            {alertMentees.map((m: any) => {
+              const ps = processLabels[m.processStatus] || processLabels.not_started;
+              const rs = resultLabels[m.resultStatus] || resultLabels.not_started;
+              return (
+                <div key={m.id} className="p-4 rounded-lg border" style={{ borderColor: '#F59E0B40', backgroundColor: '#FFF8E130' }}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-medium text-sm"
+                      style={{ backgroundColor: '#E65100' }}>
+                      {m.name?.slice(-1) || '?'}
+                    </div>
+                    <span className="text-sm font-medium" style={{ color: '#102A43' }}>{m.name}</span>
+                    <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: ps.bg, color: ps.color }}>过程: {ps.text}</span>
+                    <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: rs.bg, color: rs.color }}>结果: {rs.text}</span>
+                  </div>
+                  {/* 推荐赋能方案列表 */}
+                  {m.recommendedPlans && m.recommendedPlans.length > 0 ? (
+                    <div className="space-y-2 ml-10">
+                      {m.recommendedPlans.map((rp: any, idx: number) => {
+                        const alreadyPushed = rp.alreadyPushed || pushedPlans.has(`${rp.planId}:${m.id}`);
+                        return (
+                          <div key={idx} className="flex items-center gap-3 p-2.5 rounded-md" style={{ backgroundColor: '#F8F6F0' }}>
+                            <Activity className="w-4 h-4 shrink-0" style={{ color: '#2978B5' }} />
+                            <div className="flex-1 min-w-0">
+                              <span className="text-sm font-medium" style={{ color: '#102A43' }}>{rp.planName}</span>
+                            </div>
+                            {alreadyPushed ? (
+                              <span className="text-xs px-2 py-1 rounded-md font-medium" style={{ backgroundColor: '#2E7D3215', color: '#2E7D32' }}>
+                                <Check className="w-3 h-3 inline mr-0.5" />已推送
+                              </span>
+                            ) : (
+                              <button
+                                onClick={() => handlePushPlan(rp.planId, m.id)}
+                                disabled={pushingPlanId === rp.planId}
+                                className="text-xs px-3 py-1 rounded-md font-medium"
+                                style={{ backgroundColor: '#2978B5', color: '#fff' }}>
+                                <Send className="w-3 h-3 inline mr-0.5" />{pushingPlanId === rp.planId ? '推送中...' : '推送方案'}
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="ml-10 text-xs" style={{ color: '#667085' }}>暂无匹配赋能方案</div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* 我带的新人 — 双线状态卡片 */}
       <div className="bg-card rounded-xl p-6 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
@@ -508,7 +591,7 @@ function MentorHome({ data }: { data: any }) {
             const rs = resultLabels[m.resultStatus] || resultLabels.not_started;
             const isFlagged = m.processStatus === 'flagged' || m.resultStatus === 'yellow_alert' || m.resultStatus === 'red_alert';
             return (
-              <div key={m.id} className={`flex items-center gap-4 p-4 rounded-lg border ${isFlagged ? '' : ''}`}
+              <div key={m.id} className={`flex items-center gap-4 p-4 rounded-lg border`}
                 style={{ borderColor: isFlagged ? '#F59E0B60' : '#E6E1D8', backgroundColor: isFlagged ? '#FFF8E140' : 'transparent' }}>
                 <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-medium"
                   style={{ backgroundColor: isFlagged ? '#E65100' : '#2978B5' }}>

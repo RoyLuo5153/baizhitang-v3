@@ -41,6 +41,7 @@ const ALERT_TYPE_CONFIG: Record<string, { label: string; icon: typeof AlertTrian
   pending_practice: { label: '待完成演练', icon: FileQuestion, color: '#6366f1', bgColor: 'bg-[#6366f1]/10' },
   empower_stale: { label: '处方停滞', icon: Zap, color: '#F59E0B', bgColor: 'bg-[#F59E0B]/10' },
   empower_pending: { label: '待推送处方', icon: Zap, color: '#2978B5', bgColor: 'bg-[#2978B5]/10' },
+  dual_track_alert: { label: '双线异常', icon: AlertTriangle, color: '#dc2626', bgColor: 'bg-[#dc2626]/10' },
 };
 
 const LEVEL_CONFIG: Record<string, { label: string; color: string; bgColor: string }> = {

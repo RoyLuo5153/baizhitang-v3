@@ -336,6 +336,37 @@ async function getMentorDashboard(client: any, userId: string) {
     .order('created_at', { ascending: false })
     .limit(5);
 
+  // 赋能方案（所有可用的）
+  const { data: empowerPlans } = await client
+    .from('empower_plans')
+    .select('id, name, indicator_key, target_indicators, content, estimated_hours')
+    .eq('is_active', true);
+
+  // 赋能执行记录（查看已推送的方案）
+  const { data: executions } = await client
+    .from('empower_executions')
+    .select('plan_id, user_id, status')
+    .in('user_id', menteeIds.length > 0 ? menteeIds : ['__none__']);
+
+  // 构建每个学员的已推送方案集合
+  const pushedMap = new Map<string, Set<string>>();
+  for (const e of executions || []) {
+    const key = String(e.user_id);
+    if (!pushedMap.has(key)) pushedMap.set(key, new Set());
+    pushedMap.get(key)!.add(String(e.plan_id));
+  }
+
+  // 过程线指标到赋能方案的映射
+  const processIndicatorMap: Record<string, string> = {
+    flagged: 'qc_communication', // 过程线预警→质检沟通赋能
+  };
+
+  // 结果线指标到赋能方案的映射
+  const resultIndicatorMap: Record<string, string[]> = {
+    yellow_alert: ['wechatAddRate', 'consultationRate'],
+    red_alert: ['wechatAddRate', 'consultationRate', 'receptionRate'],
+  };
+
   return NextResponse.json({
     role: 'mentor',
     mentees: (mentees || []).map((m: any) => {
@@ -347,18 +378,58 @@ async function getMentorDashboard(client: any, userId: string) {
       const passedModules = myModules.filter((mp: any) => mp.status === 'passed').length;
       const totalModules = 8; // 4基础+4实操
 
+      // 根据双线状态匹配赋能方案
+      const recommendedPlans: { planId: string; planName: string; indicatorKey: string; alreadyPushed: boolean }[] = [];
+      const processStatus = profile?.process_status || 'not_started';
+      const resultStatus = profile?.result_status || 'not_started';
+      const userPushed = pushedMap.get(String(t.id)) || new Set();
+
+      if (processStatus === 'flagged') {
+        const indicator = processIndicatorMap.flagged;
+        const matched = (empowerPlans || []).find((p: any) =>
+          p.indicator_key === indicator || (p.target_indicators && Array.isArray(p.target_indicators) && p.target_indicators.includes(indicator))
+        );
+        if (matched) {
+          recommendedPlans.push({
+            planId: String(matched.id),
+            planName: matched.name,
+            indicatorKey: indicator,
+            alreadyPushed: userPushed.has(String(matched.id)),
+          });
+        }
+      }
+
+      if (resultStatus === 'yellow_alert' || resultStatus === 'red_alert') {
+        const indicators = resultIndicatorMap[resultStatus] || [];
+        for (const indicator of indicators) {
+          const matched = (empowerPlans || []).find((p: any) =>
+            p.indicator_key === indicator || (p.target_indicators && Array.isArray(p.target_indicators) && p.target_indicators.includes(indicator))
+          );
+          if (matched) {
+            recommendedPlans.push({
+              planId: String(matched.id),
+              planName: matched.name,
+              indicatorKey: indicator,
+              alreadyPushed: userPushed.has(String(matched.id)),
+            });
+          }
+        }
+      }
+
       return {
         id: t.id,
         name: t.real_name,
         stage: t.stage || profile?.stage || 'foundation',
-        processStatus: profile?.process_status || 'not_started',
-        resultStatus: profile?.result_status || 'not_started',
+        processStatus,
+        resultStatus,
         planProgress: plans.length > 0 ? Math.round((completed / plans.length) * 100) : 0,
         completedTasks: completed,
         totalTasks: plans.length,
         moduleProgress: `${passedModules}/${totalModules}`,
         passedModules,
         totalModules,
+        recommendedPlans,
+        hasAlert: processStatus === 'flagged' || resultStatus === 'yellow_alert' || resultStatus === 'red_alert',
       };
     }),
     pendingReviews: (pendingReviews || []).map((r: any) => ({

@@ -667,6 +667,12 @@ export default function SettingsPage() {
   const [users, setUsers] = useState<UserRecord[]>([]);
   const [usersLoading, setUsersLoading] = useState(true);
   const [userDialog, setUserDialog] = useState<{ mode: 'add' | 'edit'; user: Partial<UserRecord> | null } | null>(null);
+  const [cohortFilter, setCohortFilter] = useState<string>('all');
+  const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
+  const [batchAction, setBatchAction] = useState<string | null>(null);
+  const [batchCohort, setBatchCohort] = useState('');
+  const [batchStage, setBatchStage] = useState<number>(1);
+  const [batchProcessing, setBatchProcessing] = useState(false);
 
   const [stageRules, setStageRules] = useState<StageRule[]>([]);
   const [rulesLoading, setRulesLoading] = useState(true);
@@ -715,6 +721,56 @@ export default function SettingsPage() {
   }, []);
 
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
+
+  // --- Cohort filter + batch operations ---
+  const cohortOptions = [...new Set(users.filter(u => u.cohort).map(u => u.cohort!))].sort();
+  const filteredUsers = cohortFilter === 'all' ? users : users.filter(u => u.cohort === cohortFilter);
+  const traineeUsers = filteredUsers.filter(u => u.roleId === 1);
+
+  const toggleSelectAll = () => {
+    if (selectedUserIds.size === traineeUsers.length) {
+      setSelectedUserIds(new Set());
+    } else {
+      setSelectedUserIds(new Set(traineeUsers.map(u => u.id)));
+    }
+  };
+
+  const toggleSelectUser = (id: string) => {
+    setSelectedUserIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const handleBatchAction = async () => {
+    if (selectedUserIds.size === 0) return;
+    setBatchProcessing(true);
+    try {
+      const updates: Promise<Response>[] = [];
+      for (const userId of selectedUserIds) {
+        const body: Record<string, unknown> = { userId };
+        if (batchAction === 'cohort' && batchCohort) body.cohort = batchCohort;
+        if (batchAction === 'stage') body.stage = batchStage;
+        if (Object.keys(body).length > 1) {
+          updates.push(fetch('/api/users', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          }));
+        }
+      }
+      await Promise.all(updates);
+      setSelectedUserIds(new Set());
+      setBatchAction(null);
+      setBatchCohort('');
+      await fetchUsers();
+    } catch {
+      alert('批量操作失败');
+    } finally {
+      setBatchProcessing(false);
+    }
+  };
 
   // --- Fetch stage rules from real API ---
   const fetchStageRules = useCallback(async () => {
@@ -987,16 +1043,105 @@ export default function SettingsPage() {
                 <div className="flex items-center gap-2">
                   <Users className="w-4 h-4 text-primary" />
                   <h2 className="text-base font-semibold text-foreground">用户管理</h2>
-                  <span className="text-xs text-muted-foreground ml-1">{users.length} 位用户</span>
+                  <span className="text-xs text-muted-foreground ml-1">{filteredUsers.length} 位用户</span>
                 </div>
-                <button
-                  onClick={() => setUserDialog({ mode: 'add', user: null })}
-                  className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  添加用户
-                </button>
+                <div className="flex items-center gap-3">
+                  {/* Cohort筛选 */}
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+                    <select
+                      value={cohortFilter}
+                      onChange={e => setCohortFilter(e.target.value)}
+                      className="h-8 rounded-md border border-border bg-transparent px-2 text-xs text-foreground outline-none focus:border-primary"
+                    >
+                      <option value="all">全部期数</option>
+                      {cohortOptions.map(c => (
+                        <option key={c} value={c}>{c}期</option>
+                      ))}
+                    </select>
+                  </div>
+                  <button
+                    onClick={() => setUserDialog({ mode: 'add', user: null })}
+                    className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    添加用户
+                  </button>
+                </div>
               </div>
+
+              {/* 批量操作栏 */}
+              {selectedUserIds.size > 0 && (
+                <div className="px-5 py-3 bg-primary/5 border-b border-primary/20 flex items-center gap-4">
+                  <span className="text-xs font-medium text-primary">
+                    已选择 {selectedUserIds.size} 位学员
+                  </span>
+                  <button
+                    onClick={() => setBatchAction('cohort')}
+                    className="h-7 px-3 rounded-md border border-border bg-card text-xs font-medium text-foreground hover:bg-muted transition-colors"
+                  >
+                    批量分配期数
+                  </button>
+                  <button
+                    onClick={() => setBatchAction('stage')}
+                    className="h-7 px-3 rounded-md border border-border bg-card text-xs font-medium text-foreground hover:bg-muted transition-colors"
+                  >
+                    批量调整阶段
+                  </button>
+                  <button
+                    onClick={() => { setSelectedUserIds(new Set()); setBatchAction(null); }}
+                    className="h-7 px-2 rounded-md text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    取消选择
+                  </button>
+                </div>
+              )}
+
+              {/* 批量操作输入区 */}
+              {batchAction && selectedUserIds.size > 0 && (
+                <div className="px-5 py-3 bg-muted/50 border-b border-border flex items-center gap-3">
+                  {batchAction === 'cohort' && (
+                    <>
+                      <label className="text-xs text-muted-foreground">目标期数：</label>
+                      <input
+                        type="text"
+                        value={batchCohort}
+                        onChange={e => setBatchCohort(e.target.value)}
+                        placeholder="如：2026-Q3"
+                        className="h-8 w-40 rounded-md border border-border bg-transparent px-3 text-xs text-foreground outline-none focus:border-primary"
+                      />
+                    </>
+                  )}
+                  {batchAction === 'stage' && (
+                    <>
+                      <label className="text-xs text-muted-foreground">目标阶段：</label>
+                      <select
+                        value={batchStage}
+                        onChange={e => setBatchStage(Number(e.target.value))}
+                        className="h-8 rounded-md border border-border bg-transparent px-2 text-xs text-foreground outline-none focus:border-primary"
+                      >
+                        <option value={1}>阶段1-学习期</option>
+                        <option value={2}>阶段2-练习期</option>
+                        <option value={3}>阶段3-独立期</option>
+                        <option value={4}>阶段4-熟练期</option>
+                      </select>
+                    </>
+                  )}
+                  <button
+                    onClick={handleBatchAction}
+                    disabled={batchProcessing || (batchAction === 'cohort' && !batchCohort)}
+                    className="h-8 px-4 rounded-md bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 disabled:opacity-50 transition-colors"
+                  >
+                    {batchProcessing ? '执行中...' : '确认执行'}
+                  </button>
+                  <button
+                    onClick={() => setBatchAction(null)}
+                    className="h-8 px-3 rounded-md text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    取消
+                  </button>
+                </div>
+              )}
 
               {usersLoading ? (
                 <div className="p-6 space-y-3">
@@ -1012,6 +1157,14 @@ export default function SettingsPage() {
                   <table className="w-full">
                     <thead>
                       <tr className="bg-muted">
+                        <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide px-3 py-3 w-10">
+                          <input
+                            type="checkbox"
+                            checked={traineeUsers.length > 0 && selectedUserIds.size === traineeUsers.length}
+                            onChange={toggleSelectAll}
+                            className="rounded border-border"
+                          />
+                        </th>
                         <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">姓名</th>
                         <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">用户名</th>
                         <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">角色</th>
@@ -1022,11 +1175,22 @@ export default function SettingsPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border/50">
-                      {users.map(user => {
+                      {filteredUsers.map(user => {
                         const roleStyle = ROLE_BADGE_MAP[user.roleName] || { bg: 'bg-muted', text: 'text-muted-foreground' };
                         const displayName = getRoleDisplayName(user.roleName);
+                        const isTrainee = user.roleId === 1;
                         return (
-                          <tr key={user.id} className="hover:bg-muted/50 transition-colors">
+                          <tr key={user.id} className={`hover:bg-muted/50 transition-colors ${selectedUserIds.has(user.id) ? 'bg-primary/5' : ''}`}>
+                            <td className="px-3 py-4 text-center">
+                              {isTrainee && (
+                                <input
+                                  type="checkbox"
+                                  checked={selectedUserIds.has(user.id)}
+                                  onChange={() => toggleSelectUser(user.id)}
+                                  className="rounded border-border"
+                                />
+                              )}
+                            </td>
                             <td className="px-5 py-4">
                               <div className="flex items-center gap-2.5">
                                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-medium shrink-0">

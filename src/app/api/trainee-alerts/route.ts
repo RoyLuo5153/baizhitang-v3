@@ -359,6 +359,42 @@ export async function GET(request: NextRequest) {
           }
         }
       });
+
+      // 11. 双线异常预警：process_status=flagged 或 result_status=yellow_alert/red_alert
+      const { data: dualTrackAlerts } = await supabase
+        .from('trainee_profiles')
+        .select('user_id, process_status, result_status')
+        .in('user_id', traineeIds);
+
+      (dualTrackAlerts || []).forEach((p: { user_id: string; process_status: string; result_status: string }) => {
+        const ps = p.process_status;
+        const rs = p.result_status;
+        if (ps === 'flagged' || rs === 'yellow_alert' || rs === 'red_alert') {
+          const trainee = (trainees || []).find((t: { id: string }) => t.id === p.user_id);
+          if (trainee) {
+            const parts: string[] = [];
+            if (ps === 'flagged') parts.push('过程线预警');
+            if (rs === 'yellow_alert') parts.push('结果线黄灯');
+            if (rs === 'red_alert') parts.push('结果线红灯');
+            const isRed = rs === 'red_alert';
+            const hasEmpower = empoweredUserIds.has(p.user_id);
+            alerts.push({
+              userId: p.user_id,
+              realName: (trainee as Record<string, unknown>).real_name as string,
+              alertType: hasEmpower ? 'empower_stale' : 'dual_track_alert',
+              alertLevel: isRed ? 'danger' : 'warning',
+              message: `${(trainee as Record<string, unknown>).real_name as string} ${parts.join(' + ')}${hasEmpower ? '，赋能执行中' : '，待赋能'}`,
+              detail: hasEmpower ? '已有赋能方案，请关注执行进度' : '双线状态异常，请推荐赋能方案并推送',
+              relatedModule: 'empowerment',
+              relatedId: p.user_id,
+              createdAt: new Date().toISOString(),
+              mentorName: ((trainee as Record<string, unknown>).mentor_id as string) ? (mentorMap[(trainee as Record<string, unknown>).mentor_id as string] || null) : null,
+              department: (trainee as Record<string, unknown>).department as string | null,
+              stage: (trainee as Record<string, unknown>).stage as number | null,
+            });
+          }
+        }
+      });
     }
 
     // 新人视角：看自己的待办
@@ -410,6 +446,7 @@ export async function GET(request: NextRequest) {
         pending_practice: alerts.filter(a => a.alertType === 'pending_practice').length,
         empower_stale: alerts.filter(a => a.alertType === 'empower_stale').length,
         empower_pending: alerts.filter(a => a.alertType === 'empower_pending').length,
+        dual_track_alert: alerts.filter(a => a.alertType === 'dual_track_alert').length,
       },
     };
 

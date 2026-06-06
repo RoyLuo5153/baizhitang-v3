@@ -49,6 +49,7 @@ interface OverviewData {
   passRate: number;
   aClassRate: number;
   empowerRate: number;
+  empowerStats: { assigned: number; inProgress: number; completed: number; verified: number; total: number };
   summary: DiagnosisSummary;
   members: DiagnosisMember[];
   alerts: AlertItem[];
@@ -103,6 +104,23 @@ export default function GlobalOverviewPage() {
         return Math.round((qualified / items.length) * 100);
       });
       const empowerRate = empowerRates.length > 0 ? Math.round(empowerRates.reduce((a, b) => a + b, 0) / empowerRates.length) : 0;
+
+      // 赋能执行统计 — 从executions API获取真实数据
+      let empowerStats = { assigned: 0, inProgress: 0, completed: 0, verified: 0, total: 0 };
+      try {
+        const execRes = await fetch('/api/empower/executions');
+        if (execRes.ok) {
+          const execJson = await execRes.json();
+          const execs = execJson.executions || [];
+          empowerStats = {
+            assigned: execs.filter((e: any) => e.status === 'assigned').length,
+            inProgress: execs.filter((e: any) => e.status === 'in_progress').length,
+            completed: execs.filter((e: any) => e.status === 'completed').length,
+            verified: execs.filter((e: any) => e.status === 'verified').length,
+            total: execs.length,
+          };
+        }
+      } catch { /* ignore */ }
 
       // 雷达图数据 — 各维度团队均值 vs 基准(75)
       const allDimensions = new Set<string>();
@@ -160,6 +178,7 @@ export default function GlobalOverviewPage() {
         passRate,
         aClassRate,
         empowerRate,
+        empowerStats,
         summary,
         members,
         alerts: alerts.slice(0, 8),
@@ -281,7 +300,7 @@ export default function GlobalOverviewPage() {
           </CardContent>
         </Card>
 
-        {/* 赋能完成率 — 环形进度图 */}
+        {/* 赋能完成率 — 环形进度图 + 执行统计 */}
         <Card className="border-border/40">
           <CardContent className="flex flex-col items-center pt-4 pb-3">
             <div className="flex items-center gap-1.5 mb-1">
@@ -295,6 +314,27 @@ export default function GlobalOverviewPage() {
               showTarget
               targetValue={80}
             />
+            {/* 赋能执行率明细 */}
+            {data.empowerStats.total > 0 && (
+              <div className="w-full mt-2 px-2 space-y-1">
+                <div className="flex items-center justify-between text-[10px]">
+                  <span className="text-muted-foreground">已推送</span>
+                  <span className="font-medium text-foreground">{data.empowerStats.assigned + data.empowerStats.inProgress}</span>
+                </div>
+                <div className="flex items-center justify-between text-[10px]">
+                  <span className="text-muted-foreground">执行中</span>
+                  <span className="font-medium" style={{ color: '#2978B5' }}>{data.empowerStats.inProgress}</span>
+                </div>
+                <div className="flex items-center justify-between text-[10px]">
+                  <span className="text-muted-foreground">已完成</span>
+                  <span className="font-medium" style={{ color: '#F59E0B' }}>{data.empowerStats.completed}</span>
+                </div>
+                <div className="flex items-center justify-between text-[10px]">
+                  <span className="text-muted-foreground">已达标</span>
+                  <span className="font-medium" style={{ color: '#2E7D32' }}>{data.empowerStats.verified}</span>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

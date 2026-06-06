@@ -137,6 +137,50 @@ export async function GET(request: NextRequest) {
     };
   }
 
+  // 9. 推荐赋能方案（仅在双线异常时匹配）
+  let recommendedPlans: { planId: string; planName: string; indicatorKey: string; alreadyPushed: boolean }[] = [];
+  const hasAlert = processStatus === 'flagged' || resultStatus === 'yellow_alert' || resultStatus === 'red_alert';
+  if (hasAlert) {
+    const { data: empowerPlans } = await client
+      .from('empower_plans')
+      .select('id, name, indicator_key, target_indicators')
+      .eq('is_active', true);
+
+    const { data: executions } = await client
+      .from('empower_executions')
+      .select('plan_id')
+      .eq('user_id', userId);
+    const pushedPlanIds = new Set((executions || []).map((e: Record<string, unknown>) => String(e.plan_id)));
+
+    const processIndicatorMap: Record<string, string> = { flagged: 'qc_communication' };
+    const resultIndicatorMap: Record<string, string[]> = {
+      yellow_alert: ['wechatAddRate', 'consultationRate'],
+      red_alert: ['wechatAddRate', 'consultationRate', 'receptionRate'],
+    };
+
+    if (processStatus === 'flagged') {
+      const indicator = processIndicatorMap.flagged;
+      const matched = (empowerPlans || []).find((p: Record<string, unknown>) =>
+        p.indicator_key === indicator || (Array.isArray(p.target_indicators) && p.target_indicators.includes(indicator))
+      );
+      if (matched) {
+        recommendedPlans.push({ planId: String(matched.id), planName: matched.name as string, indicatorKey: indicator, alreadyPushed: pushedPlanIds.has(String(matched.id)) });
+      }
+    }
+
+    if (resultStatus === 'yellow_alert' || resultStatus === 'red_alert') {
+      const indicators = resultIndicatorMap[resultStatus] || [];
+      for (const indicator of indicators) {
+        const matched = (empowerPlans || []).find((p: Record<string, unknown>) =>
+          p.indicator_key === indicator || (Array.isArray(p.target_indicators) && p.target_indicators.includes(indicator))
+        );
+        if (matched) {
+          recommendedPlans.push({ planId: String(matched.id), planName: matched.name as string, indicatorKey: indicator, alreadyPushed: pushedPlanIds.has(String(matched.id)) });
+        }
+      }
+    }
+  }
+
   return NextResponse.json({
     modules: result,
     currentStage,
@@ -145,5 +189,7 @@ export async function GET(request: NextRequest) {
     stageProgress,
     totalPassed: result.filter(m => m.status === 'passed').length,
     totalModules: result.length,
+    recommendedPlans,
+    hasAlert,
   });
 }
