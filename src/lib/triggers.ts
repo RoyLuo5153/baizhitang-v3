@@ -16,6 +16,8 @@ export type NotificationType =
   | 'level_passed'       // 闯关通过
   | 'module_passed'      // 模块通关通过
   | 'module_failed'      // 模块通关未通过
+  | 'process_flagged'    // 过程线预警
+  | 'process_recovered'  // 过程线恢复
   | 'general';           // 通用通知
 
 interface NotificationPayload {
@@ -503,6 +505,95 @@ export async function onModuleFailed(
         message,
         relatedUserId: traineeId,
         priority: 'medium',
+      });
+    }
+  }
+}
+
+/**
+ * 质检完成后更新过程线状态
+ * 任一维度连续低分 → process_status = flagged
+ */
+export async function onQcCompletedUpdateProcessStatus(
+  traineeId: string,
+  qcScores: {
+    communication: number;
+    professional: number;
+    service: number;
+    compliance: number;
+  }
+): Promise<void> {
+  const client = getSupabaseClient();
+
+  // 1. 获取当前process_status
+  const { data: profile } = await client
+    .from('trainee_profiles')
+    .select('process_status, stage')
+    .eq('user_id', traineeId)
+    .single();
+
+  if (!profile || profile.stage !== 'practice') return; // 只在实操阶段生效
+
+  const currentStatus = profile.process_status;
+
+  // 2. 检查4维度是否任一低于合格线（70分）
+  const PASS_LINE = 70;
+  const lowDimensions: string[] = [];
+  const dimLabels: Record<string, string> = {
+    communication: '沟通能力',
+    professional: '专业能力',
+    service: '服务态度',
+    compliance: '合规执行',
+  };
+
+  for (const [dim, score] of Object.entries(qcScores)) {
+    if (score < PASS_LINE) {
+      lowDimensions.push(dimLabels[dim] || dim);
+    }
+  }
+
+  // 3. 状态转换逻辑
+  if (lowDimensions.length > 0 && currentStatus === 'monitoring') {
+    // monitoring → flagged：有维度低于合格线
+    await client
+      .from('trainee_profiles')
+      .update({
+        process_status: 'flagged',
+        updated_at: new Date().toISOString(),
+      })
+      .eq('user_id', traineeId);
+
+    // 通知带教老师
+    const mentorId = await getMentorId(traineeId);
+    if (mentorId) {
+      await sendNotification({
+        userId: mentorId,
+        type: 'process_flagged',
+        title: '过程线异常预警',
+        message: `学员过程线被标记为flagged，低分维度：${lowDimensions.join('、')}，请及时安排赋能`,
+        relatedUserId: traineeId,
+        priority: 'high',
+      });
+    }
+  } else if (lowDimensions.length === 0 && currentStatus === 'flagged') {
+    // flagged → monitoring：所有维度都达标，恢复监控
+    await client
+      .from('trainee_profiles')
+      .update({
+        process_status: 'monitoring',
+        updated_at: new Date().toISOString(),
+      })
+      .eq('user_id', traineeId);
+
+    const mentorId = await getMentorId(traineeId);
+    if (mentorId) {
+      await sendNotification({
+        userId: mentorId,
+        type: 'process_recovered',
+        title: '过程线恢复正常',
+        message: '学员所有质检维度已达标，过程线从flagged恢复为monitoring',
+        relatedUserId: traineeId,
+        priority: 'low',
       });
     }
   }

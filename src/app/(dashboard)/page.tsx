@@ -117,6 +117,46 @@ function TraineeHome({ data }: { data: any }) {
         </div>
       </div>
 
+      {/* 双线状态卡 */}
+      {data.dualTrackStatus && (
+        <div className="bg-card rounded-xl p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Shield className="w-5 h-5" style={{ color: '#102A43' }} />
+              <h2 className="text-lg font-semibold" style={{ color: '#102A43' }}>双线状态</h2>
+            </div>
+            <Link href="/diagnosis" className="text-xs flex items-center gap-1" style={{ color: '#2978B5' }}>
+              查看诊断 <ChevronRight className="w-3 h-3" />
+            </Link>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="p-3 rounded-lg text-center" style={{ backgroundColor: '#102A4308' }}>
+              <div className="text-xs mb-1" style={{ color: '#667085' }}>当前阶段</div>
+              <div className="text-sm font-semibold" style={{ color: '#102A43' }}>
+                {({ foundation: '学习期', practice: '练习期', independent: '独立期', proficient: '熟练期' } as Record<string, string>)[data.dualTrackStatus.stage] || '学习期'}
+              </div>
+              <div className="text-xs mt-1" style={{ color: '#667085' }}>通关 {data.dualTrackStatus.moduleProgress}</div>
+            </div>
+            <div className="p-3 rounded-lg text-center" style={{ backgroundColor: '#2978B508' }}>
+              <div className="text-xs mb-1" style={{ color: '#667085' }}>过程线</div>
+              <div className="text-sm font-semibold" style={{
+                color: ({ not_started: '#667085', monitoring: '#2978B5', flagged: '#E65100', passed: '#2E7D32' } as Record<string, string>)[data.dualTrackStatus.processStatus] || '#667085'
+              }}>
+                {({ not_started: '未开始', monitoring: '监控中', flagged: '预警', passed: '已通过' } as Record<string, string>)[data.dualTrackStatus.processStatus] || '未开始'}
+              </div>
+            </div>
+            <div className="p-3 rounded-lg text-center" style={{ backgroundColor: '#F59E0B08' }}>
+              <div className="text-xs mb-1" style={{ color: '#667085' }}>结果线</div>
+              <div className="text-sm font-semibold" style={{
+                color: ({ not_started: '#667085', insufficient_data: '#667085', monitoring: '#2978B5', yellow_alert: '#E65100', red_alert: '#E53935', passed: '#2E7D32' } as Record<string, string>)[data.dualTrackStatus.resultStatus] || '#667085'
+              }}>
+                {({ not_started: '未开始', insufficient_data: '数据不足', monitoring: '监控中', yellow_alert: '黄灯', red_alert: '红灯', passed: '已通过' } as Record<string, string>)[data.dualTrackStatus.resultStatus] || '未开始'}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 7天排课概览 */}
       <div className="bg-card rounded-xl p-6 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
         <div className="flex items-center justify-between mb-4">
@@ -427,7 +467,21 @@ function TaskCard({ plan, role, canEdit, canSuggest, onToggleComplete, onPlanUpd
 
 // ========== 带教老师看板 ==========
 function MentorHome({ data }: { data: any }) {
-  const stageNames: Record<number, string> = { 1: '学习期', 2: '练习期', 3: '独立期', 4: '熟练期' };
+  const stageNames: Record<string, string> = { foundation: '学习期', practice: '练习期', independent: '独立期', proficient: '熟练期' };
+  const processLabels: Record<string, { text: string; bg: string; color: string }> = {
+    not_started: { text: '未开始', bg: '#E6E1D830', color: '#667085' },
+    monitoring: { text: '监控中', bg: '#2978B515', color: '#2978B5' },
+    flagged: { text: '预警', bg: '#F59E0B20', color: '#E65100' },
+    passed: { text: '已通过', bg: '#2E7D3215', color: '#2E7D32' },
+  };
+  const resultLabels: Record<string, { text: string; bg: string; color: string }> = {
+    not_started: { text: '未开始', bg: '#E6E1D830', color: '#667085' },
+    insufficient_data: { text: '数据不足', bg: '#E6E1D830', color: '#667085' },
+    monitoring: { text: '监控中', bg: '#2978B515', color: '#2978B5' },
+    yellow_alert: { text: '黄灯', bg: '#F59E0B20', color: '#E65100' },
+    red_alert: { text: '红灯', bg: '#E5393520', color: '#E53935' },
+    passed: { text: '已通过', bg: '#2E7D3215', color: '#2E7D32' },
+  };
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-3 gap-4">
@@ -436,38 +490,65 @@ function MentorHome({ data }: { data: any }) {
         <QuickStat icon={<MessageSquare className="w-5 h-5" />} label="未读通知" value={data.alerts?.length || 0} color="#E65100" />
       </div>
 
-      {/* 我带的新人 */}
+      {/* 我带的新人 — 双线状态卡片 */}
       <div className="bg-card rounded-xl p-6 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
-        <div className="flex items-center gap-2 mb-4">
-          <Users className="w-5 h-5" style={{ color: '#2978B5' }} />
-          <h2 className="text-lg font-semibold" style={{ color: '#102A43' }}>我带的新人</h2>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Users className="w-5 h-5" style={{ color: '#2978B5' }} />
+            <h2 className="text-lg font-semibold" style={{ color: '#102A43' }}>我带的新人</h2>
+          </div>
+          <div className="flex items-center gap-3 text-xs" style={{ color: '#667085' }}>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: '#2978B5' }} />过程线</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: '#F59E0B' }} />结果线</span>
+          </div>
         </div>
         <div className="space-y-3">
-          {(data.mentees || []).map((m: any) => (
-            <div key={m.id} className="flex items-center gap-4 p-4 rounded-lg border" style={{ borderColor: '#E6E1D8' }}>
-              <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-medium"
-                style={{ backgroundColor: '#2978B5' }}>
-                {m.name?.slice(-1) || '?'}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium" style={{ color: '#102A43' }}>{m.name}</span>
-                  <span className="text-xs px-2 py-0.5 rounded-full"
-                    style={{ backgroundColor: '#2978B515', color: '#2978B5' }}>
-                    {stageNames[m.stage] || `阶段${m.stage}`}
-                  </span>
+          {(data.mentees || []).map((m: any) => {
+            const ps = processLabels[m.processStatus] || processLabels.not_started;
+            const rs = resultLabels[m.resultStatus] || resultLabels.not_started;
+            const isFlagged = m.processStatus === 'flagged' || m.resultStatus === 'yellow_alert' || m.resultStatus === 'red_alert';
+            return (
+              <div key={m.id} className={`flex items-center gap-4 p-4 rounded-lg border ${isFlagged ? '' : ''}`}
+                style={{ borderColor: isFlagged ? '#F59E0B60' : '#E6E1D8', backgroundColor: isFlagged ? '#FFF8E140' : 'transparent' }}>
+                <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-medium"
+                  style={{ backgroundColor: isFlagged ? '#E65100' : '#2978B5' }}>
+                  {m.name?.slice(-1) || '?'}
                 </div>
-                <div className="flex items-center gap-2 mt-1">
-                  <div className="flex-1 h-1.5 rounded-full" style={{ backgroundColor: '#E6E1D8' }}>
-                    <div className="h-full rounded-full" style={{ width: `${m.planProgress}%`, backgroundColor: m.planProgress >= 80 ? '#2E7D32' : m.planProgress >= 50 ? '#F59E0B' : '#E65100' }} />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm font-medium" style={{ color: '#102A43' }}>{m.name}</span>
+                    <span className="text-xs px-2 py-0.5 rounded-full"
+                      style={{ backgroundColor: '#2978B515', color: '#2978B5' }}>
+                      {stageNames[m.stage] || m.stage || '学习期'}
+                    </span>
+                    {/* 双线状态标签 */}
+                    <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: ps.bg, color: ps.color }}>
+                      过程: {ps.text}
+                    </span>
+                    <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: rs.bg, color: rs.color }}>
+                      结果: {rs.text}
+                    </span>
                   </div>
-                  <span className="text-xs" style={{ color: '#667085' }}>{m.planProgress}%</span>
+                  <div className="flex items-center gap-4 mt-2">
+                    {/* 模块进度 */}
+                    <div className="flex items-center gap-1.5 text-xs" style={{ color: '#667085' }}>
+                      <BookOpen className="w-3.5 h-3.5" />
+                      <span>通关 {m.moduleProgress || '0/8'}</span>
+                    </div>
+                    {/* 成长计划进度 */}
+                    <div className="flex items-center gap-2 flex-1">
+                      <div className="flex-1 h-1.5 rounded-full" style={{ backgroundColor: '#E6E1D8' }}>
+                        <div className="h-full rounded-full" style={{ width: `${m.planProgress}%`, backgroundColor: m.planProgress >= 80 ? '#2E7D32' : m.planProgress >= 50 ? '#F59E0B' : '#E65100' }} />
+                      </div>
+                      <span className="text-xs" style={{ color: '#667085' }}>{m.planProgress}%</span>
+                    </div>
+                  </div>
                 </div>
+                <Link href={`/trainee-board?userId=${m.id}`} className="text-xs px-3 py-1.5 rounded-md shrink-0"
+                  style={{ backgroundColor: '#2978B5', color: '#fff' }}>详情</Link>
               </div>
-              <Link href={`/trainee-board`} className="text-xs px-3 py-1.5 rounded-md"
-                style={{ backgroundColor: '#2978B5', color: '#fff' }}>详情</Link>
-            </div>
-          ))}
+            );
+          })}
           {(!data.mentees || data.mentees.length === 0) && (
             <div className="text-center py-8 text-sm" style={{ color: '#667085' }}>暂无带教新人</div>
           )}

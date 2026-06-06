@@ -298,6 +298,20 @@ async function getMentorDashboard(client: any, userId: string) {
 
   const menteeIds = (mentees || []).map((m: any) => m.trainee_id);
 
+  // 新人双线状态（从trainee_profiles获取）
+  const { data: profiles } = await client
+    .from('trainee_profiles')
+    .select('user_id, stage, process_status, result_status')
+    .in('user_id', menteeIds.length > 0 ? menteeIds : ['__none__']);
+
+  const profileMap: Map<string, { user_id: string; stage: string; process_status: string; result_status: string }> = new Map((profiles || []).map((p: any) => [String(p.user_id), p]));
+
+  // 模块通关进度
+  const { data: moduleProgress } = await client
+    .from('module_progress')
+    .select('user_id, module_code, status')
+    .in('user_id', menteeIds.length > 0 ? menteeIds : ['__none__']);
+
   // 新人成长计划
   const { data: menteePlans } = await client
     .from('daily_plans')
@@ -326,15 +340,25 @@ async function getMentorDashboard(client: any, userId: string) {
     role: 'mentor',
     mentees: (mentees || []).map((m: any) => {
       const t = m.users;
+      const profile = profileMap.get(String(t.id));
       const plans = (menteePlans || []).filter((p: any) => p.user_id === t.id);
       const completed = plans.filter((p: any) => p.is_completed).length;
+      const myModules = (moduleProgress || []).filter((mp: any) => mp.user_id === t.id);
+      const passedModules = myModules.filter((mp: any) => mp.status === 'passed').length;
+      const totalModules = 8; // 4基础+4实操
+
       return {
         id: t.id,
         name: t.real_name,
-        stage: t.stage,
+        stage: t.stage || profile?.stage || 'foundation',
+        processStatus: profile?.process_status || 'not_started',
+        resultStatus: profile?.result_status || 'not_started',
         planProgress: plans.length > 0 ? Math.round((completed / plans.length) * 100) : 0,
         completedTasks: completed,
         totalTasks: plans.length,
+        moduleProgress: `${passedModules}/${totalModules}`,
+        passedModules,
+        totalModules,
       };
     }),
     pendingReviews: (pendingReviews || []).map((r: any) => ({
@@ -494,6 +518,20 @@ async function getTraineeDashboard(client: any, userId: string, user: any) {
     }
   }
 
+  // 双线状态
+  const { data: traineeProfile } = await client
+    .from('trainee_profiles')
+    .select('stage, process_status, result_status')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  // 模块通关进度
+  const { data: moduleProgressData } = await client
+    .from('module_progress')
+    .select('module_code, status')
+    .eq('user_id', userId);
+  const passedModuleCount = (moduleProgressData || []).filter((mp: any) => mp.status === 'passed').length;
+
   return NextResponse.json({
     role: 'trainee',
     user: { id: user.id, name: user.real_name },
@@ -506,6 +544,14 @@ async function getTraineeDashboard(client: any, userId: string, user: any) {
       exitCondition: currentStage.exit_condition,
       durationWeeks: currentStage.duration_weeks,
     } : null,
+    dualTrackStatus: {
+      stage: traineeProfile?.stage || 'foundation',
+      processStatus: traineeProfile?.process_status || 'not_started',
+      resultStatus: traineeProfile?.result_status || 'not_started',
+      moduleProgress: `${passedModuleCount}/8`,
+      passedModules: passedModuleCount,
+      totalModules: 8,
+    },
     currentDayIndex,
     stageProgress: { total: totalTasks, completed: completedTasks, percentage: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0 },
     passedLevels,

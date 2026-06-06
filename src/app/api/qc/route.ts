@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
-import { onQcLowScore } from '@/lib/triggers';
+import { onQcLowScore, onQcCompletedUpdateProcessStatus } from '@/lib/triggers';
 
 export const dynamic = 'force-dynamic';
 
@@ -189,6 +189,20 @@ export async function POST(request: NextRequest) {
     }
   } catch (triggerErr) {
     console.error('QC trigger error:', triggerErr);
+  }
+
+  // P1: 质检完成后更新过程线状态
+  try {
+    const qcScores = {
+      communication: scoreCommunication ?? 0,
+      professional: scoreBusiness ?? 0,
+      service: scoreService ?? 0,
+      compliance: scoreProcess ?? 0,
+    };
+    // 只有实操阶段的学员才更新过程线
+    await onQcCompletedUpdateProcessStatus(userId, qcScores);
+  } catch (processErr) {
+    console.error('Process status update error:', processErr);
   }
 
   return NextResponse.json({ data });
