@@ -56,6 +56,74 @@ export async function GET(req: NextRequest) {
   }
 }
 
+// POST /api/users — 添加用户
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { username, realName, password, roleId, stage, cohort } = body;
+
+    if (!username || !realName || !roleId) {
+      return NextResponse.json({ error: '缺少必填字段: username, realName, roleId' }, { status: 400 });
+    }
+
+    const supabase = getSupabaseClient();
+
+    // 检查用户名是否重复
+    const { data: existing } = await supabase
+      .from('users')
+      .select('id')
+      .eq('username', username)
+      .maybeSingle();
+
+    if (existing) {
+      return NextResponse.json({ error: '用户名已存在' }, { status: 409 });
+    }
+
+    // 插入users表
+    const { data: newUser, error: insertError } = await supabase
+      .from('users')
+      .insert({
+        username,
+        real_name: realName,
+        password_hash: password ? `bt:${password}` : 'bt:bt2026',
+        role_id: roleId,
+        is_active: true,
+        stage: stage || 1,
+      })
+      .select('id, username, real_name, role_id, is_active, created_at')
+      .single();
+
+    if (insertError) {
+      return NextResponse.json({ error: insertError.message }, { status: 500 });
+    }
+
+    // 如果是trainee(role_id=1)，同时创建trainee_profiles记录
+    if (roleId === 1) {
+      const profileData: Record<string, unknown> = {
+        user_id: newUser.id,
+        stage: stage || 1,
+        process_status: 'not_started',
+        result_status: 'not_started',
+        profile_status: 'training',
+        hire_date: new Date().toISOString().split('T')[0],
+      };
+      if (cohort) profileData.cohort = cohort;
+
+      const { error: profileError } = await supabase
+        .from('trainee_profiles')
+        .insert(profileData);
+
+      if (profileError) {
+        console.error('创建trainee_profile失败:', profileError.message);
+      }
+    }
+
+    return NextResponse.json({ success: true, user: { id: newUser.id, username: newUser.username } });
+  } catch (e) {
+    return NextResponse.json({ error: String(e) }, { status: 500 });
+  }
+}
+
 // PUT /api/users — 更新用户信息
 export async function PUT(req: NextRequest) {
   try {
@@ -78,7 +146,10 @@ export async function PUT(req: NextRequest) {
 
     // 更新阶段和期数（trainee_profiles表）
     const profileUpdate: Record<string, unknown> = {};
-    if (stage !== undefined) profileUpdate.current_stage = stage;
+    if (stage !== undefined) {
+      const stageMap: Record<number, string> = { 1: 'foundation', 2: 'practice', 3: 'independent', 4: 'proficient' };
+      profileUpdate.stage = typeof stage === 'number' ? (stageMap[stage] || 'foundation') : stage;
+    }
     if (cohort !== undefined) profileUpdate.cohort = cohort;
 
     if (Object.keys(profileUpdate).length > 0) {

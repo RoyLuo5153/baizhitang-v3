@@ -29,3 +29,20 @@
 - **日期**：2026-06-06
 
 ---
+
+## #002 前后端字段名snake_case/camelCase不一致导致创建/编辑用户失败
+
+- **症状**：前端添加用户弹窗点击"创建"返回"缺少必要参数"；编辑期数/阶段不生效；trainee_profile创建失败
+- **根因**：
+  1. 前端发`realName`(camelCase)，后端register期望`real_name`(snake_case) → 参数丢失触发必填校验
+  2. 后端POST/PUT `/api/users`用`current_stage`，实际列名是`stage` → INSERT/UPDATE失败
+  3. 后端POST `/api/users`用`tasks`/`completed`列，`daily_plans`表实际无这些列 → INSERT失败
+- **修复**：
+  1. 前端改用POST `/api/users`（字段与后端一致），传`realName`（后端POST已支持）
+  2. `current_stage`→`stage`列名修正
+  3. 删除不存在的daily_plans插入逻辑，stage数字→字符串映射(1→foundation, 2→practice, 3→independent, 4→proficient)
+- **防错规则**：数据库操作前必须核对实际表结构（`SELECT column_name FROM information_schema.columns`），禁止凭记忆写列名
+- **类别**：数据库/类型安全
+- **日期**：2026-06-06
+
+---

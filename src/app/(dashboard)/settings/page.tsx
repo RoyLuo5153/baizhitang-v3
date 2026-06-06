@@ -188,30 +188,21 @@ function UserDialog({
     setError('');
     try {
       if (mode === 'add') {
-        const res = await fetch('/api/auth/register', {
+        const res = await fetch('/api/users', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             username: form.username,
-            password: form.password,
             realName: form.realName,
+            password: form.password || 'bt2026',
             roleId: form.roleId,
+            stage: form.roleId === 1 ? form.stage : undefined,
+            cohort: form.roleId === 1 ? form.cohort : undefined,
           }),
         });
         if (!res.ok) {
           const json = await res.json();
           throw new Error(json.error || '创建失败');
-        }
-        // If trainee, also set stage
-        if (form.roleId === 1 && form.stage) {
-          const regResult = await res.json();
-          if (regResult.user?.id) {
-            await fetch('/api/users', {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ userId: regResult.user.id, stage: form.stage }),
-            });
-          }
         }
       } else if (mode === 'edit' && user?.id) {
         const res = await fetch('/api/users', {
