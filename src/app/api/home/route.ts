@@ -138,6 +138,102 @@ async function getTrainingManagerDashboard(client: any, userId: string) {
     }
   }
 
+  // === 三层质量数据 ===
+
+  // 第一层：课程完成率
+  const { data: enrollments } = await client
+    .from('course_enrollments')
+    .select('user_id, status')
+    .in('user_id', (trainees || []).map((t: any) => t.id));
+  const totalEnrollments = (enrollments || []).length;
+  const completedEnrollments = (enrollments || []).filter((e: any) => e.status === 'completed').length;
+  const courseCompletionRate = totalEnrollments > 0 ? Math.round((completedEnrollments / totalEnrollments) * 100) : 0;
+
+  // 阶段进阶待审批
+  const { data: pendingStageChanges } = await client
+    .from('notifications')
+    .select('id, user_id, title, message, created_at, users!notifications_user_id_fkey(real_name, stage)')
+    .eq('type', 'stage_change_request')
+    .eq('is_read', false)
+    .order('created_at', { ascending: false })
+    .limit(10);
+
+  // 第二层：质检数据
+  const { data: allQcRecords } = await client
+    .from('qc_records')
+    .select('id, user_id, score_business, score_service, score_communication, score_process, qc_date, users!qc_records_user_id_fkey(real_name)')
+    .order('qc_date', { ascending: false })
+    .limit(50);
+
+  // 按维度计算平均分
+  const qcScores = allQcRecords || [];
+  const avgQcBusiness = qcScores.length > 0 ? Math.round(qcScores.reduce((s: number, r: any) => s + (r.score_business || 0), 0) / qcScores.length * 10) / 10 : 0;
+  const avgQcService = qcScores.length > 0 ? Math.round(qcScores.reduce((s: number, r: any) => s + (r.score_service || 0), 0) / qcScores.length * 10) / 10 : 0;
+  const avgQcCommunication = qcScores.length > 0 ? Math.round(qcScores.reduce((s: number, r: any) => s + (r.score_communication || 0), 0) / qcScores.length * 10) / 10 : 0;
+  const avgQcProcess = qcScores.length > 0 ? Math.round(qcScores.reduce((s: number, r: any) => s + (r.score_process || 0), 0) / qcScores.length * 10) / 10 : 0;
+
+  // 19动作通过率
+  const { data: actionScoresData } = await client
+    .from('action_scores')
+    .select('score')
+    .limit(200);
+  const totalActionScores = (actionScoresData || []).length;
+  const passedActions = (actionScoresData || []).filter((a: any) => a.score >= 4).length;
+  const actionPassRate = totalActionScores > 0 ? Math.round((passedActions / totalActionScores) * 100) : 0;
+
+  // 低分质检预警
+  const lowScoreWarnings = (allQcRecords || []).filter((r: any) => {
+    const avg = (r.score_business + r.score_service + r.score_communication + r.score_process) / 4;
+    return avg < 3;
+  }).slice(0, 5).map((r: any) => ({
+    userId: r.user_id,
+    name: (r.users as any)?.real_name || '未知',
+    avgScore: Math.round(((r.score_business + r.score_service + r.score_communication + r.score_process) / 4) * 10) / 10,
+  }));
+
+  // 第三层：业务指标
+  const { data: latestBizData } = await client
+    .from('business_data')
+    .select('*')
+    .order('period_start', { ascending: false })
+    .limit(20);
+
+  const { data: thresholdData } = await client
+    .from('thresholds')
+    .select('indicator_key, indicator_name, qualified_value, good_value, excellent_value, direction')
+    .eq('category', 'result');
+
+  // 计算指标达成状态
+  const resultIndicators = [
+    { key: 'wechat_add_rate', name: '加V率' },
+    { key: 'consultation_rate', name: '面诊率' },
+    { key: 'reception_rate', name: '接诊率' },
+    { key: 'delivery_rate', name: '签收率' },
+    { key: 'medication_rate', name: '用药率' },
+    { key: 'appointment_rate', name: '挂号率' },
+  ];
+
+  const resultMetrics = resultIndicators.map(ind => {
+    const vals = (latestBizData || []).map((b: Record<string, unknown>) => b[ind.key] ? parseFloat(String(b[ind.key])) : 0).filter((v: number) => v > 0);
+    const avg = vals.length > 0 ? Math.round(vals.reduce((a: number, b: number) => a + b, 0) / vals.length) : 0;
+    const threshold = (thresholdData || []).find((t: any) => t.indicator_key === ind.key);
+    const qualifiedVal = threshold ? Number(threshold.qualified_value) : 70;
+    const goodVal = threshold ? Number(threshold.good_value) : 85;
+    let status: 'excellent' | 'good' | 'warning' | 'danger' = 'danger';
+    if (avg >= goodVal) status = 'excellent';
+    else if (avg >= qualifiedVal) status = 'good';
+    else if (avg >= qualifiedVal * 0.8) status = 'warning';
+    return { key: ind.key, name: ind.name, value: avg, qualified: qualifiedVal, good: goodVal, status };
+  });
+
+  // 结果触发的赋能
+  const { data: resultEmpowerments } = await client
+    .from('empower_executions')
+    .select('id, user_id, plan_id, status, empower_plans!empower_executions_plan_id_fkey(name, indicator_key), users!empower_executions_user_id_fkey(real_name)')
+    .eq('triggered_by', 'result')
+    .order('created_at', { ascending: false })
+    .limit(10);
+
   return NextResponse.json({
     role: 'training_manager',
     stats: {
@@ -154,13 +250,41 @@ async function getTrainingManagerDashboard(client: any, userId: string) {
       message: a.message,
       createdAt: a.created_at,
     })),
+    // 三层质量数据
+    layer1: {
+      courseCompletionRate,
+      stageDistribution,
+      pendingStageApprovals: (pendingStageChanges || []).map((n: any) => ({
+        id: n.id,
+        userId: n.user_id,
+        traineeName: (n.users as any)?.real_name || '未知',
+        currentStage: (n.users as any)?.stage || 1,
+        message: n.message,
+        createdAt: n.created_at,
+      })),
+    },
+    layer2: {
+      avgScores: { business: avgQcBusiness, service: avgQcService, communication: avgQcCommunication, process: avgQcProcess },
+      actionPassRate,
+      lowScoreWarnings,
+    },
+    layer3: {
+      resultMetrics,
+      resultEmpowerments: (resultEmpowerments || []).map((e: any) => ({
+        id: e.id,
+        traineeName: (e.users as any)?.real_name || '未知',
+        planName: (e.empower_plans as any)?.name || '未知方案',
+        indicatorKey: (e.empower_plans as any)?.indicator_key || '',
+        status: e.status,
+      })),
+    },
     quickActions: [
       { label: '查看新人看板', href: '/trainee-board' },
       { label: '双轨诊断', href: '/diagnosis' },
       { label: '赋能中心', href: '/empowerment' },
       { label: '质检审核', href: '/qc-review' },
+      { label: '服务质量追踪', href: '/qc-flow' },
       { label: '阈值配置', href: '/settings' },
-      { label: '题库管理', href: '/question-bank' },
     ],
   });
 }

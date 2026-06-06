@@ -30,6 +30,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: '知识库', href: '/knowledge-base', icon: 'BookMarked', roles: ['trainee', 'mentor', 'teacher', 'training_manager'], group: '教务' },
   { label: '日常考核', href: '/assessment', icon: 'ClipboardCheck', roles: ['teacher', 'training_manager'], group: '教务' },
   { label: '质检审核', href: '/qc-review', icon: 'ShieldCheck', roles: ['mentor', 'training_manager'], group: '教务' },
+  { label: '服务质量追踪', href: '/qc-flow', icon: 'Activity', roles: ['trainee', 'mentor', 'training_manager'], group: '教务' },
   { label: '课程管理', href: '/courses', icon: 'GraduationCap', roles: ['trainee', 'teacher', 'training_manager', 'mentor'], group: '教务' },
   { label: '业务数据', href: '/scrm-import', icon: 'TrendingUp', roles: ['training_manager'], group: '教务' },
 
