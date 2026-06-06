@@ -28,6 +28,7 @@ interface UserRecord {
   roleId: number;
   roleName: string;
   stage: number | null;
+  cohort: string | null;
   status: string;
   createdAt: string;
 }
@@ -168,6 +169,7 @@ function UserDialog({
     password: '',
     roleId: user?.roleId || 1,
     stage: user?.stage ?? 1,
+    cohort: user?.cohort || '',
     status: user?.status || 'active',
   });
   const [saving, setSaving] = useState(false);
@@ -220,6 +222,7 @@ function UserDialog({
             realName: form.realName,
             roleId: form.roleId,
             stage: form.roleId === 1 ? form.stage : undefined,
+            cohort: form.roleId === 1 ? form.cohort : undefined,
             status: form.status,
           }),
         });
@@ -293,6 +296,17 @@ function UserDialog({
               ))}
             </select>
           </div>
+          {form.roleId === 1 && (
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1.5 block">期数</label>
+              <input
+                value={form.cohort}
+                onChange={e => setForm(prev => ({ ...prev, cohort: e.target.value }))}
+                className="w-full h-9 rounded-md border border-border bg-transparent px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+                placeholder="如：第1期、2026年3月期"
+              />
+            </div>
+          )}
           {form.roleId === 1 && (
             <div>
               <label className="text-xs font-medium text-muted-foreground mb-1.5 block">当前阶段</label>
@@ -1002,6 +1016,7 @@ export default function SettingsPage() {
                         <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">用户名</th>
                         <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">角色</th>
                         <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">阶段</th>
+                        <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">期数</th>
                         <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">状态</th>
                         <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">操作</th>
                       </tr>
@@ -1031,6 +1046,13 @@ export default function SettingsPage() {
                             <td className="px-5 py-4 text-center">
                               <span className="inline-flex items-center px-2.5 py-0.5 rounded-sm text-xs font-medium bg-muted text-muted-foreground">
                                 {getStageLabel(user.stage)}
+                              </span>
+                            </td>
+                            <td className="px-5 py-4 text-center">
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-sm text-xs font-medium ${
+                                user.cohort ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
+                              }`}>
+                                {user.cohort || '未分配'}
                               </span>
                             </td>
                             <td className="px-5 py-4 text-center">

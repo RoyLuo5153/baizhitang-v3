@@ -26,16 +26,16 @@ export async function GET(req: NextRequest) {
     const roleMap: Record<number, string> = {};
     (roles || []).forEach((r: { id: number; name: string }) => { roleMap[r.id] = r.name; });
 
-    // 获取阶段信息
+    // 获取阶段和期数信息
     const userIds = (data || []).map((u: { id: string }) => u.id);
     const { data: profiles } = await supabase
       .from('trainee_profiles')
-      .select('user_id, current_stage')
+      .select('user_id, current_stage, cohort')
       .in('user_id', userIds);
 
-    const stageMap: Record<string, number> = {};
-    (profiles || []).forEach((p: { user_id: string; current_stage: number }) => {
-      stageMap[p.user_id] = p.current_stage;
+    const profileMap: Record<string, { stage: number; cohort: string | null }> = {};
+    (profiles || []).forEach((p: { user_id: string; current_stage: number; cohort: string | null }) => {
+      profileMap[p.user_id] = { stage: p.current_stage, cohort: p.cohort };
     });
 
     const users = (data || []).map((u: { id: string; username: string; real_name: string; role_id: number; is_active: boolean; created_at: string }) => ({
@@ -44,7 +44,8 @@ export async function GET(req: NextRequest) {
       realName: u.real_name,
       roleId: u.role_id,
       roleName: roleMap[u.role_id] || '未知',
-      stage: stageMap[u.id] || null,
+      stage: profileMap[u.id]?.stage || null,
+      cohort: profileMap[u.id]?.cohort || null,
       status: u.is_active !== false ? 'active' : 'inactive',
       createdAt: u.created_at,
     }));
@@ -59,7 +60,7 @@ export async function GET(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     const body = await req.json();
-    const { userId, realName, roleId, stage, status } = body;
+    const { userId, realName, roleId, stage, status, cohort } = body;
     if (!userId) return NextResponse.json({ error: '缺少userId' }, { status: 400 });
 
     const supabase = getSupabaseClient();
@@ -75,8 +76,12 @@ export async function PUT(req: NextRequest) {
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // 更新阶段（trainee_profiles表）
-    if (stage !== undefined) {
+    // 更新阶段和期数（trainee_profiles表）
+    const profileUpdate: Record<string, unknown> = {};
+    if (stage !== undefined) profileUpdate.current_stage = stage;
+    if (cohort !== undefined) profileUpdate.cohort = cohort;
+
+    if (Object.keys(profileUpdate).length > 0) {
       const { data: existing } = await supabase
         .from('trainee_profiles')
         .select('user_id')
@@ -84,9 +89,9 @@ export async function PUT(req: NextRequest) {
         .single();
 
       if (existing) {
-        await supabase.from('trainee_profiles').update({ current_stage: stage }).eq('user_id', userId);
+        await supabase.from('trainee_profiles').update(profileUpdate).eq('user_id', userId);
       } else {
-        await supabase.from('trainee_profiles').insert({ user_id: userId, current_stage: stage });
+        await supabase.from('trainee_profiles').insert({ user_id: userId, ...profileUpdate });
       }
     }
 
