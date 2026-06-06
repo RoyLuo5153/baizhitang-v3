@@ -17,11 +17,12 @@ export async function GET(request: NextRequest) {
 
     if (plansError) return NextResponse.json({ error: plansError.message }, { status: 500 });
 
-    // 2. 获取所有在培新人 (trainee角色)
+    // 2. 获取所有在培新人 (仅trainee角色)
     const { data: trainees, error: traineesError } = await client
       .from('users')
       .select('id, real_name, username, role_id, stage')
-      .eq('is_active', true);
+      .eq('is_active', true)
+      .eq('role_id', 1);
 
     if (traineesError) return NextResponse.json({ error: traineesError.message }, { status: 500 });
 

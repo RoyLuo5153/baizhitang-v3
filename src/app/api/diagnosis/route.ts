@@ -13,11 +13,12 @@ export async function GET(request: NextRequest) {
   const userId = searchParams.get('userId');
 
   if (view === 'overview' || view === 'team') {
-    // 团队概览：返回所有成员的四象限分类
+    // 团队概览：仅返回学员(trainee)的四象限分类
     const { data: users, error } = await client
       .from('users')
       .select('id, real_name, username, role_id, stage')
       .eq('is_active', true)
+      .eq('role_id', 1)
       .limit(50);
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
