@@ -155,7 +155,7 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     const body = await req.json();
-    const { userId, realName, roleId, stage, status, cohort } = body;
+    const { userId, realName, roleId, stage, status, cohort, password } = body;
     if (!userId) return NextResponse.json({ error: '缺少userId' }, { status: 400 });
 
     const supabase = getSupabaseClient();
@@ -165,6 +165,7 @@ export async function PUT(req: NextRequest) {
     if (realName !== undefined) updateData.real_name = realName;
     if (roleId !== undefined) updateData.role_id = roleId;
     if (status !== undefined) updateData.is_active = status === 'active';
+    if (password !== undefined) updateData.password_hash = `bt:${password}`;
 
     if (Object.keys(updateData).length > 0) {
       const { error } = await supabase.from('users').update(updateData).eq('id', userId);

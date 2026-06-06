@@ -6,6 +6,7 @@ import {
   CheckCircle2, AlertCircle, Shield, ArrowRight, AlertTriangle,
   ClipboardCheck, Clock, UserCheck, XCircle, Calendar,
   Plus, Trash2, Pencil, X, ChevronDown, ChevronRight,
+  KeyRound, UserX, UserCheck2,
 } from 'lucide-react';
 
 // === Types ===
@@ -879,6 +880,45 @@ export default function SettingsPage() {
     }
   };
 
+  const handleResetPassword = async (userId: string, realName: string) => {
+    if (!confirm(`确定要将 ${realName} 的密码重置为 bt2026 吗？`)) return;
+    try {
+      const res = await fetch('/api/users', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, password: 'bt2026' }),
+      });
+      if (res.ok) {
+        alert(`${realName} 的密码已重置为 bt2026`);
+      } else {
+        const json = await res.json();
+        alert(json.error || '重置密码失败');
+      }
+    } catch {
+      alert('重置密码失败，请检查网络连接');
+    }
+  };
+
+  const handleToggleStatus = async (userId: string, realName: string, newStatus: string) => {
+    const action = newStatus === 'active' ? '启用' : '禁用';
+    if (!confirm(`确定要${action} ${realName} 的账号吗？`)) return;
+    try {
+      const res = await fetch('/api/users', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, status: newStatus }),
+      });
+      if (res.ok) {
+        await fetchUsers();
+      } else {
+        const json = await res.json();
+        alert(json.error || `${action}失败`);
+      }
+    } catch {
+      alert(`${action}失败，请检查网络连接`);
+    }
+  };
+
   // --- Stage rule delete handler ---
   const handleDeleteRule = async (ruleId: number) => {
     if (!confirm('确定要删除此规则吗？')) return;
@@ -1318,6 +1358,30 @@ export default function SettingsPage() {
                                   <Pencil className="w-3.5 h-3.5" />
                                 </button>
                                 <button
+                                  onClick={() => handleResetPassword(user.id, user.realName)}
+                                  className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-primary transition-colors"
+                                  title="重置密码"
+                                >
+                                  <KeyRound className="w-3.5 h-3.5" />
+                                </button>
+                                {user.status === 'active' ? (
+                                  <button
+                                    onClick={() => handleToggleStatus(user.id, user.realName, 'inactive')}
+                                    className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                                    title="禁用账号"
+                                  >
+                                    <UserX className="w-3.5 h-3.5" />
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() => handleToggleStatus(user.id, user.realName, 'active')}
+                                    className="p-1.5 rounded-md hover:bg-green-50 text-muted-foreground hover:text-green-600 transition-colors"
+                                    title="启用账号"
+                                  >
+                                    <UserCheck2 className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
+                                <button
                                   onClick={() => handleDeleteUser(user.id)}
                                   className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
                                   title="删除"
@@ -1400,6 +1464,24 @@ export default function SettingsPage() {
                                   title="编辑"
                                 >
                                   <Pencil className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => handleResetPassword(user.id, user.realName)}
+                                  className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-primary transition-colors"
+                                  title="重置密码"
+                                >
+                                  <KeyRound className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => handleToggleStatus(user.id, user.status, user.realName)}
+                                  className={`p-1.5 rounded-md transition-colors ${
+                                    user.status === 'active'
+                                      ? 'hover:bg-destructive/10 text-muted-foreground hover:text-destructive'
+                                      : 'hover:bg-[#22c55e]/10 text-muted-foreground hover:text-[#22c55e]'
+                                  }`}
+                                  title={user.status === 'active' ? '停用' : '启用'}
+                                >
+                                  {user.status === 'active' ? <UserX className="w-3.5 h-3.5" /> : <UserCheck className="w-3.5 h-3.5" />}
                                 </button>
                                 <button
                                   onClick={() => handleDeleteUser(user.id)}
