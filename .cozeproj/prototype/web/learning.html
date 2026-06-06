@@ -4,9 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
   <link href="https://lf-code-agent.coze.cn/obj/x-ai-cn/fonts/google/google-all-fonts.css" rel="stylesheet"/>
-
   <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/jquery/jquery-3.7.1.min.js"></script>
   <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/lucide/lucide-1.11.0.min.js"></script>
   <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/tailwindcss/tailwindcss-browser-4.2.4.min.js"></script>
@@ -15,15 +13,17 @@
     @theme {
       /* === 品牌色 === */
       --color-primary:              #2978B5;
-      --color-primary-container:    #D4E8F5;
+      --color-primary-container:    #D6EAF5;
       --color-on-primary:           #ffffff;
+      /* === 深色区 === */
+      --color-dark:                       #102A43;
       /* === 背景 / 表面 === */
       --color-background:                 #F8F6F0;
-      --color-surface-container-lowest:   #FAFAF5;
+      --color-surface-container-lowest:   #FFFFFF;
       --color-surface:                    #FFFFFF;
-      --color-surface-container:          #F0EDE5;
-      --color-surface-container-high:     #E8E4DB;
-      --color-surface-container-highest:  #DDD8CE;
+      --color-surface-container:          #EFECE5;
+      --color-surface-container-high:     #E6E1D8;
+      --color-surface-container-highest:  #D9D4CB;
       /* === 文字 === */
       --color-on-surface:           #1D2733;
       --color-on-surface-variant:   #667085;
@@ -32,18 +32,18 @@
       --color-error:    #ef4444;
       --color-warning:  #f59e0b;
       /* === 边框 === */
-      --color-outline:          #D4CFC4;
+      --color-outline:          #D0D5DD;
       --color-outline-variant:  #E6E1D8;
       /* === 圆角 === */
-      --radius-sm:   0.375rem;
-      --radius-md:   0.5rem;
-      --radius-lg:   0.75rem;
-      --radius-xl:   1rem;
-      --radius-2xl:  1.5rem;
+      --radius-sm:   0.25rem;
+      --radius-md:   0.375rem;
+      --radius-lg:   0.5rem;
+      --radius-xl:   0.75rem;
+      --radius-2xl:  1rem;
       --radius-full: 9999px;
       /* === 阴影 === */
       --shadow-card:   0 2px 8px rgba(0,0,0,0.08);
-      --shadow-float:  0 10px 25px rgba(0,0,0,0.1);
+      --shadow-float:  0 10px 25px rgba(0,0,0,0.12);
       --shadow-dialog: 0 25px 50px rgba(0,0,0,0.15);
       /* === 字体 === */
       --font-sans: "Noto Sans SC", system-ui, sans-serif;
@@ -67,632 +67,551 @@
       img.src = 'data:image/svg+xml,' + svg;
     }, true);
   </script>
-
-  <style>
-    @keyframes shimmer {
-      0% { background-position: -200% 0; }
-      100% { background-position: 200% 0; }
-    }
-    .level-active {
-      animation: shimmer 3s ease-in-out infinite;
-      background-size: 200% 100%;
-    }
-    .level-locked {
-      cursor: not-allowed;
-    }
-  </style>
 </head>
 
 <body class="bg-background text-on-surface font-sans">
 
-  <!-- @nav:start 导航组件，不需要的页面则不要复制此段（从 @nav:start 到 @nav:end） -->
+  <!-- @nav:start 导航组件 -->
   <header class="bg-surface sticky top-0 z-40 h-14 flex items-center justify-between px-6 border-b border-outline-variant/20">
     <div class="flex items-center gap-2">
       <i data-lucide="heart-pulse" class="text-primary w-5 h-5"></i>
-      <span class="font-bold text-base text-on-surface">百芝堂赋能系统</span>
+      <span class="font-bold text-base text-on-surface">百芝堂V3</span>
     </div>
     <div class="flex items-center gap-3">
-      <span class="text-sm text-on-surface-variant">培训负责人</span>
-      <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-medium">初</div>
+      <span class="text-sm text-on-surface-variant">小初</span>
+      <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-semibold">初</div>
     </div>
   </header>
+
   <div class="flex" style="height: calc(100vh - 3.5rem)">
     <aside class="w-52 shrink-0 bg-surface-container-lowest overflow-y-auto border-r border-outline-variant/15">
       <div class="p-3 space-y-0.5">
-        <p class="px-3 py-1 text-xs font-medium text-on-surface-variant/60 uppercase tracking-wider">工作台</p>
-        <a href="home.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="layout-dashboard" class="w-4 h-4"></i>首页
+        <a href="learning.html" class="flex items-center gap-3 px-3 py-2.5 rounded-md bg-primary/10 text-primary font-medium text-sm" aria-current="page">
+          <i data-lucide="graduation-cap" class="w-4 h-4"></i>阶段通关
         </a>
-        <p class="px-3 py-1 mt-3 text-xs font-medium text-on-surface-variant/60 uppercase tracking-wider">学习</p>
-        <a href="learning.html" class="flex items-center gap-3 px-3 py-2 rounded-md bg-primary/10 text-primary font-medium text-sm" aria-current="page">
-          <i data-lucide="trophy" class="w-4 h-4"></i>闯关学习
+        <a href="growth.html" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="trending-up" class="w-4 h-4"></i>成长档案
         </a>
-        <a href="growth.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="user-check" class="w-4 h-4"></i>成长档案
+        <a href="diagnosis.html" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="activity" class="w-4 h-4"></i>双轨诊断
         </a>
-        <a href="resources.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="book-open" class="w-4 h-4"></i>资料中心
-        </a>
-        <p class="px-3 py-1 mt-3 text-xs font-medium text-on-surface-variant/60 uppercase tracking-wider">管理</p>
-        <a href="trainee-board.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="users" class="w-4 h-4"></i>新人看板
-        </a>
-        <a href="diagnosis.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="scan-search" class="w-4 h-4"></i>双轨诊断
-        </a>
-        <a href="empowerment.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+        <a href="empowerment.html" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
           <i data-lucide="zap" class="w-4 h-4"></i>赋能中心
         </a>
-        <a href="qc-review.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="mic" class="w-4 h-4"></i>质检审核
+        <a href="practice.html" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="mic" class="w-4 h-4"></i>演练任务
         </a>
-        <a href="assessment.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="clipboard-check" class="w-4 h-4"></i>日常考核
+        <a href="courses.html" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="book-open" class="w-4 h-4"></i>课程管理
         </a>
-        <p class="px-3 py-1 mt-3 text-xs font-medium text-on-surface-variant/60 uppercase tracking-wider">数据</p>
-        <a href="dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+        <a href="qc-review.html" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="clipboard-check" class="w-4 h-4"></i>质检审核
+        </a>
+        <a href="dashboard.html" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
           <i data-lucide="chart-bar" class="w-4 h-4"></i>数据看板
-        </a>
-        <a href="overview.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="activity" class="w-4 h-4"></i>全局概览
-        </a>
-        <a href="scrm-import.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="database" class="w-4 h-4"></i>业务数据
-        </a>
-        <p class="px-3 py-1 mt-3 text-xs font-medium text-on-surface-variant/60 uppercase tracking-wider">配置</p>
-        <a href="question-bank.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="file-question" class="w-4 h-4"></i>题库管理
-        </a>
-        <a href="settings.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="settings" class="w-4 h-4"></i>系统设置
         </a>
       </div>
     </aside>
-  <!-- @nav:end 导航组件，不需要的页面则不要复制此段 -->
 
-  <main class="flex-1 min-w-0 overflow-y-auto bg-background p-6">
     <!-- @main-content:start -->
+    <main class="flex-1 min-w-0 overflow-y-auto bg-background p-6">
+      <div class="max-w-5xl mx-auto space-y-6">
 
-    <!-- 页面标题 -->
-    <div class="flex items-center justify-between mb-6">
-      <div>
-        <h1 class="text-2xl font-bold text-on-surface">闯关学习</h1>
-        <p class="text-sm text-on-surface-variant mt-1">完成21关挑战，从理论到实战逐步达标</p>
-      </div>
-      <div class="flex items-center gap-2 text-sm text-on-surface-variant">
-        <i data-lucide="flame" class="w-4 h-4 text-warning"></i>
-        <span>已通过 <span class="text-primary font-semibold">5</span> / 21 关</span>
-      </div>
-    </div>
-
-    <!-- 阶段进度指示器 -->
-    <div class="bg-surface rounded-lg shadow-card p-5 mb-6">
-      <div class="grid grid-cols-3 gap-6">
-
-        <!-- 阶段一 -->
-        <div class="space-y-2">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <div class="w-6 h-6 rounded-full bg-success/15 flex items-center justify-center">
-                <i data-lucide="check" class="w-3.5 h-3.5 text-success"></i>
-              </div>
-              <span class="text-sm font-semibold text-on-surface">阶段一</span>
-              <span class="text-xs text-on-surface-variant">1-7关 · 理论基础</span>
-            </div>
-            <span class="text-xs font-medium text-success">已完成</span>
+        <!-- 1. 顶部标题栏 -->
+        <div class="flex items-center justify-between">
+          <div>
+            <h1 class="text-2xl font-bold text-on-surface">阶段通关</h1>
+            <p class="text-sm text-on-surface-variant mt-1">完成模块考核，从基础到实操逐步达标</p>
           </div>
-          <div class="h-2 bg-surface-container rounded-full overflow-hidden">
-            <div class="h-full bg-success rounded-full" style="width: 100%"></div>
+          <div class="flex items-center gap-2 bg-surface rounded-lg shadow-card px-4 py-2.5">
+            <i data-lucide="flame" class="w-5 h-5 text-warning"></i>
+            <span class="text-sm font-semibold text-on-surface">已通过</span>
+            <span class="text-lg font-bold text-primary">2</span>
+            <span class="text-sm text-on-surface-variant">/</span>
+            <span class="text-sm font-semibold text-on-surface">8 模块</span>
           </div>
-          <p class="text-xs text-on-surface-variant">7/7 关已通过</p>
         </div>
 
-        <!-- 阶段二 -->
-        <div class="space-y-2">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <div class="w-6 h-6 rounded-full bg-primary/15 flex items-center justify-center">
-                <i data-lucide="play" class="w-3.5 h-3.5 text-primary"></i>
+        <!-- 2. 阶段进度条区域 -->
+        <div class="bg-surface rounded-lg shadow-card p-5">
+          <div class="grid grid-cols-2 gap-6">
+            <!-- 基础通关 -->
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <i data-lucide="book-open" class="w-4 h-4 text-primary"></i>
+                  <span class="text-base font-semibold text-on-surface">基础通关</span>
+                </div>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-primary/15 text-primary">进行中</span>
               </div>
-              <span class="text-sm font-semibold text-on-surface">阶段二</span>
-              <span class="text-xs text-on-surface-variant">8-14关 · 实战演练</span>
+              <div class="w-full bg-surface-container rounded-full h-2.5">
+                <div class="bg-primary rounded-full h-2.5 transition-all" style="width: 50%"></div>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-xs text-on-surface-variant">2 / 4 模块已通过</span>
+                <span class="text-xs font-medium text-primary">50%</span>
+              </div>
             </div>
-            <span class="text-xs font-medium text-primary">进行中</span>
+            <!-- 实操通关 -->
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <i data-lucide="wrench" class="w-4 h-4 text-on-surface-variant"></i>
+                  <span class="text-base font-semibold text-on-surface">实操通关</span>
+                </div>
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm text-xs font-medium bg-surface-container text-on-surface-variant">
+                  <i data-lucide="lock" class="w-3 h-3"></i>未解锁
+                </span>
+              </div>
+              <div class="w-full bg-surface-container rounded-full h-2.5">
+                <div class="bg-on-surface-variant/20 rounded-full h-2.5" style="width: 0%"></div>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-xs text-on-surface-variant">0 / 4 模块已通过</span>
+                <span class="text-xs font-medium text-on-surface-variant">0%</span>
+              </div>
+            </div>
           </div>
-          <div class="h-2 bg-surface-container rounded-full overflow-hidden">
-            <div class="h-full bg-primary rounded-full transition-all" style="width: 42.8%"></div>
-          </div>
-          <p class="text-xs text-on-surface-variant">3/7 关已通过</p>
         </div>
 
-        <!-- 阶段三 -->
-        <div class="space-y-2">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <div class="w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center">
-                <i data-lucide="lock" class="w-3.5 h-3.5 text-on-surface-variant/50"></i>
-              </div>
-              <span class="text-sm font-semibold text-on-surface-variant/50">阶段三</span>
-              <span class="text-xs text-on-surface-variant/50">15-21关 · 综合达标</span>
-            </div>
-            <span class="text-xs font-medium text-on-surface-variant/50">未解锁</span>
-          </div>
-          <div class="h-2 bg-surface-container rounded-full overflow-hidden">
-            <div class="h-full bg-surface-container-high rounded-full" style="width: 0%"></div>
-          </div>
-          <p class="text-xs text-on-surface-variant/50">完成阶段二后解锁</p>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- 关卡地图 -->
-    <div class="bg-surface rounded-lg shadow-card p-5 mb-6">
-      <h2 class="text-base font-semibold text-on-surface mb-4">关卡地图</h2>
-      <div class="space-y-4">
-
-        <!-- 第一行：第1-7关 -->
+        <!-- 3. 基础通关模块卡片网格 -->
         <div>
-          <div class="flex items-center gap-1 mb-2">
-            <span class="text-xs font-medium text-success">阶段一</span>
-            <span class="text-xs text-on-surface-variant">· 理论基础</span>
+          <div class="flex items-center gap-2 mb-4">
+            <i data-lucide="book-open" class="w-4 h-4 text-primary"></i>
+            <h2 class="text-base font-semibold text-on-surface">基础通关</h2>
+            <span class="text-xs text-on-surface-variant ml-1">4个模块 · 通过分数线80分</span>
           </div>
-          <div class="grid grid-cols-7 gap-3">
+          <div class="grid grid-cols-2 gap-4">
 
-            <!-- 关卡1-已通过 -->
-            <div class="level-item relative flex flex-col items-center gap-1.5 p-3 bg-success/8 border border-success/20 rounded-lg cursor-pointer hover:bg-success/12 transition-colors" data-level="1" data-status="passed" id="level-1">
-              <div class="w-10 h-10 rounded-lg bg-success/15 flex items-center justify-center">
-                <i data-lucide="check" class="w-5 h-5 text-success"></i>
+            <!-- 基础模块1-糖尿病基础：已通过 -->
+            <div id="module-diabetes-basics" class="module-card relative bg-surface rounded-lg shadow-card p-5 cursor-pointer hover:shadow-float transition-all border-2 border-transparent" data-status="passed" data-module="diabetes_basics" data-name="糖尿病基础">
+              <div class="absolute top-0 left-0 rounded-tl-lg rounded-br-lg bg-success/90 px-2.5 py-1 flex items-center gap-1">
+                <i data-lucide="check" class="w-3 h-3 text-white"></i>
+                <span class="text-xs font-medium text-white">已通过</span>
               </div>
-              <span class="text-xs font-semibold text-success">第1关</span>
+              <div class="mt-6">
+                <h3 class="text-base font-semibold text-on-surface">糖尿病基础</h3>
+                <p class="text-xs text-on-surface-variant mt-1">糖尿病类型、病理机制及基本用药知识</p>
+              </div>
+              <div class="flex items-center justify-between mt-4 pt-3 border-t border-outline-variant/15">
+                <div class="flex items-center gap-4">
+                  <div>
+                    <span class="text-xs text-on-surface-variant">最高分</span>
+                    <p class="text-lg font-bold text-success">90</p>
+                  </div>
+                  <div>
+                    <span class="text-xs text-on-surface-variant">答题次数</span>
+                    <p class="text-lg font-bold text-on-surface">2</p>
+                  </div>
+                </div>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已通过</span>
+              </div>
             </div>
 
-            <!-- 关卡2-已通过 -->
-            <div class="level-item relative flex flex-col items-center gap-1.5 p-3 bg-success/8 border border-success/20 rounded-lg cursor-pointer hover:bg-success/12 transition-colors" data-level="2" data-status="passed" id="level-2">
-              <div class="w-10 h-10 rounded-lg bg-success/15 flex items-center justify-center">
-                <i data-lucide="check" class="w-5 h-5 text-success"></i>
+            <!-- 基础模块2-服务标准：已通过 -->
+            <div id="module-service-standards" class="module-card relative bg-surface rounded-lg shadow-card p-5 cursor-pointer hover:shadow-float transition-all border-2 border-transparent" data-status="passed" data-module="service_standards" data-name="服务标准">
+              <div class="absolute top-0 left-0 rounded-tl-lg rounded-br-lg bg-success/90 px-2.5 py-1 flex items-center gap-1">
+                <i data-lucide="check" class="w-3 h-3 text-white"></i>
+                <span class="text-xs font-medium text-white">已通过</span>
               </div>
-              <span class="text-xs font-semibold text-success">第2关</span>
+              <div class="mt-6">
+                <h3 class="text-base font-semibold text-on-surface">服务标准</h3>
+                <p class="text-xs text-on-surface-variant mt-1">服务流程规范、质量标准及执行要求</p>
+              </div>
+              <div class="flex items-center justify-between mt-4 pt-3 border-t border-outline-variant/15">
+                <div class="flex items-center gap-4">
+                  <div>
+                    <span class="text-xs text-on-surface-variant">最高分</span>
+                    <p class="text-lg font-bold text-success">85</p>
+                  </div>
+                  <div>
+                    <span class="text-xs text-on-surface-variant">答题次数</span>
+                    <p class="text-lg font-bold text-on-surface">1</p>
+                  </div>
+                </div>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已通过</span>
+              </div>
             </div>
 
-            <!-- 关卡3-已通过 -->
-            <div class="level-item relative flex flex-col items-center gap-1.5 p-3 bg-success/8 border border-success/20 rounded-lg cursor-pointer hover:bg-success/12 transition-colors" data-level="3" data-status="passed" id="level-3">
-              <div class="w-10 h-10 rounded-lg bg-success/15 flex items-center justify-center">
-                <i data-lucide="check" class="w-5 h-5 text-success"></i>
+            <!-- 基础模块3-服务用语：可考核 -->
+            <div id="module-service-language" class="module-card relative bg-surface rounded-lg shadow-card p-5 cursor-pointer hover:shadow-float transition-all border-2 border-primary/40" data-status="active" data-module="service_language" data-name="服务用语">
+              <div class="absolute top-0 left-0 rounded-tl-lg rounded-br-lg bg-primary px-2.5 py-1 flex items-center gap-1">
+                <i data-lucide="pencil-line" class="w-3 h-3 text-white"></i>
+                <span class="text-xs font-medium text-white">可考核</span>
               </div>
-              <span class="text-xs font-semibold text-success">第3关</span>
+              <div class="mt-6">
+                <h3 class="text-base font-semibold text-on-surface">服务用语</h3>
+                <p class="text-xs text-on-surface-variant mt-1">规范话术、沟通技巧及场景应对用语</p>
+              </div>
+              <div class="flex items-center justify-between mt-4 pt-3 border-t border-outline-variant/15">
+                <div class="flex items-center gap-4">
+                  <div>
+                    <span class="text-xs text-on-surface-variant">最高分</span>
+                    <p class="text-lg font-bold text-on-surface-variant">--</p>
+                  </div>
+                  <div>
+                    <span class="text-xs text-on-surface-variant">答题次数</span>
+                    <p class="text-lg font-bold text-on-surface-variant">0</p>
+                  </div>
+                </div>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-primary/15 text-primary">可考核</span>
+              </div>
             </div>
 
-            <!-- 关卡4-已通过 -->
-            <div class="level-item relative flex flex-col items-center gap-1.5 p-3 bg-success/8 border border-success/20 rounded-lg cursor-pointer hover:bg-success/12 transition-colors" data-level="4" data-status="passed" id="level-4">
-              <div class="w-10 h-10 rounded-lg bg-success/15 flex items-center justify-center">
-                <i data-lucide="check" class="w-5 h-5 text-success"></i>
+            <!-- 基础模块4-合规红线：可考核 -->
+            <div id="module-compliance" class="module-card relative bg-surface rounded-lg shadow-card p-5 cursor-pointer hover:shadow-float transition-all border-2 border-primary/40" data-status="active" data-module="compliance" data-name="合规红线">
+              <div class="absolute top-0 left-0 rounded-tl-lg rounded-br-lg bg-primary px-2.5 py-1 flex items-center gap-1">
+                <i data-lucide="pencil-line" class="w-3 h-3 text-white"></i>
+                <span class="text-xs font-medium text-white">可考核</span>
               </div>
-              <span class="text-xs font-semibold text-success">第4关</span>
-            </div>
-
-            <!-- 关卡5-已通过 -->
-            <div class="level-item relative flex flex-col items-center gap-1.5 p-3 bg-success/8 border border-success/20 rounded-lg cursor-pointer hover:bg-success/12 transition-colors" data-level="5" data-status="passed" id="level-5">
-              <div class="w-10 h-10 rounded-lg bg-success/15 flex items-center justify-center">
-                <i data-lucide="check" class="w-5 h-5 text-success"></i>
+              <div class="mt-6">
+                <h3 class="text-base font-semibold text-on-surface">合规红线</h3>
+                <p class="text-xs text-on-surface-variant mt-1">法规底线、合规要求及违规风险点</p>
               </div>
-              <span class="text-xs font-semibold text-success">第5关</span>
-            </div>
-
-            <!-- 关卡6-已通过 -->
-            <div class="level-item relative flex flex-col items-center gap-1.5 p-3 bg-success/8 border border-success/20 rounded-lg cursor-pointer hover:bg-success/12 transition-colors" data-level="6" data-status="passed" id="level-6">
-              <div class="w-10 h-10 rounded-lg bg-success/15 flex items-center justify-center">
-                <i data-lucide="check" class="w-5 h-5 text-success"></i>
+              <div class="flex items-center justify-between mt-4 pt-3 border-t border-outline-variant/15">
+                <div class="flex items-center gap-4">
+                  <div>
+                    <span class="text-xs text-on-surface-variant">最高分</span>
+                    <p class="text-lg font-bold text-on-surface-variant">--</p>
+                  </div>
+                  <div>
+                    <span class="text-xs text-on-surface-variant">答题次数</span>
+                    <p class="text-lg font-bold text-on-surface-variant">0</p>
+                  </div>
+                </div>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-primary/15 text-primary">可考核</span>
               </div>
-              <span class="text-xs font-semibold text-success">第6关</span>
-            </div>
-
-            <!-- 关卡7-已通过 -->
-            <div class="level-item relative flex flex-col items-center gap-1.5 p-3 bg-success/8 border border-success/20 rounded-lg cursor-pointer hover:bg-success/12 transition-colors" data-level="7" data-status="passed" id="level-7">
-              <div class="w-10 h-10 rounded-lg bg-success/15 flex items-center justify-center">
-                <i data-lucide="check" class="w-5 h-5 text-success"></i>
-              </div>
-              <span class="text-xs font-semibold text-success">第7关</span>
             </div>
 
           </div>
         </div>
 
-        <!-- 第二行：第8-14关 -->
+        <!-- 4. 实操通关模块卡片网格（锁定） -->
         <div>
-          <div class="flex items-center gap-1 mb-2">
-            <span class="text-xs font-medium text-primary">阶段二</span>
-            <span class="text-xs text-on-surface-variant">· 实战演练</span>
+          <div class="flex items-center gap-2 mb-4">
+            <i data-lucide="wrench" class="w-4 h-4 text-on-surface-variant"></i>
+            <h2 class="text-base font-semibold text-on-surface">实操通关</h2>
+            <span class="text-xs text-on-surface-variant ml-1">4个模块 · 完成基础通关后解锁</span>
           </div>
-          <div class="grid grid-cols-7 gap-3">
-
-            <!-- 关卡8-已通过 -->
-            <div class="level-item relative flex flex-col items-center gap-1.5 p-3 bg-success/8 border border-success/20 rounded-lg cursor-pointer hover:bg-success/12 transition-colors" data-level="8" data-status="passed" id="level-8">
-              <div class="w-10 h-10 rounded-lg bg-success/15 flex items-center justify-center">
-                <i data-lucide="check" class="w-5 h-5 text-success"></i>
+          <div class="relative">
+            <!-- 灰色遮罩提示 -->
+            <div class="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
+              <div class="bg-on-surface/70 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+                <i data-lucide="lock" class="w-4 h-4"></i>
+                完成基础通关后解锁
               </div>
-              <span class="text-xs font-semibold text-success">第8关</span>
             </div>
+            <div class="grid grid-cols-2 gap-4 opacity-40">
 
-            <!-- 关卡9-已通过 -->
-            <div class="level-item relative flex flex-col items-center gap-1.5 p-3 bg-success/8 border border-success/20 rounded-lg cursor-pointer hover:bg-success/12 transition-colors" data-level="9" data-status="passed" id="level-9">
-              <div class="w-10 h-10 rounded-lg bg-success/15 flex items-center justify-center">
-                <i data-lucide="check" class="w-5 h-5 text-success"></i>
+              <!-- 实操模块1-首通电话场景 -->
+              <div id="module-first-call" class="module-card relative bg-surface rounded-lg shadow-card p-5 cursor-not-allowed" data-status="locked" data-module="first_call" data-name="首通电话场景">
+                <div class="absolute top-0 left-0 rounded-tl-lg rounded-br-lg bg-on-surface-variant/60 px-2.5 py-1 flex items-center gap-1">
+                  <i data-lucide="lock" class="w-3 h-3 text-white"></i>
+                  <span class="text-xs font-medium text-white">锁定</span>
+                </div>
+                <div class="mt-6">
+                  <h3 class="text-base font-semibold text-on-surface">首通电话场景</h3>
+                  <p class="text-xs text-on-surface-variant mt-1">首次致电客户的沟通流程与话术运用</p>
+                </div>
+                <div class="flex items-center justify-between mt-4 pt-3 border-t border-outline-variant/15">
+                  <div class="flex items-center gap-4">
+                    <div>
+                      <span class="text-xs text-on-surface-variant">最高分</span>
+                      <p class="text-lg font-bold text-on-surface-variant">--</p>
+                    </div>
+                    <div>
+                      <span class="text-xs text-on-surface-variant">答题次数</span>
+                      <p class="text-lg font-bold text-on-surface-variant">0</p>
+                    </div>
+                  </div>
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-surface-container text-on-surface-variant">锁定</span>
+                </div>
               </div>
-              <span class="text-xs font-semibold text-success">第9关</span>
-            </div>
 
-            <!-- 关卡10-已通过 -->
-            <div class="level-item relative flex flex-col items-center gap-1.5 p-3 bg-success/8 border border-success/20 rounded-lg cursor-pointer hover:bg-success/12 transition-colors" data-level="10" data-status="passed" id="level-10">
-              <div class="w-10 h-10 rounded-lg bg-success/15 flex items-center justify-center">
-                <i data-lucide="check" class="w-5 h-5 text-success"></i>
+              <!-- 实操模块2-回访电话场景 -->
+              <div id="module-followup-call" class="module-card relative bg-surface rounded-lg shadow-card p-5 cursor-not-allowed" data-status="locked" data-module="followup_call" data-name="回访电话场景">
+                <div class="absolute top-0 left-0 rounded-tl-lg rounded-br-lg bg-on-surface-variant/60 px-2.5 py-1 flex items-center gap-1">
+                  <i data-lucide="lock" class="w-3 h-3 text-white"></i>
+                  <span class="text-xs font-medium text-white">锁定</span>
+                </div>
+                <div class="mt-6">
+                  <h3 class="text-base font-semibold text-on-surface">回访电话场景</h3>
+                  <p class="text-xs text-on-surface-variant mt-1">客户回访跟进的沟通策略与异议处理</p>
+                </div>
+                <div class="flex items-center justify-between mt-4 pt-3 border-t border-outline-variant/15">
+                  <div class="flex items-center gap-4">
+                    <div>
+                      <span class="text-xs text-on-surface-variant">最高分</span>
+                      <p class="text-lg font-bold text-on-surface-variant">--</p>
+                    </div>
+                    <div>
+                      <span class="text-xs text-on-surface-variant">答题次数</span>
+                      <p class="text-lg font-bold text-on-surface-variant">0</p>
+                    </div>
+                  </div>
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-surface-container text-on-surface-variant">锁定</span>
+                </div>
               </div>
-              <span class="text-xs font-semibold text-success">第10关</span>
-            </div>
 
-            <!-- 关卡11-进行中（当前关卡） -->
-            <div class="level-item relative flex flex-col items-center gap-1.5 p-3 bg-primary/8 border-2 border-primary/60 rounded-lg cursor-pointer level-active" data-level="11" data-status="active" id="level-11" style="background-image: linear-gradient(90deg, transparent 0%, rgba(41,120,181,0.12) 50%, transparent 100%);">
-              <div class="w-10 h-10 rounded-lg bg-primary/15 flex items-center justify-center">
-                <i data-lucide="swords" class="w-5 h-5 text-primary"></i>
+              <!-- 实操模块3-预约电话场景 -->
+              <div id="module-appointment-call" class="module-card relative bg-surface rounded-lg shadow-card p-5 cursor-not-allowed" data-status="locked" data-module="appointment_call" data-name="预约电话场景">
+                <div class="absolute top-0 left-0 rounded-tl-lg rounded-br-lg bg-on-surface-variant/60 px-2.5 py-1 flex items-center gap-1">
+                  <i data-lucide="lock" class="w-3 h-3 text-white"></i>
+                  <span class="text-xs font-medium text-white">锁定</span>
+                </div>
+                <div class="mt-6">
+                  <h3 class="text-base font-semibold text-on-surface">预约电话场景</h3>
+                  <p class="text-xs text-on-surface-variant mt-1">预约到店的沟通话术与时间确认技巧</p>
+                </div>
+                <div class="flex items-center justify-between mt-4 pt-3 border-t border-outline-variant/15">
+                  <div class="flex items-center gap-4">
+                    <div>
+                      <span class="text-xs text-on-surface-variant">最高分</span>
+                      <p class="text-lg font-bold text-on-surface-variant">--</p>
+                    </div>
+                    <div>
+                      <span class="text-xs text-on-surface-variant">答题次数</span>
+                      <p class="text-lg font-bold text-on-surface-variant">0</p>
+                    </div>
+                  </div>
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-surface-container text-on-surface-variant">锁定</span>
+                </div>
               </div>
-              <span class="text-xs font-semibold text-primary">第11关</span>
-              <span class="absolute -top-1.5 -right-1.5 w-4 h-4 bg-primary rounded-full flex items-center justify-center">
-                <i data-lucide="zap" class="w-2.5 h-2.5 text-on-primary"></i>
-              </span>
-            </div>
 
-            <!-- 关卡12-锁定 -->
-            <div class="level-item level-locked relative flex flex-col items-center gap-1.5 p-3 bg-surface-container/50 border border-outline-variant/15 rounded-lg" data-level="12" data-status="locked" id="level-12">
-              <div class="w-10 h-10 rounded-lg bg-surface-container-high/60 flex items-center justify-center">
-                <i data-lucide="lock" class="w-5 h-5 text-on-surface-variant/40"></i>
+              <!-- 实操模块4-面诊当天场景 -->
+              <div id="module-visit-day" class="module-card relative bg-surface rounded-lg shadow-card p-5 cursor-not-allowed" data-status="locked" data-module="visit_day" data-name="面诊当天场景">
+                <div class="absolute top-0 left-0 rounded-tl-lg rounded-br-lg bg-on-surface-variant/60 px-2.5 py-1 flex items-center gap-1">
+                  <i data-lucide="lock" class="w-3 h-3 text-white"></i>
+                  <span class="text-xs font-medium text-white">锁定</span>
+                </div>
+                <div class="mt-6">
+                  <h3 class="text-base font-semibold text-on-surface">面诊当天场景</h3>
+                  <p class="text-xs text-on-surface-variant mt-1">面诊接待流程、现场沟通与服务执行</p>
+                </div>
+                <div class="flex items-center justify-between mt-4 pt-3 border-t border-outline-variant/15">
+                  <div class="flex items-center gap-4">
+                    <div>
+                      <span class="text-xs text-on-surface-variant">最高分</span>
+                      <p class="text-lg font-bold text-on-surface-variant">--</p>
+                    </div>
+                    <div>
+                      <span class="text-xs text-on-surface-variant">答题次数</span>
+                      <p class="text-lg font-bold text-on-surface-variant">0</p>
+                    </div>
+                  </div>
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-surface-container text-on-surface-variant">锁定</span>
+                </div>
               </div>
-              <span class="text-xs font-medium text-on-surface-variant/40">第12关</span>
+
             </div>
-
-            <!-- 关卡13-锁定 -->
-            <div class="level-item level-locked relative flex flex-col items-center gap-1.5 p-3 bg-surface-container/50 border border-outline-variant/15 rounded-lg" data-level="13" data-status="locked" id="level-13">
-              <div class="w-10 h-10 rounded-lg bg-surface-container-high/60 flex items-center justify-center">
-                <i data-lucide="lock" class="w-5 h-5 text-on-surface-variant/40"></i>
-              </div>
-              <span class="text-xs font-medium text-on-surface-variant/40">第13关</span>
-            </div>
-
-            <!-- 关卡14-锁定 -->
-            <div class="level-item level-locked relative flex flex-col items-center gap-1.5 p-3 bg-surface-container/50 border border-outline-variant/15 rounded-lg" data-level="14" data-status="locked" id="level-14">
-              <div class="w-10 h-10 rounded-lg bg-surface-container-high/60 flex items-center justify-center">
-                <i data-lucide="lock" class="w-5 h-5 text-on-surface-variant/40"></i>
-              </div>
-              <span class="text-xs font-medium text-on-surface-variant/40">第14关</span>
-            </div>
-
-          </div>
-        </div>
-
-        <!-- 第三行：第15-21关 -->
-        <div>
-          <div class="flex items-center gap-1 mb-2">
-            <span class="text-xs font-medium text-on-surface-variant/50">阶段三</span>
-            <span class="text-xs text-on-surface-variant/50">· 综合达标</span>
-            <span class="text-xs text-on-surface-variant/30 ml-1">— 完成阶段二后解锁</span>
-          </div>
-          <div class="grid grid-cols-7 gap-3">
-
-            <!-- 关卡15-锁定（阶段三） -->
-            <div class="level-item level-locked relative flex flex-col items-center gap-1.5 p-3 bg-surface-container/30 border border-outline-variant/10 rounded-lg" data-level="15" data-status="locked-stage" id="level-15">
-              <div class="w-10 h-10 rounded-lg bg-surface-container-high/40 flex items-center justify-center">
-                <i data-lucide="lock" class="w-5 h-5 text-on-surface-variant/30"></i>
-              </div>
-              <span class="text-xs font-medium text-on-surface-variant/30">第15关</span>
-            </div>
-
-            <!-- 关卡16-锁定（阶段三） -->
-            <div class="level-item level-locked relative flex flex-col items-center gap-1.5 p-3 bg-surface-container/30 border border-outline-variant/10 rounded-lg" data-level="16" data-status="locked-stage" id="level-16">
-              <div class="w-10 h-10 rounded-lg bg-surface-container-high/40 flex items-center justify-center">
-                <i data-lucide="lock" class="w-5 h-5 text-on-surface-variant/30"></i>
-              </div>
-              <span class="text-xs font-medium text-on-surface-variant/30">第16关</span>
-            </div>
-
-            <!-- 关卡17-锁定（阶段三） -->
-            <div class="level-item level-locked relative flex flex-col items-center gap-1.5 p-3 bg-surface-container/30 border border-outline-variant/10 rounded-lg" data-level="17" data-status="locked-stage" id="level-17">
-              <div class="w-10 h-10 rounded-lg bg-surface-container-high/40 flex items-center justify-center">
-                <i data-lucide="lock" class="w-5 h-5 text-on-surface-variant/30"></i>
-              </div>
-              <span class="text-xs font-medium text-on-surface-variant/30">第17关</span>
-            </div>
-
-            <!-- 关卡18-锁定（阶段三） -->
-            <div class="level-item level-locked relative flex flex-col items-center gap-1.5 p-3 bg-surface-container/30 border border-outline-variant/10 rounded-lg" data-level="18" data-status="locked-stage" id="level-18">
-              <div class="w-10 h-10 rounded-lg bg-surface-container-high/40 flex items-center justify-center">
-                <i data-lucide="lock" class="w-5 h-5 text-on-surface-variant/30"></i>
-              </div>
-              <span class="text-xs font-medium text-on-surface-variant/30">第18关</span>
-            </div>
-
-            <!-- 关卡19-锁定（阶段三） -->
-            <div class="level-item level-locked relative flex flex-col items-center gap-1.5 p-3 bg-surface-container/30 border border-outline-variant/10 rounded-lg" data-level="19" data-status="locked-stage" id="level-19">
-              <div class="w-10 h-10 rounded-lg bg-surface-container-high/40 flex items-center justify-center">
-                <i data-lucide="lock" class="w-5 h-5 text-on-surface-variant/30"></i>
-              </div>
-              <span class="text-xs font-medium text-on-surface-variant/30">第19关</span>
-            </div>
-
-            <!-- 关卡20-锁定（阶段三） -->
-            <div class="level-item level-locked relative flex flex-col items-center gap-1.5 p-3 bg-surface-container/30 border border-outline-variant/10 rounded-lg" data-level="20" data-status="locked-stage" id="level-20">
-              <div class="w-10 h-10 rounded-lg bg-surface-container-high/40 flex items-center justify-center">
-                <i data-lucide="lock" class="w-5 h-5 text-on-surface-variant/30"></i>
-              </div>
-              <span class="text-xs font-medium text-on-surface-variant/30">第20关</span>
-            </div>
-
-            <!-- 关卡21-锁定（阶段三） -->
-            <div class="level-item level-locked relative flex flex-col items-center gap-1.5 p-3 bg-surface-container/30 border border-outline-variant/10 rounded-lg" data-level="21" data-status="locked-stage" id="level-21">
-              <div class="w-10 h-10 rounded-lg bg-surface-container-high/40 flex items-center justify-center">
-                <i data-lucide="lock" class="w-5 h-5 text-on-surface-variant/30"></i>
-              </div>
-              <span class="text-xs font-medium text-on-surface-variant/30">第21关</span>
-            </div>
-
           </div>
         </div>
 
-      </div>
-    </div>
-
-    <!-- 当前关卡详情卡 -->
-    <div class="bg-surface rounded-lg shadow-card p-5" id="level-detail-card">
-      <div class="flex items-start justify-between gap-6">
-
-        <!-- 左侧：关卡信息 -->
-        <div class="flex-1">
-          <div class="flex items-center gap-3 mb-4">
-            <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center" id="detail-icon">
-              <i data-lucide="swords" class="w-6 h-6 text-primary"></i>
-            </div>
-            <div>
-              <h3 class="text-base font-semibold text-on-surface" id="detail-level-name">第11关 · 实战话术演练</h3>
-              <p class="text-xs text-on-surface-variant mt-0.5" id="detail-level-stage">阶段二 · 实战演练</p>
-            </div>
-            <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-primary/15 text-primary" id="detail-status-badge">进行中</span>
+        <!-- 5. 底部"我的状态"卡片 -->
+        <div class="rounded-lg p-5 bg-dark">
+          <div class="flex items-center gap-2 mb-4">
+            <i data-lucide="user" class="w-4 h-4 text-white/70"></i>
+            <span class="text-sm font-semibold text-white/90">我的状态</span>
           </div>
-
           <div class="grid grid-cols-3 gap-6">
-            <!-- 题型分布 -->
             <div>
-              <p class="text-xs text-on-surface-variant mb-2">题型分布</p>
-              <div class="flex items-center gap-4">
-                <div class="flex items-center gap-1.5">
-                  <div class="w-5 h-5 rounded bg-primary-container flex items-center justify-center">
-                    <span class="text-[10px] font-bold text-primary">单</span>
-                  </div>
-                  <span class="text-sm font-medium text-on-surface" id="detail-choice-count">3</span>
-                </div>
-                <div class="flex items-center gap-1.5">
-                  <div class="w-5 h-5 rounded bg-warning/15 flex items-center justify-center">
-                    <span class="text-[10px] font-bold text-warning">多</span>
-                  </div>
-                  <span class="text-sm font-medium text-on-surface" id="detail-multi-count">2</span>
-                </div>
-                <div class="flex items-center gap-1.5">
-                  <div class="w-5 h-5 rounded bg-success/15 flex items-center justify-center">
-                    <span class="text-[10px] font-bold text-success">判</span>
-                  </div>
-                  <span class="text-sm font-medium text-on-surface" id="detail-judge-count">1</span>
-                </div>
-              </div>
+              <span class="text-xs text-white/50 block mb-1">当前阶段</span>
+              <p class="text-xl font-bold text-white">基础通关</p>
             </div>
-
-            <!-- 难度星级 -->
             <div>
-              <p class="text-xs text-on-surface-variant mb-2">难度星级</p>
-              <div class="flex items-center gap-0.5" id="detail-difficulty">
-                <i data-lucide="star" class="w-4 h-4 text-warning fill-warning"></i>
-                <i data-lucide="star" class="w-4 h-4 text-warning fill-warning"></i>
-                <i data-lucide="star" class="w-4 h-4 text-warning fill-warning"></i>
-                <i data-lucide="star" class="w-4 h-4 text-surface-container-high"></i>
-                <i data-lucide="star" class="w-4 h-4 text-surface-container-high"></i>
-              </div>
-              <p class="text-xs text-on-surface-variant mt-1" id="detail-difficulty-text">3/5 · 中等难度</p>
+              <span class="text-xs text-white/50 block mb-1">过程线状态</span>
+              <p class="text-base font-semibold text-white/60">未启动</p>
+              <span class="text-xs text-white/40 mt-0.5 block">通过实操质检后激活</span>
             </div>
-
-            <!-- 最高分 -->
             <div>
-              <p class="text-xs text-on-surface-variant mb-2">最高分</p>
-              <div class="flex items-baseline gap-1">
-                <span class="text-2xl font-bold text-on-surface" id="detail-best-score">—</span>
-                <span class="text-sm text-on-surface-variant" id="detail-best-score-suffix">/ 100</span>
-              </div>
-              <p class="text-xs text-on-surface-variant mt-1" id="detail-attempts-info">尚未挑战</p>
+              <span class="text-xs text-white/50 block mb-1">结果线状态</span>
+              <p class="text-base font-semibold text-white/60">未启动</p>
+              <span class="text-xs text-white/40 mt-0.5 block">业务数据达标后激活</span>
             </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-white/10">
+            <p class="text-xs text-white/40">双线状态将在进入实操阶段后自动激活</p>
           </div>
         </div>
 
-        <!-- 右侧：操作按钮 -->
-        <div class="flex flex-col items-end gap-2 shrink-0">
-          <button id="btn-start-level" class="bg-primary text-on-primary px-6 py-2.5 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all inline-flex items-center gap-2">
-            <i data-lucide="play" class="w-4 h-4"></i>开始闯关
-          </button>
-          <p class="text-xs text-on-surface-variant" id="detail-tip-text">通过后可解锁下一关</p>
-        </div>
-
       </div>
-    </div>
-
+    </main>
     <!-- @main-content:end -->
-  </main>
+  </div>
+  <!-- @nav:end 导航组件 -->
+
+  <!-- 弹窗：答题面板（可考核模块点击时显示） -->
+  <div id="modal-quiz" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-surface rounded-xl shadow-dialog max-w-md w-full p-6">
+      <div class="flex items-center justify-between mb-5">
+        <h3 id="quiz-modal-title" class="text-lg font-bold text-on-surface">模块考核</h3>
+        <button id="btn-close-quiz" class="text-on-surface-variant hover:text-on-surface transition-colors">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <div class="space-y-4">
+        <div class="flex items-center justify-between bg-surface-container rounded-lg px-4 py-3">
+          <span class="text-sm text-on-surface-variant">题目数量</span>
+          <span id="quiz-question-count" class="text-sm font-semibold text-on-surface">10 题</span>
+        </div>
+        <div class="flex items-center justify-between bg-surface-container rounded-lg px-4 py-3">
+          <span class="text-sm text-on-surface-variant">通过分数线</span>
+          <span id="quiz-pass-threshold" class="text-sm font-semibold text-primary">80 分</span>
+        </div>
+        <div class="flex items-center justify-between bg-surface-container rounded-lg px-4 py-3">
+          <span class="text-sm text-on-surface-variant">答题限时</span>
+          <span class="text-sm font-semibold text-on-surface">15 分钟</span>
+        </div>
+      </div>
+      <button id="btn-start-quiz" class="w-full mt-6 bg-primary text-on-primary px-4 py-2.5 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+        <i data-lucide="play" class="w-4 h-4"></i>
+        开始答题
+      </button>
+    </div>
+  </div>
+
+  <!-- 弹窗：历史成绩（已通过模块点击时显示） -->
+  <div id="modal-history" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-surface rounded-xl shadow-dialog max-w-md w-full p-6">
+      <div class="flex items-center justify-between mb-5">
+        <h3 id="history-modal-title" class="text-lg font-bold text-on-surface">考核成绩</h3>
+        <button id="btn-close-history" class="text-on-surface-variant hover:text-on-surface transition-colors">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <div class="space-y-4">
+        <div class="flex items-center justify-between bg-success/10 rounded-lg px-4 py-3">
+          <span class="text-sm text-on-surface-variant">最高分</span>
+          <span id="history-best-score" class="text-xl font-bold text-success">90</span>
+        </div>
+        <div class="flex items-center justify-between bg-surface-container rounded-lg px-4 py-3">
+          <span class="text-sm text-on-surface-variant">通过时间</span>
+          <span id="history-passed-at" class="text-sm font-semibold text-on-surface">2024-12-10</span>
+        </div>
+        <div class="flex items-center justify-between bg-surface-container rounded-lg px-4 py-3">
+          <span class="text-sm text-on-surface-variant">累计答题</span>
+          <span id="history-attempts" class="text-sm font-semibold text-on-surface">2 次</span>
+        </div>
+      </div>
+      <button id="btn-retry-quiz" class="w-full mt-6 bg-primary text-on-primary px-4 py-2.5 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+        <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+        重新挑战
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast 提示 -->
+  <div id="toast-container" class="fixed top-20 right-6 z-[60] hidden">
+    <div class="bg-on-surface text-white px-4 py-2.5 rounded-lg shadow-float text-sm font-medium flex items-center gap-2">
+      <i data-lucide="lock" class="w-4 h-4"></i>
+      <span id="toast-message">完成基础通关后解锁</span>
+    </div>
   </div>
 
   <script>
-  $(function() {
+    $(function() {
 
-    // 关卡数据（mock）
-    var levelData = {
-      1:  { name: '糖尿病基础知识', stage: '阶段一 · 理论基础', status: 'passed', choice: 3, multi: 2, judge: 1, difficulty: 1, bestScore: 92, attempts: 1 },
-      2:  { name: '血糖监测原理', stage: '阶段一 · 理论基础', status: 'passed', choice: 3, multi: 2, judge: 1, difficulty: 1, bestScore: 88, attempts: 1 },
-      3:  { name: '药物分类认知', stage: '阶段一 · 理论基础', status: 'passed', choice: 3, multi: 2, judge: 1, difficulty: 2, bestScore: 95, attempts: 1 },
-      4:  { name: '营养饮食指导', stage: '阶段一 · 理论基础', status: 'passed', choice: 3, multi: 2, judge: 1, difficulty: 2, bestScore: 85, attempts: 2 },
-      5:  { name: '运动管理方案', stage: '阶段一 · 理论基础', status: 'passed', choice: 3, multi: 2, judge: 1, difficulty: 2, bestScore: 90, attempts: 1 },
-      6:  { name: '并发症预防', stage: '阶段一 · 理论基础', status: 'passed', choice: 3, multi: 2, judge: 1, difficulty: 3, bestScore: 82, attempts: 2 },
-      7:  { name: '患者心理疏导', stage: '阶段一 · 理论基础', status: 'passed', choice: 3, multi: 2, judge: 1, difficulty: 3, bestScore: 78, attempts: 3 },
-      8:  { name: '首诊话术实训', stage: '阶段二 · 实战演练', status: 'passed', choice: 3, multi: 2, judge: 1, difficulty: 2, bestScore: 90, attempts: 1 },
-      9:  { name: '加微承接话术', stage: '阶段二 · 实战演练', status: 'passed', choice: 3, multi: 2, judge: 1, difficulty: 2, bestScore: 86, attempts: 1 },
-      10: { name: '用药关怀话术', stage: '阶段二 · 实战演练', status: 'passed', choice: 3, multi: 2, judge: 1, difficulty: 3, bestScore: 80, attempts: 2 },
-      11: { name: '实战话术演练', stage: '阶段二 · 实战演练', status: 'active', choice: 3, multi: 2, judge: 1, difficulty: 3, bestScore: null, attempts: 0 },
-      12: { name: '复诊邀约话术', stage: '阶段二 · 实战演练', status: 'locked', choice: 3, multi: 2, judge: 1, difficulty: 3, bestScore: null, attempts: 0 },
-      13: { name: '续方确认话术', stage: '阶段二 · 实战演练', status: 'locked', choice: 3, multi: 2, judge: 1, difficulty: 4, bestScore: null, attempts: 0 },
-      14: { name: '综合实战考核', stage: '阶段二 · 实战演练', status: 'locked', choice: 3, multi: 2, judge: 1, difficulty: 4, bestScore: null, attempts: 0 },
-      15: { name: '全流程模拟', stage: '阶段三 · 综合达标', status: 'locked-stage', choice: 3, multi: 2, judge: 1, difficulty: 4, bestScore: null, attempts: 0 },
-      16: { name: '紧急情况应对', stage: '阶段三 · 综合达标', status: 'locked-stage', choice: 3, multi: 2, judge: 1, difficulty: 4, bestScore: null, attempts: 0 },
-      17: { name: '患者异议处理', stage: '阶段三 · 综合达标', status: 'locked-stage', choice: 3, multi: 2, judge: 1, difficulty: 5, bestScore: null, attempts: 0 },
-      18: { name: '服务质量达标', stage: '阶段三 · 综合达标', status: 'locked-stage', choice: 3, multi: 2, judge: 1, difficulty: 5, bestScore: null, attempts: 0 },
-      19: { name: '业务指标达标', stage: '阶段三 · 综合达标', status: 'locked-stage', choice: 3, multi: 2, judge: 1, difficulty: 5, bestScore: null, attempts: 0 },
-      20: { name: '独立接诊验证', stage: '阶段三 · 综合达标', status: 'locked-stage', choice: 3, multi: 2, judge: 1, difficulty: 5, bestScore: null, attempts: 0 },
-      21: { name: '综合能力达标', stage: '阶段三 · 综合达标', status: 'locked-stage', choice: 3, multi: 2, judge: 1, difficulty: 5, bestScore: null, attempts: 0 }
-    };
+      // 模块 Mock 数据映射
+      var moduleData = {
+        diabetes_basics: { name: '糖尿病基础', bestScore: 90, attempts: 2, passedAt: '2024-12-10' },
+        service_standards: { name: '服务标准', bestScore: 85, attempts: 1, passedAt: '2024-12-12' },
+        service_language: { name: '服务用语', questionCount: 10, passThreshold: 80 },
+        compliance: { name: '合规红线', questionCount: 10, passThreshold: 80 }
+      };
 
-    // 难度描述映射
-    var difficultyText = {
-      1: '1/5 · 入门难度',
-      2: '2/5 · 基础难度',
-      3: '3/5 · 中等难度',
-      4: '4/5 · 较高难度',
-      5: '5/5 · 最高难度'
-    };
+      // 点击模块卡片
+      $('.module-card').on('click', function() {
+        var status = $(this).data('status');
+        var moduleName = $(this).data('name');
+        var moduleCode = $(this).data('module');
 
-    // 当前选中的关卡
-    var selectedLevel = 11;
-
-    // 更新详情卡
-    function updateDetail(levelNum) {
-      var data = levelData[levelNum];
-      if (!data) return;
-
-      selectedLevel = levelNum;
-
-      // 关卡名称
-      $('#detail-level-name').text('第' + levelNum + '关 · ' + data.name);
-      $('#detail-level-stage').text(data.stage);
-
-      // 题型分布
-      $('#detail-choice-count').text(data.choice);
-      $('#detail-multi-count').text(data.multi);
-      $('#detail-judge-count').text(data.judge);
-
-      // 状态标识
-      if (data.status === 'passed') {
-        $('#detail-status-badge')
-          .removeClass('bg-primary/15 text-primary bg-surface-container-high/60 text-on-surface-variant/50 bg-error/15 text-error')
-          .addClass('bg-success/15 text-success')
-          .text('已通过');
-        $('#detail-icon').html('<i data-lucide="check-circle" class="w-6 h-6 text-success"></i>');
-      } else if (data.status === 'active') {
-        $('#detail-status-badge')
-          .removeClass('bg-success/15 text-success bg-surface-container-high/60 text-on-surface-variant/50 bg-error/15 text-error')
-          .addClass('bg-primary/15 text-primary')
-          .text('进行中');
-        $('#detail-icon').html('<i data-lucide="swords" class="w-6 h-6 text-primary"></i>');
-      } else if (data.status === 'locked') {
-        $('#detail-status-badge')
-          .removeClass('bg-success/15 text-success bg-primary/15 text-primary bg-error/15 text-error')
-          .addClass('bg-surface-container-high/60 text-on-surface-variant/50')
-          .text('未解锁');
-        $('#detail-icon').html('<i data-lucide="lock" class="w-6 h-6 text-on-surface-variant/50"></i>');
-      } else if (data.status === 'locked-stage') {
-        $('#detail-status-badge')
-          .removeClass('bg-success/15 text-success bg-primary/15 text-primary bg-error/15 text-error')
-          .addClass('bg-surface-container-high/60 text-on-surface-variant/50')
-          .text('阶段未解锁');
-        $('#detail-icon').html('<i data-lucide="lock" class="w-6 h-6 text-on-surface-variant/50"></i>');
-      }
-
-      // 难度星级
-      var starsHtml = '';
-      for (var i = 1; i <= 5; i++) {
-        if (i <= data.difficulty) {
-          starsHtml += '<i data-lucide="star" class="w-4 h-4 text-warning fill-warning"></i>';
-        } else {
-          starsHtml += '<i data-lucide="star" class="w-4 h-4 text-surface-container-high"></i>';
+        if (status === 'locked') {
+          // 锁定模块 → Toast提示
+          showToast('完成基础通关后解锁');
+        } else if (status === 'active') {
+          // 可考核模块 → 弹出答题面板
+          $('#quiz-modal-title').text(moduleName + ' · 模块考核');
+          $('#quiz-question-count').text('10 题');
+          $('#quiz-pass-threshold').text('80 分');
+          $('#modal-quiz').removeClass('hidden');
+          lucide.createIcons();
+        } else if (status === 'passed') {
+          // 已通过模块 → 弹出历史成绩
+          var data = moduleData[moduleCode];
+          if (data) {
+            $('#history-modal-title').text(data.name + ' · 考核成绩');
+            $('#history-best-score').text(data.bestScore);
+            $('#history-passed-at').text(data.passedAt);
+            $('#history-attempts').text(data.attempts + ' 次');
+          }
+          $('#modal-history').removeClass('hidden');
+          lucide.createIcons();
         }
+      });
+
+      // 关闭答题弹窗
+      $('#btn-close-quiz').on('click', function() {
+        $('#modal-quiz').addClass('hidden');
+      });
+
+      // 关闭历史成绩弹窗
+      $('#btn-close-history').on('click', function() {
+        $('#modal-history').addClass('hidden');
+      });
+
+      // 开始答题按钮
+      $('#btn-start-quiz').on('click', function() {
+        // 复杂交互：答题流程
+        // 1. 关闭当前弹窗
+        // 2. 从题库中随机抽取该模块10道题目
+        // 3. 逐题展示，用户选择答案
+        // 4. 15分钟倒计时
+        // 5. 提交后评分，判断是否达到通过分数线(80分)
+        // 6. 通过：更新module_progress状态为passed，检查同阶段所有模块是否全部通过
+        //    若全部通过，触发阶段转换（基础→实操）
+        // 7. 未通过：推送错题关联知识库复习通知，连续3次未通过则通知带教老师
+        console.log('开始答题：需实现完整答题流程');
+        $('#modal-quiz').addClass('hidden');
+        showToast('答题功能开发中');
+      });
+
+      // 重新挑战按钮
+      $('#btn-retry-quiz').on('click', function() {
+        // 复杂交互：重新答题
+        // 1. 关闭历史成绩弹窗
+        // 2. 打开答题面板，重新抽取题目
+        // 3. 答题流程同上
+        // 4. 若新分数高于历史最高分，更新best_score
+        console.log('重新挑战：需实现重新答题流程');
+        $('#modal-history').addClass('hidden');
+        showToast('答题功能开发中');
+      });
+
+      // 点击弹窗遮罩关闭
+      $('#modal-quiz').on('click', function(e) {
+        if ($(e.target).is('#modal-quiz')) {
+          $('#modal-quiz').addClass('hidden');
+        }
+      });
+      $('#modal-history').on('click', function(e) {
+        if ($(e.target).is('#modal-history')) {
+          $('#modal-history').addClass('hidden');
+        }
+      });
+
+      // Toast 显示函数
+      var toastTimer = null;
+      function showToast(message) {
+        $('#toast-message').text(message);
+        $('#toast-container').removeClass('hidden');
+        lucide.createIcons();
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function() {
+          $('#toast-container').addClass('hidden');
+        }, 2500);
       }
-      $('#detail-difficulty').html(starsHtml);
-      $('#detail-difficulty-text').text(difficultyText[data.difficulty]);
 
-      // 最高分
-      if (data.bestScore !== null) {
-        $('#detail-best-score').text(data.bestScore);
-        $('#detail-best-score-suffix').text('/ 100');
-        $('#detail-attempts-info').text('已挑战 ' + data.attempts + ' 次');
-      } else {
-        $('#detail-best-score').text('—');
-        $('#detail-best-score-suffix').text('/ 100');
-        $('#detail-attempts-info').text('尚未挑战');
-      }
-
-      // 按钮和提示
-      if (data.status === 'passed') {
-        $('#btn-start-level')
-          .removeClass('bg-primary text-on-primary bg-surface-container-high text-on-surface-variant/50 cursor-not-allowed opacity-50')
-          .addClass('bg-primary text-on-primary')
-          .prop('disabled', false)
-          .html('<i data-lucide="rotate-ccw" class="w-4 h-4"></i>再次挑战');
-        $('#detail-tip-text').text('已通过，可再次挑战提升分数');
-      } else if (data.status === 'active') {
-        $('#btn-start-level')
-          .removeClass('bg-surface-container-high text-on-surface-variant/50 cursor-not-allowed opacity-50')
-          .addClass('bg-primary text-on-primary')
-          .prop('disabled', false)
-          .html('<i data-lucide="play" class="w-4 h-4"></i>开始闯关');
-        $('#detail-tip-text').text('通过后可解锁下一关');
-      } else if (data.status === 'locked') {
-        $('#btn-start-level')
-          .removeClass('bg-primary text-on-primary')
-          .addClass('bg-surface-container-high text-on-surface-variant/50 cursor-not-allowed opacity-50')
-          .prop('disabled', true)
-          .html('<i data-lucide="lock" class="w-4 h-4"></i>未解锁');
-        $('#detail-tip-text').text('通过前一关后自动解锁');
-      } else if (data.status === 'locked-stage') {
-        $('#btn-start-level')
-          .removeClass('bg-primary text-on-primary')
-          .addClass('bg-surface-container-high text-on-surface-variant/50 cursor-not-allowed opacity-50')
-          .prop('disabled', true)
-          .html('<i data-lucide="lock" class="w-4 h-4"></i>未解锁');
-        $('#detail-tip-text').text('完成阶段二后解锁');
-      }
-
-      // 高亮选中的关卡
-      $('.level-item').removeClass('ring-2 ring-primary/40');
-      $('#level-' + levelNum).addClass('ring-2 ring-primary/40');
-
-      // 重新渲染 Lucide 图标
-      lucide.createIcons();
-    }
-
-    // 点击关卡
-    $('#level-detail-card').on('click', '.level-item', function(e) {
-      e.stopPropagation();
     });
-
-    $('.level-item').on('click', function() {
-      var levelNum = parseInt($(this).data('level'));
-      var status = $(this).data('status');
-      // 阶段三锁定关卡也可以点击查看详情（只是不能开始闯关）
-      updateDetail(levelNum);
-    });
-
-    // 开始闯关按钮
-    $('#btn-start-level').on('click', function() {
-      var data = levelData[selectedLevel];
-      if (!data) return;
-      if (data.status === 'locked' || data.status === 'locked-stage') return;
-      // 跳转到答题界面（传递关卡ID）
-      console.log('跳转到答题界面，关卡ID:', selectedLevel);
-      // window.location.href = 'assessment.html?level_id=' + selectedLevel;
-    });
-
-    // 初始化详情卡为当前进行中关卡
-    updateDetail(selectedLevel);
-
-  });
   </script>
 
   <script>lucide.createIcons();</script>

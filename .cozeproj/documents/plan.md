@@ -1,104 +1,149 @@
-# 赋能方案"处方化"改造 + 自动匹配推荐 + 全链路联动
+# 工单J：阶段通关验证改造 + 双线状态机
 
 ## 概述
-赋能中心核心改造：(1) 方案内容从笼统步骤升级为4段式处方（病情分析→调理方向→具体药方→达标标准）；(2) 系统根据新人不合格指标自动匹配推荐赋能方案；(3) 推送后全链路联动——新人看到处方、带教老师跟进、预警联动、总经理看板同步。
 
-## 影响面分析
-
-| 改动点 | 直接触及 | 关联联动 | 涉及角色 |
-|--------|---------|---------|---------|
-| 方案内容处方化 | 赋能中心(详情/创建/编辑/推送) | — | 培训负责人、带教老师 |
-| 自动匹配推荐 | 赋能中心(推荐Tab) | 双轨诊断页(不合格→查看推荐方案) | 培训负责人 |
-| 推送后新人可见 | — | 新人首页/成长计划(我的赋能任务+处方内容) | 新人 |
-| 带教老师跟进 | — | 带教首页/看板(待跟进赋能+处方摘要) | 带教老师 |
-| 预警联动 | — | 新人看板(赋能超期/未执行预警) | 培训负责人 |
-| 总经理看板 | — | 全局概览(赋能完成率指标细化) | 总经理 |
+将闯关学习从21关线性推进改造为模块化阶段通关验证（4基础模块+4实操模块），同时在trainee_profiles新增双线状态字段（process_status / result_status），为后续P1实操带教和P2归因体系铺路。Web平台，Supabase数据库。
 
 ## 技术方案
 
 | 维度 | 选择 | 理由 |
 |------|------|------|
-| 数据结构 | empower_plans.content 扩展为4段式处方JSON | 原有content只有steps数组 |
-| 自动匹配 | 诊断结果通过indicator_key自动关联赋能方案 | empower_plans已有indicator_key字段 |
-| 关联指标显示 | indicator_key映射为可读中文标签 | 当前"qc_communication"不可读 |
-| 处方渲染 | 4区块卡片组件(病情/方向/药方/标准) | 可复用于赋能中心、新人、带教、诊断页 |
-| 赋能执行 | empower_executions 记录推送+执行状态 | 已有表，需扩展展示处方内容 |
+| 数据库变更 | 新增assessment_modules + module_progress表，扩展questions/trainee_profiles字段 | 与旧表并存，不破坏level_progress/quiz_attempts |
+| 阶段状态 | trainee_profiles.stage/process_status/result_status | 工单指定，users.stage保留向后兼容 |
+| API策略 | 新增模块化API(/api/learning/modules)，旧21关API保留 | 平滑迁移，前端依赖新API |
+| 关卡结构 | 8个模块(4基础+4实操)替代21关 | 工单J2定义 |
+| 向后兼容 | level_progress/quiz_attempts/learning_levels表保留不动 | 旧数据不丢失 |
 
 ## 功能模块
 
-### 1. 数据结构改造
-empower_plans.content 扩展为4段式处方：
-```json
-{
-  "diagnosis": "病情分析：加V率仅35%，远低于75%合格线。根因：首通电话话术生硬，患者尚未建立信任就急于加微信，拒绝率高",
-  "direction": "调理方向：先建立信任再引导加V，从'我要加你微信'转变为'方便后续为您提供服务'",
-  "prescription": [
-    {"step": "话术重构", "detail": "重写首通电话加V话术，从需求切入", "duration": "2天", "owner": "带教老师"},
-    {"step": "跟读训练", "detail": "跟读标准话术录音5遍，提交录音对比", "duration": "1天", "owner": "新人"},
-    {"step": "场景演练", "detail": "3种患者类型实战演练", "duration": "2天", "owner": "带教老师+新人"},
-    {"step": "实战上岗", "detail": "连续3天记录加V结果，每日复盘", "duration": "3天", "owner": "新人"}
-  ],
-  "standard": "连续5个工作日加V率≥75%，且拒绝率≤20%"
-}
+### M1. 数据库迁移（J1+J2+J3+J5）
+
+**新增表：**
+
+```
+assessment_modules:
+  id, code(unique), name, stage(foundation/practice),
+  description, sort_order, is_active, pass_threshold(default 80),
+  question_count(default 10), created_at, updated_at
+  预置数据：4基础(diabetes_basics/service_standards/service_language/compliance)
+           +4实操(first_call/followup_call/appointment_call/visit_day)
+
+module_progress:
+  id, user_id(→users), module_code, status(locked/active/in_progress/passed),
+  best_score, attempts, last_attempt_at, passed_at,
+  created_at, updated_at
+  UNIQUE(user_id, module_code)
 ```
 
-### 2. 自动匹配推荐机制
-- 诊断API返回每个新人的不合格指标列表
-- 赋能API新增 `?view=recommendations`：按indicator_key匹配，返回"新人→不合格指标→推荐方案"
-- 前端新增"推荐方案"Tab，按新人分组展示系统推荐，支持一键推送
+**扩展字段：**
+- questions: +module(varchar 50), +stage(varchar 20 default 'foundation')
+- learning_levels: +module(varchar 50), +pass_threshold(int default 80), +question_count(int default 10)
+- trainee_profiles: +stage(varchar 20 default 'foundation'), +process_status(varchar 20 default 'not_started'), +result_status(varchar 20 default 'not_started')
 
-### 3. indicator_key 可读映射
-| key | 中文标签 |
-|-----|---------|
-| qc_communication | 质检-沟通能力 |
-| qc_compliance | 质检-合规性 |
-| qc_professional | 质检-专业度 |
-| qc_service | 质检-服务态度 |
-| add_v_rate | 加V率 |
-| consultation_rate | 面诊率 |
-| reception_rate | 接诊率 |
-| signing_rate | 签收率 |
-| medication_rate | 用药率 |
-| registration_rate | 挂号率 |
+**数据反填：**
+- questions按level_id反填module/stage
+- learning_levels按level_id反填module
+- trainee_profiles按users.stage反填stage/process_status/result_status
 
-### 4. 赋能中心改造（培训负责人/带教老师）
-- 方案详情：4区块卡片（病情分析红框/调理方向蓝框/具体药方绿框/达标标准橙框）
-- 创建/编辑弹窗：4段式结构化输入 + 关联指标多选
-- 推送预览：展示完整处方
-- 新增"推荐方案"Tab：按新人分组，不合格指标→匹配方案→一键推送
+### M2. 模块化API（J4+J5）
 
-### 5. 双轨诊断页联动
-- 不合格指标旁增加"查看推荐方案"按钮
-- 点击弹出该指标对应的赋能方案处方预览
-- 可直接从此处推送方案给新人
+**GET /api/learning/modules** — 模块列表+进度
+- 读取assessment_modules表，关联module_progress
+- 返回每个模块：code, name, stage, questionCount, passThreshold, status, bestScore, attempts
+- 返回currentStage, processStatus, resultStatus, stageProgress
+- 删除FALLBACK_NAMES硬编码
 
-### 6. 新人视图联动
-- 首页/成长计划中"我的赋能任务"展示处方摘要
-- 点击展开完整处方（4区块）
-- 每个药方步骤可标记完成状态
+**POST /api/learning/modules/[moduleCode]/submit** — 模块化答题提交
+- 按module+stage从questions表随机抽题
+- 评分逻辑不变
+- 通过→检查同stage全部模块→触发阶段转换
+- 未通过→推送错题关联知识库复习通知
 
-### 7. 带教老师视图联动
-- 带教看板中"待跟进赋能"卡片显示处方摘要
-- 显示哪些步骤是"带教老师"负责的
-- 可标记步骤完成 + 填写点评
+**GET /api/learning/modules/list** — 供题库管理用的模块定义列表
 
-### 8. 新人看板预警联动
-- 赋能方案推送后超期未执行→预警
-- 药方步骤逾期→橙色预警
-- 达标标准到期未达标→红色预警
+### M3. 触发器升级（J6）
 
-### 9. 总经理看板联动
-- 赋能完成率指标细化：执行中/已完成/超期
-- 点击可展开查看各方案的执行进度
+新增onModulePassed / onModuleFailed：
+- onModulePassed：检查同stage所有模块是否passed→全部通过则更新trainee_profiles双线状态
+- onModuleFailed：推送复习通知→连续3次通知带教老师
+- 保留原有onQuizPassed/onQuizFailed（向后兼容）
+
+状态转换规则：
+```
+基础通关全通过 → stage=practice, process_status=monitoring, result_status=insufficient_data
+实操通关全通过 → stage=qualified, process_status=passed, result_status=passed
+```
+
+### M4. 前端改版（J7）
+
+learning/page.tsx：从21关地图→阶段+模块卡片网格
+- 删除STAGE_LABELS/STAGE_SHORT硬编码
+- 基础通关：4模块卡片（糖尿病基础/服务标准/服务用语/合规红线）
+- 实操通关：4模块卡片（基础通关通过后解锁）
+- 底部"我的状态"卡片：当前阶段 + process_status + result_status
+- 点击模块卡片→弹出答题面板（复用现有答题组件）
+
+### M5. 题库管理适配（J8）
+
+questions API：GET新增module/stage筛选，POST支持module/stage
+题库管理UI：题目筛选新增module/stage，创建/编辑题目可选module
 
 ## 是否有原型设计
-否（改造现有页面，不涉及新页面）
+
+是（设计引导已开启）
 
 ## 实施步骤
-1. 数据迁移 + 指标映射：更新8条方案content为处方结构 + 新建indicator-key映射常量 — empower_plans表 + src/lib/constants/indicator-labels.ts
-2. 后端改造：empower API支持处方CRUD + 推荐视图 + empower_executions扩展 — src/app/api/empower/route.ts
-3. 赋能中心前端改造：4区块处方详情 + 结构化创建/编辑 + 推送预览 + 推荐方案Tab — src/app/(dashboard)/empowerment/page.tsx
-4. 双轨诊断页联动：不合格指标→查看推荐方案 + 直接推送 — src/app/(dashboard)/diagnosis/page.tsx
-5. 新人+带教视图联动：新人看赋能处方+步骤完成 / 带教看处方摘要+跟进 — src/app/(dashboard)/page.tsx + courses/components/MentorProgress.tsx
-6. 预警+看板联动：赋能超期预警 / 总经理赋能指标细化 — src/app/(dashboard)/trainee-board/page.tsx + overview/page.tsx
-7. 代码检查与验证 + push GitHub — test_run
+
+1. **数据库迁移**：执行SQL迁移（新建assessment_modules + module_progress表，扩展questions/learning_levels/trainee_profiles字段，反填数据，更新schema.ts） — 涉及 schema.ts + SQL迁移
+2. **模块化API开发**：重写/api/learning为模块化列表API，新建/api/learning/modules/[moduleCode]/submit提交API，更新/api/questions支持module/stage筛选 — 涉及 learning/route.ts + learning/modules/ + questions/route.ts
+3. **触发器升级**：新增onModulePassed/onModuleFailed，实现双线状态自动转换 — 涉及 triggers.ts
+4. **前端改版**：重写learning/page.tsx，21关地图→模块卡片网格，新增"我的状态"卡片 — 涉及 learning/page.tsx
+5. **题库管理适配**：题库管理页新增module/stage筛选和编辑字段 — 涉及 settings/page.tsx或question-bank/page.tsx
+6. **联调测试**：模块化答题+阶段转换+双线状态更新全流程验证
+
+## 页面规格
+
+##### @nav(web-topbar)
+> type: topbar
+> platform: web
+
+- @page(/) 首页
+- @page(/learning) 阶段通关
+- @page(/growth) 成长档案
+- @page(/diagnosis) 双轨诊断
+- @page(/empowerment) 赋能中心
+- @page(/dashboard) 数据看板
+- @page(/overview) 全局概览
+- @page(/question-bank) 题库管理
+- @page(/resources) 资料中心
+- @page(/qc-review) 质检审核
+- @page(/assessment) 日常考核
+- @page(/trainee-board) 新人看板
+- @page(/trainee-profiles) 新人档案
+- @page(/practice) 演练任务
+- @page(/courses) 课程管理
+- @page(/settings) 系统设置
+
+##### @page(/learning) 阶段通关
+
+**核心职责**：模块化阶段通关验证，替代原21关线性闯关
+**访问路径**：顶部导航直达
+**布局**：顶部标题栏(阶段通关+已通过数) → 阶段进度条(基础通关/实操通关) → 基础通关4模块卡片网格 → 实操通关4模块卡片(基础通关通过后解锁) → 底部"我的状态"卡片(当前阶段+过程线状态+结果线状态)
+**列表项字段**：模块名 / 模块状态(✅可考🔒已通过📋进行中) / 最高分 / 答题次数 / 题目数量
+
+**弹窗 quiz-panel**：
+- 点击模块卡片弹出答题面板
+- 随机抽取该模块题目
+- 提交后显示得分和通过/未通过
+- 未通过显示推荐复习知识点
+
+**交互说明**
+
+| 元素 | 动作 | 响应 | 传参 | 备注 |
+|------|------|------|------|------|
+| 模块卡片(可考) | 点击 | 弹出 @modal(quiz-panel) | moduleCode | status=active |
+| 模块卡片(已通过) | 点击 | 弹出 @modal(quiz-panel) 查看历史成绩 | moduleCode | status=passed，可重考 |
+| 模块卡片(锁定) | 点击 | Toast提示"完成前置阶段后解锁" | — | status=locked |
+| 答题面板提交 | 点击 | 评分→更新进度→判断阶段转换 | moduleCode, answers | 通过时检查全阶段 |
+| 答题未通过 | — | 推送复习通知 | moduleCode | 关联知识库内容 |
+| 我的状态卡片 | 展示 | 当前阶段+双线状态 | — | process_status/result_status |
