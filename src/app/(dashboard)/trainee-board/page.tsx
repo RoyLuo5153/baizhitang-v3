@@ -39,6 +39,8 @@ const ALERT_TYPE_CONFIG: Record<string, { label: string; icon: typeof AlertTrian
   pending_review: { label: '待审核演练', icon: Headphones, color: '#8b5cf6', bgColor: 'bg-[#8b5cf6]/10' },
   pending_qc: { label: '待审核质检', icon: Shield, color: '#0891b2', bgColor: 'bg-[#0891b2]/10' },
   pending_practice: { label: '待完成演练', icon: FileQuestion, color: '#6366f1', bgColor: 'bg-[#6366f1]/10' },
+  empower_stale: { label: '处方停滞', icon: Zap, color: '#F59E0B', bgColor: 'bg-[#F59E0B]/10' },
+  empower_pending: { label: '待推送处方', icon: Zap, color: '#2978B5', bgColor: 'bg-[#2978B5]/10' },
 };
 
 const LEVEL_CONFIG: Record<string, { label: string; color: string; bgColor: string }> = {

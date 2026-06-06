@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import {
   ScanSearch, Users, AlertTriangle, CheckCircle2, TrendingDown,
   ChevronRight, Activity, Target, Route as RouteIcon, User,
   X, ArrowRight, Zap, Clock, ListChecks, Send, BarChart3,
-  TrendingUp, TrendingDown as TrendingDownIcon,
+  TrendingUp, TrendingDown as TrendingDownIcon, CheckCircle, Eye, Pill, Compass, Search,
 } from 'lucide-react';
 
 /* ------------------------------------------------------------------ */
@@ -29,6 +29,23 @@ interface DiagnosisData {
   members: Member[];
 }
 
+interface EmpowerPlan {
+  id: string;
+  name: string;
+  description: string;
+  indicator_key?: string;
+  target_indicators?: string[];
+  content: {
+    analysis?: string;
+    direction?: string;
+    prescription?: { step: string; detail: string; duration?: string; responsible?: string }[];
+    standard?: string;
+    steps?: string[];
+    [key: string]: unknown;
+  };
+  estimated_hours?: number;
+}
+
 interface AttributionEntry {
   metricKey: string;
   metricLabel: string;
@@ -37,9 +54,12 @@ interface AttributionEntry {
   threshold: number;
   problemLabel: string;
   problemDesc: string;
+  planId: string | null;
   planName: string;
   planHours: number;
   planSteps: string[];
+  planContent: EmpowerPlan['content'] | null;
+  alreadyPushed: boolean;
 }
 
 interface FunnelStage {
@@ -58,7 +78,7 @@ interface WeeklyFunnel {
 /*  Attribution Mapping (metric → problem → plan)                      */
 /* ------------------------------------------------------------------ */
 
-const PROCESS_ATTRIBUTIONS: Record<string, Omit<AttributionEntry, 'currentValue'>> = {
+const PROCESS_ATTRIBUTIONS: Record<string, Omit<AttributionEntry, 'currentValue' | 'planId' | 'planContent' | 'alreadyPushed'>> = {
   learning: {
     metricKey: 'learning',
     metricLabel: '闯关进度',
@@ -105,7 +125,7 @@ const PROCESS_ATTRIBUTIONS: Record<string, Omit<AttributionEntry, 'currentValue'
   },
 };
 
-const RESULT_ATTRIBUTIONS: Record<string, Omit<AttributionEntry, 'currentValue'>> = {
+const RESULT_ATTRIBUTIONS: Record<string, Omit<AttributionEntry, 'currentValue' | 'planId' | 'planContent' | 'alreadyPushed'>> = {
   wechatAddRate: {
     metricKey: 'wechatAddRate',
     metricLabel: '加V率',
@@ -219,7 +239,11 @@ const QUADRANT_CONFIG: Record<string, {
 /*  Helper: build attribution entries for a member                     */
 /* ------------------------------------------------------------------ */
 
-function buildAttributions(member: Member): AttributionEntry[] {
+function buildAttributions(
+  member: Member,
+  plans: EmpowerPlan[],
+  pushedPlanIds: Set<string>,
+): AttributionEntry[] {
   const entries: AttributionEntry[] = [];
 
   // Process line unqualified items
@@ -228,9 +252,22 @@ function buildAttributions(member: Member): AttributionEntry[] {
     if (detail.level === 'unqualified') {
       const mapping = PROCESS_ATTRIBUTIONS[key];
       if (mapping) {
+        // Try to find a matching plan from database
+        const matchedPlan = plans.find(p =>
+          p.indicator_key === key ||
+          (p.target_indicators && Array.isArray(p.target_indicators) && p.target_indicators.includes(key))
+        );
         entries.push({
           ...mapping,
           currentValue: detail.value,
+          planId: matchedPlan?.id || null,
+          planName: matchedPlan?.name || mapping.planName,
+          planHours: matchedPlan?.estimated_hours || mapping.planHours,
+          planSteps: matchedPlan?.content?.prescription
+            ? matchedPlan.content.prescription.map((s: { step: string }) => s.step)
+            : matchedPlan?.content?.steps || mapping.planSteps,
+          planContent: matchedPlan?.content || null,
+          alreadyPushed: matchedPlan ? pushedPlanIds.has(`${matchedPlan.id}:${member.id}`) : false,
         });
       }
     }
@@ -242,9 +279,21 @@ function buildAttributions(member: Member): AttributionEntry[] {
     if (detail.level === 'unqualified') {
       const mapping = RESULT_ATTRIBUTIONS[key];
       if (mapping) {
+        const matchedPlan = plans.find(p =>
+          p.indicator_key === key ||
+          (p.target_indicators && Array.isArray(p.target_indicators) && p.target_indicators.includes(key))
+        );
         entries.push({
           ...mapping,
           currentValue: detail.value,
+          planId: matchedPlan?.id || null,
+          planName: matchedPlan?.name || mapping.planName,
+          planHours: matchedPlan?.estimated_hours || mapping.planHours,
+          planSteps: matchedPlan?.content?.prescription
+            ? matchedPlan.content.prescription.map((s: { step: string }) => s.step)
+            : matchedPlan?.content?.steps || mapping.planSteps,
+          planContent: matchedPlan?.content || null,
+          alreadyPushed: matchedPlan ? pushedPlanIds.has(`${matchedPlan.id}:${member.id}`) : false,
         });
       }
     }
@@ -261,9 +310,14 @@ export default function DiagnosisPage() {
   const [data, setData] = useState<DiagnosisData | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
+  const [plans, setPlans] = useState<EmpowerPlan[]>([]);
+  const [pushedSet, setPushedSet] = useState<Set<string>>(new Set());
+  const [pushingKey, setPushingKey] = useState<string | null>(null);
+  const [prescriptionPlan, setPrescriptionPlan] = useState<{ plan: EmpowerPlan; entry: AttributionEntry; memberId: string } | null>(null);
 
   useEffect(() => {
     fetchDiagnosis();
+    fetchPlansAndExecutions();
   }, []);
 
   async function fetchDiagnosis() {
@@ -281,11 +335,57 @@ export default function DiagnosisPage() {
     setLoading(false);
   }
 
+  async function fetchPlansAndExecutions() {
+    try {
+      const [plansRes, execRes] = await Promise.all([
+        fetch('/api/empower'),
+        fetch('/api/empower/executions'),
+      ]);
+      if (plansRes.ok) {
+        const json = await plansRes.json();
+        setPlans(json.plans || []);
+      }
+      if (execRes.ok) {
+        const json = await execRes.json();
+        const execs = json.executions || [];
+        const set = new Set<string>();
+        execs.forEach((e: { plan_id: string; user_id: string; status: string }) => {
+          if (e.status === 'assigned' || e.status === 'in_progress') {
+            set.add(`${e.plan_id}:${e.user_id}`);
+          }
+        });
+        setPushedSet(set);
+      }
+    } catch { /* ignore */ }
+  }
+
+  async function handlePushPlan(planId: string, memberId: string, metricKey: string) {
+    setPushingKey(metricKey);
+    try {
+      const res = await fetch('/api/empower/executions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ planId, traineeId: memberId }),
+      });
+      if (res.ok) {
+        setPushedSet(prev => new Set([...prev, `${planId}:${memberId}`]));
+      }
+    } catch { /* ignore */ }
+    setPushingKey(null);
+  }
+
+  async function handlePushAll(memberId: string, attrs: AttributionEntry[]) {
+    const pushable = attrs.filter(a => a.planId && !a.alreadyPushed);
+    for (const attr of pushable) {
+      await handlePushPlan(attr.planId!, memberId, attr.metricKey);
+    }
+  }
+
   // Build attributions for selected member
   const attributions = useMemo(() => {
     if (!selectedMember) return [];
-    return buildAttributions(selectedMember);
-  }, [selectedMember]);
+    return buildAttributions(selectedMember, plans, pushedSet);
+  }, [selectedMember, plans, pushedSet]);
 
   if (loading) {
     return (
@@ -413,7 +513,14 @@ export default function DiagnosisPage() {
                 </div>
               ) : (
                 attributions.map((attr, idx) => (
-                  <AttributionFlowRow key={attr.metricKey} entry={attr} index={idx} />
+                  <AttributionFlowRow
+                    key={attr.metricKey}
+                    entry={attr}
+                    memberId={selectedMember.id}
+                    onPush={(planId) => handlePushPlan(planId, selectedMember.id, attr.metricKey)}
+                    onPreview={(plan) => setPrescriptionPlan({ plan, entry: attr, memberId: selectedMember.id })}
+                    pushing={pushingKey === attr.metricKey}
+                  />
                 ))
               )}
             </div>
@@ -424,7 +531,11 @@ export default function DiagnosisPage() {
                 <span className="text-xs text-muted-foreground">
                   共 {attributions.length} 项待提升 · 预计 {attributions.reduce((s, a) => s + a.planHours, 0)} 小时
                 </span>
-                <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors">
+                <button
+                  onClick={() => handlePushAll(selectedMember.id, attributions)}
+                  disabled={attributions.every(a => a.alreadyPushed || !a.planId) || pushingKey !== null}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+                >
                   <Send className="w-3.5 h-3.5" />
                   一键推送全部方案
                 </button>
@@ -433,6 +544,20 @@ export default function DiagnosisPage() {
           </div>
         )}
       </div>
+
+      {/* Prescription Preview Modal */}
+      {prescriptionPlan && (
+        <PrescriptionPreviewModal
+          plan={prescriptionPlan.plan}
+          memberName={selectedMember?.name || ''}
+          onClose={() => setPrescriptionPlan(null)}
+          onPush={(planId: string) => {
+            handlePushPlan(planId, prescriptionPlan.memberId, prescriptionPlan.entry.metricKey);
+            setPrescriptionPlan(null);
+          }}
+          pushing={pushingKey !== null}
+        />
+      )}
 
       {/* Funnel Trend Chart */}
       <FunnelTrendSection members={members} />
@@ -444,8 +569,16 @@ export default function DiagnosisPage() {
 /*  Attribution Flow Row: 不合格项 → 问题归因 → 推荐方案               */
 /* ------------------------------------------------------------------ */
 
-function AttributionFlowRow({ entry, index }: { entry: AttributionEntry; index: number }) {
+function AttributionFlowRow({ entry, memberId, onPush, onPreview, pushing }: {
+  entry: AttributionEntry;
+  memberId: string;
+  onPush: (planId: string) => void;
+  onPreview: (plan: EmpowerPlan) => void;
+  pushing: boolean;
+}) {
   const [planExpanded, setPlanExpanded] = useState(false);
+  const hasPlan = !!entry.planId;
+  const content = entry.planContent;
 
   return (
     <div className="rounded-lg border border-border overflow-hidden">
@@ -497,18 +630,114 @@ function AttributionFlowRow({ entry, index }: { entry: AttributionEntry; index: 
             <Clock className="w-3 h-3" />
             <span>{entry.planHours}小时</span>
           </div>
-          <button
-            onClick={() => setPlanExpanded(!planExpanded)}
-            className="mt-2 inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors"
-          >
-            <Send className="w-3 h-3" />
-            推送方案
-          </button>
+          <div className="flex items-center gap-2 mt-2">
+            {entry.alreadyPushed ? (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium bg-[#22c55e]/15 text-[#22c55e]">
+                <CheckCircle className="w-3 h-3" />已推送
+              </span>
+            ) : (
+              <button
+                onClick={() => entry.planId && onPush(entry.planId)}
+                disabled={pushing || !hasPlan}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+              >
+                <Send className="w-3 h-3" />{pushing ? '推送中...' : '推送方案'}
+              </button>
+            )}
+            {hasPlan && content && (
+              <button
+                onClick={() => setPlanExpanded(!planExpanded)}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-muted text-foreground text-xs font-medium hover:bg-muted/80 transition-colors"
+              >
+                <Eye className="w-3 h-3" />查看处方
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Expanded Plan Steps */}
-      {planExpanded && (
+      {/* Expanded Prescription (4-segment) */}
+      {planExpanded && content && (
+        <div className="px-4 py-3 bg-muted/20 border-t border-border space-y-3">
+          {/* 病情分析 */}
+          {content.analysis && (
+            <div className="bg-[#102A43]/5 rounded-md p-3 border border-[#102A43]/10">
+              <div className="flex items-center gap-1.5 mb-1">
+                <Search className="w-3.5 h-3.5 text-[#102A43]" />
+                <span className="text-xs font-semibold text-[#102A43]">病情分析</span>
+              </div>
+              <p className="text-xs text-foreground/90 leading-relaxed">{content.analysis}</p>
+            </div>
+          )}
+          {/* 调理方向 */}
+          {content.direction && (
+            <div className="bg-primary/5 rounded-md p-3 border border-primary/10">
+              <div className="flex items-center gap-1.5 mb-1">
+                <Compass className="w-3.5 h-3.5 text-primary" />
+                <span className="text-xs font-semibold text-primary">调理方向</span>
+              </div>
+              <p className="text-xs text-foreground/90 leading-relaxed">{content.direction}</p>
+            </div>
+          )}
+          {/* 具体药方 */}
+          {content.prescription && Array.isArray(content.prescription) && content.prescription.length > 0 && (
+            <div className="bg-[#F59E0B]/5 rounded-md p-3 border border-[#F59E0B]/10">
+              <div className="flex items-center gap-1.5 mb-2">
+                <Pill className="w-3.5 h-3.5 text-[#F59E0B]" />
+                <span className="text-xs font-semibold text-[#F59E0B]">具体药方</span>
+              </div>
+              <div className="space-y-2">
+                {content.prescription.map((item, i) => (
+                  <div key={i} className="flex gap-2 items-start">
+                    <span className="w-5 h-5 rounded-full bg-[#F59E0B]/15 text-[#F59E0B] text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
+                    <div>
+                      <span className="text-xs font-medium text-foreground">{item.step}</span>
+                      <span className="text-xs text-muted-foreground ml-1">{item.detail}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {/* 达标标准 */}
+          {content.standard && (
+            <div className="bg-[#22c55e]/5 rounded-md p-3 border border-[#22c55e]/10">
+              <div className="flex items-center gap-1.5 mb-1">
+                <Target className="w-3.5 h-3.5 text-[#22c55e]" />
+                <span className="text-xs font-semibold text-[#22c55e]">达标标准</span>
+              </div>
+              <div className="space-y-1">
+                {content.standard.split(/[；;\n]/).filter(s => s.trim()).map((s, i) => (
+                  <div key={i} className="flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3 h-3 text-[#22c55e]" />
+                    <span className="text-xs text-foreground">{s.trim()}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {/* Fallback to steps */}
+          {!content.analysis && !content.prescription && content.steps && (
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <ListChecks className="w-3.5 h-3.5 text-primary" />
+                <span className="text-xs font-semibold text-foreground">方案步骤</span>
+              </div>
+              <div className="space-y-1.5">
+                {(content.steps as string[]).map((step, i) => (
+                  <div key={i} className="flex items-start gap-2">
+                    <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center shrink-0 mt-0.5 font-medium">{i + 1}</span>
+                    <span className="text-xs text-foreground leading-relaxed">{step}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Fallback: plan steps when no content object */}
+      {planExpanded && !content && entry.planSteps.length > 0 && (
         <div className="px-4 py-3 bg-muted/20 border-t border-border">
           <div className="flex items-center gap-2 mb-2">
             <ListChecks className="w-3.5 h-3.5 text-primary" />
@@ -1115,4 +1344,133 @@ function getMockData(): DiagnosisData {
       },
     ],
   };
+}
+
+/* ------------------------------------------------------------------ */
+/*  Prescription Preview Modal (from Diagnosis page)                   */
+/* ------------------------------------------------------------------ */
+
+function PrescriptionPreviewModal({ plan, memberName, onClose, onPush, pushing }: {
+  plan: EmpowerPlan;
+  memberName: string;
+  onClose: () => void;
+  onPush: (planId: string) => void;
+  pushing: boolean;
+}) {
+  const content = plan.content;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-card rounded-xl shadow-lg max-w-lg w-full max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="p-6">
+          <div className="flex items-start justify-between mb-4">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xs text-muted-foreground">推送对象：</span>
+                <span className="text-xs font-medium text-foreground">{memberName}</span>
+              </div>
+              <h3 className="text-lg font-bold text-foreground">{plan.name}</h3>
+            </div>
+            <button onClick={onClose} className="text-muted-foreground hover:text-foreground p-1">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {content && typeof content === 'object' && (
+            <div className="space-y-4">
+              {content.analysis && (
+                <div className="bg-[#102A43]/5 rounded-lg p-4 border border-[#102A43]/10">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-6 h-6 rounded-full bg-[#102A43]/10 flex items-center justify-center">
+                      <span className="text-xs font-bold text-[#102A43]">诊</span>
+                    </div>
+                    <h4 className="text-sm font-semibold text-[#102A43]">病情分析</h4>
+                  </div>
+                  <p className="text-sm text-foreground/90 leading-relaxed pl-8">{content.analysis}</p>
+                </div>
+              )}
+              {content.direction && (
+                <div className="bg-primary/5 rounded-lg p-4 border border-primary/10">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-6 h-6 rounded-full bg-primary/15 flex items-center justify-center">
+                      <span className="text-xs font-bold text-primary">向</span>
+                    </div>
+                    <h4 className="text-sm font-semibold text-primary">调理方向</h4>
+                  </div>
+                  <p className="text-sm text-foreground/90 leading-relaxed pl-8">{content.direction}</p>
+                </div>
+              )}
+              {content.prescription && Array.isArray(content.prescription) && content.prescription.length > 0 && (
+                <div className="bg-[#F59E0B]/5 rounded-lg p-4 border border-[#F59E0B]/10">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-6 h-6 rounded-full bg-[#F59E0B]/15 flex items-center justify-center">
+                      <span className="text-xs font-bold text-[#F59E0B]">方</span>
+                    </div>
+                    <h4 className="text-sm font-semibold text-[#F59E0B]">具体药方</h4>
+                  </div>
+                  <div className="space-y-3 pl-8">
+                    {content.prescription.map((item, i) => (
+                      <div key={i} className="flex gap-3 items-start">
+                        <span className="w-6 h-6 rounded-full bg-[#F59E0B]/15 text-[#F59E0B] text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
+                        <div>
+                          <p className="text-sm font-semibold text-foreground">{item.step}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{item.detail}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            {item.duration && <span className="text-xs bg-muted px-1.5 py-0.5 rounded text-muted-foreground">{item.duration}</span>}
+                            {item.responsible && <span className="text-xs bg-muted px-1.5 py-0.5 rounded text-muted-foreground">负责人：{item.responsible}</span>}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {content.standard && (
+                <div className="bg-[#22c55e]/5 rounded-lg p-4 border border-[#22c55e]/10">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-6 h-6 rounded-full bg-[#22c55e]/15 flex items-center justify-center">
+                      <span className="text-xs font-bold text-[#22c55e]">标</span>
+                    </div>
+                    <h4 className="text-sm font-semibold text-[#22c55e]">达标标准</h4>
+                  </div>
+                  <div className="space-y-1.5 pl-8">
+                    {content.standard.split(/[；;\n]/).filter(s => s.trim()).map((s, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-[#22c55e]" />
+                        <span className="text-sm text-foreground">{s.trim()}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {!content.analysis && !content.prescription && content.steps && (
+                <div>
+                  <h4 className="text-sm font-semibold text-foreground mb-2">方案内容</h4>
+                  <div className="space-y-3">
+                    {(content.steps as string[]).map((step: string, i: number) => (
+                      <div key={i} className="flex gap-3 items-start">
+                        <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
+                        <p className="text-sm text-foreground">{step}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-border">
+            <button onClick={onClose} className="px-4 py-2 rounded-md text-sm text-muted-foreground hover:text-foreground">关闭</button>
+            <button
+              onClick={() => onPush(plan.id)}
+              disabled={pushing}
+              className="px-5 py-2 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50 inline-flex items-center gap-1.5"
+            >
+              <Send className="w-3.5 h-3.5" />{pushing ? '推送中...' : '推送方案'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }

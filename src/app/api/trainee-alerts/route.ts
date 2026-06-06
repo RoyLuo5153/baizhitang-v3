@@ -289,6 +289,76 @@ export async function GET(request: NextRequest) {
           }
         });
       }
+
+      // 9. 赋能处方逾期预警：已分配处方超过7天但无进展
+      const { data: staleExecutions } = await supabase
+        .from('empower_executions')
+        .select('id, user_id, progress, status, started_at')
+        .in('user_id', traineeIds)
+        .in('status', ['assigned', 'in_progress'])
+        .order('started_at', { ascending: true });
+
+      (staleExecutions || []).forEach((exec: { id: number; user_id: string; progress: number; status: string; started_at: string }) => {
+        const daysSince = Math.floor((Date.now() - new Date(exec.started_at).getTime()) / (1000 * 60 * 60 * 24));
+        if (daysSince > 7 && (exec.progress || 0) < 30) {
+          const trainee = (trainees || []).find((t: { id: string }) => t.id === exec.user_id);
+          if (trainee) {
+            alerts.push({
+              userId: exec.user_id,
+              realName: (trainee as Record<string, unknown>).real_name as string,
+              alertType: 'empower_stale',
+              alertLevel: daysSince > 14 ? 'danger' : 'warning',
+              message: `${(trainee as Record<string, unknown>).real_name as string} 赋能处方执行停滞（${daysSince}天）`,
+              detail: `处方已分配${daysSince}天，进度仅${exec.progress || 0}%，需带教介入跟进`,
+              relatedModule: 'empowerment',
+              relatedId: String(exec.id),
+              createdAt: exec.started_at,
+              mentorName: ((trainee as Record<string, unknown>).mentor_id as string) ? (mentorMap[(trainee as Record<string, unknown>).mentor_id as string] || null) : null,
+              department: (trainee as Record<string, unknown>).department as string | null,
+              stage: (trainee as Record<string, unknown>).stage as number | null,
+            });
+          }
+        }
+      });
+
+      // 10. 赋能处方待推送：诊断不合格但尚未分配赋能方案
+      const { data: unassignedDiagnoses } = await supabase
+        .from('diagnoses')
+        .select('id, trainee_id, quadrant, created_at')
+        .in('trainee_id', traineeIds)
+        .in('quadrant', ['B', 'C', 'D'])
+        .order('created_at', { ascending: false })
+        .limit(30);
+
+      const { data: allExecutions } = await supabase
+        .from('empower_executions')
+        .select('user_id')
+        .in('user_id', traineeIds)
+        .in('status', ['assigned', 'in_progress']);
+
+      const empoweredUserIds = new Set((allExecutions || []).map((e: { user_id: string }) => e.user_id));
+
+      (unassignedDiagnoses || []).forEach((d: { id: number; trainee_id: string; quadrant: string; created_at: string }) => {
+        if (!empoweredUserIds.has(d.trainee_id)) {
+          const trainee = (trainees || []).find((t: { id: string }) => t.id === d.trainee_id);
+          if (trainee) {
+            alerts.push({
+              userId: d.trainee_id,
+              realName: (trainee as Record<string, unknown>).real_name as string,
+              alertType: 'empower_pending',
+              alertLevel: 'warning',
+              message: `${(trainee as Record<string, unknown>).real_name as string} 诊断${d.quadrant}类，待推送赋能处方`,
+              detail: `诊断不合格但尚未分配赋能方案，请到赋能中心推荐方案并推送`,
+              relatedModule: 'empowerment',
+              relatedId: String(d.id),
+              createdAt: d.created_at,
+              mentorName: ((trainee as Record<string, unknown>).mentor_id as string) ? (mentorMap[(trainee as Record<string, unknown>).mentor_id as string] || null) : null,
+              department: (trainee as Record<string, unknown>).department as string | null,
+              stage: (trainee as Record<string, unknown>).stage as number | null,
+            });
+          }
+        }
+      });
     }
 
     // 新人视角：看自己的待办
@@ -338,6 +408,8 @@ export async function GET(request: NextRequest) {
         pending_review: alerts.filter(a => a.alertType === 'pending_review').length,
         pending_qc: alerts.filter(a => a.alertType === 'pending_qc').length,
         pending_practice: alerts.filter(a => a.alertType === 'pending_practice').length,
+        empower_stale: alerts.filter(a => a.alertType === 'empower_stale').length,
+        empower_pending: alerts.filter(a => a.alertType === 'empower_pending').length,
       },
     };
 
