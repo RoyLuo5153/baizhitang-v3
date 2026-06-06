@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/jquery/jquery-3.7.1.min.js"></script>
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/lucide/lucide-1.11.0.min.js"></script>
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/tailwindcss/tailwindcss-browser-4.2.4.min.js"></script>
+
+  <style type="text/tailwindcss">
+    @theme {
+      /* === 品牌色 === */
+      --color-primary:              #102A43;
+      --color-primary-container:    #2978B5;
+      --color-on-primary:           #ffffff;
+      /* === 背景 / 表面 === */
+      --color-background:                 #F8F6F0;
+      --color-surface-container-lowest:   #FAFAF7;
+      --color-surface:                    #FFFFFF;
+      --color-surface-container:          #EFEDE6;
+      --color-surface-container-high:     #E6E3DC;
+      --color-surface-container-highest:  #DDD9D0;
+      /* === 文字 === */
+      --color-on-surface:           #1D2733;
+      --color-on-surface-variant:   #667085;
+      /* === 功能色 === */
+      --color-success:  #22c55e;
+      --color-error:    #ef4444;
+      --color-warning:  #F59E0B;
+      /* === 边框 === */
+      --color-outline:          #D4CFC4;
+      --color-outline-variant:  #E6E1D8;
+      /* === 圆角 === */
+      --radius-sm:   0.375rem;
+      --radius-md:   0.5rem;
+      --radius-lg:   0.75rem;
+      --radius-xl:   1rem;
+      --radius-2xl:  1.5rem;
+      --radius-full: 9999px;
+      /* === 阴影 === */
+      --shadow-card:   0 2px 8px rgba(0,0,0,0.08);
+      --shadow-float:  0 10px 25px rgba(0,0,0,0.1);
+      --shadow-dialog: 0 25px 50px rgba(0,0,0,0.15);
+      /* === 字体 === */
+      --font-sans: system-ui, -apple-system, "Noto Sans SC", sans-serif;
+    }
+  </style>
+
+  <!-- 图片兜底 -->
+  <script>
+    document.addEventListener('error', function (e) {
+      const img = e.target;
+      if (img.tagName !== 'IMG' || img.dataset.fallback) return;
+      img.dataset.fallback = '1';
+      const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const cat = img.getAttribute('data-category') || '其他';
+      const alt = img.getAttribute('alt') || '';
+      const label = esc(alt.length > 8 ? alt.slice(0, 8) + '…' : alt);
+      const icons = { '人物': '👤', '自然风景': '🏞', '动物': '🐾', '建筑城市': '🏙', '运动体育': '⚽', '交通工具': '🚗', '食物': '🍽', '服饰时尚': '👗', '商业科技': '💼', '游戏娱乐': '🎮', '艺术': '🎨', '其他': '🖼' };
+      const icon = icons[cat] || '🖼';
+      const w = img.width || 400, h = img.height || 300;
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="45%" text-anchor="middle" font-size="${Math.min(w, h) * 0.18}" dominant-baseline="central">${icon}</text><text x="50%" y="68%" text-anchor="middle" font-size="${Math.min(w, h) * 0.07}" fill="%239ca3af" font-family="system-ui,sans-serif" dominant-baseline="central">${label}</text></svg>`;
+      img.src = 'data:image/svg+xml,' + svg;
+    }, true);
+  </script>
+
+  <style>
+    /* 蓝色脉冲动画 */
+    @keyframes pulse-blue {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    .animate-pulse-blue {
+      animation: pulse-blue 1.5s ease-in-out infinite;
+    }
+  </style>
+</head>
+
+<body class="bg-background text-on-surface font-sans">
+
+  <!-- @nav:start 导航组件 -->
+  <header class="bg-surface sticky top-0 z-40 h-14 flex items-center justify-between px-6 border-b border-outline-variant/30">
+    <div class="flex items-center gap-2">
+      <i data-lucide="activity" class="text-primary-container w-5 h-5"></i>
+      <span class="font-bold text-lg text-primary">百芝堂</span>
+      <span class="text-xs text-on-surface-variant ml-1">V3双轨驱动赋能系统</span>
+    </div>
+    <div class="flex items-center gap-4">
+      <span class="text-sm text-on-surface-variant">陈导师</span>
+      <div class="w-8 h-8 rounded-full bg-primary-container text-on-primary flex items-center justify-center text-sm font-medium">陈</div>
+    </div>
+  </header>
+
+  <div class="flex" style="height: calc(100vh - 3.5rem)">
+    <aside class="w-52 shrink-0 bg-surface-container-lowest overflow-y-auto border-r border-outline-variant/20">
+      <div class="p-3 space-y-0.5">
+        <a href="empowerment.html" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="zap" class="w-4 h-4"></i>赋能中心
+        </a>
+        <a href="diagnosis.html" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="git-branch" class="w-4 h-4"></i>双轨诊断
+        </a>
+        <a href="trainee-prescription.html" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="clipboard-list" class="w-4 h-4"></i>我的处方
+        </a>
+        <a href="mentor-board.html" class="flex items-center gap-3 px-3 py-2.5 rounded-md bg-primary/10 text-primary font-medium text-sm transition-colors" aria-current="page">
+          <i data-lucide="users" class="w-4 h-4"></i>带教看板
+        </a>
+      </div>
+    </aside>
+
+    <!-- @main-content:start -->
+    <main class="flex-1 min-w-0 overflow-y-auto bg-background p-6">
+
+      <!-- 页面标题 -->
+      <div class="mb-6">
+        <h1 class="text-2xl font-bold text-on-surface">陈导师的带教看板</h1>
+        <p class="text-sm text-on-surface-variant mt-1">跟进所带新人的赋能处方执行情况</p>
+      </div>
+
+      <!-- 统计卡片 -->
+      <div class="grid grid-cols-4 gap-4 mb-8">
+        <!-- 统计-带教学员数 -->
+        <div class="bg-surface rounded-lg shadow-card p-5">
+          <div class="flex items-center justify-between">
+            <span class="text-sm text-on-surface-variant">带教学员数</span>
+            <div class="w-9 h-9 rounded-lg bg-primary-container/10 flex items-center justify-center">
+              <i data-lucide="users" class="w-4 h-4 text-primary-container"></i>
+            </div>
+          </div>
+          <div class="mt-3 text-3xl font-bold text-on-surface">3</div>
+        </div>
+        <!-- 统计-执行中处方 -->
+        <div class="bg-surface rounded-lg shadow-card p-5">
+          <div class="flex items-center justify-between">
+            <span class="text-sm text-on-surface-variant">执行中处方</span>
+            <div class="w-9 h-9 rounded-lg bg-primary-container/10 flex items-center justify-center">
+              <i data-lucide="file-text" class="w-4 h-4 text-primary-container"></i>
+            </div>
+          </div>
+          <div class="mt-3 text-3xl font-bold text-on-surface">2</div>
+        </div>
+        <!-- 统计-待跟进步骤 -->
+        <div class="bg-surface rounded-lg shadow-card p-5">
+          <div class="flex items-center justify-between">
+            <span class="text-sm text-on-surface-variant">待跟进步骤</span>
+            <div class="w-9 h-9 rounded-lg bg-warning/10 flex items-center justify-center">
+              <i data-lucide="clock" class="w-4 h-4 text-warning"></i>
+            </div>
+          </div>
+          <div class="mt-3 text-3xl font-bold text-on-surface">4</div>
+        </div>
+        <!-- 统计-已完成处方 -->
+        <div class="bg-surface rounded-lg shadow-card p-5">
+          <div class="flex items-center justify-between">
+            <span class="text-sm text-on-surface-variant">已完成处方</span>
+            <div class="w-9 h-9 rounded-lg bg-success/10 flex items-center justify-center">
+              <i data-lucide="check-circle" class="w-4 h-4 text-success"></i>
+            </div>
+          </div>
+          <div class="mt-3 text-3xl font-bold text-on-surface">1</div>
+        </div>
+      </div>
+
+      <!-- 学员1：张小红 -->
+      <div class="mb-6">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-9 h-9 rounded-full bg-warning/20 flex items-center justify-center text-sm font-semibold text-warning">张</div>
+          <span class="text-base font-semibold text-on-surface">张小红</span>
+          <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-warning/15 text-warning">B类</span>
+        </div>
+
+        <!-- 处方列表-张小红 -->
+        <div class="space-y-3 ml-12">
+
+          <!-- 处方1：加V率提升方案 -->
+          <div class="bg-surface rounded-lg shadow-card overflow-hidden">
+            <!-- 处方头部 -->
+            <div class="px-5 py-4">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="text-base font-semibold text-on-surface">加V率提升方案</span>
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-primary-container/15 text-primary-container">执行中</span>
+                </div>
+                <span class="text-xs text-on-surface-variant">推送于 2024-06-15</span>
+              </div>
+              <!-- 处方摘要 -->
+              <p class="text-sm text-on-surface-variant mt-2">加V率低于60%，说明首通电话和回访环节未能有效传递价值…</p>
+              <!-- 进度 -->
+              <div class="flex items-center gap-3 mt-3">
+                <span class="text-xs text-on-surface-variant">1/3 步骤完成</span>
+                <div class="flex-1 h-1.5 bg-surface-container rounded-full overflow-hidden">
+                  <div class="h-full bg-primary-container rounded-full" style="width: 33%"></div>
+                </div>
+              </div>
+            </div>
+            <!-- 步骤列表 -->
+            <div class="border-t border-outline-variant/20 px-5 py-3 space-y-2">
+              <!-- 步骤1-已完成 -->
+              <div class="flex items-center gap-3 py-2">
+                <div class="w-5 h-5 rounded-full bg-success/15 flex items-center justify-center shrink-0">
+                  <i data-lucide="check" class="w-3 h-3 text-success"></i>
+                </div>
+                <span class="text-sm text-on-surface-variant line-through flex-1">首通电话话术复盘</span>
+                <span class="text-xs text-on-surface-variant">3天</span>
+              </div>
+              <!-- 步骤2-进行中-带教负责 -->
+              <div class="flex items-center gap-3 py-2 border-2 border-warning/40 rounded-lg px-3 bg-warning/5" id="step-zhang-step2">
+                <div class="w-5 h-5 rounded-full flex items-center justify-center shrink-0">
+                  <span class="w-2.5 h-2.5 rounded-full bg-primary-container animate-pulse-blue inline-block"></span>
+                </div>
+                <span class="text-sm text-on-surface flex-1">话术模拟演练</span>
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-xs font-medium bg-warning/15 text-warning">我负责</span>
+                <span class="text-xs text-on-surface-variant">2天</span>
+                <button id="btn-followup-zhang-step2" class="ml-2 bg-primary-container text-on-primary px-3 py-1 rounded-md text-xs font-medium hover:opacity-90 active:scale-[0.98] transition-all">跟进点评</button>
+              </div>
+              <!-- 步骤3-待开始-带教+新人共同负责 -->
+              <div class="flex items-center gap-3 py-2 border-2 border-warning/40 rounded-lg px-3 bg-warning/5" id="step-zhang-step3">
+                <div class="w-5 h-5 rounded-full bg-surface-container flex items-center justify-center shrink-0">
+                  <span class="w-1.5 h-1.5 rounded-full bg-on-surface-variant/40 inline-block"></span>
+                </div>
+                <span class="text-sm text-on-surface-variant flex-1">实战跟诊</span>
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-xs font-medium bg-warning/15 text-warning">我负责</span>
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-xs font-medium bg-surface-container text-on-surface-variant ml-1">待开始</span>
+                <span class="text-xs text-on-surface-variant">5天</span>
+                <button id="btn-followup-zhang-step3" class="ml-2 bg-surface-container-high text-on-surface px-3 py-1 rounded-md text-xs font-medium hover:bg-surface-container-highest active:scale-[0.98] transition-all">跟进点评</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 处方2：面诊率提升方案 -->
+          <div class="bg-surface rounded-lg shadow-card overflow-hidden">
+            <!-- 处方头部 -->
+            <div class="px-5 py-4">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="text-base font-semibold text-on-surface">面诊率提升方案</span>
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-primary-container/15 text-primary-container">执行中</span>
+                </div>
+                <span class="text-xs text-on-surface-variant">推送于 2024-06-18</span>
+              </div>
+              <!-- 处方摘要 -->
+              <p class="text-sm text-on-surface-variant mt-2">面诊率持续偏低，患者到院转化环节存在明显短板，需从预约…</p>
+              <!-- 进度 -->
+              <div class="flex items-center gap-3 mt-3">
+                <span class="text-xs text-on-surface-variant">0/2 步骤完成</span>
+                <div class="flex-1 h-1.5 bg-surface-container rounded-full overflow-hidden">
+                  <div class="h-full bg-primary-container rounded-full" style="width: 0%"></div>
+                </div>
+              </div>
+            </div>
+            <!-- 步骤列表 -->
+            <div class="border-t border-outline-variant/20 px-5 py-3 space-y-2">
+              <!-- 步骤1-待开始-带教负责 -->
+              <div class="flex items-center gap-3 py-2 border-2 border-warning/40 rounded-lg px-3 bg-warning/5" id="step-zhang2-step1">
+                <div class="w-5 h-5 rounded-full bg-surface-container flex items-center justify-center shrink-0">
+                  <span class="w-1.5 h-1.5 rounded-full bg-on-surface-variant/40 inline-block"></span>
+                </div>
+                <span class="text-sm text-on-surface-variant flex-1">面诊话术培训</span>
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-xs font-medium bg-warning/15 text-warning">我负责</span>
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-xs font-medium bg-surface-container text-on-surface-variant ml-1">待开始</span>
+                <span class="text-xs text-on-surface-variant">3天</span>
+                <button id="btn-followup-zhang2-step1" class="ml-2 bg-surface-container-high text-on-surface px-3 py-1 rounded-md text-xs font-medium hover:bg-surface-container-highest active:scale-[0.98] transition-all">跟进点评</button>
+              </div>
+              <!-- 步骤2-待开始-新人负责 -->
+              <div class="flex items-center gap-3 py-2">
+                <div class="w-5 h-5 rounded-full bg-surface-container flex items-center justify-center shrink-0">
+                  <span class="w-1.5 h-1.5 rounded-full bg-on-surface-variant/40 inline-block"></span>
+                </div>
+                <span class="text-sm text-on-surface-variant flex-1">面诊流程实操</span>
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-xs font-medium bg-surface-container text-on-surface-variant">待开始</span>
+                <span class="text-xs text-on-surface-variant">4天</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 学员2：李大伟 -->
+      <div class="mb-6">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-9 h-9 rounded-full bg-error/20 flex items-center justify-center text-sm font-semibold text-error">李</div>
+          <span class="text-base font-semibold text-on-surface">李大伟</span>
+          <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-error/15 text-error">D类</span>
+        </div>
+
+        <!-- 处方列表-李大伟 -->
+        <div class="space-y-3 ml-12">
+
+          <!-- 处方1：综合提升方案 -->
+          <div class="bg-surface rounded-lg shadow-card overflow-hidden">
+            <!-- 逾期预警条 -->
+            <div class="bg-error/10 px-5 py-2 flex items-center gap-2 border-b border-error/20">
+              <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-error"></i>
+              <span class="text-xs font-medium text-error">步骤3「实战跟诊考核」已逾期2天</span>
+            </div>
+            <!-- 处方头部 -->
+            <div class="px-5 py-4">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="text-base font-semibold text-on-surface">综合提升方案</span>
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-primary-container/15 text-primary-container">执行中</span>
+                </div>
+                <span class="text-xs text-on-surface-variant">推送于 2024-06-10</span>
+              </div>
+              <!-- 处方摘要 -->
+              <p class="text-sm text-on-surface-variant mt-2">多指标持续不达标，需系统性强化基本功，从沟通到转化全流程…</p>
+              <!-- 进度 -->
+              <div class="flex items-center gap-3 mt-3">
+                <span class="text-xs text-on-surface-variant">2/4 步骤完成</span>
+                <div class="flex-1 h-1.5 bg-surface-container rounded-full overflow-hidden">
+                  <div class="h-full bg-primary-container rounded-full" style="width: 50%"></div>
+                </div>
+              </div>
+            </div>
+            <!-- 步骤列表 -->
+            <div class="border-t border-outline-variant/20 px-5 py-3 space-y-2">
+              <!-- 步骤1-已完成 -->
+              <div class="flex items-center gap-3 py-2">
+                <div class="w-5 h-5 rounded-full bg-success/15 flex items-center justify-center shrink-0">
+                  <i data-lucide="check" class="w-3 h-3 text-success"></i>
+                </div>
+                <span class="text-sm text-on-surface-variant line-through flex-1">基础话术培训</span>
+                <span class="text-xs text-on-surface-variant">5天</span>
+              </div>
+              <!-- 步骤2-已完成 -->
+              <div class="flex items-center gap-3 py-2">
+                <div class="w-5 h-5 rounded-full bg-success/15 flex items-center justify-center shrink-0">
+                  <i data-lucide="check" class="w-3 h-3 text-success"></i>
+                </div>
+                <span class="text-sm text-on-surface-variant line-through flex-1">电话回访演练</span>
+                <span class="text-xs text-on-surface-variant">3天</span>
+              </div>
+              <!-- 步骤3-进行中-带教负责(逾期) -->
+              <div class="flex items-center gap-3 py-2 border-2 border-error/50 rounded-lg px-3 bg-error/5" id="step-li-step3">
+                <div class="w-5 h-5 rounded-full flex items-center justify-center shrink-0">
+                  <span class="w-2.5 h-2.5 rounded-full bg-error animate-pulse-blue inline-block"></span>
+                </div>
+                <span class="text-sm text-on-surface flex-1">实战跟诊考核</span>
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-xs font-medium bg-warning/15 text-warning">我负责</span>
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-xs font-medium bg-error/15 text-error ml-1">逾期2天</span>
+                <span class="text-xs text-on-surface-variant">5天</span>
+                <button id="btn-followup-li-step3" class="ml-2 bg-primary-container text-on-primary px-3 py-1 rounded-md text-xs font-medium hover:opacity-90 active:scale-[0.98] transition-all">跟进点评</button>
+              </div>
+              <!-- 步骤4-待开始-带教负责 -->
+              <div class="flex items-center gap-3 py-2 border-2 border-warning/40 rounded-lg px-3 bg-warning/5" id="step-li-step4">
+                <div class="w-5 h-5 rounded-full bg-surface-container flex items-center justify-center shrink-0">
+                  <span class="w-1.5 h-1.5 rounded-full bg-on-surface-variant/40 inline-block"></span>
+                </div>
+                <span class="text-sm text-on-surface-variant flex-1">综合能力评估</span>
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-xs font-medium bg-warning/15 text-warning">我负责</span>
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-xs font-medium bg-surface-container text-on-surface-variant ml-1">待开始</span>
+                <span class="text-xs text-on-surface-variant">3天</span>
+                <button id="btn-followup-li-step4" class="ml-2 bg-surface-container-high text-on-surface px-3 py-1 rounded-md text-xs font-medium hover:bg-surface-container-highest active:scale-[0.98] transition-all">跟进点评</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 学员3：王美玲 -->
+      <div class="mb-6">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-9 h-9 rounded-full bg-success/20 flex items-center justify-center text-sm font-semibold text-success">王</div>
+          <span class="text-base font-semibold text-on-surface">王美玲</span>
+          <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">A类</span>
+        </div>
+
+        <!-- 处方列表-王美玲 -->
+        <div class="ml-12">
+          <div class="bg-surface rounded-lg shadow-card px-5 py-6">
+            <div class="flex flex-col items-center justify-center text-center">
+              <div class="w-12 h-12 rounded-full bg-success/10 flex items-center justify-center mb-3">
+                <i data-lucide="check-circle" class="w-6 h-6 text-success"></i>
+              </div>
+              <p class="text-sm font-medium text-on-surface">暂无赋能处方</p>
+              <p class="text-xs text-on-surface-variant mt-1">该学员各项指标达标，当前无需推送赋能方案</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+    <!-- @main-content:end -->
+  </div>
+  <!-- @nav:end 导航组件 -->
+
+  <!-- 跟进点评弹窗 -->
+  <div id="modal-followup" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-surface rounded-xl shadow-dialog max-w-md w-full max-h-[90vh] overflow-y-auto p-6">
+      <div class="flex items-center justify-between mb-5">
+        <h3 class="text-lg font-bold text-on-surface">跟进点评</h3>
+        <button id="btn-close-modal" class="w-8 h-8 rounded-md hover:bg-surface-container flex items-center justify-center transition-colors">
+          <i data-lucide="x" class="w-4 h-4 text-on-surface-variant"></i>
+        </button>
+      </div>
+      <!-- 步骤信息 -->
+      <div class="bg-surface-container rounded-md px-3 py-2 mb-4">
+        <p class="text-sm text-on-surface-variant">当前步骤：<span id="modal-step-name" class="text-on-surface font-medium">话术模拟演练</span></p>
+        <p class="text-xs text-on-surface-variant mt-1">学员：<span id="modal-trainee-name" class="text-on-surface">张小红</span></p>
+      </div>
+      <!-- 点评输入 -->
+      <div class="mb-4">
+        <label class="text-sm font-medium text-on-surface mb-1.5 block">点评内容</label>
+        <textarea id="input-followup-comment" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors resize-none" rows="4" placeholder="请输入跟进点评内容…"></textarea>
+      </div>
+      <!-- 星级评分 -->
+      <div class="mb-6">
+        <label class="text-sm font-medium text-on-surface mb-1.5 block">评分</label>
+        <div id="star-rating" class="flex items-center gap-1">
+          <button class="star-btn w-8 h-8 flex items-center justify-center rounded hover:bg-surface-container transition-colors" data-star="1">
+            <i data-lucide="star" class="w-5 h-5 text-on-surface-variant/30"></i>
+          </button>
+          <button class="star-btn w-8 h-8 flex items-center justify-center rounded hover:bg-surface-container transition-colors" data-star="2">
+            <i data-lucide="star" class="w-5 h-5 text-on-surface-variant/30"></i>
+          </button>
+          <button class="star-btn w-8 h-8 flex items-center justify-center rounded hover:bg-surface-container transition-colors" data-star="3">
+            <i data-lucide="star" class="w-5 h-5 text-on-surface-variant/30"></i>
+          </button>
+          <button class="star-btn w-8 h-8 flex items-center justify-center rounded hover:bg-surface-container transition-colors" data-star="4">
+            <i data-lucide="star" class="w-5 h-5 text-on-surface-variant/30"></i>
+          </button>
+          <button class="star-btn w-8 h-8 flex items-center justify-center rounded hover:bg-surface-container transition-colors" data-star="5">
+            <i data-lucide="star" class="w-5 h-5 text-on-surface-variant/30"></i>
+          </button>
+          <span id="rating-text" class="text-sm text-on-surface-variant ml-2">未评分</span>
+        </div>
+      </div>
+      <!-- 操作按钮 -->
+      <div class="flex items-center justify-end gap-3">
+        <button id="btn-cancel-followup" class="bg-surface-container text-on-surface px-4 py-2 rounded-md text-sm font-medium hover:bg-surface-container-high active:scale-[0.98] transition-all">取消</button>
+        <button id="btn-submit-followup" class="bg-primary text-on-primary px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all">提交点评</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    $(function() {
+
+      // 当前状态
+      var currentStepId = '';
+      var currentRating = 0;
+
+      // 跟进点评按钮映射
+      var stepInfoMap = {
+        'btn-followup-zhang-step2': { stepId: 'step-zhang-step2', stepName: '话术模拟演练', traineeName: '张小红' },
+        'btn-followup-zhang-step3': { stepId: 'step-zhang-step3', stepName: '实战跟诊', traineeName: '张小红' },
+        'btn-followup-zhang2-step1': { stepId: 'step-zhang2-step1', stepName: '面诊话术培训', traineeName: '张小红' },
+        'btn-followup-li-step3': { stepId: 'step-li-step3', stepName: '实战跟诊考核', traineeName: '李大伟' },
+        'btn-followup-li-step4': { stepId: 'step-li-step4', stepName: '综合能力评估', traineeName: '李大伟' }
+      };
+
+      // 跟进点评按钮 - 点击弹出点评弹窗
+      $('[id^="btn-followup-"]').on('click', function() {
+        var btnId = $(this).attr('id');
+        var info = stepInfoMap[btnId];
+        if (!info) return;
+
+        currentStepId = info.stepId;
+        currentRating = 0;
+
+        // 更新弹窗信息
+        $('#modal-step-name').text(info.stepName);
+        $('#modal-trainee-name').text(info.traineeName);
+        $('#input-followup-comment').val('');
+        updateStarDisplay(0);
+        $('#rating-text').text('未评分');
+
+        // 显示弹窗
+        $('#modal-followup').removeClass('hidden');
+      });
+
+      // 关闭弹窗
+      $('#btn-close-modal').on('click', function() {
+        $('#modal-followup').addClass('hidden');
+      });
+      $('#btn-cancel-followup').on('click', function() {
+        $('#modal-followup').addClass('hidden');
+      });
+
+      // 点击弹窗背景关闭
+      $('#modal-followup').on('click', function(e) {
+        if ($(e.target).is('#modal-followup')) {
+          $('#modal-followup').addClass('hidden');
+        }
+      });
+
+      // 星级评分交互
+      function updateStarDisplay(rating) {
+        $('#star-rating .star-btn').each(function() {
+          var starVal = parseInt($(this).data('star'));
+          var icon = $(this).find('i, svg');
+          if (starVal <= rating) {
+            icon.attr('class', 'w-5 h-5 text-warning');
+          } else {
+            icon.attr('class', 'w-5 h-5 text-on-surface-variant/30');
+          }
+        });
+      }
+
+      $('#star-rating').on('click', '.star-btn', function() {
+        currentRating = parseInt($(this).data('star'));
+        updateStarDisplay(currentRating);
+        var ratingLabels = ['', '很差', '较差', '一般', '良好', '优秀'];
+        $('#rating-text').text(currentRating + '分 - ' + ratingLabels[currentRating]);
+      });
+
+      // 提交点评
+      $('#btn-submit-followup').on('click', function() {
+        if (currentRating === 0) {
+          $('#rating-text').text('请选择评分').addClass('text-error');
+          setTimeout(function() { $('#rating-text').removeClass('text-error'); }, 2000);
+          return;
+        }
+
+        var comment = $('#input-followup-comment').val().trim();
+        if (!comment) {
+          $('#input-followup-comment').attr('placeholder', '请输入点评内容后再提交').addClass('ring-2 ring-error/30');
+          setTimeout(function() { $('#input-followup-comment').removeClass('ring-2 ring-error/30'); }, 2000);
+          return;
+        }
+
+        // 将步骤变为已完成状态
+        if (currentStepId) {
+          var $step = $('#' + currentStepId);
+          // 移除橙色/红色边框和背景
+          $step.removeClass('border-2 border-warning/40 border-error/50 bg-warning/5 bg-error/5');
+          // 添加已完成样式
+          $step.addClass('border border-outline-variant/10 bg-surface');
+          // 替换状态指示器为完成勾
+          $step.find('.w-5').first().replaceWith(
+            '<div class="w-5 h-5 rounded-full bg-success/15 flex items-center justify-center shrink-0"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="text-success"><polyline points="20 6 9 17 4 12"></polyline></svg></div>'
+          );
+          // 文字加删除线和灰色
+          var $text = $step.find('span.text-sm').first();
+          $text.addClass('line-through text-on-surface-variant').removeClass('text-on-surface');
+          // 移除"我负责"、"逾期"、"待开始"标签
+          $step.find('span.inline-flex').remove();
+          // 移除"跟进点评"按钮
+          $step.find('button[id^="btn-followup-"]').remove();
+        }
+
+        // 关闭弹窗
+        $('#modal-followup').addClass('hidden');
+      });
+
+    });
+  </script>
+
+  <script>lucide.createIcons();</script>
+</body>
+
+</html>

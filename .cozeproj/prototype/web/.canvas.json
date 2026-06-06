@@ -3,9 +3,33 @@
     {
       "type": "html",
       "options": {
-        "path": ".cozeproj/prototype/web/learning.html"
+        "path": ".cozeproj/prototype/web/empowerment.html"
       },
-      "title": "阶段通关",
+      "title": "赋能中心",
+      "size": "web"
+    },
+    {
+      "type": "html",
+      "options": {
+        "path": ".cozeproj/prototype/web/diagnosis.html"
+      },
+      "title": "双轨诊断",
+      "size": "web"
+    },
+    {
+      "type": "html",
+      "options": {
+        "path": ".cozeproj/prototype/web/trainee-prescription.html"
+      },
+      "title": "我的处方",
+      "size": "web"
+    },
+    {
+      "type": "html",
+      "options": {
+        "path": ".cozeproj/prototype/web/mentor-board.html"
+      },
+      "title": "带教看板",
       "size": "web"
     }
   ]

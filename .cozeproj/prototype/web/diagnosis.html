@@ -5,8 +5,6 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <link href="https://lf-code-agent.coze.cn/obj/x-ai-cn/fonts/google/google-all-fonts.css" rel="stylesheet"/>
-
   <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/jquery/jquery-3.7.1.min.js"></script>
   <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/lucide/lucide-1.11.0.min.js"></script>
   <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/tailwindcss/tailwindcss-browser-4.2.4.min.js"></script>
@@ -14,23 +12,23 @@
   <style type="text/tailwindcss">
     @theme {
       /* === 品牌色 === */
-      --color-primary:              #2978B5;
-      --color-primary-container:    #D4E8F5;
+      --color-primary:              #102A43;
+      --color-primary-container:    #2978B5;
       --color-on-primary:           #ffffff;
       /* === 背景 / 表面 === */
       --color-background:                 #F8F6F0;
-      --color-surface-container-lowest:   #FAFAF5;
+      --color-surface-container-lowest:   #FAFAF7;
       --color-surface:                    #FFFFFF;
-      --color-surface-container:          #F0EDE5;
-      --color-surface-container-high:     #E8E4DB;
-      --color-surface-container-highest:  #DDD8CE;
+      --color-surface-container:          #EFEDE6;
+      --color-surface-container-high:     #E6E3DC;
+      --color-surface-container-highest:  #DDD9D0;
       /* === 文字 === */
       --color-on-surface:           #1D2733;
       --color-on-surface-variant:   #667085;
       /* === 功能色 === */
       --color-success:  #22c55e;
       --color-error:    #ef4444;
-      --color-warning:  #f59e0b;
+      --color-warning:  #F59E0B;
       /* === 边框 === */
       --color-outline:          #D4CFC4;
       --color-outline-variant:  #E6E1D8;
@@ -46,7 +44,7 @@
       --shadow-float:  0 10px 25px rgba(0,0,0,0.1);
       --shadow-dialog: 0 25px 50px rgba(0,0,0,0.15);
       /* === 字体 === */
-      --font-sans: "Noto Sans SC", system-ui, sans-serif;
+      --font-sans: system-ui, -apple-system, "Noto Sans SC", sans-serif;
     }
   </style>
 
@@ -72,1113 +70,448 @@
 <body class="bg-background text-on-surface font-sans">
 
   <!-- @nav:start 导航组件 -->
-  <header class="bg-surface sticky top-0 z-40 h-14 flex items-center justify-between px-6 border-b border-outline-variant/20">
+  <header class="bg-surface sticky top-0 z-40 h-14 flex items-center justify-between px-6 border-b border-outline-variant/30">
     <div class="flex items-center gap-2">
-      <i data-lucide="heart-pulse" class="text-primary w-5 h-5"></i>
-      <span class="font-bold text-base text-on-surface">百芝堂赋能系统</span>
+      <i data-lucide="activity" class="text-primary-container w-5 h-5"></i>
+      <span class="font-bold text-lg text-primary">百芝堂</span>
+      <span class="text-xs text-on-surface-variant ml-1">V3双轨驱动赋能系统</span>
     </div>
-    <div class="flex items-center gap-3">
-      <span class="text-sm text-on-surface-variant">培训负责人</span>
-      <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-sm font-medium">初</div>
+    <div class="flex items-center gap-4">
+      <span class="text-sm text-on-surface-variant">郑管理</span>
+      <div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center text-sm font-medium">郑</div>
     </div>
   </header>
+
   <div class="flex" style="height: calc(100vh - 3.5rem)">
-    <aside class="w-52 shrink-0 bg-surface-container-lowest overflow-y-auto border-r border-outline-variant/15">
+    <aside class="w-52 shrink-0 bg-surface-container-lowest overflow-y-auto border-r border-outline-variant/20">
       <div class="p-3 space-y-0.5">
-        <p class="px-3 py-1 text-xs font-medium text-on-surface-variant/60 uppercase tracking-wider">工作台</p>
-        <a href="home.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="layout-dashboard" class="w-4 h-4"></i>首页
-        </a>
-        <p class="px-3 py-1 mt-3 text-xs font-medium text-on-surface-variant/60 uppercase tracking-wider">学习</p>
-        <a href="learning.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="trophy" class="w-4 h-4"></i>闯关学习
-        </a>
-        <a href="growth.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="user-check" class="w-4 h-4"></i>成长档案
-        </a>
-        <a href="resources.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="book-open" class="w-4 h-4"></i>资料中心
-        </a>
-        <p class="px-3 py-1 mt-3 text-xs font-medium text-on-surface-variant/60 uppercase tracking-wider">管理</p>
-        <a href="trainee-board.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="users" class="w-4 h-4"></i>新人看板
-        </a>
-        <a href="diagnosis.html" class="flex items-center gap-3 px-3 py-2 rounded-md bg-primary/10 text-primary font-medium text-sm" aria-current="page">
-          <i data-lucide="scan-search" class="w-4 h-4"></i>双轨诊断
-        </a>
-        <a href="empowerment.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+        <a href="empowerment.html" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
           <i data-lucide="zap" class="w-4 h-4"></i>赋能中心
         </a>
-        <a href="qc-review.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="mic" class="w-4 h-4"></i>质检审核
+        <a href="diagnosis.html" class="flex items-center gap-3 px-3 py-2.5 rounded-md bg-primary/10 text-primary font-medium text-sm" aria-current="page">
+          <i data-lucide="git-branch" class="w-4 h-4"></i>双轨诊断
         </a>
-        <a href="assessment.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="clipboard-check" class="w-4 h-4"></i>日常考核
+        <a href="trainee-prescription.html" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="clipboard-list" class="w-4 h-4"></i>我的处方
         </a>
-        <p class="px-3 py-1 mt-3 text-xs font-medium text-on-surface-variant/60 uppercase tracking-wider">数据</p>
-        <a href="dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="chart-bar" class="w-4 h-4"></i>数据看板
-        </a>
-        <a href="overview.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="activity" class="w-4 h-4"></i>全局概览
-        </a>
-        <a href="scrm-import.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="database" class="w-4 h-4"></i>业务数据
-        </a>
-        <p class="px-3 py-1 mt-3 text-xs font-medium text-on-surface-variant/60 uppercase tracking-wider">配置</p>
-        <a href="question-bank.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="file-question" class="w-4 h-4"></i>题库管理
-        </a>
-        <a href="settings.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="settings" class="w-4 h-4"></i>系统设置
+        <a href="mentor-board.html" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="users" class="w-4 h-4"></i>带教看板
         </a>
       </div>
     </aside>
-  <!-- @nav:end 导航组件 -->
 
-  <main class="flex-1 min-w-0 overflow-y-auto bg-background p-6">
     <!-- @main-content:start -->
+    <main class="flex-1 min-w-0 overflow-y-auto bg-background p-6">
 
-    <!-- 页面标题 -->
-    <div class="flex items-center justify-between mb-6">
-      <div>
-        <h1 class="text-2xl font-bold text-on-surface">双轨诊断</h1>
-        <p class="text-sm text-on-surface-variant mt-1">过程线与结果线交叉验证，精准定位问题根因</p>
-      </div>
-      <div class="flex items-center gap-3">
-        <a href="scrm-import.html" class="bg-surface-container text-on-surface px-4 py-2 rounded-md text-sm font-medium hover:bg-surface-container-high active:scale-[0.98] transition-all inline-flex items-center gap-2">
-          <i data-lucide="database" class="w-3.5 h-3.5"></i>导入SCRM数据
-        </a>
-        <button id="btn-threshold" class="bg-primary text-on-primary px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all inline-flex items-center gap-2">
-          <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i>阈值设置
-        </button>
-      </div>
-    </div>
-
-    <!-- 主体区域：四象限图 + 归因面板 -->
-    <div class="flex gap-6 mb-6">
-
-      <!-- 左侧：四象限散点图 -->
-      <div class="flex-1 bg-surface rounded-lg shadow-card p-5">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-base font-semibold text-on-surface">四象限分布</h2>
-          <div class="flex items-center gap-4 text-xs text-on-surface-variant">
-            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-success inline-block"></span>A 达标</span>
-            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-primary inline-block"></span>B 机制问题</span>
-            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-warning inline-block"></span>C 运气型</span>
-            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-error inline-block"></span>D 能力问题</span>
-          </div>
-        </div>
-        <div id="quadrant-chart" class="relative" style="height: 400px;">
-          <svg viewBox="0 0 600 400" class="w-full h-full" style="font-family: 'Noto Sans SC', system-ui, sans-serif;">
-            <!-- 象限背景色 -->
-            <!-- A象限(右上): 过程合格+结果合格 -->
-            <rect x="300" y="0" width="300" height="200" fill="#22c55e" opacity="0.04"/>
-            <!-- B象限(右下): 过程合格+结果不合格 -->
-            <rect x="300" y="200" width="300" height="200" fill="#2978B5" opacity="0.04"/>
-            <!-- C象限(左上): 过程不合格+结果合格 -->
-            <rect x="0" y="0" width="300" height="200" fill="#f59e0b" opacity="0.04"/>
-            <!-- D象限(左下): 过程不合格+结果不合格 -->
-            <rect x="0" y="200" width="300" height="200" fill="#ef4444" opacity="0.04"/>
-
-            <!-- 网格线 -->
-            <line x1="0" y1="40" x2="600" y2="40" stroke="#E6E1D8" stroke-width="0.5" stroke-dasharray="4,4"/>
-            <line x1="0" y1="80" x2="600" y2="80" stroke="#E6E1D8" stroke-width="0.5" stroke-dasharray="4,4"/>
-            <line x1="0" y1="120" x2="600" y2="120" stroke="#E6E1D8" stroke-width="0.5" stroke-dasharray="4,4"/>
-            <line x1="0" y1="160" x2="600" y2="160" stroke="#E6E1D8" stroke-width="0.5" stroke-dasharray="4,4"/>
-            <line x1="0" y1="240" x2="600" y2="240" stroke="#E6E1D8" stroke-width="0.5" stroke-dasharray="4,4"/>
-            <line x1="0" y1="280" x2="600" y2="280" stroke="#E6E1D8" stroke-width="0.5" stroke-dasharray="4,4"/>
-            <line x1="0" y1="320" x2="600" y2="320" stroke="#E6E1D8" stroke-width="0.5" stroke-dasharray="4,4"/>
-            <line x1="0" y1="360" x2="600" y2="360" stroke="#E6E1D8" stroke-width="0.5" stroke-dasharray="4,4"/>
-
-            <line x1="60" y1="0" x2="60" y2="400" stroke="#E6E1D8" stroke-width="0.5" stroke-dasharray="4,4"/>
-            <line x1="120" y1="0" x2="120" y2="400" stroke="#E6E1D8" stroke-width="0.5" stroke-dasharray="4,4"/>
-            <line x1="180" y1="0" x2="180" y2="400" stroke="#E6E1D8" stroke-width="0.5" stroke-dasharray="4,4"/>
-            <line x1="240" y1="0" x2="240" y2="400" stroke="#E6E1D8" stroke-width="0.5" stroke-dasharray="4,4"/>
-            <line x1="360" y1="0" x2="360" y2="400" stroke="#E6E1D8" stroke-width="0.5" stroke-dasharray="4,4"/>
-            <line x1="420" y1="0" x2="420" y2="400" stroke="#E6E1D8" stroke-width="0.5" stroke-dasharray="4,4"/>
-            <line x1="480" y1="0" x2="480" y2="400" stroke="#E6E1D8" stroke-width="0.5" stroke-dasharray="4,4"/>
-            <line x1="540" y1="0" x2="540" y2="400" stroke="#E6E1D8" stroke-width="0.5" stroke-dasharray="4,4"/>
-
-            <!-- 合格线(虚线) - 过程线70%和结果线70% -->
-            <line x1="420" y1="0" x2="420" y2="400" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="8,4" opacity="0.6"/>
-            <line x1="0" y1="120" x2="600" y2="120" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="8,4" opacity="0.6"/>
-
-            <!-- 合格线标注 -->
-            <text x="425" y="14" font-size="10" fill="#ef4444" opacity="0.7">过程线合格线 70%</text>
-            <text x="4" y="116" font-size="10" fill="#ef4444" opacity="0.7">结果线合格线 70%</text>
-
-            <!-- 象限标签 -->
-            <text x="450" y="30" font-size="13" font-weight="600" fill="#22c55e" opacity="0.5">A · 达标</text>
-            <text x="450" y="220" font-size="13" font-weight="600" fill="#2978B5" opacity="0.5">B · 机制问题</text>
-            <text x="20" y="30" font-size="13" font-weight="600" fill="#f59e0b" opacity="0.5">C · 运气型</text>
-            <text x="20" y="220" font-size="13" font-weight="600" fill="#ef4444" opacity="0.5">D · 能力问题</text>
-
-            <!-- 坐标轴 -->
-            <line x1="0" y1="400" x2="600" y2="400" stroke="#D4CFC4" stroke-width="1"/>
-            <line x1="0" y1="0" x2="0" y2="400" stroke="#D4CFC4" stroke-width="1"/>
-
-            <!-- X轴刻度标注 -->
-            <text x="0" y="418" font-size="10" fill="#667085" text-anchor="middle">0%</text>
-            <text x="120" y="418" font-size="10" fill="#667085" text-anchor="middle">20%</text>
-            <text x="240" y="418" font-size="10" fill="#667085" text-anchor="middle">40%</text>
-            <text x="360" y="418" font-size="10" fill="#667085" text-anchor="middle">60%</text>
-            <text x="480" y="418" font-size="10" fill="#667085" text-anchor="middle">80%</text>
-            <text x="600" y="418" font-size="10" fill="#667085" text-anchor="middle">100%</text>
-            <text x="300" y="438" font-size="11" fill="#667085" text-anchor="middle" font-weight="500">过程线合格率</text>
-
-            <!-- Y轴刻度标注 -->
-            <text x="-10" y="404" font-size="10" fill="#667085" text-anchor="end">0%</text>
-            <text x="-10" y="324" font-size="10" fill="#667085" text-anchor="end">20%</text>
-            <text x="-10" y="244" font-size="10" fill="#667085" text-anchor="end">40%</text>
-            <text x="-10" y="164" font-size="10" fill="#667085" text-anchor="end">60%</text>
-            <text x="-10" y="84" font-size="10" fill="#667085" text-anchor="end">80%</text>
-            <text x="-10" y="4" font-size="10" fill="#667085" text-anchor="end">100%</text>
-
-            <!-- 散点：8个新人 -->
-            <!-- A象限-王芳: 过程85%, 结果92% -->
-            <g class="cursor-pointer trainee-dot" data-id="1" data-name="王芳" data-quadrant="A">
-              <circle cx="510" cy="72" r="22" fill="#22c55e" opacity="0.15"/>
-              <circle cx="510" cy="72" r="16" fill="#22c55e" opacity="0.2" stroke="#22c55e" stroke-width="1.5"/>
-              <text x="510" y="72" font-size="11" font-weight="600" fill="#22c55e" text-anchor="middle" dominant-baseline="central">王</text>
-            </g>
-            <!-- A象限-李明: 过程75%, 结果82% -->
-            <g class="cursor-pointer trainee-dot" data-id="2" data-name="李明" data-quadrant="A">
-              <circle cx="450" cy="112" r="22" fill="#22c55e" opacity="0.15"/>
-              <circle cx="450" cy="112" r="16" fill="#22c55e" opacity="0.2" stroke="#22c55e" stroke-width="1.5"/>
-              <text x="450" y="112" font-size="11" font-weight="600" fill="#22c55e" text-anchor="middle" dominant-baseline="central">李</text>
-            </g>
-            <!-- B象限-张伟: 过程80%, 结果55% -->
-            <g class="cursor-pointer trainee-dot" data-id="3" data-name="张伟" data-quadrant="B">
-              <circle cx="480" cy="240" r="22" fill="#2978B5" opacity="0.15"/>
-              <circle cx="480" cy="240" r="16" fill="#2978B5" opacity="0.2" stroke="#2978B5" stroke-width="1.5"/>
-              <text x="480" y="240" font-size="11" font-weight="600" fill="#2978B5" text-anchor="middle" dominant-baseline="central">张</text>
-            </g>
-            <!-- B象限-刘洋: 过程72%, 结果48% -->
-            <g class="cursor-pointer trainee-dot" data-id="4" data-name="刘洋" data-quadrant="B">
-              <circle cx="432" cy="272" r="22" fill="#2978B5" opacity="0.15"/>
-              <circle cx="432" cy="272" r="16" fill="#2978B5" opacity="0.2" stroke="#2978B5" stroke-width="1.5"/>
-              <text x="432" y="272" font-size="11" font-weight="600" fill="#2978B5" text-anchor="middle" dominant-baseline="central">刘</text>
-            </g>
-            <!-- C象限-陈静: 过程55%, 结果88% -->
-            <g class="cursor-pointer trainee-dot" data-id="5" data-name="陈静" data-quadrant="C">
-              <circle cx="330" cy="96" r="22" fill="#f59e0b" opacity="0.15"/>
-              <circle cx="330" cy="96" r="16" fill="#f59e0b" opacity="0.2" stroke="#f59e0b" stroke-width="1.5"/>
-              <text x="330" y="96" font-size="11" font-weight="600" fill="#f59e0b" text-anchor="middle" dominant-baseline="central">陈</text>
-            </g>
-            <!-- C象限-赵鑫: 过程62%, 结果75% -->
-            <g class="cursor-pointer trainee-dot" data-id="6" data-name="赵鑫" data-quadrant="C">
-              <circle cx="372" cy="160" r="22" fill="#f59e0b" opacity="0.15"/>
-              <circle cx="372" cy="160" r="16" fill="#f59e0b" opacity="0.2" stroke="#f59e0b" stroke-width="1.5"/>
-              <text x="372" y="160" font-size="11" font-weight="600" fill="#f59e0b" text-anchor="middle" dominant-baseline="central">赵</text>
-            </g>
-            <!-- D象限-周婷: 过程45%, 结果52% -->
-            <g class="cursor-pointer trainee-dot" data-id="7" data-name="周婷" data-quadrant="D">
-              <circle cx="270" cy="248" r="22" fill="#ef4444" opacity="0.15"/>
-              <circle cx="270" cy="248" r="16" fill="#ef4444" opacity="0.2" stroke="#ef4444" stroke-width="1.5"/>
-              <text x="270" y="248" font-size="11" font-weight="600" fill="#ef4444" text-anchor="middle" dominant-baseline="central">周</text>
-            </g>
-            <!-- D象限-吴磊: 过程38%, 结果40% -->
-            <g class="cursor-pointer trainee-dot" data-id="8" data-name="吴磊" data-quadrant="D">
-              <circle cx="228" cy="288" r="22" fill="#ef4444" opacity="0.15"/>
-              <circle cx="228" cy="288" r="16" fill="#ef4444" opacity="0.2" stroke="#ef4444" stroke-width="1.5"/>
-              <text x="228" y="288" font-size="11" font-weight="600" fill="#ef4444" text-anchor="middle" dominant-baseline="central">吴</text>
-            </g>
-          </svg>
-        </div>
-      </div>
-
-      <!-- 右侧：归因面板 -->
-      <div id="attribution-panel" class="w-[380px] shrink-0 bg-surface rounded-lg shadow-card p-5 flex flex-col">
-        <!-- 默认提示（未选中） -->
-        <div id="attribution-empty" class="flex-1 flex flex-col items-center justify-center text-center">
-          <div class="w-16 h-16 rounded-full bg-surface-container flex items-center justify-center mb-4">
-            <i data-lucide="mouse-pointer-click" class="w-7 h-7 text-on-surface-variant"></i>
-          </div>
-          <p class="text-sm font-medium text-on-surface-variant">点击左侧散点查看归因分析</p>
-          <p class="text-xs text-on-surface-variant/60 mt-1">选择一位新人查看不合格项与诊断</p>
-        </div>
-
-        <!-- 选中后的归因内容 -->
-        <div id="attribution-content" class="hidden flex-1 flex flex-col">
-          <!-- 新人信息头 -->
-          <div class="flex items-center gap-3 pb-4 border-b border-outline-variant/15 mb-4">
-            <div id="attr-avatar" class="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center text-success text-sm font-bold">王</div>
-            <div class="flex-1">
-              <h3 id="attr-name" class="text-base font-semibold text-on-surface">王芳</h3>
-              <div class="flex items-center gap-2 mt-0.5">
-                <span id="attr-quadrant-badge" class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">A类 · 达标</span>
-                <span id="attr-stage" class="text-xs text-on-surface-variant">阶段二</span>
+      <!-- 筛选区 -->
+      <div class="bg-surface rounded-lg shadow-card p-4 mb-6">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-4">
+            <!-- 新人选择 -->
+            <div class="flex items-center gap-2">
+              <label class="text-sm font-medium text-on-surface-variant">新人</label>
+              <select id="select-trainee" class="bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors min-w-[160px]">
+                <option value="zhangxiaohong" selected>张小红</option>
+                <option value="liuming">刘明</option>
+                <option value="wangfang">王芳</option>
+                <option value="zhaolei">赵磊</option>
+                <option value="chenyan">陈燕</option>
+              </select>
+            </div>
+            <!-- 诊断周期 -->
+            <div class="flex items-center gap-2">
+              <label class="text-sm font-medium text-on-surface-variant">诊断周期</label>
+              <div class="flex bg-surface-container rounded-md overflow-hidden">
+                <button id="btn-cycle-week" class="px-4 py-2 text-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors">周</button>
+                <button id="btn-cycle-month" class="px-4 py-2 text-sm font-medium bg-primary text-on-primary">月</button>
               </div>
             </div>
-            <button id="btn-close-attr" class="w-7 h-7 rounded-md hover:bg-surface-container flex items-center justify-center text-on-surface-variant transition-colors">
-              <i data-lucide="x" class="w-4 h-4"></i>
+          </div>
+          <!-- 四象限标签 -->
+          <div class="flex items-center gap-3">
+            <span class="text-xs text-on-surface-variant mr-1">四象限分类：</span>
+            <span class="inline-flex items-center px-2.5 py-1 rounded-sm text-xs font-medium bg-success/15 text-success">A类·全合格</span>
+            <span class="inline-flex items-center px-2.5 py-1 rounded-sm text-xs font-medium bg-warning/15 text-warning">B类·结果不合格</span>
+            <span class="inline-flex items-center px-2.5 py-1 rounded-sm text-xs font-medium bg-yellow-400/15 text-yellow-600">C类·过程不合格</span>
+            <span class="inline-flex items-center px-2.5 py-1 rounded-sm text-xs font-medium bg-error/15 text-error">D类·全不合格</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 新人诊断概览卡片 -->
+      <div id="overview-card" class="bg-surface rounded-lg shadow-card p-5 mb-6">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-bold">张</div>
+            <div>
+              <h2 class="text-base font-semibold text-on-surface">张小红</h2>
+              <p class="text-xs text-on-surface-variant">入职45天 · 中医科 · 带教：李老师</p>
+            </div>
+          </div>
+          <span id="quadrant-badge" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-semibold bg-warning/15 text-warning">
+            <i data-lucide="alert-triangle" class="w-4 h-4"></i>B类 · 结果不合格
+          </span>
+        </div>
+        <div class="grid grid-cols-2 gap-6">
+          <!-- 过程线得分 -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-sm font-medium text-on-surface">过程线得分</span>
+              <span class="text-2xl font-bold text-primary">72<span class="text-sm font-normal text-on-surface-variant ml-0.5">分</span></span>
+            </div>
+            <div class="w-full h-2.5 bg-surface-container rounded-full overflow-hidden">
+              <div class="h-full bg-primary-container rounded-full transition-all" style="width: 72%"></div>
+            </div>
+            <div class="flex justify-between mt-1.5">
+              <span class="text-xs text-on-surface-variant">0</span>
+              <span class="text-xs text-success">合格线 60</span>
+              <span class="text-xs text-on-surface-variant">100</span>
+            </div>
+          </div>
+          <!-- 结果线得分 -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-sm font-medium text-on-surface">结果线得分</span>
+              <span class="text-2xl font-bold text-error">58<span class="text-sm font-normal text-on-surface-variant ml-0.5">分</span></span>
+            </div>
+            <div class="w-full h-2.5 bg-surface-container rounded-full overflow-hidden">
+              <div class="h-full bg-error rounded-full transition-all" style="width: 58%"></div>
+            </div>
+            <div class="flex justify-between mt-1.5">
+              <span class="text-xs text-on-surface-variant">0</span>
+              <span class="text-xs text-success">合格线 60</span>
+              <span class="text-xs text-on-surface-variant">100</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 过程线指标对标表 -->
+      <div class="bg-surface rounded-lg shadow-card overflow-hidden mb-6">
+        <div class="px-5 py-4 border-b border-outline-variant/20">
+          <h3 class="text-base font-semibold text-on-surface flex items-center gap-2">
+            <i data-lucide="route" class="w-4 h-4 text-primary-container"></i>过程线指标对标
+          </h3>
+        </div>
+        <!-- 表头 -->
+        <div class="grid grid-cols-7 px-5 py-3 bg-surface-container text-xs font-semibold text-on-surface-variant uppercase tracking-wide">
+          <span>指标名</span>
+          <span>当前值</span>
+          <span>合格阈值</span>
+          <span>良好阈值</span>
+          <span>优秀阈值</span>
+          <span>对标结果</span>
+          <span>操作</span>
+        </div>
+        <div class="divide-y divide-outline-variant/30">
+          <!-- 过程线-闯关 -->
+          <div class="grid grid-cols-7 px-5 py-3.5 hover:bg-surface-container/50 transition-colors items-center">
+            <span class="text-sm font-medium text-on-surface">闯关</span>
+            <span class="text-sm text-on-surface">85分</span>
+            <span class="text-sm text-on-surface-variant">60分</span>
+            <span class="text-sm text-on-surface-variant">75分</span>
+            <span class="text-sm text-on-surface-variant">90分</span>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-blue-500/15 text-blue-600 w-fit">良好</span>
+            <span class="text-sm text-on-surface-variant">—</span>
+          </div>
+          <!-- 过程线-质检 -->
+          <div class="grid grid-cols-7 px-5 py-3.5 hover:bg-surface-container/50 transition-colors items-center">
+            <span class="text-sm font-medium text-on-surface">质检</span>
+            <span class="text-sm text-on-surface">92分</span>
+            <span class="text-sm text-on-surface-variant">60分</span>
+            <span class="text-sm text-on-surface-variant">75分</span>
+            <span class="text-sm text-on-surface-variant">90分</span>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-amber-500/15 text-amber-600 w-fit">优秀</span>
+            <span class="text-sm text-on-surface-variant">—</span>
+          </div>
+          <!-- 过程线-日常考核 -->
+          <div class="grid grid-cols-7 px-5 py-3.5 hover:bg-surface-container/50 transition-colors items-center">
+            <span class="text-sm font-medium text-on-surface">日常考核</span>
+            <span class="text-sm text-on-surface">68分</span>
+            <span class="text-sm text-on-surface-variant">60分</span>
+            <span class="text-sm text-on-surface-variant">75分</span>
+            <span class="text-sm text-on-surface-variant">90分</span>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success w-fit">合格</span>
+            <span class="text-sm text-on-surface-variant">—</span>
+          </div>
+          <!-- 过程线-演练 -->
+          <div class="grid grid-cols-7 px-5 py-3.5 hover:bg-surface-container/50 transition-colors items-center">
+            <span class="text-sm font-medium text-on-surface">演练</span>
+            <span class="text-sm text-on-surface">45分</span>
+            <span class="text-sm text-on-surface-variant">60分</span>
+            <span class="text-sm text-on-surface-variant">75分</span>
+            <span class="text-sm text-on-surface-variant">90分</span>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-error/15 text-error w-fit">不合格</span>
+            <button id="btn-recommend-yanlian" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium bg-primary-container/10 text-primary-container hover:bg-primary-container/20 transition-colors w-fit" data-indicator="yanlian" data-indicator-name="演练">
+              <i data-lucide="lightbulb" class="w-3.5 h-3.5"></i>推荐方案
             </button>
           </div>
-
-          <!-- 双轨评分摘要 -->
-          <div class="grid grid-cols-2 gap-3 mb-4">
-            <div class="bg-surface-container rounded-md p-3">
-              <p class="text-xs text-on-surface-variant mb-1">过程线合格率</p>
-              <p id="attr-process-rate" class="text-lg font-bold text-on-surface">85%</p>
-            </div>
-            <div class="bg-surface-container rounded-md p-3">
-              <p class="text-xs text-on-surface-variant mb-1">结果线合格率</p>
-              <p id="attr-result-rate" class="text-lg font-bold text-on-surface">92%</p>
-            </div>
-          </div>
-
-          <!-- 不合格项列表 -->
-          <div class="flex items-center justify-between mb-3">
-            <h4 class="text-sm font-semibold text-on-surface">不合格项归因</h4>
-            <span id="attr-fail-count" class="text-xs text-on-surface-variant">0 项不合格</span>
-          </div>
-          <div id="attr-items-list" class="flex-1 overflow-y-auto space-y-2.5">
-            <!-- 所有新人归因数据都在DOM中，通过data-name控制显示 -->
-            <!-- 王芳(A类) - 无不合格项 -->
-            <div class="attr-trainee-items" data-name="王芳">
-              <div class="bg-success/5 rounded-md p-3 flex items-center gap-2">
-                <i data-lucide="check-circle-2" class="w-4 h-4 text-success shrink-0"></i>
-                <span class="text-sm text-success font-medium">全部达标，暂无不合格项</span>
-              </div>
-            </div>
-            <!-- 李明(A类) - 无不合格项 -->
-            <div class="attr-trainee-items" data-name="李明">
-              <div class="bg-success/5 rounded-md p-3 flex items-center gap-2">
-                <i data-lucide="check-circle-2" class="w-4 h-4 text-success shrink-0"></i>
-                <span class="text-sm text-success font-medium">全部达标，暂无不合格项</span>
-              </div>
-            </div>
-            <!-- 张伟(B类) - 结果线3项不合格 -->
-            <div class="attr-trainee-items" data-name="张伟">
-              <!-- 列表-不合格项1 -->
-              <div class="bg-surface-container rounded-md p-3">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-sm font-medium text-on-surface">面诊率</span>
-                  <span class="text-xs px-1.5 py-0.5 rounded bg-error/10 text-error font-medium">不合格</span>
-                </div>
-                <div class="grid grid-cols-3 gap-2 text-xs mb-2">
-                  <div><span class="text-on-surface-variant">当前值</span><p class="font-semibold text-error mt-0.5">72%</p></div>
-                  <div><span class="text-on-surface-variant">合格线</span><p class="font-semibold text-on-surface mt-0.5">85%</p></div>
-                  <div><span class="text-on-surface-variant">差距</span><p class="font-semibold text-error mt-0.5">-13%</p></div>
-                </div>
-                <div class="border-t border-outline-variant/10 pt-2">
-                  <p class="text-xs text-on-surface-variant mb-1">诊断：面诊邀约能力不足，首次沟通未有效引导患者到院</p>
-                  <p class="text-xs text-primary font-medium">推荐：面诊邀约专项训练</p>
-                </div>
-              </div>
-              <!-- 列表-不合格项2 -->
-              <div class="bg-surface-container rounded-md p-3">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-sm font-medium text-on-surface">签收率</span>
-                  <span class="text-xs px-1.5 py-0.5 rounded bg-error/10 text-error font-medium">不合格</span>
-                </div>
-                <div class="grid grid-cols-3 gap-2 text-xs mb-2">
-                  <div><span class="text-on-surface-variant">当前值</span><p class="font-semibold text-error mt-0.5">78%</p></div>
-                  <div><span class="text-on-surface-variant">合格线</span><p class="font-semibold text-on-surface mt-0.5">85%</p></div>
-                  <div><span class="text-on-surface-variant">差距</span><p class="font-semibold text-error mt-0.5">-7%</p></div>
-                </div>
-                <div class="border-t border-outline-variant/10 pt-2">
-                  <p class="text-xs text-on-surface-variant mb-1">诊断：签收跟进不到位，患者下单后缺乏持续关怀与催促</p>
-                  <p class="text-xs text-primary font-medium">推荐：签收话术专项训练</p>
-                </div>
-              </div>
-              <!-- 列表-不合格项3 -->
-              <div class="bg-surface-container rounded-md p-3">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-sm font-medium text-on-surface">挂号率</span>
-                  <span class="text-xs px-1.5 py-0.5 rounded bg-error/10 text-error font-medium">不合格</span>
-                </div>
-                <div class="grid grid-cols-3 gap-2 text-xs mb-2">
-                  <div><span class="text-on-surface-variant">当前值</span><p class="font-semibold text-error mt-0.5">68%</p></div>
-                  <div><span class="text-on-surface-variant">合格线</span><p class="font-semibold text-on-surface mt-0.5">80%</p></div>
-                  <div><span class="text-on-surface-variant">差距</span><p class="font-semibold text-error mt-0.5">-12%</p></div>
-                </div>
-                <div class="border-t border-outline-variant/10 pt-2">
-                  <p class="text-xs text-on-surface-variant mb-1">诊断：挂号引导能力不足，未掌握挂号流程的引导话术</p>
-                  <p class="text-xs text-primary font-medium">推荐：挂号引导专项训练</p>
-                </div>
-              </div>
-            </div>
-            <!-- 刘洋(B类) - 结果线4项不合格 -->
-            <div class="attr-trainee-items" data-name="刘洋">
-              <!-- 列表-不合格项1 -->
-              <div class="bg-surface-container rounded-md p-3">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-sm font-medium text-on-surface">加V率</span>
-                  <span class="text-xs px-1.5 py-0.5 rounded bg-error/10 text-error font-medium">不合格</span>
-                </div>
-                <div class="grid grid-cols-3 gap-2 text-xs mb-2">
-                  <div><span class="text-on-surface-variant">当前值</span><p class="font-semibold text-error mt-0.5">82%</p></div>
-                  <div><span class="text-on-surface-variant">合格线</span><p class="font-semibold text-on-surface mt-0.5">90%</p></div>
-                  <div><span class="text-on-surface-variant">差距</span><p class="font-semibold text-error mt-0.5">-8%</p></div>
-                </div>
-                <div class="border-t border-outline-variant/10 pt-2">
-                  <p class="text-xs text-on-surface-variant mb-1">诊断：加微承接能力不足，首呼沟通中未能有效引导加微</p>
-                  <p class="text-xs text-primary font-medium">推荐：加微话术专项训练</p>
-                </div>
-              </div>
-              <!-- 列表-不合格项2 -->
-              <div class="bg-surface-container rounded-md p-3">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-sm font-medium text-on-surface">面诊率</span>
-                  <span class="text-xs px-1.5 py-0.5 rounded bg-error/10 text-error font-medium">不合格</span>
-                </div>
-                <div class="grid grid-cols-3 gap-2 text-xs mb-2">
-                  <div><span class="text-on-surface-variant">当前值</span><p class="font-semibold text-error mt-0.5">65%</p></div>
-                  <div><span class="text-on-surface-variant">合格线</span><p class="font-semibold text-on-surface mt-0.5">85%</p></div>
-                  <div><span class="text-on-surface-variant">差距</span><p class="font-semibold text-error mt-0.5">-20%</p></div>
-                </div>
-                <div class="border-t border-outline-variant/10 pt-2">
-                  <p class="text-xs text-on-surface-variant mb-1">诊断：面诊邀约能力严重不足，沟通中缺乏紧迫感营造</p>
-                  <p class="text-xs text-primary font-medium">推荐：面诊邀约专项训练</p>
-                </div>
-              </div>
-              <!-- 列表-不合格项3 -->
-              <div class="bg-surface-container rounded-md p-3">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-sm font-medium text-on-surface">接诊率</span>
-                  <span class="text-xs px-1.5 py-0.5 rounded bg-error/10 text-error font-medium">不合格</span>
-                </div>
-                <div class="grid grid-cols-3 gap-2 text-xs mb-2">
-                  <div><span class="text-on-surface-variant">当前值</span><p class="font-semibold text-error mt-0.5">60%</p></div>
-                  <div><span class="text-on-surface-variant">合格线</span><p class="font-semibold text-on-surface mt-0.5">80%</p></div>
-                  <div><span class="text-on-surface-variant">差距</span><p class="font-semibold text-error mt-0.5">-20%</p></div>
-                </div>
-                <div class="border-t border-outline-variant/10 pt-2">
-                  <p class="text-xs text-on-surface-variant mb-1">诊断：接诊流程不熟练，未能有效衔接面诊与接诊环节</p>
-                  <p class="text-xs text-primary font-medium">推荐：接诊演练专项训练</p>
-                </div>
-              </div>
-              <!-- 列表-不合格项4 -->
-              <div class="bg-surface-container rounded-md p-3">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-sm font-medium text-on-surface">签收率</span>
-                  <span class="text-xs px-1.5 py-0.5 rounded bg-error/10 text-error font-medium">不合格</span>
-                </div>
-                <div class="grid grid-cols-3 gap-2 text-xs mb-2">
-                  <div><span class="text-on-surface-variant">当前值</span><p class="font-semibold text-error mt-0.5">70%</p></div>
-                  <div><span class="text-on-surface-variant">合格线</span><p class="font-semibold text-on-surface mt-0.5">85%</p></div>
-                  <div><span class="text-on-surface-variant">差距</span><p class="font-semibold text-error mt-0.5">-15%</p></div>
-                </div>
-                <div class="border-t border-outline-variant/10 pt-2">
-                  <p class="text-xs text-on-surface-variant mb-1">诊断：签收跟进不到位，签收话术与催促时机不当</p>
-                  <p class="text-xs text-primary font-medium">推荐：签收话术专项训练</p>
-                </div>
-              </div>
-            </div>
-            <!-- 陈静(C类) - 过程线2项不合格 -->
-            <div class="attr-trainee-items" data-name="陈静">
-              <!-- 列表-不合格项1 -->
-              <div class="bg-surface-container rounded-md p-3">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-sm font-medium text-on-surface">录音质检-沟通技巧</span>
-                  <span class="text-xs px-1.5 py-0.5 rounded bg-error/10 text-error font-medium">不合格</span>
-                </div>
-                <div class="grid grid-cols-3 gap-2 text-xs mb-2">
-                  <div><span class="text-on-surface-variant">当前值</span><p class="font-semibold text-error mt-0.5">62</p></div>
-                  <div><span class="text-on-surface-variant">合格线</span><p class="font-semibold text-on-surface mt-0.5">70</p></div>
-                  <div><span class="text-on-surface-variant">差距</span><p class="font-semibold text-error mt-0.5">-8</p></div>
-                </div>
-                <div class="border-t border-outline-variant/10 pt-2">
-                  <p class="text-xs text-on-surface-variant mb-1">诊断：沟通技巧不足，倾听与共情能力欠缺，容易引发患者反感</p>
-                  <p class="text-xs text-primary font-medium">推荐：沟通技巧专项训练</p>
-                </div>
-              </div>
-              <!-- 列表-不合格项2 -->
-              <div class="bg-surface-container rounded-md p-3">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-sm font-medium text-on-surface">日常考核</span>
-                  <span class="text-xs px-1.5 py-0.5 rounded bg-error/10 text-error font-medium">不合格</span>
-                </div>
-                <div class="grid grid-cols-3 gap-2 text-xs mb-2">
-                  <div><span class="text-on-surface-variant">当前值</span><p class="font-semibold text-error mt-0.5">58</p></div>
-                  <div><span class="text-on-surface-variant">合格线</span><p class="font-semibold text-on-surface mt-0.5">70</p></div>
-                  <div><span class="text-on-surface-variant">差距</span><p class="font-semibold text-error mt-0.5">-12</p></div>
-                </div>
-                <div class="border-t border-outline-variant/10 pt-2">
-                  <p class="text-xs text-on-surface-variant mb-1">诊断：日常工作态度与纪律需改善，存在迟到、漏打卡等情况</p>
-                  <p class="text-xs text-primary font-medium">推荐：日常行为纠正方案</p>
-                </div>
-              </div>
-            </div>
-            <!-- 赵鑫(C类) - 过程线1项不合格 -->
-            <div class="attr-trainee-items" data-name="赵鑫">
-              <!-- 列表-不合格项1 -->
-              <div class="bg-surface-container rounded-md p-3">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-sm font-medium text-on-surface">录音质检-业务专业</span>
-                  <span class="text-xs px-1.5 py-0.5 rounded bg-error/10 text-error font-medium">不合格</span>
-                </div>
-                <div class="grid grid-cols-3 gap-2 text-xs mb-2">
-                  <div><span class="text-on-surface-variant">当前值</span><p class="font-semibold text-error mt-0.5">65</p></div>
-                  <div><span class="text-on-surface-variant">合格线</span><p class="font-semibold text-on-surface mt-0.5">70</p></div>
-                  <div><span class="text-on-surface-variant">差距</span><p class="font-semibold text-error mt-0.5">-5</p></div>
-                </div>
-                <div class="border-t border-outline-variant/10 pt-2">
-                  <p class="text-xs text-on-surface-variant mb-1">诊断：业务知识不够扎实，对糖尿病用药方案掌握不全面</p>
-                  <p class="text-xs text-primary font-medium">推荐：业务话术专项训练</p>
-                </div>
-              </div>
-            </div>
-            <!-- 周婷(D类) - 过程线3项+结果线3项不合格 -->
-            <div class="attr-trainee-items" data-name="周婷">
-              <p class="text-xs text-on-surface-variant mb-2 font-medium">过程线不合格</p>
-              <!-- 列表-不合格项1 -->
-              <div class="bg-surface-container rounded-md p-3 mb-2.5">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-sm font-medium text-on-surface">闯关成绩</span>
-                  <span class="text-xs px-1.5 py-0.5 rounded bg-error/10 text-error font-medium">不合格</span>
-                </div>
-                <div class="grid grid-cols-3 gap-2 text-xs mb-2">
-                  <div><span class="text-on-surface-variant">当前值</span><p class="font-semibold text-error mt-0.5">52</p></div>
-                  <div><span class="text-on-surface-variant">合格线</span><p class="font-semibold text-on-surface mt-0.5">70</p></div>
-                  <div><span class="text-on-surface-variant">差距</span><p class="font-semibold text-error mt-0.5">-18</p></div>
-                </div>
-                <div class="border-t border-outline-variant/10 pt-2">
-                  <p class="text-xs text-on-surface-variant mb-1">诊断：理论知识掌握不足，多关卡未通过</p>
-                  <p class="text-xs text-primary font-medium">推荐：补充理论闯关训练</p>
-                </div>
-              </div>
-              <!-- 列表-不合格项2 -->
-              <div class="bg-surface-container rounded-md p-3 mb-2.5">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-sm font-medium text-on-surface">录音质检-流程执行</span>
-                  <span class="text-xs px-1.5 py-0.5 rounded bg-error/10 text-error font-medium">不合格</span>
-                </div>
-                <div class="grid grid-cols-3 gap-2 text-xs mb-2">
-                  <div><span class="text-on-surface-variant">当前值</span><p class="font-semibold text-error mt-0.5">55</p></div>
-                  <div><span class="text-on-surface-variant">合格线</span><p class="font-semibold text-on-surface mt-0.5">70</p></div>
-                  <div><span class="text-on-surface-variant">差距</span><p class="font-semibold text-error mt-0.5">-15</p></div>
-                </div>
-                <div class="border-t border-outline-variant/10 pt-2">
-                  <p class="text-xs text-on-surface-variant mb-1">诊断：流程执行不规范，遗漏关键环节</p>
-                  <p class="text-xs text-primary font-medium">推荐：流程执行专项训练</p>
-                </div>
-              </div>
-              <!-- 列表-不合格项3 -->
-              <div class="bg-surface-container rounded-md p-3 mb-2.5">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-sm font-medium text-on-surface">日常考核</span>
-                  <span class="text-xs px-1.5 py-0.5 rounded bg-error/10 text-error font-medium">不合格</span>
-                </div>
-                <div class="grid grid-cols-3 gap-2 text-xs mb-2">
-                  <div><span class="text-on-surface-variant">当前值</span><p class="font-semibold text-error mt-0.5">50</p></div>
-                  <div><span class="text-on-surface-variant">合格线</span><p class="font-semibold text-on-surface mt-0.5">70</p></div>
-                  <div><span class="text-on-surface-variant">差距</span><p class="font-semibold text-error mt-0.5">-20</p></div>
-                </div>
-                <div class="border-t border-outline-variant/10 pt-2">
-                  <p class="text-xs text-on-surface-variant mb-1">诊断：日常行为规范需全面纠正</p>
-                  <p class="text-xs text-primary font-medium">推荐：日常行为纠正方案</p>
-                </div>
-              </div>
-              <p class="text-xs text-on-surface-variant mb-2 font-medium">结果线不合格</p>
-              <!-- 列表-不合格项4 -->
-              <div class="bg-surface-container rounded-md p-3 mb-2.5">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-sm font-medium text-on-surface">面诊率</span>
-                  <span class="text-xs px-1.5 py-0.5 rounded bg-error/10 text-error font-medium">不合格</span>
-                </div>
-                <div class="grid grid-cols-3 gap-2 text-xs mb-2">
-                  <div><span class="text-on-surface-variant">当前值</span><p class="font-semibold text-error mt-0.5">60%</p></div>
-                  <div><span class="text-on-surface-variant">合格线</span><p class="font-semibold text-on-surface mt-0.5">85%</p></div>
-                  <div><span class="text-on-surface-variant">差距</span><p class="font-semibold text-error mt-0.5">-25%</p></div>
-                </div>
-                <div class="border-t border-outline-variant/10 pt-2">
-                  <p class="text-xs text-on-surface-variant mb-1">诊断：面诊邀约能力严重不足</p>
-                  <p class="text-xs text-primary font-medium">推荐：面诊邀约专项训练</p>
-                </div>
-              </div>
-              <!-- 列表-不合格项5 -->
-              <div class="bg-surface-container rounded-md p-3 mb-2.5">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-sm font-medium text-on-surface">接诊率</span>
-                  <span class="text-xs px-1.5 py-0.5 rounded bg-error/10 text-error font-medium">不合格</span>
-                </div>
-                <div class="grid grid-cols-3 gap-2 text-xs mb-2">
-                  <div><span class="text-on-surface-variant">当前值</span><p class="font-semibold text-error mt-0.5">55%</p></div>
-                  <div><span class="text-on-surface-variant">合格线</span><p class="font-semibold text-on-surface mt-0.5">80%</p></div>
-                  <div><span class="text-on-surface-variant">差距</span><p class="font-semibold text-error mt-0.5">-25%</p></div>
-                </div>
-                <div class="border-t border-outline-variant/10 pt-2">
-                  <p class="text-xs text-on-surface-variant mb-1">诊断：接诊流程不熟练，衔接能力差</p>
-                  <p class="text-xs text-primary font-medium">推荐：接诊演练专项训练</p>
-                </div>
-              </div>
-              <!-- 列表-不合格项6 -->
-              <div class="bg-surface-container rounded-md p-3">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-sm font-medium text-on-surface">签收率</span>
-                  <span class="text-xs px-1.5 py-0.5 rounded bg-error/10 text-error font-medium">不合格</span>
-                </div>
-                <div class="grid grid-cols-3 gap-2 text-xs mb-2">
-                  <div><span class="text-on-surface-variant">当前值</span><p class="font-semibold text-error mt-0.5">62%</p></div>
-                  <div><span class="text-on-surface-variant">合格线</span><p class="font-semibold text-on-surface mt-0.5">85%</p></div>
-                  <div><span class="text-on-surface-variant">差距</span><p class="font-semibold text-error mt-0.5">-23%</p></div>
-                </div>
-                <div class="border-t border-outline-variant/10 pt-2">
-                  <p class="text-xs text-on-surface-variant mb-1">诊断：签收跟进不到位，缺乏持续关怀</p>
-                  <p class="text-xs text-primary font-medium">推荐：签收话术专项训练</p>
-                </div>
-              </div>
-            </div>
-            <!-- 吴磊(D类) - 过程线4项+结果线4项不合格 -->
-            <div class="attr-trainee-items" data-name="吴磊">
-              <p class="text-xs text-on-surface-variant mb-2 font-medium">过程线不合格</p>
-              <!-- 列表-不合格项1 -->
-              <div class="bg-surface-container rounded-md p-3 mb-2.5">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-sm font-medium text-on-surface">闯关成绩</span>
-                  <span class="text-xs px-1.5 py-0.5 rounded bg-error/10 text-error font-medium">不合格</span>
-                </div>
-                <div class="grid grid-cols-3 gap-2 text-xs mb-2">
-                  <div><span class="text-on-surface-variant">当前值</span><p class="font-semibold text-error mt-0.5">45</p></div>
-                  <div><span class="text-on-surface-variant">合格线</span><p class="font-semibold text-on-surface mt-0.5">70</p></div>
-                  <div><span class="text-on-surface-variant">差距</span><p class="font-semibold text-error mt-0.5">-25</p></div>
-                </div>
-                <div class="border-t border-outline-variant/10 pt-2">
-                  <p class="text-xs text-on-surface-variant mb-1">诊断：理论知识严重不足，需全面复学</p>
-                  <p class="text-xs text-primary font-medium">推荐：补充理论闯关训练</p>
-                </div>
-              </div>
-              <!-- 列表-不合格项2 -->
-              <div class="bg-surface-container rounded-md p-3 mb-2.5">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-sm font-medium text-on-surface">录音质检-业务专业</span>
-                  <span class="text-xs px-1.5 py-0.5 rounded bg-error/10 text-error font-medium">不合格</span>
-                </div>
-                <div class="grid grid-cols-3 gap-2 text-xs mb-2">
-                  <div><span class="text-on-surface-variant">当前值</span><p class="font-semibold text-error mt-0.5">48</p></div>
-                  <div><span class="text-on-surface-variant">合格线</span><p class="font-semibold text-on-surface mt-0.5">70</p></div>
-                  <div><span class="text-on-surface-variant">差距</span><p class="font-semibold text-error mt-0.5">-22</p></div>
-                </div>
-                <div class="border-t border-outline-variant/10 pt-2">
-                  <p class="text-xs text-on-surface-variant mb-1">诊断：业务专业知识严重欠缺</p>
-                  <p class="text-xs text-primary font-medium">推荐：业务话术专项训练</p>
-                </div>
-              </div>
-              <!-- 列表-不合格项3 -->
-              <div class="bg-surface-container rounded-md p-3 mb-2.5">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-sm font-medium text-on-surface">录音质检-服务规范</span>
-                  <span class="text-xs px-1.5 py-0.5 rounded bg-error/10 text-error font-medium">不合格</span>
-                </div>
-                <div class="grid grid-cols-3 gap-2 text-xs mb-2">
-                  <div><span class="text-on-surface-variant">当前值</span><p class="font-semibold text-error mt-0.5">52</p></div>
-                  <div><span class="text-on-surface-variant">合格线</span><p class="font-semibold text-on-surface mt-0.5">70</p></div>
-                  <div><span class="text-on-surface-variant">差距</span><p class="font-semibold text-error mt-0.5">-18</p></div>
-                </div>
-                <div class="border-t border-outline-variant/10 pt-2">
-                  <p class="text-xs text-on-surface-variant mb-1">诊断：服务规范意识薄弱，用语不专业</p>
-                  <p class="text-xs text-primary font-medium">推荐：服务规范专项训练</p>
-                </div>
-              </div>
-              <!-- 列表-不合格项4 -->
-              <div class="bg-surface-container rounded-md p-3 mb-2.5">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-sm font-medium text-on-surface">日常考核</span>
-                  <span class="text-xs px-1.5 py-0.5 rounded bg-error/10 text-error font-medium">不合格</span>
-                </div>
-                <div class="grid grid-cols-3 gap-2 text-xs mb-2">
-                  <div><span class="text-on-surface-variant">当前值</span><p class="font-semibold text-error mt-0.5">40</p></div>
-                  <div><span class="text-on-surface-variant">合格线</span><p class="font-semibold text-on-surface mt-0.5">70</p></div>
-                  <div><span class="text-on-surface-variant">差距</span><p class="font-semibold text-error mt-0.5">-30</p></div>
-                </div>
-                <div class="border-t border-outline-variant/10 pt-2">
-                  <p class="text-xs text-on-surface-variant mb-1">诊断：日常行为需全面纠正，态度和纪律均不达标</p>
-                  <p class="text-xs text-primary font-medium">推荐：日常行为纠正方案</p>
-                </div>
-              </div>
-              <p class="text-xs text-on-surface-variant mb-2 font-medium">结果线不合格</p>
-              <!-- 列表-不合格项5 -->
-              <div class="bg-surface-container rounded-md p-3 mb-2.5">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-sm font-medium text-on-surface">加V率</span>
-                  <span class="text-xs px-1.5 py-0.5 rounded bg-error/10 text-error font-medium">不合格</span>
-                </div>
-                <div class="grid grid-cols-3 gap-2 text-xs mb-2">
-                  <div><span class="text-on-surface-variant">当前值</span><p class="font-semibold text-error mt-0.5">75%</p></div>
-                  <div><span class="text-on-surface-variant">合格线</span><p class="font-semibold text-on-surface mt-0.5">90%</p></div>
-                  <div><span class="text-on-surface-variant">差距</span><p class="font-semibold text-error mt-0.5">-15%</p></div>
-                </div>
-                <div class="border-t border-outline-variant/10 pt-2">
-                  <p class="text-xs text-on-surface-variant mb-1">诊断：加微承接能力严重不足</p>
-                  <p class="text-xs text-primary font-medium">推荐：加微话术专项训练</p>
-                </div>
-              </div>
-              <!-- 列表-不合格项6 -->
-              <div class="bg-surface-container rounded-md p-3 mb-2.5">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-sm font-medium text-on-surface">面诊率</span>
-                  <span class="text-xs px-1.5 py-0.5 rounded bg-error/10 text-error font-medium">不合格</span>
-                </div>
-                <div class="grid grid-cols-3 gap-2 text-xs mb-2">
-                  <div><span class="text-on-surface-variant">当前值</span><p class="font-semibold text-error mt-0.5">50%</p></div>
-                  <div><span class="text-on-surface-variant">合格线</span><p class="font-semibold text-on-surface mt-0.5">85%</p></div>
-                  <div><span class="text-on-surface-variant">差距</span><p class="font-semibold text-error mt-0.5">-35%</p></div>
-                </div>
-                <div class="border-t border-outline-variant/10 pt-2">
-                  <p class="text-xs text-on-surface-variant mb-1">诊断：面诊邀约能力严重不足</p>
-                  <p class="text-xs text-primary font-medium">推荐：面诊邀约专项训练</p>
-                </div>
-              </div>
-              <!-- 列表-不合格项7 -->
-              <div class="bg-surface-container rounded-md p-3 mb-2.5">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-sm font-medium text-on-surface">接诊率</span>
-                  <span class="text-xs px-1.5 py-0.5 rounded bg-error/10 text-error font-medium">不合格</span>
-                </div>
-                <div class="grid grid-cols-3 gap-2 text-xs mb-2">
-                  <div><span class="text-on-surface-variant">当前值</span><p class="font-semibold text-error mt-0.5">48%</p></div>
-                  <div><span class="text-on-surface-variant">合格线</span><p class="font-semibold text-on-surface mt-0.5">80%</p></div>
-                  <div><span class="text-on-surface-variant">差距</span><p class="font-semibold text-error mt-0.5">-32%</p></div>
-                </div>
-                <div class="border-t border-outline-variant/10 pt-2">
-                  <p class="text-xs text-on-surface-variant mb-1">诊断：接诊流程极不熟练</p>
-                  <p class="text-xs text-primary font-medium">推荐：接诊演练专项训练</p>
-                </div>
-              </div>
-              <!-- 列表-不合格项8 -->
-              <div class="bg-surface-container rounded-md p-3">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-sm font-medium text-on-surface">签收率</span>
-                  <span class="text-xs px-1.5 py-0.5 rounded bg-error/10 text-error font-medium">不合格</span>
-                </div>
-                <div class="grid grid-cols-3 gap-2 text-xs mb-2">
-                  <div><span class="text-on-surface-variant">当前值</span><p class="font-semibold text-error mt-0.5">55%</p></div>
-                  <div><span class="text-on-surface-variant">合格线</span><p class="font-semibold text-on-surface mt-0.5">85%</p></div>
-                  <div><span class="text-on-surface-variant">差距</span><p class="font-semibold text-error mt-0.5">-30%</p></div>
-                </div>
-                <div class="border-t border-outline-variant/10 pt-2">
-                  <p class="text-xs text-on-surface-variant mb-1">诊断：签收跟进严重缺失</p>
-                  <p class="text-xs text-primary font-medium">推荐：签收话术专项训练</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 一键赋能按钮 -->
-          <div class="pt-4 mt-auto border-t border-outline-variant/15">
-            <a id="btn-empower" href="empowerment.html" class="block w-full bg-primary text-on-primary px-4 py-2.5 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all text-center">
-              一键推送赋能方案
-            </a>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 底部：业务漏斗趋势图 -->
-    <div class="bg-surface rounded-lg shadow-card p-5">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="text-base font-semibold text-on-surface">业务漏斗趋势</h2>
-        <span class="text-xs text-on-surface-variant">最近8周各环节转化率</span>
-      </div>
-      <div style="height: 220px;">
-        <svg viewBox="0 0 800 220" class="w-full h-full" style="font-family: 'Noto Sans SC', system-ui, sans-serif;">
-          <!-- 网格线 -->
-          <line x1="40" y1="10" x2="780" y2="10" stroke="#E6E1D8" stroke-width="0.5" stroke-dasharray="3,3"/>
-          <line x1="40" y1="50" x2="780" y2="50" stroke="#E6E1D8" stroke-width="0.5" stroke-dasharray="3,3"/>
-          <line x1="40" y1="90" x2="780" y2="90" stroke="#E6E1D8" stroke-width="0.5" stroke-dasharray="3,3"/>
-          <line x1="40" y1="130" x2="780" y2="130" stroke="#E6E1D8" stroke-width="0.5" stroke-dasharray="3,3"/>
-          <line x1="40" y1="170" x2="780" y2="170" stroke="#E6E1D8" stroke-width="0.5" stroke-dasharray="3,3"/>
-          <line x1="40" y1="200" x2="780" y2="200" stroke="#D4CFC4" stroke-width="1"/>
-
-          <!-- Y轴标签 -->
-          <text x="35" y="14" font-size="9" fill="#667085" text-anchor="end">100%</text>
-          <text x="35" y="54" font-size="9" fill="#667085" text-anchor="end">80%</text>
-          <text x="35" y="94" font-size="9" fill="#667085" text-anchor="end">60%</text>
-          <text x="35" y="134" font-size="9" fill="#667085" text-anchor="end">40%</text>
-          <text x="35" y="174" font-size="9" fill="#667085" text-anchor="end">20%</text>
-          <text x="35" y="204" font-size="9" fill="#667085" text-anchor="end">0%</text>
-
-          <!-- X轴标签 - 8周 -->
-          <text x="90" y="215" font-size="9" fill="#667085" text-anchor="middle">W1</text>
-          <text x="190" y="215" font-size="9" fill="#667085" text-anchor="middle">W2</text>
-          <text x="290" y="215" font-size="9" fill="#667085" text-anchor="middle">W3</text>
-          <text x="390" y="215" font-size="9" fill="#667085" text-anchor="middle">W4</text>
-          <text x="490" y="215" font-size="9" fill="#667085" text-anchor="middle">W5</text>
-          <text x="590" y="215" font-size="9" fill="#667085" text-anchor="middle">W6</text>
-          <text x="690" y="215" font-size="9" fill="#667085" text-anchor="middle">W7</text>
-          <text x="780" y="215" font-size="9" fill="#667085" text-anchor="middle">W8</text>
-
-          <!-- 加V率折线 - 绿色 #22c55e -->
-          <!-- 数据: 82%, 85%, 87%, 88%, 90%, 91%, 92%, 93% -->
-          <polyline points="90,36 190,30 290,26 390,24 490,20 590,18 690,16 780,14" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <circle cx="90" cy="36" r="3" fill="#22c55e"/><circle cx="190" cy="30" r="3" fill="#22c55e"/>
-          <circle cx="290" cy="26" r="3" fill="#22c55e"/><circle cx="390" cy="24" r="3" fill="#22c55e"/>
-          <circle cx="490" cy="20" r="3" fill="#22c55e"/><circle cx="590" cy="18" r="3" fill="#22c55e"/>
-          <circle cx="690" cy="16" r="3" fill="#22c55e"/><circle cx="780" cy="14" r="3" fill="#22c55e"/>
-
-          <!-- 用药率折线 - 蓝色 #2978B5 -->
-          <!-- 数据: 78%, 80%, 82%, 85%, 87%, 88%, 90%, 91% -->
-          <polyline points="90,44 190,40 290,36 390,30 490,26 590,24 690,20 780,18" fill="none" stroke="#2978B5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <circle cx="90" cy="44" r="3" fill="#2978B5"/><circle cx="190" cy="40" r="3" fill="#2978B5"/>
-          <circle cx="290" cy="36" r="3" fill="#2978B5"/><circle cx="390" cy="30" r="3" fill="#2978B5"/>
-          <circle cx="490" cy="26" r="3" fill="#2978B5"/><circle cx="590" cy="24" r="3" fill="#2978B5"/>
-          <circle cx="690" cy="20" r="3" fill="#2978B5"/><circle cx="780" cy="18" r="3" fill="#2978B5"/>
-
-          <!-- 面诊率折线 - 橙色 #f59e0b -->
-          <!-- 数据: 70%, 72%, 68%, 75%, 78%, 80%, 82%, 85% -->
-          <polyline points="90,60 190,56 290,64 390,50 490,44 590,40 690,36 780,30" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <circle cx="90" cy="60" r="3" fill="#f59e0b"/><circle cx="190" cy="56" r="3" fill="#f59e0b"/>
-          <circle cx="290" cy="64" r="3" fill="#f59e0b"/><circle cx="390" cy="50" r="3" fill="#f59e0b"/>
-          <circle cx="490" cy="44" r="3" fill="#f59e0b"/><circle cx="590" cy="40" r="3" fill="#f59e0b"/>
-          <circle cx="690" cy="36" r="3" fill="#f59e0b"/><circle cx="780" cy="30" r="3" fill="#f59e0b"/>
-
-          <!-- 接诊率折线 - 红色 #ef4444 -->
-          <!-- 数据: 65%, 68%, 70%, 72%, 75%, 78%, 76%, 80% -->
-          <polyline points="90,70 190,64 290,60 390,56 490,50 590,44 690,48 780,40" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <circle cx="90" cy="70" r="3" fill="#ef4444"/><circle cx="190" cy="64" r="3" fill="#ef4444"/>
-          <circle cx="290" cy="60" r="3" fill="#ef4444"/><circle cx="390" cy="56" r="3" fill="#ef4444"/>
-          <circle cx="490" cy="50" r="3" fill="#ef4444"/><circle cx="590" cy="44" r="3" fill="#ef4444"/>
-          <circle cx="690" cy="48" r="3" fill="#ef4444"/><circle cx="780" cy="40" r="3" fill="#ef4444"/>
-
-          <!-- 签收率折线 - 紫色 #8b5cf6 -->
-          <!-- 数据: 72%, 75%, 78%, 80%, 82%, 85%, 87%, 88% -->
-          <polyline points="90,56 190,50 290,44 390,40 490,36 590,30 690,26 780,24" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <circle cx="90" cy="56" r="3" fill="#8b5cf6"/><circle cx="190" cy="50" r="3" fill="#8b5cf6"/>
-          <circle cx="290" cy="44" r="3" fill="#8b5cf6"/><circle cx="390" cy="40" r="3" fill="#8b5cf6"/>
-          <circle cx="490" cy="36" r="3" fill="#8b5cf6"/><circle cx="590" cy="30" r="3" fill="#8b5cf6"/>
-          <circle cx="690" cy="26" r="3" fill="#8b5cf6"/><circle cx="780" cy="24" r="3" fill="#8b5cf6"/>
-
-          <!-- 挂号率折线 - 青色 #06b6d4 -->
-          <!-- 数据: 60%, 63%, 65%, 68%, 72%, 75%, 78%, 80% -->
-          <polyline points="90,80 190,74 290,70 390,64 490,56 590,50 690,44 780,40" fill="none" stroke="#06b6d4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <circle cx="90" cy="80" r="3" fill="#06b6d4"/><circle cx="190" cy="74" r="3" fill="#06b6d4"/>
-          <circle cx="290" cy="70" r="3" fill="#06b6d4"/><circle cx="390" cy="64" r="3" fill="#06b6d4"/>
-          <circle cx="490" cy="56" r="3" fill="#06b6d4"/><circle cx="590" cy="50" r="3" fill="#06b6d4"/>
-          <circle cx="690" cy="44" r="3" fill="#06b6d4"/><circle cx="780" cy="40" r="3" fill="#06b6d4"/>
-
-          <!-- 合格线标注 -->
-          <line x1="40" y1="30" x2="780" y2="30" stroke="#ef4444" stroke-width="1" stroke-dasharray="6,3" opacity="0.35"/>
-          <text x="782" y="28" font-size="8" fill="#ef4444" opacity="0.5">85%</text>
-        </svg>
-        <!-- 图例 -->
-        <div class="flex items-center justify-center gap-5 mt-3 text-xs text-on-surface-variant">
-          <span class="flex items-center gap-1.5"><span class="w-3 h-0.5 bg-success inline-block rounded"></span>加V率</span>
-          <span class="flex items-center gap-1.5"><span class="w-3 h-0.5 bg-primary inline-block rounded"></span>用药率</span>
-          <span class="flex items-center gap-1.5"><span class="w-3 h-0.5 bg-warning inline-block rounded"></span>面诊率</span>
-          <span class="flex items-center gap-1.5"><span class="w-3 h-0.5 bg-error inline-block rounded"></span>接诊率</span>
-          <span class="flex items-center gap-1.5"><span class="w-3 h-0.5 inline-block rounded" style="background:var(--color-violet-500)"></span>签收率</span>
-          <span class="flex items-center gap-1.5"><span class="w-3 h-0.5 inline-block rounded" style="background:var(--color-cyan-500)"></span>挂号率</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- 阈值设置面板（可展开） -->
-    <div id="threshold-panel" class="mt-6 bg-surface rounded-lg shadow-card overflow-hidden hidden">
-      <!-- 面板头部 -->
-      <div class="flex items-center justify-between px-5 py-4 border-b border-outline-variant/15">
-        <div class="flex items-center gap-2">
-          <i data-lucide="sliders-horizontal" class="w-4 h-4 text-primary"></i>
-          <h2 class="text-base font-semibold text-on-surface">阈值设置</h2>
-          <span class="text-xs text-on-surface-variant ml-1">调整合格/良好/优秀标准后，系统将重新逐项对标并重算四象限</span>
-        </div>
-        <div class="flex items-center gap-3">
-          <button id="btn-reset-threshold" class="bg-surface-container text-on-surface px-3 py-1.5 rounded-md text-sm font-medium hover:bg-surface-container-high transition-all">重置默认</button>
-          <button id="btn-save-threshold" class="bg-primary text-on-primary px-4 py-1.5 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all">保存并重算</button>
-          <button id="btn-close-threshold" class="w-7 h-7 rounded-md hover:bg-surface-container flex items-center justify-center text-on-surface-variant transition-colors">
-            <i data-lucide="x" class="w-4 h-4"></i>
-          </button>
         </div>
       </div>
 
-      <div class="p-5">
-        <div class="grid grid-cols-2 gap-8">
-          <!-- 过程线阈值 -->
-          <div>
-            <h3 class="text-sm font-semibold text-on-surface mb-4 flex items-center gap-2">
-              <span class="w-1.5 h-4 bg-primary rounded-sm inline-block"></span>过程线各环节阈值
-            </h3>
-            <div class="space-y-3">
-              <!-- 闯关成绩 -->
-              <div class="flex items-center gap-3">
-                <span class="text-sm text-on-surface w-28 shrink-0">闯关成绩</span>
-                <div class="flex items-center gap-2 flex-1">
-                  <span class="text-xs text-on-surface-variant w-8">合格</span>
-                  <input type="number" value="70" class="w-16 bg-surface-container border-none rounded-md px-2 py-1.5 text-sm text-on-surface text-center focus:outline-none focus:ring-2 focus:ring-primary/30" data-threshold="process-exam-pass"/>
-                  <span class="text-xs text-on-surface-variant w-8">良好</span>
-                  <input type="number" value="85" class="w-16 bg-surface-container border-none rounded-md px-2 py-1.5 text-sm text-on-surface text-center focus:outline-none focus:ring-2 focus:ring-primary/30" data-threshold="process-exam-good"/>
-                  <span class="text-xs text-on-surface-variant w-8">优秀</span>
-                  <input type="number" value="95" class="w-16 bg-surface-container border-none rounded-md px-2 py-1.5 text-sm text-on-surface text-center focus:outline-none focus:ring-2 focus:ring-primary/30" data-threshold="process-exam-excellent"/>
-                </div>
-              </div>
-              <!-- 录音质检-业务专业 -->
-              <div class="flex items-center gap-3">
-                <span class="text-sm text-on-surface w-28 shrink-0">质检-业务专业</span>
-                <div class="flex items-center gap-2 flex-1">
-                  <span class="text-xs text-on-surface-variant w-8">合格</span>
-                  <input type="number" value="70" class="w-16 bg-surface-container border-none rounded-md px-2 py-1.5 text-sm text-on-surface text-center focus:outline-none focus:ring-2 focus:ring-primary/30"/>
-                  <span class="text-xs text-on-surface-variant w-8">良好</span>
-                  <input type="number" value="85" class="w-16 bg-surface-container border-none rounded-md px-2 py-1.5 text-sm text-on-surface text-center focus:outline-none focus:ring-2 focus:ring-primary/30"/>
-                  <span class="text-xs text-on-surface-variant w-8">优秀</span>
-                  <input type="number" value="95" class="w-16 bg-surface-container border-none rounded-md px-2 py-1.5 text-sm text-on-surface text-center focus:outline-none focus:ring-2 focus:ring-primary/30"/>
-                </div>
-              </div>
-              <!-- 录音质检-服务规范 -->
-              <div class="flex items-center gap-3">
-                <span class="text-sm text-on-surface w-28 shrink-0">质检-服务规范</span>
-                <div class="flex items-center gap-2 flex-1">
-                  <span class="text-xs text-on-surface-variant w-8">合格</span>
-                  <input type="number" value="70" class="w-16 bg-surface-container border-none rounded-md px-2 py-1.5 text-sm text-on-surface text-center focus:outline-none focus:ring-2 focus:ring-primary/30"/>
-                  <span class="text-xs text-on-surface-variant w-8">良好</span>
-                  <input type="number" value="85" class="w-16 bg-surface-container border-none rounded-md px-2 py-1.5 text-sm text-on-surface text-center focus:outline-none focus:ring-2 focus:ring-primary/30"/>
-                  <span class="text-xs text-on-surface-variant w-8">优秀</span>
-                  <input type="number" value="95" class="w-16 bg-surface-container border-none rounded-md px-2 py-1.5 text-sm text-on-surface text-center focus:outline-none focus:ring-2 focus:ring-primary/30"/>
-                </div>
-              </div>
-              <!-- 录音质检-沟通技巧 -->
-              <div class="flex items-center gap-3">
-                <span class="text-sm text-on-surface w-28 shrink-0">质检-沟通技巧</span>
-                <div class="flex items-center gap-2 flex-1">
-                  <span class="text-xs text-on-surface-variant w-8">合格</span>
-                  <input type="number" value="70" class="w-16 bg-surface-container border-none rounded-md px-2 py-1.5 text-sm text-on-surface text-center focus:outline-none focus:ring-2 focus:ring-primary/30"/>
-                  <span class="text-xs text-on-surface-variant w-8">良好</span>
-                  <input type="number" value="85" class="w-16 bg-surface-container border-none rounded-md px-2 py-1.5 text-sm text-on-surface text-center focus:outline-none focus:ring-2 focus:ring-primary/30"/>
-                  <span class="text-xs text-on-surface-variant w-8">优秀</span>
-                  <input type="number" value="95" class="w-16 bg-surface-container border-none rounded-md px-2 py-1.5 text-sm text-on-surface text-center focus:outline-none focus:ring-2 focus:ring-primary/30"/>
-                </div>
-              </div>
-              <!-- 录音质检-流程执行 -->
-              <div class="flex items-center gap-3">
-                <span class="text-sm text-on-surface w-28 shrink-0">质检-流程执行</span>
-                <div class="flex items-center gap-2 flex-1">
-                  <span class="text-xs text-on-surface-variant w-8">合格</span>
-                  <input type="number" value="70" class="w-16 bg-surface-container border-none rounded-md px-2 py-1.5 text-sm text-on-surface text-center focus:outline-none focus:ring-2 focus:ring-primary/30"/>
-                  <span class="text-xs text-on-surface-variant w-8">良好</span>
-                  <input type="number" value="85" class="w-16 bg-surface-container border-none rounded-md px-2 py-1.5 text-sm text-on-surface text-center focus:outline-none focus:ring-2 focus:ring-primary/30"/>
-                  <span class="text-xs text-on-surface-variant w-8">优秀</span>
-                  <input type="number" value="95" class="w-16 bg-surface-container border-none rounded-md px-2 py-1.5 text-sm text-on-surface text-center focus:outline-none focus:ring-2 focus:ring-primary/30"/>
-                </div>
-              </div>
-              <!-- 日常考核 -->
-              <div class="flex items-center gap-3">
-                <span class="text-sm text-on-surface w-28 shrink-0">日常考核</span>
-                <div class="flex items-center gap-2 flex-1">
-                  <span class="text-xs text-on-surface-variant w-8">合格</span>
-                  <input type="number" value="70" class="w-16 bg-surface-container border-none rounded-md px-2 py-1.5 text-sm text-on-surface text-center focus:outline-none focus:ring-2 focus:ring-primary/30"/>
-                  <span class="text-xs text-on-surface-variant w-8">良好</span>
-                  <input type="number" value="85" class="w-16 bg-surface-container border-none rounded-md px-2 py-1.5 text-sm text-on-surface text-center focus:outline-none focus:ring-2 focus:ring-primary/30"/>
-                  <span class="text-xs text-on-surface-variant w-8">优秀</span>
-                  <input type="number" value="95" class="w-16 bg-surface-container border-none rounded-md px-2 py-1.5 text-sm text-on-surface text-center focus:outline-none focus:ring-2 focus:ring-primary/30"/>
-                </div>
-              </div>
-            </div>
+      <!-- 结果线指标对标表 -->
+      <div class="bg-surface rounded-lg shadow-card overflow-hidden mb-6">
+        <div class="px-5 py-4 border-b border-outline-variant/20">
+          <h3 class="text-base font-semibold text-on-surface flex items-center gap-2">
+            <i data-lucide="target" class="w-4 h-4 text-primary-container"></i>结果线指标对标
+          </h3>
+        </div>
+        <!-- 表头 -->
+        <div class="grid grid-cols-7 px-5 py-3 bg-surface-container text-xs font-semibold text-on-surface-variant uppercase tracking-wide">
+          <span>指标名</span>
+          <span>当前值</span>
+          <span>合格阈值</span>
+          <span>良好阈值</span>
+          <span>优秀阈值</span>
+          <span>对标结果</span>
+          <span>操作</span>
+        </div>
+        <div class="divide-y divide-outline-variant/30">
+          <!-- 结果线-加V率 -->
+          <div class="grid grid-cols-7 px-5 py-3.5 hover:bg-surface-container/50 transition-colors items-center">
+            <span class="text-sm font-medium text-on-surface">加V率</span>
+            <span class="text-sm text-error font-semibold">58%</span>
+            <span class="text-sm text-on-surface-variant">60%</span>
+            <span class="text-sm text-on-surface-variant">70%</span>
+            <span class="text-sm text-on-surface-variant">80%</span>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-error/15 text-error w-fit">不合格</span>
+            <button id="btn-recommend-jiav" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium bg-primary-container/10 text-primary-container hover:bg-primary-container/20 transition-colors w-fit" data-indicator="jiav_rate" data-indicator-name="加V率">
+              <i data-lucide="lightbulb" class="w-3.5 h-3.5"></i>推荐方案
+            </button>
           </div>
-
-          <!-- 结果线阈值 -->
-          <div>
-            <h3 class="text-sm font-semibold text-on-surface mb-4 flex items-center gap-2">
-              <span class="w-1.5 h-4 bg-warning rounded-sm inline-block"></span>结果线各环节阈值
-            </h3>
-            <div class="space-y-3">
-              <!-- 加V率 -->
-              <div class="flex items-center gap-3">
-                <span class="text-sm text-on-surface w-28 shrink-0">加V率</span>
-                <div class="flex items-center gap-2 flex-1">
-                  <span class="text-xs text-on-surface-variant w-8">合格</span>
-                  <input type="number" value="90" class="w-16 bg-surface-container border-none rounded-md px-2 py-1.5 text-sm text-on-surface text-center focus:outline-none focus:ring-2 focus:ring-primary/30"/>
-                  <span class="text-xs text-on-surface-variant w-8">良好</span>
-                  <input type="number" value="95" class="w-16 bg-surface-container border-none rounded-md px-2 py-1.5 text-sm text-on-surface text-center focus:outline-none focus:ring-2 focus:ring-primary/30"/>
-                  <span class="text-xs text-on-surface-variant w-8">优秀</span>
-                  <input type="number" value="98" class="w-16 bg-surface-container border-none rounded-md px-2 py-1.5 text-sm text-on-surface text-center focus:outline-none focus:ring-2 focus:ring-primary/30"/>
-                </div>
-              </div>
-              <!-- 用药率 -->
-              <div class="flex items-center gap-3">
-                <span class="text-sm text-on-surface w-28 shrink-0">用药率</span>
-                <div class="flex items-center gap-2 flex-1">
-                  <span class="text-xs text-on-surface-variant w-8">合格</span>
-                  <input type="number" value="90" class="w-16 bg-surface-container border-none rounded-md px-2 py-1.5 text-sm text-on-surface text-center focus:outline-none focus:ring-2 focus:ring-primary/30"/>
-                  <span class="text-xs text-on-surface-variant w-8">良好</span>
-                  <input type="number" value="95" class="w-16 bg-surface-container border-none rounded-md px-2 py-1.5 text-sm text-on-surface text-center focus:outline-none focus:ring-2 focus:ring-primary/30"/>
-                  <span class="text-xs text-on-surface-variant w-8">优秀</span>
-                  <input type="number" value="98" class="w-16 bg-surface-container border-none rounded-md px-2 py-1.5 text-sm text-on-surface text-center focus:outline-none focus:ring-2 focus:ring-primary/30"/>
-                </div>
-              </div>
-              <!-- 面诊率 -->
-              <div class="flex items-center gap-3">
-                <span class="text-sm text-on-surface w-28 shrink-0">面诊率</span>
-                <div class="flex items-center gap-2 flex-1">
-                  <span class="text-xs text-on-surface-variant w-8">合格</span>
-                  <input type="number" value="85" class="w-16 bg-surface-container border-none rounded-md px-2 py-1.5 text-sm text-on-surface text-center focus:outline-none focus:ring-2 focus:ring-primary/30"/>
-                  <span class="text-xs text-on-surface-variant w-8">良好</span>
-                  <input type="number" value="92" class="w-16 bg-surface-container border-none rounded-md px-2 py-1.5 text-sm text-on-surface text-center focus:outline-none focus:ring-2 focus:ring-primary/30"/>
-                  <span class="text-xs text-on-surface-variant w-8">优秀</span>
-                  <input type="number" value="96" class="w-16 bg-surface-container border-none rounded-md px-2 py-1.5 text-sm text-on-surface text-center focus:outline-none focus:ring-2 focus:ring-primary/30"/>
-                </div>
-              </div>
-              <!-- 接诊率 -->
-              <div class="flex items-center gap-3">
-                <span class="text-sm text-on-surface w-28 shrink-0">接诊率</span>
-                <div class="flex items-center gap-2 flex-1">
-                  <span class="text-xs text-on-surface-variant w-8">合格</span>
-                  <input type="number" value="80" class="w-16 bg-surface-container border-none rounded-md px-2 py-1.5 text-sm text-on-surface text-center focus:outline-none focus:ring-2 focus:ring-primary/30"/>
-                  <span class="text-xs text-on-surface-variant w-8">良好</span>
-                  <input type="number" value="88" class="w-16 bg-surface-container border-none rounded-md px-2 py-1.5 text-sm text-on-surface text-center focus:outline-none focus:ring-2 focus:ring-primary/30"/>
-                  <span class="text-xs text-on-surface-variant w-8">优秀</span>
-                  <input type="number" value="93" class="w-16 bg-surface-container border-none rounded-md px-2 py-1.5 text-sm text-on-surface text-center focus:outline-none focus:ring-2 focus:ring-primary/30"/>
-                </div>
-              </div>
-              <!-- 签收率 -->
-              <div class="flex items-center gap-3">
-                <span class="text-sm text-on-surface w-28 shrink-0">签收率</span>
-                <div class="flex items-center gap-2 flex-1">
-                  <span class="text-xs text-on-surface-variant w-8">合格</span>
-                  <input type="number" value="85" class="w-16 bg-surface-container border-none rounded-md px-2 py-1.5 text-sm text-on-surface text-center focus:outline-none focus:ring-2 focus:ring-primary/30"/>
-                  <span class="text-xs text-on-surface-variant w-8">良好</span>
-                  <input type="number" value="92" class="w-16 bg-surface-container border-none rounded-md px-2 py-1.5 text-sm text-on-surface text-center focus:outline-none focus:ring-2 focus:ring-primary/30"/>
-                  <span class="text-xs text-on-surface-variant w-8">优秀</span>
-                  <input type="number" value="96" class="w-16 bg-surface-container border-none rounded-md px-2 py-1.5 text-sm text-on-surface text-center focus:outline-none focus:ring-2 focus:ring-primary/30"/>
-                </div>
-              </div>
-              <!-- 挂号率 -->
-              <div class="flex items-center gap-3">
-                <span class="text-sm text-on-surface w-28 shrink-0">挂号率</span>
-                <div class="flex items-center gap-2 flex-1">
-                  <span class="text-xs text-on-surface-variant w-8">合格</span>
-                  <input type="number" value="80" class="w-16 bg-surface-container border-none rounded-md px-2 py-1.5 text-sm text-on-surface text-center focus:outline-none focus:ring-2 focus:ring-primary/30"/>
-                  <span class="text-xs text-on-surface-variant w-8">良好</span>
-                  <input type="number" value="88" class="w-16 bg-surface-container border-none rounded-md px-2 py-1.5 text-sm text-on-surface text-center focus:outline-none focus:ring-2 focus:ring-primary/30"/>
-                  <span class="text-xs text-on-surface-variant w-8">优秀</span>
-                  <input type="number" value="93" class="w-16 bg-surface-container border-none rounded-md px-2 py-1.5 text-sm text-on-surface text-center focus:outline-none focus:ring-2 focus:ring-primary/30"/>
-                </div>
-              </div>
-            </div>
+          <!-- 结果线-面诊率 -->
+          <div class="grid grid-cols-7 px-5 py-3.5 hover:bg-surface-container/50 transition-colors items-center">
+            <span class="text-sm font-medium text-on-surface">面诊率</span>
+            <span class="text-sm text-error font-semibold">35%</span>
+            <span class="text-sm text-on-surface-variant">50%</span>
+            <span class="text-sm text-on-surface-variant">65%</span>
+            <span class="text-sm text-on-surface-variant">75%</span>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-error/15 text-error w-fit">不合格</span>
+            <button id="btn-recommend-mianzhen" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium bg-primary-container/10 text-primary-container hover:bg-primary-container/20 transition-colors w-fit" data-indicator="mianzhen_rate" data-indicator-name="面诊率">
+              <i data-lucide="lightbulb" class="w-3.5 h-3.5"></i>推荐方案
+            </button>
+          </div>
+          <!-- 结果线-接诊率 -->
+          <div class="grid grid-cols-7 px-5 py-3.5 hover:bg-surface-container/50 transition-colors items-center">
+            <span class="text-sm font-medium text-on-surface">接诊率</span>
+            <span class="text-sm text-on-surface">72%</span>
+            <span class="text-sm text-on-surface-variant">60%</span>
+            <span class="text-sm text-on-surface-variant">75%</span>
+            <span class="text-sm text-on-surface-variant">85%</span>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success w-fit">合格</span>
+            <span class="text-sm text-on-surface-variant">—</span>
+          </div>
+          <!-- 结果线-签收率 -->
+          <div class="grid grid-cols-7 px-5 py-3.5 hover:bg-surface-container/50 transition-colors items-center">
+            <span class="text-sm font-medium text-on-surface">签收率</span>
+            <span class="text-sm text-on-surface">78%</span>
+            <span class="text-sm text-on-surface-variant">60%</span>
+            <span class="text-sm text-on-surface-variant">75%</span>
+            <span class="text-sm text-on-surface-variant">85%</span>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-blue-500/15 text-blue-600 w-fit">良好</span>
+            <span class="text-sm text-on-surface-variant">—</span>
+          </div>
+          <!-- 结果线-用药率 -->
+          <div class="grid grid-cols-7 px-5 py-3.5 hover:bg-surface-container/50 transition-colors items-center">
+            <span class="text-sm font-medium text-on-surface">用药率</span>
+            <span class="text-sm text-on-surface">65%</span>
+            <span class="text-sm text-on-surface-variant">50%</span>
+            <span class="text-sm text-on-surface-variant">65%</span>
+            <span class="text-sm text-on-surface-variant">80%</span>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-blue-500/15 text-blue-600 w-fit">良好</span>
+            <span class="text-sm text-on-surface-variant">—</span>
+          </div>
+          <!-- 结果线-挂号率 -->
+          <div class="grid grid-cols-7 px-5 py-3.5 hover:bg-surface-container/50 transition-colors items-center">
+            <span class="text-sm font-medium text-on-surface">挂号率</span>
+            <span class="text-sm text-on-surface">82%</span>
+            <span class="text-sm text-on-surface-variant">60%</span>
+            <span class="text-sm text-on-surface-variant">75%</span>
+            <span class="text-sm text-on-surface-variant">85%</span>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-amber-500/15 text-amber-600 w-fit">优秀</span>
+            <span class="text-sm text-on-surface-variant">—</span>
           </div>
         </div>
       </div>
-    </div>
 
+      <!-- 方案推荐弹窗 -->
+      <div id="modal-recommend" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-surface rounded-xl shadow-dialog max-w-lg w-full max-h-[85vh] overflow-y-auto">
+          <!-- 弹窗头部 -->
+          <div class="px-6 py-4 border-b border-outline-variant/20 flex items-center justify-between">
+            <h3 id="modal-title" class="text-base font-semibold text-on-surface">为张小红推荐赋能方案</h3>
+            <button id="btn-modal-close" class="w-8 h-8 flex items-center justify-center rounded-md hover:bg-surface-container transition-colors">
+              <i data-lucide="x" class="w-4 h-4 text-on-surface-variant"></i>
+            </button>
+          </div>
+          <!-- 弹窗内容 -->
+          <div class="px-6 py-4 space-y-3">
+            <p class="text-sm text-on-surface-variant">系统已根据不合格指标自动匹配以下赋能方案，请勾选需要推送的方案：</p>
+
+            <!-- 方案1-加V率提升方案 -->
+            <div class="bg-surface-container/50 rounded-lg p-4">
+              <div class="flex items-start gap-3">
+                <input type="checkbox" id="chk-plan-jiav" class="mt-1 w-4 h-4 rounded border-outline-variant text-primary-container focus:ring-primary-container/30" checked />
+                <div class="flex-1">
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="text-sm font-semibold text-on-surface">加V率提升方案</span>
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-xs bg-error/10 text-error">关联：加V率</span>
+                  </div>
+                  <p class="text-xs text-on-surface-variant leading-relaxed">加V率低于60%，说明首通电话和回访环节未能有效传递价值，需强化首通电话价值传递能力，提升患者信任度...</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- 方案2-面诊率提升方案 -->
+            <div class="bg-surface-container/50 rounded-lg p-4">
+              <div class="flex items-start gap-3">
+                <input type="checkbox" id="chk-plan-mianzhen" class="mt-1 w-4 h-4 rounded border-outline-variant text-primary-container focus:ring-primary-container/30" checked />
+                <div class="flex-1">
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="text-sm font-semibold text-on-surface">面诊率提升方案</span>
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-xs bg-error/10 text-error">关联：面诊率</span>
+                  </div>
+                  <p class="text-xs text-on-surface-variant leading-relaxed">面诊率仅35%，远低于50%合格线，患者从线上咨询到线下面诊的转化环节存在明显断层，需提升沟通引导和预约...</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- 方案3-综合提升方案(演练) -->
+            <div id="modal-plan-yanlian" class="bg-surface-container/50 rounded-lg p-4 hidden">
+              <div class="flex items-start gap-3">
+                <input type="checkbox" id="chk-plan-yanlian" class="mt-1 w-4 h-4 rounded border-outline-variant text-primary-container focus:ring-primary-container/30" checked />
+                <div class="flex-1">
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="text-sm font-semibold text-on-surface">演练能力提升方案</span>
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-xs bg-error/10 text-error">关联：演练</span>
+                  </div>
+                  <p class="text-xs text-on-surface-variant leading-relaxed">演练得分45分，低于60分合格线，说明实战模拟能力不足，需增加场景化模拟训练频次，强化应对各类患者场景的...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 弹窗底部 -->
+          <div class="px-6 py-4 border-t border-outline-variant/20 flex items-center justify-end gap-3">
+            <button id="btn-modal-cancel" class="bg-surface-container text-on-surface px-4 py-2 rounded-md text-sm font-medium hover:bg-surface-container-high active:scale-[0.98] transition-all">取消</button>
+            <button id="btn-push-plans" class="bg-primary text-on-primary px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all inline-flex items-center gap-2">
+              <i data-lucide="send" class="w-3.5 h-3.5"></i>推送选中方案
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </main>
     <!-- @main-content:end -->
-  </main>
   </div>
+  <!-- @nav:end 导航组件 -->
 
   <script>
-  $(function() {
-    // 新人数据映射
-    var traineeData = {
-      '1': { name: '王芳', process: 85, result: 92, quadrant: 'A', stage: '阶段二', failCount: 0,
-             badge: { text: 'A类 · 达标', bg: 'bg-success/15', color: 'text-success', avatarBg: 'bg-success/10', avatarColor: 'text-success' } },
-      '2': { name: '李明', process: 75, result: 82, quadrant: 'A', stage: '阶段一', failCount: 0,
-             badge: { text: 'A类 · 达标', bg: 'bg-success/15', color: 'text-success', avatarBg: 'bg-success/10', avatarColor: 'text-success' } },
-      '3': { name: '张伟', process: 80, result: 55, quadrant: 'B', stage: '阶段二', failCount: 3,
-             badge: { text: 'B类 · 机制问题', bg: 'bg-primary/15', color: 'text-primary', avatarBg: 'bg-primary/10', avatarColor: 'text-primary' } },
-      '4': { name: '刘洋', process: 72, result: 48, quadrant: 'B', stage: '阶段一', failCount: 4,
-             badge: { text: 'B类 · 机制问题', bg: 'bg-primary/15', color: 'text-primary', avatarBg: 'bg-primary/10', avatarColor: 'text-primary' } },
-      '5': { name: '陈静', process: 55, result: 88, quadrant: 'C', stage: '阶段二', failCount: 2,
-             badge: { text: 'C类 · 运气型', bg: 'bg-warning/15', color: 'text-warning', avatarBg: 'bg-warning/10', avatarColor: 'text-warning' } },
-      '6': { name: '赵鑫', process: 62, result: 75, quadrant: 'C', stage: '阶段一', failCount: 1,
-             badge: { text: 'C类 · 运气型', bg: 'bg-warning/15', color: 'text-warning', avatarBg: 'bg-warning/10', avatarColor: 'text-warning' } },
-      '7': { name: '周婷', process: 45, result: 52, quadrant: 'D', stage: '阶段一', failCount: 6,
-             badge: { text: 'D类 · 能力问题', bg: 'bg-error/15', color: 'text-error', avatarBg: 'bg-error/10', avatarColor: 'text-error' } },
-      '8': { name: '吴磊', process: 38, result: 40, quadrant: 'D', stage: '阶段一', failCount: 8,
-             badge: { text: 'D类 · 能力问题', bg: 'bg-error/15', color: 'text-error', avatarBg: 'bg-error/10', avatarColor: 'text-error' } }
-    };
+    $(function () {
 
-    // 点击散点 - 显示归因面板
-    $('#quadrant-chart').on('click', '.trainee-dot', function() {
-      var id = $(this).data('id');
-      var data = traineeData[id];
-      if (!data) return;
+      // === 周期切换 ===
+      $('#btn-cycle-week').on('click', function () {
+        $(this).addClass('bg-primary text-on-primary').removeClass('text-on-surface-variant');
+        $('#btn-cycle-month').removeClass('bg-primary text-on-primary').addClass('text-on-surface-variant');
+        console.log('切换到周维度诊断');
+      });
 
-      // 高亮选中点
-      $('.trainee-dot').find('circle').last().attr('stroke-width', '1.5');
-      $(this).find('circle').last().attr('stroke-width', '3');
+      $('#btn-cycle-month').on('click', function () {
+        $(this).addClass('bg-primary text-on-primary').removeClass('text-on-surface-variant');
+        $('#btn-cycle-week').removeClass('bg-primary text-on-primary').addClass('text-on-surface-variant');
+        console.log('切换到月维度诊断');
+      });
 
-      // 更新归因面板
-      $('#attribution-empty').addClass('hidden');
-      $('#attribution-content').removeClass('hidden');
+      // === 新人切换 ===
+      $('#select-trainee').on('change', function () {
+        console.log('切换新人:', $(this).val());
+        // 后续应实现：根据选中新人ID重新加载诊断数据并更新页面内容
+      });
 
-      // 更新人头信息
-      $('#attr-avatar').text(data.name.charAt(0))
-        .removeClass('bg-success/10 bg-primary/10 bg-warning/10 bg-error/10 text-success text-primary text-warning text-error')
-        .addClass(data.badge.avatarBg + ' ' + data.badge.avatarColor);
-      $('#attr-name').text(data.name);
-      $('#attr-quadrant-badge').text(data.badge.text)
-        .removeClass('bg-success/15 bg-primary/15 bg-warning/15 bg-error/15 text-success text-primary text-warning text-error')
-        .addClass(data.badge.bg + ' ' + data.badge.color);
-      $('#attr-stage').text(data.stage);
-      $('#attr-process-rate').text(data.process + '%');
-      $('#attr-result-rate').text(data.result + '%');
-      $('#attr-fail-count').text(data.failCount + ' 项不合格');
+      // === 推荐方案按钮 - 统一处理 ===
+      // 点击"推荐方案"按钮 → 打开方案推荐弹窗，根据指标类型显示对应方案
+      $('[id^="btn-recommend-"]').on('click', function () {
+        var indicator = $(this).data('indicator');
+        var indicatorName = $(this).data('indicator-name');
 
-      // 显示对应新人的不合格项
-      $('.attr-trainee-items').addClass('hidden');
-      $('.attr-trainee-items[data-name="' + data.name + '"]').removeClass('hidden');
-    });
+        // 根据指标决定弹窗中显示哪些方案
+        // 默认隐藏演练方案
+        $('#modal-plan-yanlian').addClass('hidden');
 
-    // 关闭归因面板
-    $('#btn-close-attr').on('click', function() {
-      $('#attribution-empty').removeClass('hidden');
-      $('#attribution-content').addClass('hidden');
-      $('.trainee-dot').find('circle').last().attr('stroke-width', '1.5');
-    });
+        if (indicator === 'yanlian') {
+          // 演练不合格 → 显示演练方案
+          $('#modal-plan-yanlian').removeClass('hidden');
+          // 隐藏其他方案
+          $('#chk-plan-jiav').closest('.bg-surface-container\\/50').addClass('hidden');
+          $('#chk-plan-mianzhen').closest('.bg-surface-container\\/50').addClass('hidden');
+        } else {
+          // 结果线指标（加V率、面诊率）→ 显示对应方案
+          $('#chk-plan-jiav').closest('.bg-surface-container\\/50').removeClass('hidden');
+          $('#chk-plan-mianzhen').closest('.bg-surface-container\\/50').removeClass('hidden');
 
-    // 阈值设置面板 - 展开/收起
-    $('#btn-threshold').on('click', function() {
-      var panel = $('#threshold-panel');
-      if (panel.hasClass('hidden')) {
-        panel.removeClass('hidden');
-        // 滚动到面板
-        $('html, body').animate({ scrollTop: panel.offset().top - 80 }, 300);
-      } else {
-        panel.addClass('hidden');
-      }
-    });
+          if (indicator === 'jiav_rate') {
+            $('#chk-plan-jiav').prop('checked', true);
+            $('#chk-plan-mianzhen').prop('checked', false);
+          } else if (indicator === 'mianzhen_rate') {
+            $('#chk-plan-jiav').prop('checked', false);
+            $('#chk-plan-mianzhen').prop('checked', true);
+          }
+        }
 
-    // 关闭阈值面板
-    $('#btn-close-threshold').on('click', function() {
-      $('#threshold-panel').addClass('hidden');
-    });
+        $('#modal-recommend').removeClass('hidden');
+      });
 
-    // 重置阈值 - 将所有输入框恢复默认值
-    // 重置按钮 - 点击后应实现：
-    // 1. 将所有阈值输入框恢复为系统默认值
-    // 2. 过程线默认：合格70/良好85/优秀95
-    // 3. 结果线默认：加V率90/95/98、用药率90/95/98、面诊率85/92/96、接诊率80/88/93、签收率85/92/96、挂号率80/88/93
-    $('#btn-reset-threshold').on('click', function() {
-      console.log('重置阈值为默认值');
-      // 过程线默认值
-      var processDefaults = [70, 85, 95];
-      // 结果线默认值
-      var resultDefaults = {
-        '加V率': [90, 95, 98], '用药率': [90, 95, 98],
-        '面诊率': [85, 92, 96], '接诊率': [80, 88, 93],
-        '签收率': [85, 92, 96], '挂号率': [80, 88, 93]
-      };
-      // 简化：重置所有输入为当前显示的值（实际应从后端获取默认值）
-      $('#threshold-panel input[type="number"]').each(function(index) {
-        // 过程线6行x3列
-        if (index < 18) {
-          var col = index % 3;
-          $(this).val(processDefaults[col]);
+      // === 弹窗关闭 ===
+      $('#btn-modal-close').on('click', function () {
+        $('#modal-recommend').addClass('hidden');
+      });
+
+      $('#btn-modal-cancel').on('click', function () {
+        $('#modal-recommend').addClass('hidden');
+      });
+
+      // 点击遮罩层关闭弹窗
+      $('#modal-recommend').on('click', function (e) {
+        if ($(e.target).is('#modal-recommend')) {
+          $('#modal-recommend').addClass('hidden');
         }
       });
-    });
 
-    // 保存阈值 - 点击后应实现：
-    // 1. 收集所有阈值输入框的值
-    // 2. 校验：合格 < 良好 < 优秀，值在合理范围内
-    // 3. 提交到后端保存
-    // 4. 重新逐项对标所有新人的各项指标
-    // 5. 重算四象限分类（A/B/C/D）
-    // 6. 更新散点图位置和颜色
-    // 7. 更新归因面板中的不合格项
-    $('#btn-save-threshold').on('click', function() {
-      console.log('保存阈值并重新计算四象限');
-    });
+      // === 推送选中方案 ===
+      $('#btn-push-plans').on('click', function () {
+        var pushedIndicators = [];
 
-    // 一键赋能 - 带参数跳转赋能中心
-    $('#btn-empower').on('click', function(e) {
-      // 获取当前选中的新人名称
-      var name = $('#attr-name').text();
-      if (name) {
-        e.preventDefault();
-        window.location.href = 'empowerment.html?trainee=' + encodeURIComponent(name);
-      }
+        // 检查勾选的方案
+        if ($('#chk-plan-jiav').is(':visible') && $('#chk-plan-jiav').is(':checked')) {
+          pushedIndicators.push('jiav_rate');
+        }
+        if ($('#chk-plan-mianzhen').is(':visible') && $('#chk-plan-mianzhen').is(':checked')) {
+          pushedIndicators.push('mianzhen_rate');
+        }
+        if ($('#chk-plan-yanlian').is(':visible') && $('#chk-plan-yanlian').is(':checked')) {
+          pushedIndicators.push('yanlian');
+        }
+
+        // 将已推送指标对应的"推荐方案"按钮替换为"已推送"灰色标签
+        $.each(pushedIndicators, function (_, ind) {
+          var btn = $('[data-indicator="' + ind + '"]');
+          if (btn.length) {
+            btn.replaceWith(
+              '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium bg-surface-container text-on-surface-variant">' +
+              '<i data-lucide="check-circle" class="w-3.5 h-3.5"></i>已推送</span>'
+            );
+          }
+        });
+
+        // 重新渲染图标
+        lucide.createIcons();
+
+        // 关闭弹窗
+        $('#modal-recommend').addClass('hidden');
+
+        console.log('已推送方案，关联指标:', pushedIndicators);
+      });
+
     });
-  });
   </script>
 
   <script>lucide.createIcons();</script>
