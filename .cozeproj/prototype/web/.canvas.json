@@ -3,33 +3,17 @@
     {
       "type": "html",
       "options": {
-        "path": ".cozeproj/prototype/web/empowerment.html"
+        "path": ".cozeproj/prototype/web/home.html"
       },
-      "title": "赋能中心",
+      "title": "三层驾驶舱",
       "size": "web"
     },
     {
       "type": "html",
       "options": {
-        "path": ".cozeproj/prototype/web/diagnosis.html"
+        "path": ".cozeproj/prototype/web/qc-flow.html"
       },
-      "title": "双轨诊断",
-      "size": "web"
-    },
-    {
-      "type": "html",
-      "options": {
-        "path": ".cozeproj/prototype/web/trainee-prescription.html"
-      },
-      "title": "我的处方",
-      "size": "web"
-    },
-    {
-      "type": "html",
-      "options": {
-        "path": ".cozeproj/prototype/web/mentor-board.html"
-      },
-      "title": "带教看板",
+      "title": "服务质量追踪",
       "size": "web"
     }
   ]
