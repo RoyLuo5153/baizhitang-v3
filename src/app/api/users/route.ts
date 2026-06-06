@@ -30,13 +30,39 @@ export async function GET(req: NextRequest) {
     const userIds = (data || []).map((u: { id: string }) => u.id);
     const { data: profiles } = await supabase
       .from('trainee_profiles')
-      .select('user_id, current_stage, cohort')
+      .select('user_id, stage, cohort')
       .in('user_id', userIds);
 
-    const profileMap: Record<string, { stage: number; cohort: string | null }> = {};
-    (profiles || []).forEach((p: { user_id: string; current_stage: number; cohort: string | null }) => {
-      profileMap[p.user_id] = { stage: p.current_stage, cohort: p.cohort };
+    const profileMap: Record<string, { stage: string; cohort: string | null }> = {};
+    (profiles || []).forEach((p: { user_id: string; stage: string; cohort: string | null }) => {
+      profileMap[p.user_id] = { stage: p.stage, cohort: p.cohort };
     });
+
+    // 获取学员的带教老师信息
+    const traineeIds = (data || []).filter((u: { role_id: number }) => u.role_id === 1).map((u: { id: string }) => u.id);
+    let mentorMap: Record<string, string> = {};
+    if (traineeIds.length > 0) {
+      const { data: mentorLinks } = await supabase
+        .from('mentor_trainees')
+        .select('trainee_id, mentor_id')
+        .in('trainee_id', traineeIds)
+        .eq('is_active', true);
+      
+      const mentorIds = [...new Set((mentorLinks || []).map((m: { mentor_id: string }) => m.mentor_id))];
+      let mentorNames: Record<string, string> = {};
+      if (mentorIds.length > 0) {
+        const { data: mentorUsers } = await supabase
+          .from('users')
+          .select('id, real_name')
+          .in('id', mentorIds);
+        (mentorUsers || []).forEach((m: { id: string; real_name: string }) => { mentorNames[m.id] = m.real_name; });
+      }
+      (mentorLinks || []).forEach((m: { trainee_id: string; mentor_id: string }) => {
+        mentorMap[m.trainee_id] = mentorNames[m.mentor_id] || '';
+      });
+    }
+
+    const stageNumberMap: Record<string, number> = { foundation: 1, practice: 2, independent: 3, proficient: 4 };
 
     const users = (data || []).map((u: { id: string; username: string; real_name: string; role_id: number; is_active: boolean; created_at: string }) => ({
       id: u.id,
@@ -44,8 +70,9 @@ export async function GET(req: NextRequest) {
       realName: u.real_name,
       roleId: u.role_id,
       roleName: roleMap[u.role_id] || '未知',
-      stage: profileMap[u.id]?.stage || null,
+      stage: profileMap[u.id]?.stage ? (stageNumberMap[profileMap[u.id].stage] || null) : null,
       cohort: profileMap[u.id]?.cohort || null,
+      mentorName: mentorMap[u.id] || null,
       status: u.is_active !== false ? 'active' : 'inactive',
       createdAt: u.created_at,
     }));

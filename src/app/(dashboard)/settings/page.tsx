@@ -29,6 +29,7 @@ interface UserRecord {
   roleName: string;
   stage: number | null;
   cohort: string | null;
+  mentorName: string | null;
   status: string;
   createdAt: string;
 }
@@ -663,6 +664,8 @@ export default function SettingsPage() {
   const [batchAction, setBatchAction] = useState<string | null>(null);
   const [batchCohort, setBatchCohort] = useState('');
   const [batchStage, setBatchStage] = useState<number>(1);
+  const [selectedMentorId, setSelectedMentorId] = useState('');
+  const [mentorList, setMentorList] = useState<{id: string; realName: string; username: string}[]>([]);
   const [batchProcessing, setBatchProcessing] = useState(false);
   const [userSubTab, setUserSubTab] = useState<'trainees' | 'staff'>('trainees');
 
@@ -712,7 +715,18 @@ export default function SettingsPage() {
     setUsersLoading(false);
   }, []);
 
-  useEffect(() => { fetchUsers(); }, [fetchUsers]);
+  useEffect(() => { fetchUsers(); fetchMentorList(); }, [fetchUsers]);
+
+  // --- Fetch mentor list for assignment ---
+  const fetchMentorList = useCallback(async () => {
+    try {
+      const res = await fetch('/api/users?roleId=2');
+      if (res.ok) {
+        const json = await res.json();
+        setMentorList((json.users || []).map((u: UserRecord) => ({ id: u.id, realName: u.realName, username: u.username })));
+      }
+    } catch { /* ignore */ }
+  }, []);
 
   // --- Cohort filter + batch operations ---
   const cohortOptions = [...new Set(users.filter(u => u.cohort).map(u => u.cohort!))].sort();
@@ -740,23 +754,35 @@ export default function SettingsPage() {
     if (selectedUserIds.size === 0) return;
     setBatchProcessing(true);
     try {
-      const updates: Promise<Response>[] = [];
-      for (const userId of selectedUserIds) {
-        const body: Record<string, unknown> = { userId };
-        if (batchAction === 'cohort' && batchCohort) body.cohort = batchCohort;
-        if (batchAction === 'stage') body.stage = batchStage;
-        if (Object.keys(body).length > 1) {
-          updates.push(fetch('/api/users', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body),
-          }));
+      if (batchAction === 'mentor' && selectedMentorId) {
+        // 分配导师：调用mentor-trainees API
+        const res = await fetch('/api/mentor-trainees', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mentorId: selectedMentorId, traineeIds: Array.from(selectedUserIds) }),
+        });
+        const data = await res.json();
+        if (!data.success) { alert(data.error || '分配导师失败'); return; }
+      } else {
+        const updates: Promise<Response>[] = [];
+        for (const userId of selectedUserIds) {
+          const body: Record<string, unknown> = { userId };
+          if (batchAction === 'cohort' && batchCohort) body.cohort = batchCohort;
+          if (batchAction === 'stage') body.stage = batchStage;
+          if (Object.keys(body).length > 1) {
+            updates.push(fetch('/api/users', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(body),
+            }));
+          }
         }
+        await Promise.all(updates);
       }
-      await Promise.all(updates);
       setSelectedUserIds(new Set());
       setBatchAction(null);
       setBatchCohort('');
+      setSelectedMentorId('');
       await fetchUsers();
     } catch {
       alert('批量操作失败');
@@ -1115,6 +1141,12 @@ export default function SettingsPage() {
                       批量调整阶段
                     </button>
                     <button
+                      onClick={() => setBatchAction('mentor')}
+                      className="h-7 px-3 rounded-md border border-primary/30 bg-primary/5 text-xs font-medium text-primary hover:bg-primary/10 transition-colors"
+                    >
+                      分配导师
+                    </button>
+                    <button
                       onClick={() => { setSelectedUserIds(new Set()); setBatchAction(null); }}
                       className="h-7 px-2 rounded-md text-xs text-muted-foreground hover:text-foreground transition-colors"
                     >
@@ -1154,9 +1186,24 @@ export default function SettingsPage() {
                       </select>
                     </>
                   )}
+                  {batchAction === 'mentor' && (
+                    <>
+                      <label className="text-xs text-muted-foreground">选择导师：</label>
+                      <select
+                        value={selectedMentorId}
+                        onChange={e => setSelectedMentorId(e.target.value)}
+                        className="h-8 rounded-md border border-border bg-transparent px-2 text-xs text-foreground outline-none focus:border-primary"
+                      >
+                        <option value="">-- 请选择 --</option>
+                        {mentorList.map(m => (
+                          <option key={m.id} value={m.id}>{m.realName} ({m.username})</option>
+                        ))}
+                      </select>
+                    </>
+                  )}
                   <button
                     onClick={handleBatchAction}
-                    disabled={batchProcessing || (batchAction === 'cohort' && !batchCohort)}
+                    disabled={batchProcessing || (batchAction === 'cohort' && !batchCohort) || (batchAction === 'mentor' && !selectedMentorId)}
                     className="h-8 px-4 rounded-md bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 disabled:opacity-50 transition-colors"
                   >
                     {batchProcessing ? '执行中...' : '确认执行'}
@@ -1197,6 +1244,7 @@ export default function SettingsPage() {
                         <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">角色</th>
                         <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">阶段</th>
                         <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">期数</th>
+                        <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">带教老师</th>
                         <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">状态</th>
                         <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">操作</th>
                       </tr>
@@ -1241,6 +1289,13 @@ export default function SettingsPage() {
                                 user.cohort ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
                               }`}>
                                 {user.cohort || '未分配'}
+                              </span>
+                            </td>
+                            <td className="px-5 py-4 text-center">
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-sm text-xs font-medium ${
+                                user.mentorName ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
+                              }`}>
+                                {user.mentorName || '未分配'}
                               </span>
                             </td>
                             <td className="px-5 py-4 text-center">
