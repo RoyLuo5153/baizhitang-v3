@@ -3,17 +3,17 @@
     {
       "type": "html",
       "options": {
-        "path": ".cozeproj/prototype/web/home.html"
+        "path": ".cozeproj/prototype/web/login.html"
       },
-      "title": "三层驾驶舱",
+      "title": "登录页",
       "size": "web"
     },
     {
       "type": "html",
       "options": {
-        "path": ".cozeproj/prototype/web/qc-flow.html"
+        "path": ".cozeproj/prototype/web/settings.html"
       },
-      "title": "服务质量追踪",
+      "title": "设置页-改密",
       "size": "web"
     }
   ]

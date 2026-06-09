@@ -5,48 +5,46 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <link href="https://lf-code-agent.coze.cn/obj/x-ai-cn/fonts/google/google-all-fonts.css" rel="stylesheet"/>
-
   <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/jquery/jquery-3.7.1.min.js"></script>
   <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/lucide/lucide-1.11.0.min.js"></script>
   <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/tailwindcss/tailwindcss-browser-4.2.4.min.js"></script>
 
   <style type="text/tailwindcss">
     @theme {
-      /* === 品牌色 === */
-      --color-primary:              #2978B5;
-      --color-primary-container:    #D4E8F5;
+      /* === 品牌色（数据风：深蓝主色 + 数据蓝容器色） === */
+      --color-primary:              #102A43;
+      --color-primary-container:    #2978B5;
       --color-on-primary:           #ffffff;
-      /* === 背景 / 表面 === */
+      /* === 背景 / 表面（暖灰底色，中性层级） === */
       --color-background:                 #F8F6F0;
-      --color-surface-container-lowest:   #FAFAF5;
+      --color-surface-container-lowest:   #FFFFFF;
       --color-surface:                    #FFFFFF;
-      --color-surface-container:          #F0EDE5;
+      --color-surface-container:          #EFECE4;
       --color-surface-container-high:     #E8E4DB;
-      --color-surface-container-highest:  #DDD8CE;
+      --color-surface-container-highest:  #E0DCD2;
       /* === 文字 === */
       --color-on-surface:           #1D2733;
       --color-on-surface-variant:   #667085;
       /* === 功能色 === */
       --color-success:  #22c55e;
       --color-error:    #ef4444;
-      --color-warning:  #f59e0b;
+      --color-warning:  #F59E0B;
       /* === 边框 === */
-      --color-outline:          #D4CFC4;
+      --color-outline:          #D4D0C7;
       --color-outline-variant:  #E6E1D8;
       /* === 圆角 === */
-      --radius-sm:   0.375rem;
-      --radius-md:   0.5rem;
-      --radius-lg:   0.75rem;
-      --radius-xl:   1rem;
-      --radius-2xl:  1.5rem;
+      --radius-sm:   0.25rem;
+      --radius-md:   0.375rem;
+      --radius-lg:   0.5rem;
+      --radius-xl:   0.75rem;
+      --radius-2xl:  1rem;
       --radius-full: 9999px;
       /* === 阴影 === */
       --shadow-card:   0 2px 8px rgba(0,0,0,0.08);
-      --shadow-float:  0 10px 25px rgba(0,0,0,0.1);
-      --shadow-dialog: 0 25px 50px rgba(0,0,0,0.15);
+      --shadow-float:  0 10px 25px rgba(0,0,0,0.12);
+      --shadow-dialog: 0 25px 50px rgba(0,0,0,0.2);
       /* === 字体 === */
-      --font-sans: "Noto Sans SC", system-ui, sans-serif;
+      --font-sans: system-ui, -apple-system, sans-serif;
     }
   </style>
 
@@ -69,121 +67,302 @@
   </script>
 </head>
 
-<body class="bg-background text-on-surface font-sans min-h-screen flex flex-col">
+<body class="bg-background text-on-surface font-sans min-h-screen flex items-center justify-center p-4">
 
   <!-- @main-content:start -->
-  <main class="flex-1 flex items-center justify-center p-6">
-    <div class="w-full max-w-sm">
+  <main class="w-full max-w-md">
 
-      <!-- 登录卡片 -->
-      <div class="bg-surface rounded-xl shadow-card p-8">
-        <!-- Logo区域 -->
-        <div class="flex flex-col items-center gap-3 mb-8">
-          <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-            <i data-lucide="heart-pulse" class="w-7 h-7 text-primary"></i>
-          </div>
-          <h1 class="text-xl font-bold text-on-surface tracking-tight">百芝堂赋能系统</h1>
-          <p class="text-sm text-on-surface-variant">培训赋能 · 双轨驱动</p>
+    <!-- 登录卡片 -->
+    <div id="login-card" class="bg-surface rounded-xl shadow-card p-8">
+
+      <!-- Logo 区 -->
+      <div class="flex flex-col items-center gap-3 mb-8">
+        <!-- Logo：深蓝圆角方块内"BZ"白色字 -->
+        <div class="w-14 h-14 bg-primary rounded-xl flex items-center justify-center">
+          <span class="text-on-primary text-xl font-bold tracking-wide">BZ</span>
         </div>
-
-        <!-- 表单区域 -->
-        <div class="space-y-4">
-          <!-- 用户名输入框 -->
-          <div>
-            <label for="input-username" class="block text-sm font-medium text-on-surface mb-1.5">用户名</label>
-            <div class="relative">
-              <i data-lucide="user" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant/50"></i>
-              <input id="input-username" type="text" placeholder="请输入用户名"
-                class="w-full bg-surface-container border-none rounded-md pl-9 pr-3 py-2.5 text-sm
-                       text-on-surface placeholder:text-on-surface-variant/50
-                       focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
-            </div>
-          </div>
-
-          <!-- 密码输入框 -->
-          <div>
-            <label for="input-password" class="block text-sm font-medium text-on-surface mb-1.5">密码</label>
-            <div class="relative">
-              <i data-lucide="lock" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant/50"></i>
-              <input id="input-password" type="password" placeholder="请输入密码"
-                class="w-full bg-surface-container border-none rounded-md pl-9 pr-10 py-2.5 text-sm
-                       text-on-surface placeholder:text-on-surface-variant/50
-                       focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
-              <button id="btn-toggle-password" type="button"
-                class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant/50 hover:text-on-surface-variant transition-colors">
-                <i data-lucide="eye" class="w-4 h-4"></i>
-              </button>
-            </div>
-          </div>
-
-          <!-- 角色选择下拉 -->
-          <div>
-            <label for="select-role" class="block text-sm font-medium text-on-surface mb-1.5">角色</label>
-            <div class="relative">
-              <i data-lucide="shield" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant/50"></i>
-              <select id="select-role"
-                class="w-full bg-surface-container border-none rounded-md pl-9 pr-8 py-2.5 text-sm
-                       text-on-surface appearance-none
-                       focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors
-                       [&>option]:bg-surface [&>option]:text-on-surface">
-                <option value="trainee">新人</option>
-                <option value="mentor">带教老师</option>
-                <option value="teacher">培训老师</option>
-                <option value="manager" selected>培训负责人</option>
-                <option value="boss">总经理</option>
-              </select>
-              <i data-lucide="chevron-down" class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant/50 pointer-events-none"></i>
-            </div>
-          </div>
-
-          <!-- 登录按钮 -->
-          <button id="btn-login"
-            class="w-full bg-primary text-on-primary px-4 py-2.5 rounded-md text-sm font-medium
-                   hover:opacity-90 active:scale-[0.98] transition-all inline-flex items-center justify-center gap-2 mt-2">
-            <i data-lucide="log-in" class="w-4 h-4"></i>
-            登录
-          </button>
-        </div>
+        <h1 class="text-2xl font-bold text-on-surface text-center">百芝堂培训管理系统</h1>
+        <p class="text-sm text-on-surface-variant text-center">培训赋能 · 数据驱动 · 安全合规</p>
       </div>
 
-      <!-- 底部小字 -->
-      <p class="text-center text-xs text-on-surface-variant/60 mt-6">百芝堂糖尿病慢病管理</p>
+      <!-- 错误提示区域 -->
+      <div id="login-error" class="hidden bg-error/10 border border-error/20 rounded-md px-4 py-3 mb-5 flex items-center gap-2">
+        <i data-lucide="alert-circle" class="w-4 h-4 text-error shrink-0"></i>
+        <span id="login-error-msg" class="text-sm text-error">用户名或密码错误</span>
+      </div>
+
+      <!-- 登录表单 -->
+      <form id="login-form" class="space-y-4" onsubmit="return false;">
+        <!-- 用户名输入框 -->
+        <div>
+          <label for="input-username" class="block text-sm font-medium text-on-surface mb-1.5">用户名</label>
+          <div class="relative">
+            <i data-lucide="user" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant/50"></i>
+            <input id="input-username" type="text" placeholder="请输入用户名"
+                   class="w-full bg-surface-container border-none rounded-md pl-10 pr-3 py-2.5 text-sm
+                          text-on-surface placeholder:text-on-surface-variant/50
+                          focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+          </div>
+        </div>
+
+        <!-- 密码输入框 -->
+        <div>
+          <label for="input-password" class="block text-sm font-medium text-on-surface mb-1.5">密码</label>
+          <div class="relative">
+            <i data-lucide="lock" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant/50"></i>
+            <input id="input-password" type="password" placeholder="请输入密码"
+                   class="w-full bg-surface-container border-none rounded-md pl-10 pr-3 py-2.5 text-sm
+                          text-on-surface placeholder:text-on-surface-variant/50
+                          focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+          </div>
+        </div>
+
+        <!-- 登录按钮 -->
+        <button id="btn-login" type="submit"
+                class="w-full bg-primary text-on-primary px-4 py-2.5 rounded-md text-sm font-medium
+                       hover:opacity-90 active:scale-[0.98] transition-all inline-flex items-center justify-center gap-2 mt-2">
+          <i data-lucide="log-in" class="w-4 h-4"></i>
+          登录
+        </button>
+      </form>
     </div>
+
+    <!-- 测试账号列表 -->
+    <div id="test-accounts" class="mt-6 bg-surface rounded-lg shadow-card p-5">
+      <div class="flex items-center gap-2 mb-4">
+        <i data-lucide="info" class="w-4 h-4 text-primary-container"></i>
+        <h2 class="text-sm font-semibold text-on-surface">测试账号</h2>
+      </div>
+      <div class="space-y-2.5">
+        <!-- 测试账号-1 -->
+        <div class="test-account-item flex items-center justify-between bg-surface-container rounded-md px-3 py-2 cursor-pointer hover:bg-surface-container-high transition-colors" data-username="admin">
+          <div class="flex items-center gap-2">
+            <i data-lucide="user-circle" class="w-4 h-4 text-on-surface-variant"></i>
+            <span class="text-sm font-medium text-on-surface">admin</span>
+          </div>
+          <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-primary/10 text-primary">系统管理员</span>
+        </div>
+        <!-- 测试账号-2 -->
+        <div class="test-account-item flex items-center justify-between bg-surface-container rounded-md px-3 py-2 cursor-pointer hover:bg-surface-container-high transition-colors" data-username="zhangwei">
+          <div class="flex items-center gap-2">
+            <i data-lucide="user-circle" class="w-4 h-4 text-on-surface-variant"></i>
+            <span class="text-sm font-medium text-on-surface">zhangwei</span>
+          </div>
+          <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-primary-container/15 text-primary-container">培训主管</span>
+        </div>
+        <!-- 测试账号-3 -->
+        <div class="test-account-item flex items-center justify-between bg-surface-container rounded-md px-3 py-2 cursor-pointer hover:bg-surface-container-high transition-colors" data-username="liuna">
+          <div class="flex items-center gap-2">
+            <i data-lucide="user-circle" class="w-4 h-4 text-on-surface-variant"></i>
+            <span class="text-sm font-medium text-on-surface">liuna</span>
+          </div>
+          <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">培训讲师</span>
+        </div>
+        <!-- 测试账号-4 -->
+        <div class="test-account-item flex items-center justify-between bg-surface-container rounded-md px-3 py-2 cursor-pointer hover:bg-surface-container-high transition-colors" data-username="wangfang">
+          <div class="flex items-center gap-2">
+            <i data-lucide="user-circle" class="w-4 h-4 text-on-surface-variant"></i>
+            <span class="text-sm font-medium text-on-surface">wangfang</span>
+          </div>
+          <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-warning/15 text-warning">学员</span>
+        </div>
+        <!-- 测试账号-5 -->
+        <div class="test-account-item flex items-center justify-between bg-surface-container rounded-md px-3 py-2 cursor-pointer hover:bg-surface-container-high transition-colors" data-username="chenming">
+          <div class="flex items-center gap-2">
+            <i data-lucide="user-circle" class="w-4 h-4 text-on-surface-variant"></i>
+            <span class="text-sm font-medium text-on-surface">chenming</span>
+          </div>
+          <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-warning/15 text-warning">学员</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 强制改密弹窗 -->
+    <div id="change-password-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 hidden">
+      <div class="bg-surface rounded-xl shadow-dialog max-w-md w-full p-6">
+        <!-- 弹窗标题 -->
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-10 h-10 bg-warning/15 rounded-lg flex items-center justify-center shrink-0">
+            <i data-lucide="shield-alert" class="w-5 h-5 text-warning"></i>
+          </div>
+          <div>
+            <h3 id="modal-title" class="text-base font-semibold text-on-surface">安全提示：请修改初始密码</h3>
+            <p class="text-xs text-on-surface-variant mt-0.5">您的密码为系统初始密码，为确保账户安全请立即修改</p>
+          </div>
+        </div>
+
+        <!-- 改密错误提示 -->
+        <div id="change-pwd-error" class="hidden bg-error/10 border border-error/20 rounded-md px-4 py-3 mb-4 flex items-center gap-2">
+          <i data-lucide="alert-circle" class="w-4 h-4 text-error shrink-0"></i>
+          <span id="change-pwd-error-msg" class="text-sm text-error">两次输入的新密码不一致</span>
+        </div>
+
+        <!-- 改密表单 -->
+        <form id="change-password-form" class="space-y-4" onsubmit="return false;">
+          <!-- 旧密码 -->
+          <div>
+            <label for="input-old-password" class="block text-sm font-medium text-on-surface mb-1.5">旧密码</label>
+            <div class="relative">
+              <i data-lucide="lock" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant/50"></i>
+              <input id="input-old-password" type="password" placeholder="请输入旧密码"
+                     class="w-full bg-surface-container border-none rounded-md pl-10 pr-3 py-2.5 text-sm
+                            text-on-surface placeholder:text-on-surface-variant/50
+                            focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+            </div>
+          </div>
+
+          <!-- 新密码 -->
+          <div>
+            <label for="input-new-password" class="block text-sm font-medium text-on-surface mb-1.5">新密码</label>
+            <div class="relative">
+              <i data-lucide="key-round" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant/50"></i>
+              <input id="input-new-password" type="password" placeholder="请输入新密码（至少6位）"
+                     class="w-full bg-surface-container border-none rounded-md pl-10 pr-3 py-2.5 text-sm
+                            text-on-surface placeholder:text-on-surface-variant/50
+                            focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+            </div>
+          </div>
+
+          <!-- 确认新密码 -->
+          <div>
+            <label for="input-confirm-password" class="block text-sm font-medium text-on-surface mb-1.5">确认新密码</label>
+            <div class="relative">
+              <i data-lucide="key-round" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant/50"></i>
+              <input id="input-confirm-password" type="password" placeholder="请再次输入新密码"
+                     class="w-full bg-surface-container border-none rounded-md pl-10 pr-3 py-2.5 text-sm
+                            text-on-surface placeholder:text-on-surface-variant/50
+                            focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+            </div>
+          </div>
+
+          <!-- 提交按钮 -->
+          <button id="btn-change-password" type="submit"
+                  class="w-full bg-primary text-on-primary px-4 py-2.5 rounded-md text-sm font-medium
+                         hover:opacity-90 active:scale-[0.98] transition-all inline-flex items-center justify-center gap-2 mt-2">
+            <i data-lucide="check" class="w-4 h-4"></i>
+            确认修改
+          </button>
+        </form>
+
+        <!-- 底部提示 -->
+        <p class="text-xs text-on-surface-variant text-center mt-4">修改密码后方可正常使用系统</p>
+      </div>
+    </div>
+
   </main>
   <!-- @main-content:end -->
 
   <script>
-    lucide.createIcons();
-
     $(function () {
-      // 密码显示/隐藏切换
-      var passwordVisible = false;
-      $('#btn-toggle-password').on('click', function () {
-        passwordVisible = !passwordVisible;
-        var $input = $('#input-password');
-        if (passwordVisible) {
-          $input.attr('type', 'text');
-          $(this).find('i').attr('data-lucide', 'eye-off');
-        } else {
-          $input.attr('type', 'password');
-          $(this).find('i').attr('data-lucide', 'eye');
-        }
-        lucide.createIcons();
-      });
 
-      // 登录按钮 - demo项目不判断账密，直接跳转
+      // === 登录按钮点击 ===
       $('#btn-login').on('click', function () {
-        window.location.href = 'home.html';
+        var username = $('#input-username').val().trim();
+        var password = $('#input-password').val().trim();
+
+        // 隐藏之前的错误提示
+        $('#login-error').addClass('hidden');
+
+        // 简单校验：空字段提示
+        if (!username || !password) {
+          $('#login-error-msg').text('请输入用户名和密码');
+          $('#login-error').removeClass('hidden');
+          return;
+        }
+
+        // Demo项目不判断账密，直接跳转
+        // 模拟登录成功后检查 forceChangePassword 标记
+        // 当用户使用旧格式密码（bt:前缀）首次登录时，后端返回 forceChangePassword: true
+        // 原型中默认演示强制改密弹窗场景
+        var forceChangePassword = true;
+
+        if (forceChangePassword) {
+          // 显示强制改密弹窗（不可关闭，必须改密才能继续）
+          $('#change-password-modal').removeClass('hidden');
+          // 自动填入旧密码
+          $('#input-old-password').val(password);
+        } else {
+          // 直接跳转到设置页
+          window.location.href = 'settings.html';
+        }
       });
 
-      // 回车键触发登录
-      $('#input-username, #input-password').on('keydown', function (e) {
+      // === 改密弹窗提交 ===
+      $('#btn-change-password').on('click', function () {
+        var oldPwd = $('#input-old-password').val().trim();
+        var newPwd = $('#input-new-password').val().trim();
+        var confirmPwd = $('#input-confirm-password').val().trim();
+
+        // 隐藏之前的错误
+        $('#change-pwd-error').addClass('hidden');
+
+        // 校验：旧密码不能为空
+        if (!oldPwd) {
+          $('#change-pwd-error-msg').text('请输入旧密码');
+          $('#change-pwd-error').removeClass('hidden');
+          return;
+        }
+
+        // 校验：新密码长度
+        if (newPwd.length < 6) {
+          $('#change-pwd-error-msg').text('新密码长度不能少于6位');
+          $('#change-pwd-error').removeClass('hidden');
+          return;
+        }
+
+        // 校验：两次密码一致
+        if (newPwd !== confirmPwd) {
+          $('#change-pwd-error-msg').text('两次输入的新密码不一致');
+          $('#change-pwd-error').removeClass('hidden');
+          return;
+        }
+
+        // 校验：新密码不能与旧密码相同
+        if (newPwd === oldPwd) {
+          $('#change-pwd-error-msg').text('新密码不能与旧密码相同');
+          $('#change-pwd-error').removeClass('hidden');
+          return;
+        }
+
+        // 模拟调用 /api/auth/change-password 接口
+        // 成功后关闭弹窗，跳转到设置页
+        $('#change-password-modal').addClass('hidden');
+        window.location.href = 'settings.html';
+      });
+
+      // === 强制改密弹窗不可关闭 ===
+      // 弹窗遮罩层点击不关闭（强制改密，必须修改密码才能继续）
+      // 注意：没有关闭按钮，也没有点击遮罩关闭的逻辑
+
+      // === 回车键提交登录 ===
+      $('#login-form').on('keydown', function (e) {
         if (e.key === 'Enter') {
+          e.preventDefault();
           $('#btn-login').trigger('click');
         }
       });
+
+      // === 回车键提交改密 ===
+      $('#change-password-form').on('keydown', function (e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          $('#btn-change-password').trigger('click');
+        }
+      });
+
+      // === 测试账号点击快速填入 ===
+      $('#test-accounts').on('click', '.test-account-item', function () {
+        var username = $(this).data('username');
+        $('#input-username').val(username);
+        $('#input-password').focus();
+        // 隐藏错误提示
+        $('#login-error').addClass('hidden');
+      });
+
     });
   </script>
+
+  <script>lucide.createIcons();</script>
 </body>
 
 </html>
