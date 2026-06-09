@@ -293,10 +293,95 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: '无权删除超级管理员账号' }, { status: 403 });
     }
 
-    // 先删除关联表
-    await supabase.from('trainee_profiles').delete().eq('user_id', userId);
-    await supabase.from('daily_plans').delete().eq('user_id', userId);
-    await supabase.from('practice_tasks').delete().eq('assigned_to', userId);
+    // 先删除关联表（按外键依赖顺序，先删子表再删父表）
+    // 带user_id/trainee_id/mentor_id等外键引用users.id的表
+    const relatedDeletions = [
+      // 学习相关
+      { table: 'module_progress', column: 'user_id' },
+      { table: 'level_progress', column: 'user_id' },
+      { table: 'quiz_attempts', column: 'user_id' },
+      // 业务数据
+      { table: 'business_data', column: 'user_id' },
+      { table: 'trainee_monthly_data', column: 'user_id' },
+      // 质检相关
+      { table: 'qc_records', column: 'user_id' },
+      // 赋能相关
+      { table: 'empower_executions', column: 'user_id' },
+      // 诊断
+      { table: 'quadrant_snapshots', column: 'user_id' },
+      // 评估
+      { table: 'assessment_targets', column: 'user_id' },
+      { table: 'daily_assessments', column: 'trainee_id' },
+      // 知识库
+      { table: 'knowledge_bookmarks', column: 'user_id' },
+      // 资源
+      { table: 'resource_views', column: 'user_id' },
+      // 通知
+      { table: 'notifications', column: 'user_id' },
+      // 成长计划
+      { table: 'daily_plans', column: 'user_id' },
+      // 核心动作评分
+      { table: 'action_scores', column: 'user_id' },
+      // 演练任务
+      { table: 'practice_tasks', column: 'assigned_to' },
+      // 阶段申请
+      { table: 'stage_applications', column: 'trainee_id' },
+      // 课程考勤
+      { table: 'course_attendance', column: 'user_id' },
+      // 课程交付
+      { table: 'course_deliveries', column: 'user_id' },
+      // 培训批次学员
+      { table: 'batch_trainees', column: 'user_id' },
+      // 日程变更日志
+      { table: 'schedule_change_logs', column: 'changed_by' },
+      // 带教关系
+      { table: 'mentor_trainees', column: 'trainee_id' },
+      // 学员档案（放在最后，其他表可能还引用它）
+      { table: 'trainee_profiles', column: 'user_id' },
+    ];
+
+    for (const { table, column } of relatedDeletions) {
+      await supabase.from(table).delete().eq(column, userId);
+    }
+
+    // 第二轮：清理以该用户为mentor/teacher/reviewer等角色的关联记录
+    const mentorDeletions = [
+      { table: 'mentor_trainees', column: 'mentor_id' },
+      { table: 'coaching_records', column: 'mentor_id' },
+      { table: 'course_deliveries', column: 'mentor_id' },
+      { table: 'batch_trainees', column: 'mentor_id' },
+      { table: 'plan_stage_courses', column: 'teacher_id' },
+      { table: 'course_deliveries', column: 'teacher_id' },
+    ];
+    for (const { table, column } of mentorDeletions) {
+      await supabase.from(table).delete().eq(column, userId);
+    }
+
+    // 第三轮：清理created_by/assessor/reviewer等操作者关联（置空而非删除，保留业务记录）
+    const nullifyColumns = [
+      { table: 'assessments', column: 'created_by' },
+      { table: 'resources', column: 'uploaded_by' },
+      { table: 'training_plans', column: 'manager_id' },
+      { table: 'training_batches', column: 'created_by' },
+    ];
+    for (const { table, column } of nullifyColumns) {
+      await supabase.from(table).update({ [column]: null }).eq(column, userId);
+    }
+
+    // 知识库文章：将author_id置空而非删除，保留文章内容
+    await supabase.from('knowledge_articles').update({ author_id: null }).eq('author_id', userId);
+
+    // QC记录中的reviewer_id置空
+    await supabase.from('qc_records').update({ reviewer_id: null }).eq('reviewer_id', userId);
+
+    // 日常考核中的assessor_id置空
+    await supabase.from('daily_assessments').update({ assessor_id: null }).eq('assessor_id', userId);
+
+    // 阶段申请中的reviewer_id置空
+    await supabase.from('stage_applications').update({ reviewer_id: null }).eq('reviewer_id', userId);
+
+    // 辅导记录中的trainee_id置空
+    await supabase.from('coaching_records').update({ trainee_id: null }).eq('trainee_id', userId);
 
     // 删除用户
     const { error } = await supabase.from('users').delete().eq('id', userId);
