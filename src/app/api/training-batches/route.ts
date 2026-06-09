@@ -1,23 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
+import { getAuthFromHeaders } from '@/lib/auth/api-auth';
 
 export const dynamic = 'force-dynamic';
-
-function getUserFromCookie(request: NextRequest) {
-  const token = request.cookies.get('auth_token')?.value;
-  if (!token) return null;
-  try {
-    const decoded = JSON.parse(Buffer.from(token, 'base64').toString());
-    return decoded as { id: number; username: string; realName: string; role: string };
-  } catch {
-    return null;
-  }
-}
 
 // GET /api/training-batches - 获取培训批次列表
 export async function GET(request: NextRequest) {
   const client = getSupabaseClient();
-  const user = getUserFromCookie(request);
+  const user = getAuthFromHeaders(request);
   if (!user) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
@@ -134,7 +124,7 @@ export async function GET(request: NextRequest) {
 // POST /api/training-batches - 从模板创建培训实例
 export async function POST(request: NextRequest) {
   const client = getSupabaseClient();
-  const user = getUserFromCookie(request);
+  const user = getAuthFromHeaders(request);
   if (!user) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
@@ -228,7 +218,7 @@ export async function POST(request: NextRequest) {
 // PATCH /api/training-batches - 更新批次信息
 export async function PATCH(request: NextRequest) {
   const client = getSupabaseClient();
-  const user = getUserFromCookie(request);
+  const user = getAuthFromHeaders(request);
   if (!user) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }

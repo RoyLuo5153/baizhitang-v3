@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
+import { getAuthFromHeaders } from '@/lib/auth/api-auth';
 
 export const dynamic = 'force-dynamic';
 
 // GET /api/empower/alerts - 获取待推送预警（不合格新人 + 匹配方案）
 export async function GET(request: NextRequest) {
+  const auth = getAuthFromHeaders(request);
+  if (!auth) return NextResponse.json({ error: '未登录' }, { status: 401 });
   const token = request.headers.get('authorization')?.replace('Bearer ', '');
   const client = getSupabaseClient(token);
 

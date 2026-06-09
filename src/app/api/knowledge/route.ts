@@ -1,17 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
 import { S3Storage } from 'coze-coding-dev-sdk';
-
-// 从cookie解析用户身份
-function getUserFromCookie(request: NextRequest) {
-  const token = request.cookies.get('auth_token')?.value;
-  if (!token) return null;
-  try {
-    return JSON.parse(Buffer.from(token, 'base64').toString());
-  } catch {
-    return null;
-  }
-}
+import { getAuthFromHeaders } from '@/lib/auth/api-auth';
 
 // 为附件key生成签名URL
 async function signAttachmentUrls(attachments: unknown[]): Promise<unknown[]> {
@@ -42,7 +32,7 @@ export async function GET(request: NextRequest) {
     const supabase = getSupabaseClient();
     if (!supabase) return NextResponse.json({ error: 'Database unavailable' }, { status: 500 });
 
-    const userInfo = getUserFromCookie(request);
+    const userInfo = getAuthFromHeaders(request);
     const role = userInfo?.role || 'trainee';
 
     const { searchParams } = new URL(request.url);
@@ -169,7 +159,7 @@ export async function POST(request: NextRequest) {
     const supabase = getSupabaseClient();
     if (!supabase) return NextResponse.json({ error: 'Database unavailable' }, { status: 500 });
 
-    const userInfo = getUserFromCookie(request);
+    const userInfo = getAuthFromHeaders(request);
     const role = userInfo?.role || 'trainee';
     const userId = userInfo?.id || null;
 
@@ -233,7 +223,7 @@ export async function PATCH(request: NextRequest) {
     const supabase = getSupabaseClient();
     if (!supabase) return NextResponse.json({ error: 'Database unavailable' }, { status: 500 });
 
-    const userInfo = getUserFromCookie(request);
+    const userInfo = getAuthFromHeaders(request);
     const role = userInfo?.role || 'trainee';
     const userId = userInfo?.id || null;
 
@@ -302,7 +292,7 @@ export async function DELETE(request: NextRequest) {
     const supabase = getSupabaseClient();
     if (!supabase) return NextResponse.json({ error: 'Database unavailable' }, { status: 500 });
 
-    const userInfo = getUserFromCookie(request);
+    const userInfo = getAuthFromHeaders(request);
     const role = userInfo?.role || 'trainee';
 
     // 只有培训负责人可以删除

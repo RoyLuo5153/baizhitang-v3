@@ -1,18 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
+import { getAuthFromHeaders } from '@/lib/auth/api-auth';
 
 export const dynamic = 'force-dynamic';
-
-function getUserFromCookie(request: NextRequest) {
-  const token = request.cookies.get('auth_token')?.value;
-  if (!token) return null;
-  try {
-    const decoded = JSON.parse(Buffer.from(token, 'base64').toString());
-    return decoded as { id: number; username: string; realName: string; role: string };
-  } catch {
-    return null;
-  }
-}
 
 // 生成6位随机签到码
 function generateCheckInCode(): string {
@@ -22,7 +12,7 @@ function generateCheckInCode(): string {
 // GET /api/course-attendance - 获取签到记录
 export async function GET(request: NextRequest) {
   const client = getSupabaseClient();
-  const user = getUserFromCookie(request);
+  const user = getAuthFromHeaders(request);
   if (!user) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
@@ -66,7 +56,7 @@ export async function GET(request: NextRequest) {
 // POST /api/course-attendance - 生成签到码 / 签到
 export async function POST(request: NextRequest) {
   const client = getSupabaseClient();
-  const user = getUserFromCookie(request);
+  const user = getAuthFromHeaders(request);
   if (!user) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
@@ -164,7 +154,7 @@ export async function POST(request: NextRequest) {
 // PATCH /api/course-attendance - 批量更新签到状态
 export async function PATCH(request: NextRequest) {
   const client = getSupabaseClient();
-  const user = getUserFromCookie(request);
+  const user = getAuthFromHeaders(request);
   if (!user) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }

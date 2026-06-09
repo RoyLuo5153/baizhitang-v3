@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
+import { getAuthFromHeaders } from '@/lib/auth/api-auth';
 
 const supabase = getSupabaseClient();
 
 // GET /api/assessment - 获取考核任务/记录
 export async function GET(request: NextRequest) {
+  const auth = getAuthFromHeaders(request);
+  if (!auth) return NextResponse.json({ error: '未授权' }, { status: 401 });
+
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
@@ -102,11 +106,19 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/assessment - 发布考核
+// POST /api/assessment - 发布考核（仅teacher/training_manager/mentor）
 export async function POST(request: NextRequest) {
+  const auth = getAuthFromHeaders(request);
+  if (!auth) return NextResponse.json({ error: '未授权' }, { status: 401 });
+  if (!['teacher', 'training_manager', 'mentor'].includes(auth.role)) {
+    return NextResponse.json({ error: '无权创建考核' }, { status: 403 });
+  }
+
   try {
     const body = await request.json();
-    const { traineeId, type, title, dueDate, scores, comment, dimensions, assessorId } = body;
+    const { traineeId, type, title, dueDate, scores, comment, dimensions } = body;
+    // Use auth user as assessor
+    const assessorId = auth.userId;
 
     if (!traineeId || !title) {
       return NextResponse.json({ error: '缺少必要参数' }, { status: 400 });

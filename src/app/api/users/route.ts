@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
+import { getAuthFromHeaders, requireRoles, ROLES } from '@/lib/auth/api-auth';
 import bcrypt from 'bcryptjs';
 
 // GET /api/users — 获取用户列表（支持?roleId=2筛选带教老师）
 export async function GET(req: NextRequest) {
   try {
+    // 鉴权：仅 training_manager/boss 可查看用户列表
+    const auth = getAuthFromHeaders(req);
+    if (!auth) return NextResponse.json({ error: '未登录' }, { status: 401 });
+    const denied = requireRoles(auth, ROLES.TRAINING_MANAGER, ROLES.BOSS);
+    if (denied) return denied;
+
     const supabase = getSupabaseClient();
     const url = new URL(req.url);
     const roleIdFilter = url.searchParams.get('roleId');
@@ -87,6 +94,12 @@ export async function GET(req: NextRequest) {
 // POST /api/users — 添加用户
 export async function POST(req: NextRequest) {
   try {
+    // 鉴权：仅 training_manager/boss 可创建用户
+    const auth = getAuthFromHeaders(req);
+    if (!auth) return NextResponse.json({ error: '未登录' }, { status: 401 });
+    const denied = requireRoles(auth, ROLES.TRAINING_MANAGER, ROLES.BOSS);
+    if (denied) return denied;
+
     const body = await req.json();
     const { username, realName, password, roleId, stage, cohort } = body;
 
@@ -155,6 +168,12 @@ export async function POST(req: NextRequest) {
 // PUT /api/users — 更新用户信息
 export async function PUT(req: NextRequest) {
   try {
+    // 鉴权：仅 training_manager/boss 可修改用户
+    const auth = getAuthFromHeaders(req);
+    if (!auth) return NextResponse.json({ error: '未登录' }, { status: 401 });
+    const denied = requireRoles(auth, ROLES.TRAINING_MANAGER, ROLES.BOSS);
+    if (denied) return denied;
+
     const body = await req.json();
     const { userId, realName, roleId, stage, status, cohort, password, resetPassword } = body;
     if (!userId) return NextResponse.json({ error: '缺少userId' }, { status: 400 });

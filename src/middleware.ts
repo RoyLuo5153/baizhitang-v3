@@ -3,13 +3,31 @@ import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
 
 /**
- * 路由级权限保护
- * 每个路径显式声明允许访问的角色白名单
- * 未登录用户访问任何dashboard路径都重定向到/login
+ * 全局鉴权中间件
+ * 1. API路由：JWT验证 + 用户信息注入请求头 + 角色权限校验
+ * 2. 页面路由：JWT验证 + 角色路由权限
  */
 
 type RoleCode = 'trainee' | 'mentor' | 'teacher' | 'training_manager' | 'boss';
 
+// 无需鉴权的API路由白名单
+const PUBLIC_API_ROUTES = [
+  '/api/auth/login',
+  '/api/auth/register',
+  '/api/auth/me',
+  '/api/auth/change-password',
+];
+
+// API路由角色权限（未列出的API已登录即可访问）
+const API_PERMISSIONS: Record<string, RoleCode[]> = {
+  '/api/users': ['training_manager', 'boss'],
+  '/api/migrate': ['training_manager'],
+  '/api/stage-rules': ['training_manager'],
+  '/api/thresholds': ['training_manager'],
+  '/api/mentor-trainees': ['training_manager', 'mentor'],
+};
+
+// 页面路由角色权限
 const ROUTE_PERMISSIONS: Record<string, RoleCode[]> = {
   '/learning': ['trainee', 'mentor', 'teacher', 'training_manager'],
   '/growth': ['trainee', 'mentor', 'training_manager'],
@@ -30,14 +48,18 @@ const ROUTE_PERMISSIONS: Record<string, RoleCode[]> = {
   '/settings': ['training_manager'],
 };
 
-async function parseToken(token: string): Promise<{ role: string } | null> {
+async function parseToken(token: string): Promise<{ userId: string; role: string; permissions: string[] } | null> {
   try {
     const secret = new TextEncoder().encode(
-      process.env.JWT_SECRET || 'default-secret-for-dev-only'
+      process.env.JWT_SECRET || 'bz-training-dev-secret-key-2026'
     );
     const { payload } = await jwtVerify(token, secret);
-    if (payload.role) {
-      return { role: payload.role as string };
+    if (payload.userId && payload.role) {
+      return {
+        userId: payload.userId as string,
+        role: payload.role as string,
+        permissions: (payload.permissions as string[]) || [],
+      };
     }
     return null;
   } catch {
@@ -48,32 +70,72 @@ async function parseToken(token: string): Promise<{ role: string } | null> {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // 静态资源、API、登录页跳过
+  // 静态资源跳过
   if (
     pathname.startsWith('/_next') ||
-    pathname.startsWith('/api') ||
-    pathname.startsWith('/login') ||
     pathname.includes('.') // 静态文件
   ) {
     return NextResponse.next();
   }
 
-  // 从cookie获取auth_token
+  // ====== API路由鉴权 ======
+  if (pathname.startsWith('/api/')) {
+    // 白名单API放行
+    if (PUBLIC_API_ROUTES.some(route => pathname.startsWith(route))) {
+      return NextResponse.next();
+    }
+
+    // 检查auth_token cookie
+    const token = request.cookies.get('auth_token')?.value;
+    if (!token) {
+      return NextResponse.json({ error: '未登录' }, { status: 401 });
+    }
+
+    // JWT验证
+    const parsed = await parseToken(token);
+    if (!parsed) {
+      return NextResponse.json({ error: '无效凭证，请重新登录' }, { status: 401 });
+    }
+
+    // API角色权限校验（找最长匹配前缀）
+    let matchedPath = '';
+    for (const routePath of Object.keys(API_PERMISSIONS)) {
+      if (pathname.startsWith(routePath) && routePath.length > matchedPath.length) {
+        matchedPath = routePath;
+      }
+    }
+    if (matchedPath) {
+      const allowedRoles = API_PERMISSIONS[matchedPath];
+      if (!allowedRoles.includes(parsed.role as RoleCode)) {
+        return NextResponse.json({ error: '无权限访问' }, { status: 403 });
+      }
+    }
+
+    // 将用户信息注入请求头，供下游API使用
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set('x-user-id', parsed.userId);
+    requestHeaders.set('x-user-role', parsed.role);
+    requestHeaders.set('x-user-permissions', parsed.permissions.join(','));
+    return NextResponse.next({ request: { headers: requestHeaders } });
+  }
+
+  // ====== 登录页跳过 ======
+  if (pathname.startsWith('/login')) {
+    return NextResponse.next();
+  }
+
+  // ====== 页面路由鉴权 ======
   const token = request.cookies.get('auth_token')?.value;
 
   if (!token) {
-    // 未登录，重定向到登录页
     const loginUrl = new URL('/login', request.url);
     return NextResponse.redirect(loginUrl);
   }
 
-  // 验证JWT签名获取角色
   const parsed = await parseToken(token);
   if (!parsed || !parsed.role) {
-    // token无效，重定向到登录页
     const loginUrl = new URL('/login', request.url);
     const response = NextResponse.redirect(loginUrl);
-    // 清除无效cookie
     response.cookies.set('auth_token', '', { maxAge: 0 });
     return response;
   }
@@ -91,13 +153,11 @@ export async function middleware(request: NextRequest) {
   if (matchedPath) {
     const allowedRoles = ROUTE_PERMISSIONS[matchedPath];
     if (!allowedRoles.includes(userRole)) {
-      // 无权限，重定向到首页
       const homeUrl = new URL('/', request.url);
       return NextResponse.redirect(homeUrl);
     }
   }
 
-  // 首页(/)和其他未在ROUTE_PERMISSIONS中的路径放行（已登录即可访问）
   return NextResponse.next();
 }
 

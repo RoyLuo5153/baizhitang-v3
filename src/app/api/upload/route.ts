@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { S3Storage } from 'coze-coding-dev-sdk';
+import { getAuthFromHeaders } from '@/lib/auth/api-auth';
 
 // ─── 文件类型限制配置 ─────────────────────────────────────
 const FILE_LIMITS: Record<string, { exts: string[]; maxSize: number }> = {
@@ -32,21 +33,12 @@ function formatFileSize(bytes: number): string {
 }
 
 // 从cookie解析用户身份
-function getUserFromCookie(request: NextRequest) {
-  const token = request.cookies.get('auth_token')?.value;
-  if (!token) return null;
-  try {
-    return JSON.parse(Buffer.from(token, 'base64').toString());
-  } catch {
-    return null;
-  }
-}
 
 // POST /api/upload — 上传文件到对象存储
 export async function POST(request: NextRequest) {
   try {
     // 1. 鉴权：新人无权上传
-    const userInfo = getUserFromCookie(request);
+    const userInfo = getAuthFromHeaders(request);
     const role = userInfo?.role || 'trainee';
     if (role === 'trainee') {
       return NextResponse.json({ error: '新人无权上传文件' }, { status: 403 });

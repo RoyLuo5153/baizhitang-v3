@@ -1,16 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
-
-// 从cookie解析用户身份
-function getUserFromCookie(request: NextRequest) {
-  const token = request.cookies.get('auth_token')?.value;
-  if (!token) return null;
-  try {
-    return JSON.parse(Buffer.from(token, 'base64').toString());
-  } catch {
-    return null;
-  }
-}
+import { getAuthFromHeaders } from '@/lib/auth/api-auth';
 
 // PATCH /api/knowledge/review — 审核（仅培训负责人）
 export async function PATCH(request: NextRequest) {
@@ -18,7 +8,7 @@ export async function PATCH(request: NextRequest) {
     const supabase = getSupabaseClient();
     if (!supabase) return NextResponse.json({ error: 'Database unavailable' }, { status: 500 });
 
-    const userInfo = getUserFromCookie(request);
+    const userInfo = getAuthFromHeaders(request);
     const role = userInfo?.role;
     const userId = userInfo?.id;
 
@@ -76,7 +66,7 @@ export async function GET(request: NextRequest) {
     const supabase = getSupabaseClient();
     if (!supabase) return NextResponse.json({ error: 'Database unavailable' }, { status: 500 });
 
-    const userInfo = getUserFromCookie(request);
+    const userInfo = getAuthFromHeaders(request);
     const role = userInfo?.role;
 
     if (role !== 'training_manager') {

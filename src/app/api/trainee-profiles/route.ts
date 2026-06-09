@@ -1,24 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
-
-/**
- * 从请求cookie中解析auth_token获取用户身份
- * 统一身份校验：不依赖前端传参，从服务端cookie取
- */
-function getAuthFromRequest(request: NextRequest): { userId: string; role: string } | null {
-  const token = request.cookies.get('auth_token')?.value;
-  if (!token) return null;
-  try {
-    const decoded = Buffer.from(token, 'base64').toString('utf-8');
-    const parsed = JSON.parse(decoded);
-    if (parsed.userId && parsed.role) {
-      return { userId: parsed.userId, role: parsed.role };
-    }
-    return null;
-  } catch {
-    return null;
-  }
-}
+import { getAuthFromHeaders } from '@/lib/auth/api-auth';
 
 /**
  * GET /api/trainee-profiles
@@ -31,8 +13,8 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = getSupabaseClient();
 
-    // 从cookie取身份，不依赖前端传参
-    const auth = getAuthFromRequest(request);
+    // 从middleware注入的请求头取身份
+    const auth = getAuthFromHeaders(request);
     if (!auth) {
       return NextResponse.json({ error: '未登录' }, { status: 401 });
     }

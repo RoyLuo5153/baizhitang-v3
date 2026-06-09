@@ -1,23 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
+import { getAuthFromHeaders } from '@/lib/auth/api-auth';
 
 export const dynamic = 'force-dynamic';
-
-function getUserFromCookie(request: NextRequest) {
-  const token = request.cookies.get('auth_token')?.value;
-  if (!token) return null;
-  try {
-    return JSON.parse(Buffer.from(token, 'base64').toString()) as {
-      id: number; username: string; realName: string; role: string;
-    };
-  } catch { return null; }
-}
 
 // GET /api/questions/review - 获取待审核题目列表（培训负责人专用）
 export async function GET(request: NextRequest) {
   const token = request.headers.get('authorization')?.replace('Bearer ', '');
   const client = getSupabaseClient(token);
-  const user = getUserFromCookie(request);
+  const user = getAuthFromHeaders(request);
 
   if (!user || user.role !== 'training_manager') {
     return NextResponse.json({ error: '仅培训负责人可查看待审核题目' }, { status: 403 });
@@ -59,7 +50,7 @@ export async function GET(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   const token = request.headers.get('authorization')?.replace('Bearer ', '');
   const client = getSupabaseClient(token);
-  const user = getUserFromCookie(request);
+  const user = getAuthFromHeaders(request);
 
   if (!user || user.role !== 'training_manager') {
     return NextResponse.json({ error: '仅培训负责人可审核题目' }, { status: 403 });

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
 import { onQcLowScore, onQcCompletedUpdateProcessStatus } from '@/lib/triggers';
+import { getAuthFromHeaders } from '@/lib/auth/api-auth';
 
 export const dynamic = 'force-dynamic';
 

@@ -1,23 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
+import { getAuthFromHeaders, type AuthInfo } from '@/lib/auth/api-auth';
 
 export const dynamic = 'force-dynamic';
-
-function getUserFromCookie(request: NextRequest) {
-  const token = request.cookies.get('auth_token')?.value;
-  if (!token) return null;
-  try {
-    const decoded = JSON.parse(Buffer.from(token, 'base64').toString());
-    return decoded as { id: number; username: string; realName: string; role: string };
-  } catch {
-    return null;
-  }
-}
 
 // GET /api/course-deliveries - 获取课程交付记录
 export async function GET(request: NextRequest) {
   const client = getSupabaseClient();
-  const user = getUserFromCookie(request);
+  const user = getAuthFromHeaders(request);
   if (!user) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
@@ -101,7 +91,7 @@ export async function GET(request: NextRequest) {
 }
 
 // mentor视图：按学员分组
-async function getMentorView(client: ReturnType<typeof getSupabaseClient>, user: { id: number; role: string }) {
+async function getMentorView(client: ReturnType<typeof getSupabaseClient>, user: AuthInfo) {
   // 获取该mentor的批次学员
   const { data: batchTrainees } = await client
     .from('batch_trainees')
@@ -158,7 +148,7 @@ async function getMentorView(client: ReturnType<typeof getSupabaseClient>, user:
 }
 
 // trainee视图：个人学习数据
-async function getTraineeView(client: ReturnType<typeof getSupabaseClient>, user: { id: number; role: string }) {
+async function getTraineeView(client: ReturnType<typeof getSupabaseClient>, user: AuthInfo) {
   const userId = String(user.id);
 
   // 获取学员的批次信息
@@ -276,7 +266,7 @@ async function getTraineeView(client: ReturnType<typeof getSupabaseClient>, user
 // POST /api/course-deliveries - 创建交付记录（排课）
 export async function POST(request: NextRequest) {
   const client = getSupabaseClient();
-  const user = getUserFromCookie(request);
+  const user = getAuthFromHeaders(request);
   if (!user) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
@@ -355,7 +345,7 @@ export async function POST(request: NextRequest) {
 // PATCH /api/course-deliveries - 更新交付记录（排课/签到/作业）
 export async function PATCH(request: NextRequest) {
   const client = getSupabaseClient();
-  const user = getUserFromCookie(request);
+  const user = getAuthFromHeaders(request);
   if (!user) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }

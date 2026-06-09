@@ -1,12 +1,19 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
+import { getAuthFromHeaders } from '@/lib/auth/api-auth';
 
 /**
  * POST /api/empower/auto-trigger
  * 结果线自动触发赋能：业务指标低于阈值→自动匹配方案→创建执行记录
  * 可按需调用（定时任务/手动触发）
+ * 仅 training_manager/mentor 可触发
  */
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  const auth = getAuthFromHeaders(request);
+  if (!auth) return NextResponse.json({ error: '未授权' }, { status: 401 });
+  if (!['training_manager', 'mentor', 'boss'].includes(auth.role)) {
+    return NextResponse.json({ error: '权限不足' }, { status: 403 });
+  }
   try {
     const client = getSupabaseClient();
     const body = await request.json().catch(() => ({}));

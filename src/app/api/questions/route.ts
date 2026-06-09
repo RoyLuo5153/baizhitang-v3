@@ -1,25 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
+import { getAuthFromHeaders } from '@/lib/auth/api-auth';
 
 export const dynamic = 'force-dynamic';
-
-// 解析cookie获取用户身份
-function getUserFromCookie(request: NextRequest) {
-  const token = request.cookies.get('auth_token')?.value;
-  if (!token) return null;
-  try {
-    const decoded = JSON.parse(Buffer.from(token, 'base64').toString());
-    return decoded as { id: number; username: string; realName: string; role: string };
-  } catch {
-    return null;
-  }
-}
 
 // GET /api/questions - 获取题目列表（带筛选分页+角色过滤）
 export async function GET(request: NextRequest) {
   const token = request.headers.get('authorization')?.replace('Bearer ', '');
   const client = getSupabaseClient(token);
-  const user = getUserFromCookie(request);
+  const user = getAuthFromHeaders(request);
 
   const { searchParams } = new URL(request.url);
   const levelId = searchParams.get('levelId');
@@ -91,7 +80,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const token = request.headers.get('authorization')?.replace('Bearer ', '');
   const client = getSupabaseClient(token);
-  const user = getUserFromCookie(request);
+  const user = getAuthFromHeaders(request);
 
   if (!user) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
@@ -155,7 +144,7 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   const token = request.headers.get('authorization')?.replace('Bearer ', '');
   const client = getSupabaseClient(token);
-  const user = getUserFromCookie(request);
+  const user = getAuthFromHeaders(request);
 
   if (!user) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
@@ -219,7 +208,7 @@ export async function PUT(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   const token = request.headers.get('authorization')?.replace('Bearer ', '');
   const client = getSupabaseClient(token);
-  const user = getUserFromCookie(request);
+  const user = getAuthFromHeaders(request);
 
   if (!user || user.role === 'trainee') {
     return NextResponse.json({ error: '无权删除题目' }, { status: 403 });

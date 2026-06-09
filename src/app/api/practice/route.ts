@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
 import { onPracticeSubmitted, onPracticeLowScore } from '@/lib/triggers';
+import { getAuthFromHeaders } from '@/lib/auth/api-auth';
 
 // ============================================================
 // GET /api/practice — 按角色分化返回演练数据

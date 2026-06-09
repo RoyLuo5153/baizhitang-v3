@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
+import { getAuthFromHeaders } from '@/lib/auth/api-auth';
 
 export async function GET(request: NextRequest) {
+  const auth = getAuthFromHeaders(request);
+  if (!auth) return NextResponse.json({ error: '未登录' }, { status: 401 });
   try {
     const supabase = getSupabaseClient();
     const { searchParams } = new URL(request.url);

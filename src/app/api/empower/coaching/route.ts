@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
+import { getAuthFromHeaders } from '@/lib/auth/api-auth';
 
 export async function GET(request: NextRequest) {
+  const auth = getAuthFromHeaders(request);
+  if (!auth) return NextResponse.json({ error: '未授权' }, { status: 401 });
   try {
     const supabase = getSupabaseClient();
     const { searchParams } = new URL(request.url);
@@ -29,6 +32,12 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const auth = getAuthFromHeaders(request);
+  if (!auth) return NextResponse.json({ error: '未授权' }, { status: 401 });
+  // 只有 mentor/training_manager 可创建辅导记录
+  if (auth.role !== 'mentor' && auth.role !== 'training_manager' && auth.role !== 'boss') {
+    return NextResponse.json({ error: '无权操作' }, { status: 403 });
+  }
   try {
     const supabase = getSupabaseClient();
     const body = await request.json();
