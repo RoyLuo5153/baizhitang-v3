@@ -47,10 +47,10 @@ export default function NotificationsPage() {
         const data = await res.json();
         setNotifications(data.notifications || []);
       } else {
-        setNotifications(MOCK_NOTIFICATIONS);
+        setNotifications([]);
       }
     } catch {
-      setNotifications(MOCK_NOTIFICATIONS);
+      setNotifications([]);
     }
     setLoading(false);
   };
@@ -283,13 +283,4 @@ export default function NotificationsPage() {
   );
 }
 
-const MOCK_NOTIFICATIONS: Notification[] = [
-  { id: 1, user_id: '1', type: 'overdue', title: '闯关任务逾期', message: '您在第1关"初心启航"停留已超过7天，请尽快完成', related_id: '1', related_type: 'level', priority: 'high', is_read: false, created_at: new Date(Date.now() - 3600000).toISOString(), read_at: null },
-  { id: 2, user_id: '1', type: 'empower', title: '赋能方案待确认', message: '您被分配了"沟通能力提升方案"，请查看并确认', related_id: '1', related_type: 'empower_execution', priority: 'high', is_read: false, created_at: new Date(Date.now() - 7200000).toISOString(), read_at: null },
-  { id: 3, user_id: '2', type: 'dropout', title: '掉队预警', message: '您的多项目标不达标，已连续2周D类，请注意', related_id: '2', related_type: 'diagnosis', priority: 'urgent', is_read: false, created_at: new Date(Date.now() - 14400000).toISOString(), read_at: null },
-  { id: 4, user_id: '3', type: 'assessment', title: '考核任务待完成', message: '您有1项"阶段二综合评估"待完成', related_id: '3', related_type: 'assessment', priority: 'normal', is_read: false, created_at: new Date(Date.now() - 28800000).toISOString(), read_at: null },
-  { id: 5, user_id: '4', type: 'qc', title: '质检评分已出', message: '您最新的微信质检评分为72分，需关注沟通维度', related_id: '4', related_type: 'qc_record', priority: 'normal', is_read: true, created_at: new Date(Date.now() - 86400000).toISOString(), read_at: new Date(Date.now() - 43200000).toISOString() },
-  { id: 6, user_id: '1', type: 'stage', title: '阶段升级提示', message: '您已通过7关，可申请升级到阶段二', related_id: '1', related_type: 'stage', priority: 'normal', is_read: false, created_at: new Date(Date.now() - 172800000).toISOString(), read_at: null },
-  { id: 7, user_id: '6', type: 'trainee', title: '学员掉队提醒', message: '您的学员李大伟连续2周D类，建议安排辅导', related_id: '2', related_type: 'trainee', priority: 'high', is_read: false, created_at: new Date(Date.now() - 43200000).toISOString(), read_at: null },
-  { id: 8, user_id: '9', type: 'system', title: '新课程上线', message: '课程"糖尿病用药指导"已上线', related_id: '1', related_type: 'course', priority: 'low', is_read: true, created_at: new Date(Date.now() - 259200000).toISOString(), read_at: new Date(Date.now() - 172800000).toISOString() },
-];
+

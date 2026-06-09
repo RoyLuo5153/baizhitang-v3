@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import {
   ChartBar, Users, TrendingUp, Target, AlertTriangle,
-  CheckCircle2, Clock, Award, ArrowUpRight, ArrowDownRight,
+  CheckCircle2, Clock, Award,
 } from 'lucide-react';
 
 interface DashboardData {
@@ -14,9 +14,6 @@ interface DashboardData {
     avgBusinessScore: number;
   };
   quadrantDistribution: { A: number; B: number; C: number; D: number };
-  recentActivities: any[];
-  topPerformers: any[];
-  alerts: any[];
 }
 
 /* ── Level metadata: 21 levels across 3 stages ── */
@@ -42,68 +39,9 @@ interface TraineeProgress {
   scores: (number | null)[];
 }
 
-/* Mock trainee data — 8 trainees with realistic progress patterns */
-const MOCK_TRAINEES: TraineeProgress[] = [
-  {
-    id: 't1', name: '张明',
-    levels:   [2,2,2,2,2,2,2, 2,2,2,2,1,0,0, 0,0,0,0,0,0,0],
-    scores:   [95,88,92,85,90,87,93, 91,86,89,82,65,null,null, null,null,null,null,null,null,null],
-  },
-  {
-    id: 't2', name: '李婷',
-    levels:   [2,2,2,2,2,2,2, 2,2,1,0,0,0,0, 0,0,0,0,0,0,0],
-    scores:   [90,93,87,91,88,94,86, 89,85,72,null,null,null,null, null,null,null,null,null,null,null],
-  },
-  {
-    id: 't3', name: '王磊',
-    levels:   [2,2,2,2,2,1,0, 0,0,0,0,0,0,0, 0,0,0,0,0,0,0],
-    scores:   [82,79,85,88,83,68,null, null,null,null,null,null,null,null, null,null,null,null,null,null,null],
-  },
-  {
-    id: 't4', name: '赵雪',
-    levels:   [2,2,2,2,2,2,2, 2,2,2,2,2,2,2, 2,1,0,0,0,0,0],
-    scores:   [96,91,94,89,93,95,90, 88,92,87,90,86,91,88, 84,70,null,null,null,null,null],
-  },
-  {
-    id: 't5', name: '陈浩',
-    levels:   [2,2,2,1,0,0,0, 0,0,0,0,0,0,0, 0,0,0,0,0,0,0],
-    scores:   [78,82,75,60,null,null,null, null,null,null,null,null,null,null, null,null,null,null,null,null,null],
-  },
-  {
-    id: 't6', name: '刘芳',
-    levels:   [2,2,2,2,2,2,1, 1,0,0,0,0,0,0, 0,0,0,0,0,0,0],
-    scores:   [88,85,90,86,91,87,70, 62,null,null,null,null,null,null, null,null,null,null,null,null,null],
-  },
-  {
-    id: 't7', name: '孙强',
-    levels:   [2,2,2,2,2,2,2, 2,2,2,1,0,0,0, 0,0,0,0,0,0,0],
-    scores:   [91,87,93,84,89,92,88, 86,90,83,65,null,null,null, null,null,null,null,null,null,null],
-  },
-  {
-    id: 't8', name: '周丽',
-    levels:   [2,2,2,2,2,2,2, 2,2,2,2,2,2,1, 1,0,0,0,0,0,0],
-    scores:   [93,90,88,92,86,94,91, 87,95,84,89,83,90,68, 55,null,null,null,null,null,null],
-  },
-];
-
-/* Compute stage-level aggregates from mock data */
-function computeStageStats() {
-  return STAGE_RANGES.map(({ stage }) => {
-    const startIdx = (stage - 1) * 7;
-    const endIdx = startIdx + 7;
-    const totalTrainees = MOCK_TRAINEES.length;
-    let allPassed = 0;
-    let anyInProgress = 0;
-    MOCK_TRAINEES.forEach(t => {
-      const slice = t.levels.slice(startIdx, endIdx);
-      const allDone = slice.every(s => s === 2);
-      const hasProgress = slice.some(s => s === 1);
-      if (allDone) allPassed++;
-      else if (hasProgress) anyInProgress++;
-    });
-    const notStarted = totalTrainees - allPassed - anyInProgress;
-    return { stage, totalTrainees, allPassed, anyInProgress, notStarted };
-  });
+interface HeatmapData {
+  levels: { id: number; name: string; stage: number }[];
+  trainees: TraineeProgress[];
 }
 
 /* ── Color palette matching shadcn variables ── */
@@ -155,9 +93,43 @@ function HeatmapCell({
   );
 }
 
+/* ── computeStageStats from real data ── */
+function computeStageStats(trainees: TraineeProgress[]) {
+  const totalTrainees = trainees.length || 1;
+  return STAGE_RANGES.map(s => {
+    const start = (s.stage - 1) * 7;
+    const end = start + 7;
+    let allPassed = 0;
+    let anyInProgress = 0;
+    trainees.forEach(t => {
+      const slice = t.levels.slice(start, end);
+      const allDone = slice.every(st => st === 2);
+      const hasProgress = slice.some(st => st === 1);
+      if (allDone) allPassed++;
+      else if (hasProgress) anyInProgress++;
+    });
+    const notStarted = totalTrainees - allPassed - anyInProgress;
+    return { stage: s.stage, totalTrainees, allPassed, anyInProgress, notStarted };
+  });
+}
+
 /* ── Progress Heatmap ── */
-function ProgressHeatmap() {
+function ProgressHeatmap({ data }: { data: HeatmapData | null }) {
   const cellSize = 'minmax(16px, 1fr)';
+
+  if (!data || data.trainees.length === 0) {
+    return (
+      <div className="bg-card rounded-lg shadow-card p-5">
+        <h2 className="text-base font-semibold text-foreground mb-4">进度热力图</h2>
+        <div className="text-center py-8">
+          <ChartBar className="w-10 h-10 text-muted-foreground/30 mx-auto mb-2" />
+          <p className="text-sm text-muted-foreground">暂无学员进度数据</p>
+        </div>
+      </div>
+    );
+  }
+
+  const levelCount = data.levels.length || 21;
 
   return (
     <div className="bg-card rounded-lg shadow-card p-5">
@@ -165,7 +137,7 @@ function ProgressHeatmap() {
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-2">
           <h2 className="text-base font-semibold text-foreground">进度热力图</h2>
-          <span className="text-xs text-muted-foreground">21个关卡 × {MOCK_TRAINEES.length}人</span>
+          <span className="text-xs text-muted-foreground">{levelCount}个关卡 × {data.trainees.length}人</span>
         </div>
         <div className="flex items-center gap-4 text-xs text-muted-foreground">
           <span className="flex items-center gap-1.5">
@@ -183,9 +155,9 @@ function ProgressHeatmap() {
       {/* Column headers — level numbers */}
       <div
         className="grid gap-[3px] mb-1 pl-[72px]"
-        style={{ gridTemplateColumns: `repeat(21, ${cellSize})` }}
+        style={{ gridTemplateColumns: `repeat(${levelCount}, ${cellSize})` }}
       >
-        {Array.from({ length: 21 }, (_, i) => (
+        {Array.from({ length: levelCount }, (_, i) => (
           <div key={i} className="text-[10px] text-muted-foreground text-center font-mono leading-none">
             {i + 1}
           </div>
@@ -193,28 +165,37 @@ function ProgressHeatmap() {
       </div>
 
       {/* Stage indicator row */}
-      <div
-        className="grid gap-[3px] mb-2 pl-[72px]"
-        style={{ gridTemplateColumns: `repeat(21, ${cellSize})` }}
-      >
-        {STAGE_RANGES.map(s => (
-          <div key={s.stage} className="col-span-7 text-center">
-            <span
-              className="inline-block text-[9px] font-medium px-1.5 py-0.5 rounded-full"
-              style={{
-                backgroundColor: s.stage === 1 ? 'rgba(34,197,94,0.1)' : s.stage === 2 ? 'rgba(var(--primary),0.1)' : 'rgba(168,85,247,0.1)',
-                color: s.stage === 1 ? '#22c55e' : s.stage === 2 ? 'var(--primary)' : '#a855f7',
-              }}
-            >
-              {s.label}
-            </span>
-          </div>
-        ))}
-      </div>
+      {data.levels.length > 0 && (
+        <div
+          className="grid gap-[3px] mb-2 pl-[72px]"
+          style={{ gridTemplateColumns: `repeat(${levelCount}, ${cellSize})` }}
+        >
+          {STAGE_RANGES.filter(s => {
+            const start = (s.stage - 1) * 7;
+            return start < levelCount;
+          }).map(s => {
+            const start = (s.stage - 1) * 7;
+            const span = Math.min(7, levelCount - start);
+            return (
+              <div key={s.stage} className="col-span-7 text-center" style={{ gridColumn: `${start + 1} / span ${span}` }}>
+                <span
+                  className="inline-block text-[9px] font-medium px-1.5 py-0.5 rounded-full"
+                  style={{
+                    backgroundColor: s.stage === 1 ? 'rgba(34,197,94,0.1)' : s.stage === 2 ? 'rgba(var(--primary),0.1)' : 'rgba(168,85,247,0.1)',
+                    color: s.stage === 1 ? '#22c55e' : s.stage === 2 ? 'var(--primary)' : '#a855f7',
+                  }}
+                >
+                  {s.label}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Rows — one per trainee */}
       <div className="space-y-[3px]">
-        {MOCK_TRAINEES.map(trainee => (
+        {data.trainees.map(trainee => (
           <div key={trainee.id} className="flex items-center gap-0">
             {/* Name label */}
             <div className="w-[72px] shrink-0 text-xs text-foreground font-medium truncate pr-2 text-right">
@@ -223,14 +204,14 @@ function ProgressHeatmap() {
             {/* Level cells */}
             <div
               className="grid gap-[3px] flex-1"
-              style={{ gridTemplateColumns: `repeat(21, ${cellSize})` }}
+              style={{ gridTemplateColumns: `repeat(${levelCount}, ${cellSize})` }}
             >
               {trainee.levels.map((status, li) => (
                 <HeatmapCell
                   key={li}
                   status={status}
                   score={trainee.scores[li]}
-                  levelName={LEVEL_NAMES[li]}
+                  levelName={data.levels[li]?.name || LEVEL_NAMES[li] || `关卡${li + 1}`}
                   traineeName={trainee.name}
                 />
               ))}
@@ -248,9 +229,9 @@ function ProgressHeatmap() {
 }
 
 /* ── Stage Distribution Bar Chart (inline SVG) ── */
-function StageDistributionChart() {
-  const stageStats = useMemo(() => computeStageStats(), []);
-  const totalTrainees = MOCK_TRAINEES.length;
+function StageDistributionChart({ trainees }: { trainees: TraineeProgress[] }) {
+  const stageStats = useMemo(() => computeStageStats(trainees), [trainees]);
+  const totalTrainees = trainees.length || 1;
 
   /* SVG dimensions */
   const svgW = 520;
@@ -271,6 +252,18 @@ function StageDistributionChart() {
 
   /* Grid lines */
   const gridLines = Array.from({ length: totalTrainees + 1 }, (_, i) => i);
+
+  if (trainees.length === 0) {
+    return (
+      <div className="bg-card rounded-lg shadow-card p-5">
+        <h2 className="text-base font-semibold text-foreground mb-4">阶段分布柱状图</h2>
+        <div className="text-center py-8">
+          <ChartBar className="w-10 h-10 text-muted-foreground/30 mx-auto mb-2" />
+          <p className="text-sm text-muted-foreground">暂无学员数据</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-card rounded-lg shadow-card p-5">
@@ -355,7 +348,6 @@ function StageDistributionChart() {
                 width={barW} height={passedH}
                 rx={2} fill={COLORS.passed}
               />
-              {/* Clip bottom corners of the passed rect if it's not alone */}
               {passedH > 4 && (s.anyInProgress > 0 || s.notStarted > 0) && (
                 <rect
                   x={x} y={yPassed + passedH - 4}
@@ -422,15 +414,15 @@ function StageDistributionChart() {
 
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
+  const [heatmapData, setHeatmapData] = useState<HeatmapData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch from multiple APIs to build dashboard
     async function loadDashboard() {
       try {
-        const [diagRes, learningRes] = await Promise.all([
+        const [diagRes, heatmapRes] = await Promise.all([
           fetch('/api/diagnosis?view=team'),
-          fetch('/api/learning?userId=1'),
+          fetch('/api/learning/heatmap'),
         ]);
 
         let quadrantDist = { A: 0, B: 0, C: 0, D: 0 };
@@ -442,26 +434,37 @@ export default function DashboardPage() {
           totalMembers = diagJson.summary?.total || 0;
         }
 
+        if (heatmapRes.ok) {
+          const heatmapJson = await heatmapRes.json();
+          setHeatmapData(heatmapJson);
+          // Use heatmap trainee count as source of truth for total
+          if (heatmapJson.trainees?.length > 0) {
+            totalMembers = heatmapJson.trainees.length;
+          }
+        }
+
+        // Compute real avg learning progress from heatmap data
+        let avgLearningProgress = 0;
+        if (heatmapData?.trainees?.length) {
+          const progresses = heatmapData.trainees.map((t: TraineeProgress) => {
+            const passed = t.levels.filter((s: CellStatus) => s === 2).length;
+            return Math.round((passed / Math.max(t.levels.length, 1)) * 100);
+          });
+          avgLearningProgress = Math.round(progresses.reduce((a: number, b: number) => a + b, 0) / progresses.length);
+        }
+
         setData({
           summary: {
             totalMembers,
-            avgLearningProgress: 45,
-            avgQcScore: 72,
-            avgBusinessScore: 78,
+            avgLearningProgress,
+            avgQcScore: 0,
+            avgBusinessScore: 0,
           },
           quadrantDistribution: quadrantDist,
-          recentActivities: [],
-          topPerformers: [],
-          alerts: [],
         });
       } catch {
-        setData({
-          summary: { totalMembers: 8, avgLearningProgress: 45, avgQcScore: 72, avgBusinessScore: 78 },
-          quadrantDistribution: { A: 2, B: 3, C: 2, D: 1 },
-          recentActivities: [],
-          topPerformers: [],
-          alerts: [],
-        });
+        // No fallback to mock — show empty state
+        setData(null);
       }
       setLoading(false);
     }
@@ -479,7 +482,22 @@ export default function DashboardPage() {
     );
   }
 
-  if (!data) return null;
+  if (!data) {
+    return (
+      <div className="p-6 space-y-6">
+        <div className="flex items-center gap-2">
+          <ChartBar className="w-5 h-5 text-primary" />
+          <h1 className="text-xl font-bold text-foreground">数据看板</h1>
+          <span className="text-sm text-muted-foreground">培训体系全景数据</span>
+        </div>
+        <div className="bg-card rounded-lg shadow-card p-12 text-center">
+          <ChartBar className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
+          <p className="text-muted-foreground">暂无数据，培训数据将随着使用逐步积累</p>
+        </div>
+      </div>
+    );
+  }
+
   const { summary, quadrantDistribution: qd } = data;
 
   return (
@@ -507,19 +525,19 @@ export default function DashboardPage() {
                 <Icon className={`w-4 h-4 ${stat.color}`} />
               </div>
               <div className="flex items-baseline gap-1">
-                <span className="text-2xl font-bold text-foreground">{stat.value}</span>
-                <span className="text-sm text-muted-foreground">{stat.unit}</span>
+                <span className="text-2xl font-bold text-foreground">{stat.value || '—'}</span>
+                {stat.value > 0 && <span className="text-sm text-muted-foreground">{stat.unit}</span>}
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* ───── NEW: Progress Heatmap ───── */}
-      <ProgressHeatmap />
+      {/* Progress Heatmap */}
+      <ProgressHeatmap data={heatmapData} />
 
-      {/* ───── NEW: Stage Distribution Bar Chart ───── */}
-      <StageDistributionChart />
+      {/* Stage Distribution Bar Chart */}
+      <StageDistributionChart trainees={heatmapData?.trainees || []} />
 
       {/* Quadrant Distribution */}
       <div className="grid grid-cols-2 gap-6">

@@ -38,79 +38,7 @@ const FUNNEL_STAGES = [
 
 type FunnelStageKey = typeof FUNNEL_STAGES[number]['key'];
 
-/* ── Mock team averages (latest week) ── */
-const MOCK_TEAM_AVERAGES: Record<FunnelStageKey, number> = {
-  wechat_add_rate: 92,
-  consultation_rate: 81,
-  reception_rate: 78,
-  delivery_rate: 88,
-  medication_rate: 85,
-  appointment_rate: 74,
-};
 
-/* ── Mock trainee breakdowns for each stage ── */
-const MOCK_TRAINEE_BREAKDOWNS: Record<FunnelStageKey, { name: string; rate: number }[]> = {
-  wechat_add_rate: [
-    { name: '张明', rate: 96 },
-    { name: '李婷', rate: 94 },
-    { name: '王磊', rate: 88 },
-    { name: '赵雪', rate: 91 },
-    { name: '陈浩', rate: 82 },
-    { name: '刘芳', rate: 95 },
-    { name: '孙强', rate: 93 },
-    { name: '周丽', rate: 97 },
-  ],
-  consultation_rate: [
-    { name: '张明', rate: 89 },
-    { name: '李婷', rate: 85 },
-    { name: '王磊', rate: 72 },
-    { name: '赵雪', rate: 88 },
-    { name: '陈浩', rate: 68 },
-    { name: '刘芳', rate: 83 },
-    { name: '孙强', rate: 86 },
-    { name: '周丽', rate: 77 },
-  ],
-  reception_rate: [
-    { name: '张明', rate: 85 },
-    { name: '李婷', rate: 82 },
-    { name: '王磊', rate: 70 },
-    { name: '赵雪', rate: 90 },
-    { name: '陈浩', rate: 65 },
-    { name: '刘芳', rate: 76 },
-    { name: '孙强', rate: 80 },
-    { name: '周丽', rate: 76 },
-  ],
-  delivery_rate: [
-    { name: '张明', rate: 92 },
-    { name: '李婷', rate: 90 },
-    { name: '王磊', rate: 80 },
-    { name: '赵雪', rate: 94 },
-    { name: '陈浩', rate: 78 },
-    { name: '刘芳', rate: 86 },
-    { name: '孙强', rate: 91 },
-    { name: '周丽', rate: 93 },
-  ],
-  medication_rate: [
-    { name: '张明', rate: 94 },
-    { name: '李婷', rate: 88 },
-    { name: '王磊', rate: 78 },
-    { name: '赵雪', rate: 92 },
-    { name: '陈浩', rate: 74 },
-    { name: '刘芳', rate: 82 },
-    { name: '孙强', rate: 90 },
-    { name: '周丽', rate: 82 },
-  ],
-  appointment_rate: [
-    { name: '张明', rate: 80 },
-    { name: '李婷', rate: 78 },
-    { name: '王磊', rate: 62 },
-    { name: '赵雪', rate: 82 },
-    { name: '陈浩', rate: 58 },
-    { name: '刘芳', rate: 72 },
-    { name: '孙强', rate: 76 },
-    { name: '周丽', rate: 74 },
-  ],
-};
 
 /* ── Main Page ── */
 export default function ScrmImportPage() {
@@ -260,8 +188,29 @@ function ThresholdValue({ value, threshold }: { value: number | null; threshold:
    ══════════════════════════════════════════════ */
 function FunnelChart() {
   const [expandedStage, setExpandedStage] = useState<FunnelStageKey | null>(null);
+  const [teamAverages, setTeamAverages] = useState<Record<FunnelStageKey, number> | null>(null);
+  const [traineeBreakdowns, setTraineeBreakdowns] = useState<Record<FunnelStageKey, { name: string; rate: number }[]> | null>(null);
+  const [funnelLoading, setFunnelLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchFunnel() {
+      try {
+        const res = await fetch('/api/business/funnel');
+        if (res.ok) {
+          const json = await res.json();
+          if (json.teamAverages) setTeamAverages(json.teamAverages as Record<FunnelStageKey, number>);
+          if (json.traineeBreakdowns) setTraineeBreakdowns(json.traineeBreakdowns as Record<FunnelStageKey, { name: string; rate: number }[]>);
+        }
+      } catch {
+        // API请求失败，不使用mock数据
+      }
+      setFunnelLoading(false);
+    }
+    fetchFunnel();
+  }, []);
 
   const handleStageClick = (key: FunnelStageKey) => {
+    if (!teamAverages) return;
     setExpandedStage(prev => (prev === key ? null : key));
   };
 
@@ -300,6 +249,17 @@ function FunnelChart() {
       </div>
 
       {/* Funnel SVG */}
+      {funnelLoading ? (
+        <div className="px-4 pt-4 pb-2 flex items-center justify-center h-[160px]">
+          <p className="text-sm text-muted-foreground">加载漏斗数据...</p>
+        </div>
+      ) : !teamAverages ? (
+        <div className="px-4 pt-6 pb-4 flex flex-col items-center justify-center">
+          <TrendingUp className="w-10 h-10 text-muted-foreground/30 mb-2" />
+          <p className="text-sm text-muted-foreground">暂无漏斗数据</p>
+          <p className="text-xs text-muted-foreground mt-1">录入业务数据后自动生成</p>
+        </div>
+      ) : (
       <div className="px-4 pt-4 pb-2">
         <svg
           viewBox={`0 0 ${svgW} ${svgH}`}
@@ -324,7 +284,7 @@ function FunnelChart() {
           </defs>
 
           {FUNNEL_STAGES.map((stage, i) => {
-            const rate = MOCK_TEAM_AVERAGES[stage.key];
+            const rate = teamAverages[stage.key];
             const pass = rate >= stage.threshold;
             const isExpanded = expandedStage === stage.key;
 
@@ -442,13 +402,14 @@ function FunnelChart() {
           })}
         </svg>
       </div>
+      )}
 
       {/* Expanded trainee breakdown */}
-      {expandedStage && (
+      {expandedStage && traineeBreakdowns && (
         <TraineeBreakdown
           stageKey={expandedStage}
           stageConfig={FUNNEL_STAGES.find(s => s.key === expandedStage)!}
-          data={MOCK_TRAINEE_BREAKDOWNS[expandedStage]}
+          data={traineeBreakdowns[expandedStage] || []}
           onClose={() => setExpandedStage(null)}
         />
       )}

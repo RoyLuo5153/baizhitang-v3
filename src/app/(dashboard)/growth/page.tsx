@@ -85,61 +85,6 @@ const PRIORITY_CONFIG: Record<string, { label: string; color: string; bgColor: s
   low: { label: '一般', color: 'text-[#22c55e]', bgColor: 'bg-[#22c55e]/10' },
 };
 
-// === Mock data for fallback / initial development ===
-const MOCK_DATA: GrowthData = {
-  user: { id: 1, real_name: '王小明', primary_role: 'trainee', join_date: '2025-01-15' },
-  quadrant: 'B',
-  currentStage: 2,
-  stageName: '阶段二 · 实战演练',
-  processMetrics: [
-    { key: 'learning_passed', label: '闯关通过数', value: 12, threshold: 7, unit: '关', qualified: true },
-    { key: 'qc_score', label: '录音质检分数', value: 75, threshold: 70, unit: '分', qualified: true },
-    { key: 'wechat_skill', label: '加微服务用语得分', value: 82, threshold: 80, unit: '分', qualified: true },
-    { key: 'daily_assessment', label: '日常考核均分', value: 78, threshold: 75, unit: '分', qualified: true },
-    { key: 'attendance_rate', label: '出勤率', value: 96, threshold: 90, unit: '%', qualified: true },
-  ],
-  resultMetrics: [
-    { key: 'wechat_add_rate', label: '加V率', value: 85, threshold: 90, unit: '%', qualified: false, diagnosis: '加微承接服务用语不熟练，高峰期遗漏较多，需强化场景化服务用语训练' },
-    { key: 'consultation_rate', label: '咨询转化率', value: 58, threshold: 60, unit: '%', qualified: false, diagnosis: '客户需求挖掘深度不足，产品价值传递不够清晰' },
-    { key: 'reception_rate', label: '接待完成率', value: 75, threshold: 70, unit: '%', qualified: true },
-    { key: 'delivery_rate', label: '交付达成率', value: 82, threshold: 80, unit: '%', qualified: true },
-    { key: 'medication_rate', label: '用药方案采纳率', value: 70, threshold: 75, unit: '%', qualified: false, diagnosis: '专业表达能力偏弱，方案说服力不够，建议加强医学知识专项学习' },
-    { key: 'appointment_rate', label: '预约回访率', value: 55, threshold: 50, unit: '%', qualified: true },
-  ],
-  empowerPlans: [
-    {
-      id: 1,
-      title: '加微服务用语专项训练',
-      description: '针对加V率不达标，通过场景化服务用语演练和模拟训练，提升加微承接能力',
-      targetMetrics: ['加V率'],
-      duration: '2周',
-      priority: 'high',
-    },
-    {
-      id: 2,
-      title: '咨询转化力提升方案',
-      description: '强化需求挖掘技巧和产品价值传递能力，提升从咨询到转化的全链路效率',
-      targetMetrics: ['咨询转化率'],
-      duration: '3周',
-      priority: 'high',
-    },
-    {
-      id: 3,
-      title: '医学专业力进阶计划',
-      description: '系统提升用药方案表达专业度，增强客户信任感和方案采纳率',
-      targetMetrics: ['用药方案采纳率'],
-      duration: '4周',
-      priority: 'medium',
-    },
-  ],
-  timeline: [
-    { week: '第1周', label: '1/15-1/21', quadrant: 'D', processScore: 35, resultScore: 40 },
-    { week: '第2周', label: '1/22-1/28', quadrant: 'C', processScore: 55, resultScore: 45 },
-    { week: '第3周', label: '1/29-2/4', quadrant: 'C', processScore: 68, resultScore: 48 },
-    { week: '第4周', label: '2/5-2/11', quadrant: 'B', processScore: 78, resultScore: 58 },
-  ],
-};
-
 export default function GrowthProfilePage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
@@ -169,9 +114,8 @@ export default function GrowthProfilePage() {
       setData(transformed);
     } catch (err) {
       console.error('Failed to fetch growth data:', err);
-      setError('加载成长档案失败，正在使用模拟数据');
-      // Use mock data as fallback
-      setData(MOCK_DATA);
+      setError('加载成长档案失败，请稍后重试');
+      setData(null);
     } finally {
       setDataLoading(false);
     }
@@ -1253,24 +1197,24 @@ function transformApiResponse(raw: any, currentUser: any): GrowthData {
           priority: 'medium' as const,
         }] : []),
       ]
-    : MOCK_DATA.empowerPlans;
+    : [];
 
   // Build timeline
-  const timeline: TimelineEntry[] = raw.timeline || MOCK_DATA.timeline;
+  const timeline: TimelineEntry[] = raw.timeline || [];
 
   return {
     user: {
       id: raw.user?.id || currentUser.id,
       real_name: raw.user?.real_name || currentUser.realName,
       primary_role: raw.user?.primary_role || currentUser.primaryRole,
-      join_date: raw.user?.join_date || '2025-01-15',
+      join_date: raw.user?.join_date || '',
     },
     quadrant,
     currentStage: raw.learningProgress?.currentStage || 1,
     stageName: STAGE_LABELS[raw.learningProgress?.currentStage || 1],
     processMetrics,
     resultMetrics,
-    empowerPlans: empowerPlans.length > 0 ? empowerPlans : MOCK_DATA.empowerPlans,
+    empowerPlans,
     timeline,
   };
 }

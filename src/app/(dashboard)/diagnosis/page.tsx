@@ -326,11 +326,9 @@ export default function DiagnosisPage() {
       if (res.ok) {
         const json = await res.json();
         setData(json);
-      } else {
-        setData(getMockData());
       }
     } catch {
-      setData(getMockData());
+      // API请求失败，不使用mock数据，展示空状态
     }
     setLoading(false);
   }
@@ -400,7 +398,16 @@ export default function DiagnosisPage() {
     );
   }
 
-  if (!data) return null;
+  if (!data) {
+    return (
+      <div className="p-6 flex flex-col items-center justify-center min-h-[60vh]">
+        <ScanSearch className="w-16 h-16 text-muted-foreground/30 mb-4" />
+        <h3 className="text-lg font-semibold text-foreground mb-2">暂无诊断数据</h3>
+        <p className="text-sm text-muted-foreground">尚未录入业务数据，无法进行双轨诊断</p>
+        <p className="text-xs text-muted-foreground mt-1">请先在"业务数据"页面录入学员指标</p>
+      </div>
+    );
+  }
 
   const { summary, members } = data;
 
@@ -1206,145 +1213,7 @@ function ResultLineTable({ details }: { details: Record<string, any> }) {
   );
 }
 
-/* ------------------------------------------------------------------ */
-/*  Mock Data (enhanced with more members & result funnel metrics)     */
-/* ------------------------------------------------------------------ */
 
-function getMockData(): DiagnosisData {
-  return {
-    summary: { total: 8, A: 2, B: 3, C: 2, D: 1 },
-    members: [
-      {
-        id: '1', name: '张三', role: 'trainee', stage: 2, quadrant: 'A',
-        processQualified: true, resultQualified: true,
-        processDetails: {
-          learning: { label: '闯关进度', value: 14, unit: '关', threshold: { qualified: 7, good: 14, excellent: 21 }, level: 'good' },
-          qcScore: { label: '质检平均分', value: 85, unit: '分', threshold: { qualified: 70, good: 80, excellent: 90 }, level: 'good' },
-        },
-        resultDetails: {
-          wechatAddRate: { label: '加V率', value: 92, unit: '%', threshold: { qualified: 90 }, level: 'qualified' },
-          consultationRate: { label: '面诊率', value: 95, unit: '%', threshold: { qualified: 85 }, level: 'qualified' },
-          receptionRate: { label: '接诊率', value: 88, unit: '%', threshold: { qualified: 80 }, level: 'qualified' },
-          signRate: { label: '签收率', value: 65, unit: '%', threshold: { qualified: 60 }, level: 'qualified' },
-          medicationRate: { label: '用药率', value: 78, unit: '%', threshold: { qualified: 70 }, level: 'qualified' },
-          registrationRate: { label: '挂号率', value: 55, unit: '%', threshold: { qualified: 50 }, level: 'qualified' },
-        },
-      },
-      {
-        id: '2', name: '李四', role: 'trainee', stage: 1, quadrant: 'D',
-        processQualified: false, resultQualified: false,
-        processDetails: {
-          learning: { label: '闯关进度', value: 3, unit: '关', threshold: { qualified: 7, good: 14, excellent: 21 }, level: 'unqualified' },
-          qcScore: { label: '质检平均分', value: 55, unit: '分', threshold: { qualified: 70, good: 80, excellent: 90 }, level: 'unqualified' },
-        },
-        resultDetails: {
-          wechatAddRate: { label: '加V率', value: 78, unit: '%', threshold: { qualified: 90 }, level: 'unqualified' },
-          consultationRate: { label: '面诊率', value: 70, unit: '%', threshold: { qualified: 85 }, level: 'unqualified' },
-          receptionRate: { label: '接诊率', value: 62, unit: '%', threshold: { qualified: 80 }, level: 'unqualified' },
-          signRate: { label: '签收率', value: 38, unit: '%', threshold: { qualified: 60 }, level: 'unqualified' },
-          medicationRate: { label: '用药率', value: 52, unit: '%', threshold: { qualified: 70 }, level: 'unqualified' },
-          registrationRate: { label: '挂号率', value: 30, unit: '%', threshold: { qualified: 50 }, level: 'unqualified' },
-        },
-      },
-      {
-        id: '3', name: '王五', role: 'trainee', stage: 2, quadrant: 'A',
-        processQualified: true, resultQualified: true,
-        processDetails: {
-          learning: { label: '闯关进度', value: 18, unit: '关', threshold: { qualified: 7, good: 14, excellent: 21 }, level: 'excellent' },
-          qcScore: { label: '质检平均分', value: 91, unit: '分', threshold: { qualified: 70, good: 80, excellent: 90 }, level: 'excellent' },
-        },
-        resultDetails: {
-          wechatAddRate: { label: '加V率', value: 95, unit: '%', threshold: { qualified: 90 }, level: 'qualified' },
-          consultationRate: { label: '面诊率', value: 90, unit: '%', threshold: { qualified: 85 }, level: 'qualified' },
-          receptionRate: { label: '接诊率', value: 85, unit: '%', threshold: { qualified: 80 }, level: 'qualified' },
-          signRate: { label: '签收率', value: 70, unit: '%', threshold: { qualified: 60 }, level: 'qualified' },
-          medicationRate: { label: '用药率', value: 80, unit: '%', threshold: { qualified: 70 }, level: 'qualified' },
-          registrationRate: { label: '挂号率', value: 58, unit: '%', threshold: { qualified: 50 }, level: 'qualified' },
-        },
-      },
-      {
-        id: '4', name: '赵六', role: 'trainee', stage: 1, quadrant: 'B',
-        processQualified: true, resultQualified: false,
-        processDetails: {
-          learning: { label: '闯关进度', value: 10, unit: '关', threshold: { qualified: 7, good: 14, excellent: 21 }, level: 'good' },
-          qcScore: { label: '质检平均分', value: 78, unit: '分', threshold: { qualified: 70, good: 80, excellent: 90 }, level: 'good' },
-        },
-        resultDetails: {
-          wechatAddRate: { label: '加V率', value: 88, unit: '%', threshold: { qualified: 90 }, level: 'unqualified' },
-          consultationRate: { label: '面诊率', value: 82, unit: '%', threshold: { qualified: 85 }, level: 'unqualified' },
-          receptionRate: { label: '接诊率', value: 81, unit: '%', threshold: { qualified: 80 }, level: 'qualified' },
-          signRate: { label: '签收率', value: 62, unit: '%', threshold: { qualified: 60 }, level: 'qualified' },
-          medicationRate: { label: '用药率', value: 68, unit: '%', threshold: { qualified: 70 }, level: 'unqualified' },
-          registrationRate: { label: '挂号率', value: 51, unit: '%', threshold: { qualified: 50 }, level: 'qualified' },
-        },
-      },
-      {
-        id: '5', name: '孙七', role: 'trainee', stage: 2, quadrant: 'B',
-        processQualified: true, resultQualified: false,
-        processDetails: {
-          learning: { label: '闯关进度', value: 12, unit: '关', threshold: { qualified: 7, good: 14, excellent: 21 }, level: 'good' },
-          qcScore: { label: '质检平均分', value: 82, unit: '分', threshold: { qualified: 70, good: 80, excellent: 90 }, level: 'good' },
-        },
-        resultDetails: {
-          wechatAddRate: { label: '加V率', value: 91, unit: '%', threshold: { qualified: 90 }, level: 'qualified' },
-          consultationRate: { label: '面诊率', value: 80, unit: '%', threshold: { qualified: 85 }, level: 'unqualified' },
-          receptionRate: { label: '接诊率', value: 75, unit: '%', threshold: { qualified: 80 }, level: 'unqualified' },
-          signRate: { label: '签收率', value: 58, unit: '%', threshold: { qualified: 60 }, level: 'unqualified' },
-          medicationRate: { label: '用药率', value: 72, unit: '%', threshold: { qualified: 70 }, level: 'qualified' },
-          registrationRate: { label: '挂号率', value: 48, unit: '%', threshold: { qualified: 50 }, level: 'unqualified' },
-        },
-      },
-      {
-        id: '6', name: '周八', role: 'trainee', stage: 1, quadrant: 'B',
-        processQualified: true, resultQualified: false,
-        processDetails: {
-          learning: { label: '闯关进度', value: 9, unit: '关', threshold: { qualified: 7, good: 14, excellent: 21 }, level: 'good' },
-          qcScore: { label: '质检平均分', value: 76, unit: '%', threshold: { qualified: 70, good: 80, excellent: 90 }, level: 'good' },
-        },
-        resultDetails: {
-          wechatAddRate: { label: '加V率', value: 86, unit: '%', threshold: { qualified: 90 }, level: 'unqualified' },
-          consultationRate: { label: '面诊率', value: 87, unit: '%', threshold: { qualified: 85 }, level: 'qualified' },
-          receptionRate: { label: '接诊率', value: 82, unit: '%', threshold: { qualified: 80 }, level: 'qualified' },
-          signRate: { label: '签收率', value: 55, unit: '%', threshold: { qualified: 60 }, level: 'unqualified' },
-          medicationRate: { label: '用药率', value: 71, unit: '%', threshold: { qualified: 70 }, level: 'qualified' },
-          registrationRate: { label: '挂号率', value: 53, unit: '%', threshold: { qualified: 50 }, level: 'qualified' },
-        },
-      },
-      {
-        id: '7', name: '吴九', role: 'trainee', stage: 2, quadrant: 'C',
-        processQualified: false, resultQualified: true,
-        processDetails: {
-          learning: { label: '闯关进度', value: 5, unit: '关', threshold: { qualified: 7, good: 14, excellent: 21 }, level: 'unqualified' },
-          qcScore: { label: '质检平均分', value: 65, unit: '分', threshold: { qualified: 70, good: 80, excellent: 90 }, level: 'unqualified' },
-        },
-        resultDetails: {
-          wechatAddRate: { label: '加V率', value: 93, unit: '%', threshold: { qualified: 90 }, level: 'qualified' },
-          consultationRate: { label: '面诊率', value: 88, unit: '%', threshold: { qualified: 85 }, level: 'qualified' },
-          receptionRate: { label: '接诊率', value: 84, unit: '%', threshold: { qualified: 80 }, level: 'qualified' },
-          signRate: { label: '签收率', value: 63, unit: '%', threshold: { qualified: 60 }, level: 'qualified' },
-          medicationRate: { label: '用药率', value: 75, unit: '%', threshold: { qualified: 70 }, level: 'qualified' },
-          registrationRate: { label: '挂号率', value: 52, unit: '%', threshold: { qualified: 50 }, level: 'qualified' },
-        },
-      },
-      {
-        id: '8', name: '郑十', role: 'trainee', stage: 1, quadrant: 'C',
-        processQualified: false, resultQualified: true,
-        processDetails: {
-          learning: { label: '闯关进度', value: 4, unit: '关', threshold: { qualified: 7, good: 14, excellent: 21 }, level: 'unqualified' },
-          qcScore: { label: '质检平均分', value: 72, unit: '分', threshold: { qualified: 70, good: 80, excellent: 90 }, level: 'qualified' },
-        },
-        resultDetails: {
-          wechatAddRate: { label: '加V率', value: 94, unit: '%', threshold: { qualified: 90 }, level: 'qualified' },
-          consultationRate: { label: '面诊率', value: 86, unit: '%', threshold: { qualified: 85 }, level: 'qualified' },
-          receptionRate: { label: '接诊率', value: 83, unit: '%', threshold: { qualified: 80 }, level: 'qualified' },
-          signRate: { label: '签收率', value: 64, unit: '%', threshold: { qualified: 60 }, level: 'qualified' },
-          medicationRate: { label: '用药率', value: 73, unit: '%', threshold: { qualified: 70 }, level: 'qualified' },
-          registrationRate: { label: '挂号率', value: 56, unit: '%', threshold: { qualified: 50 }, level: 'qualified' },
-        },
-      },
-    ],
-  };
-}
 
 /* ------------------------------------------------------------------ */
 /*  Prescription Preview Modal (from Diagnosis page)                   */

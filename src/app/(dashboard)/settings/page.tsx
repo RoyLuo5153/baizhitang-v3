@@ -64,12 +64,7 @@ interface StageApplication {
   reviewed_at: string | null;
 }
 
-const MOCK_APPLICATIONS: StageApplication[] = [
-  { id: 1, trainee_id: '1', trainee_name: '张小红', current_stage: 1, target_stage: 2, status: 'pending', reason: '已通过7关闯关学习', evidence: '闯关成绩全部合格，双轨诊断连续2周B类以上', reviewer_id: null, reviewer_name: null, review_comment: null, applied_at: '2025-06-06T10:00:00Z', reviewed_at: null },
-  { id: 2, trainee_id: '2', trainee_name: '李大伟', current_stage: 1, target_stage: 2, status: 'approved', reason: '闯关7关全部通过', evidence: '闯关成绩全部合格，质检4维度均达良好以上', reviewer_id: '9', reviewer_name: '郑管理', review_comment: '表现优秀，同意升级', applied_at: '2025-06-01T09:00:00Z', reviewed_at: '2025-06-02T14:00:00Z' },
-];
-
-// === Mock Data Fallbacks ===
+// === Default Threshold Configs ===
 
 const DEFAULT_PROCESS_THRESHOLDS: ThresholdConfig[] = [
   { id: 'p1', metric_key: 'passing_score', metric_name: '闯关成绩', category: 'process', qualified_value: 60, good_value: 80, excellent_value: 95, unit: '分' },
@@ -830,7 +825,7 @@ export default function SettingsPage() {
           return;
         }
       } catch {}
-      setStageApplications(MOCK_APPLICATIONS);
+      setStageApplications([]);
     }
     load();
   }, []);
