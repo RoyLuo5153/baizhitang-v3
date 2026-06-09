@@ -13,7 +13,6 @@ type RoleCode = 'trainee' | 'mentor' | 'teacher' | 'training_manager' | 'boss';
 // 无需鉴权的API路由白名单
 const PUBLIC_API_ROUTES = [
   '/api/auth/login',
-  '/api/auth/register',
   '/api/auth/me',
   '/api/auth/change-password',
 ];
@@ -48,7 +47,7 @@ const ROUTE_PERMISSIONS: Record<string, RoleCode[]> = {
   '/settings': ['training_manager'],
 };
 
-async function parseToken(token: string): Promise<{ userId: string; role: string; permissions: string[] } | null> {
+async function parseToken(token: string): Promise<{ userId: string; username: string; role: string; permissions: string[] } | null> {
   try {
     const secret = new TextEncoder().encode(
       process.env.JWT_SECRET || 'bz-training-dev-secret-key-2026'
@@ -57,6 +56,7 @@ async function parseToken(token: string): Promise<{ userId: string; role: string
     if (payload.userId && payload.role) {
       return {
         userId: payload.userId as string,
+        username: payload.username as string,
         role: payload.role as string,
         permissions: (payload.permissions as string[]) || [],
       };
@@ -115,6 +115,7 @@ export async function middleware(request: NextRequest) {
     const requestHeaders = new Headers(request.headers);
     requestHeaders.set('x-user-id', parsed.userId);
     requestHeaders.set('x-user-role', parsed.role);
+    requestHeaders.set('x-user-name', parsed.username || '');
     requestHeaders.set('x-user-permissions', parsed.permissions.join(','));
     return NextResponse.next({ request: { headers: requestHeaders } });
   }

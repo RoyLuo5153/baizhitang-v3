@@ -107,7 +107,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '缺少必填字段: username, realName, roleId' }, { status: 400 });
     }
 
+    // 操作审计
+    console.log(`[AUDIT] 用户创建: 操作人=${auth.userId}(${auth.role}), 新用户=${username}, roleId=${roleId}`);
+
     const supabase = getSupabaseClient();
+
+    // 审计日志（异步不阻塞）
+    supabase.from('audit_logs').insert({
+      operator_id: Number(auth.userId),
+      operator_name: auth.username || auth.userId,
+      action: 'create_user',
+      target_type: 'user',
+      target_id: username,
+      details: { realName, roleId, stage, cohort }
+    }).then(() => {});
 
     // 检查用户名是否重复
     const { data: existing } = await supabase
@@ -178,7 +191,22 @@ export async function PUT(req: NextRequest) {
     const { userId, realName, roleId, stage, status, cohort, password, resetPassword } = body;
     if (!userId) return NextResponse.json({ error: '缺少userId' }, { status: 400 });
 
+    // 禁止修改自己的角色（防止提权/降权）
+    if (String(userId) === String(auth.userId) && roleId !== undefined) {
+      return NextResponse.json({ error: '不能修改自己的角色' }, { status: 403 });
+    }
+
+    // 操作审计：记录谁修改了谁
+    console.log(`[AUDIT] 用户修改: 操作人=${auth.userId}(${auth.role}), 目标用户=${userId}, 变更字段=${Object.keys(body).filter(k => k !== 'userId').join(',')}`);
     const supabase = getSupabaseClient();
+    await supabase.from('audit_logs').insert({
+      operator_id: Number(auth.userId),
+      operator_name: auth.username || auth.userId,
+      action: 'update_user',
+      target_type: 'user',
+      target_id: String(userId),
+      details: { changedFields: Object.keys(body).filter(k => k !== 'userId') }
+    }).then(() => {});
 
     // 更新users表
     const updateData: Record<string, unknown> = {};

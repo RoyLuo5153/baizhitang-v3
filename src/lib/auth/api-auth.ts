@@ -9,6 +9,7 @@ export interface AuthInfo {
   id: string;       // 兼容旧代码中的 user.id
   userId: string;
   role: string;
+  username?: string;
 }
 
 /**
@@ -18,8 +19,9 @@ export interface AuthInfo {
 export function getAuthFromHeaders(request: Request): AuthInfo | null {
   const userId = request.headers.get('x-user-id');
   const role = request.headers.get('x-user-role');
+  const username = request.headers.get('x-user-name') || undefined;
   if (!userId || !role) return null;
-  return { id: userId, userId, role };
+  return { id: userId, userId, role, username };
 }
 
 /**

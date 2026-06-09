@@ -3,6 +3,9 @@ import { getSupabaseClient } from '@/storage/database/supabase-client';
 import bcrypt from 'bcryptjs';
 
 export async function POST(request: NextRequest) {
+  // 禁止自助注册 - 所有账号必须由 training_manager 通过 /api/users 创建
+  return NextResponse.json({ error: '自助注册已关闭，请联系管理员开通账号' }, { status: 403 });
+  
   try {
     const { username, real_name, password, role, roleId, department, position, mentor_id } = await request.json();
 
@@ -62,7 +65,7 @@ export async function POST(request: NextRequest) {
     await supabase
       .from('trainee_profiles')
       .insert({
-        user_id: user.id,
+        user_id: user!.id,
         department: department || '',
         position: position || '',
         profile_status: 'training',
