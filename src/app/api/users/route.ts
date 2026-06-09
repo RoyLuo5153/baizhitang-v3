@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
+import bcrypt from 'bcryptjs';
 
 // GET /api/users — 获取用户列表（支持?roleId=2筛选带教老师）
 export async function GET(req: NextRequest) {
@@ -112,7 +113,7 @@ export async function POST(req: NextRequest) {
       .insert({
         username,
         real_name: realName,
-        password_hash: password ? `bt:${password}` : 'bt:bt2026',
+        password_hash: password ? await bcrypt.hash(password, 10) : await bcrypt.hash('bt2026', 10),
         role_id: roleId,
         is_active: true,
         stage: stage || 1,
@@ -155,7 +156,7 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     const body = await req.json();
-    const { userId, realName, roleId, stage, status, cohort, password } = body;
+    const { userId, realName, roleId, stage, status, cohort, password, resetPassword } = body;
     if (!userId) return NextResponse.json({ error: '缺少userId' }, { status: 400 });
 
     const supabase = getSupabaseClient();
@@ -165,7 +166,13 @@ export async function PUT(req: NextRequest) {
     if (realName !== undefined) updateData.real_name = realName;
     if (roleId !== undefined) updateData.role_id = roleId;
     if (status !== undefined) updateData.is_active = status === 'active';
-    if (password !== undefined) updateData.password_hash = `bt:${password}`;
+    // 密码重置（管理员操作）：用bt:前缀标记，强制用户下次登录改密
+    // 普通密码修改走 /api/auth/change-password（bcrypt格式）
+    if (resetPassword && password) {
+      updateData.password_hash = `bt:${password}`;
+    } else if (password !== undefined) {
+      updateData.password_hash = await bcrypt.hash(password, 10);
+    }
 
     if (Object.keys(updateData).length > 0) {
       const { error } = await supabase.from('users').update(updateData).eq('id', userId);

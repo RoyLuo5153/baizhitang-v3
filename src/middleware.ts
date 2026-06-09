@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { jwtVerify } from 'jose';
 
 /**
  * 路由级权限保护
@@ -29,12 +30,14 @@ const ROUTE_PERMISSIONS: Record<string, RoleCode[]> = {
   '/settings': ['training_manager'],
 };
 
-function parseToken(token: string): { role: string } | null {
+async function parseToken(token: string): Promise<{ role: string } | null> {
   try {
-    const decoded = Buffer.from(token, 'base64').toString('utf-8');
-    const parsed = JSON.parse(decoded);
-    if (parsed.role) {
-      return { role: parsed.role };
+    const secret = new TextEncoder().encode(
+      process.env.JWT_SECRET || 'default-secret-for-dev-only'
+    );
+    const { payload } = await jwtVerify(token, secret);
+    if (payload.role) {
+      return { role: payload.role as string };
     }
     return null;
   } catch {
@@ -42,7 +45,7 @@ function parseToken(token: string): { role: string } | null {
   }
 }
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // 静态资源、API、登录页跳过
@@ -64,8 +67,8 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // 解析token获取角色
-  const parsed = parseToken(token);
+  // 验证JWT签名获取角色
+  const parsed = await parseToken(token);
   if (!parsed || !parsed.role) {
     // token无效，重定向到登录页
     const loginUrl = new URL('/login', request.url);

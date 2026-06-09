@@ -6,7 +6,7 @@ import {
   CheckCircle2, AlertCircle, Shield, ArrowRight, AlertTriangle,
   ClipboardCheck, Clock, UserCheck, XCircle, Calendar,
   Plus, Trash2, Pencil, X, ChevronDown, ChevronRight,
-  KeyRound, UserX, UserCheck2,
+  KeyRound, UserX, UserCheck2, Lock,
 } from 'lucide-react';
 
 // === Types ===
@@ -670,6 +670,12 @@ export default function SettingsPage() {
   const [batchProcessing, setBatchProcessing] = useState(false);
   const [userSubTab, setUserSubTab] = useState<'trainees' | 'staff'>('trainees');
 
+  // 修改密码弹窗
+  const [showChangePwd, setShowChangePwd] = useState(false);
+  const [changePwdForm, setChangePwdForm] = useState({ oldPassword: '', newPassword: '', confirmPassword: '' });
+  const [changePwdError, setChangePwdError] = useState('');
+  const [changePwdLoading, setChangePwdLoading] = useState(false);
+
   const [stageRules, setStageRules] = useState<StageRule[]>([]);
   const [rulesLoading, setRulesLoading] = useState(true);
   const [ruleDialog, setRuleDialog] = useState<Partial<StageRule> | null>(null);
@@ -881,15 +887,15 @@ export default function SettingsPage() {
   };
 
   const handleResetPassword = async (userId: string, realName: string) => {
-    if (!confirm(`确定要将 ${realName} 的密码重置为 bt2026 吗？`)) return;
+    if (!confirm(`确定要将 ${realName} 的密码重置为默认密码吗？重置后该用户下次登录需修改密码。`)) return;
     try {
       const res = await fetch('/api/users', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, password: 'bt2026' }),
+        body: JSON.stringify({ userId, password: 'bt2026', resetPassword: true }),
       });
       if (res.ok) {
-        alert(`${realName} 的密码已重置为 bt2026`);
+        alert(`${realName} 的密码已重置，该用户下次登录需修改密码`);
       } else {
         const json = await res.json();
         alert(json.error || '重置密码失败');
@@ -976,7 +982,16 @@ export default function SettingsPage() {
           <SlidersHorizontal className="w-5 h-5 text-primary" />
           <h1 className="text-xl font-bold text-foreground">系统设置</h1>
         </div>
-        <p className="text-sm text-muted-foreground mt-1">配置阈值、管理用户与阶段规则</p>
+        <div className="flex items-center gap-3">
+          <p className="text-sm text-muted-foreground">配置阈值、管理用户与阶段规则</p>
+          <button
+            onClick={() => setShowChangePwd(true)}
+            className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          >
+            <Lock className="w-4 h-4" />
+            修改密码
+          </button>
+        </div>
       </div>
 
       {/* === Left Tabs + Right Content Layout === */}
@@ -1818,6 +1833,82 @@ export default function SettingsPage() {
           onClose={() => setRuleDialog(null)}
           onSaved={() => { setRuleDialog(null); fetchStageRules(); }}
         />
+      )}
+
+      {/* 修改密码弹窗 */}
+      {showChangePwd && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-card rounded-lg shadow-xl w-full max-w-md mx-4 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-foreground">修改密码</h3>
+              <button onClick={() => { setShowChangePwd(false); setChangePwdError(''); setChangePwdForm({ oldPassword: '', newPassword: '', confirmPassword: '' }); }} className="text-muted-foreground hover:text-foreground">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              setChangePwdError('');
+              if (!changePwdForm.oldPassword || !changePwdForm.newPassword || !changePwdForm.confirmPassword) {
+                setChangePwdError('请填写所有字段');
+                return;
+              }
+              if (changePwdForm.newPassword.length < 6) {
+                setChangePwdError('新密码至少6位');
+                return;
+              }
+              if (changePwdForm.newPassword !== changePwdForm.confirmPassword) {
+                setChangePwdError('两次输入的新密码不一致');
+                return;
+              }
+              if (changePwdForm.oldPassword === changePwdForm.newPassword) {
+                setChangePwdError('新密码不能与旧密码相同');
+                return;
+              }
+              setChangePwdLoading(true);
+              try {
+                const res = await fetch('/api/auth/change-password', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ oldPassword: changePwdForm.oldPassword, newPassword: changePwdForm.newPassword }),
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                  setChangePwdError(data.error || '修改密码失败');
+                  return;
+                }
+                setShowChangePwd(false);
+                setChangePwdForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
+                alert('密码修改成功');
+              } catch {
+                setChangePwdError('网络错误，请重试');
+              } finally {
+                setChangePwdLoading(false);
+              }
+            }} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1">旧密码</label>
+                <input type="password" value={changePwdForm.oldPassword} onChange={e => setChangePwdForm(prev => ({ ...prev, oldPassword: e.target.value }))} placeholder="请输入旧密码" className="w-full px-4 py-2.5 rounded-md border border-border bg-muted text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm" required />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1">新密码</label>
+                <input type="password" value={changePwdForm.newPassword} onChange={e => setChangePwdForm(prev => ({ ...prev, newPassword: e.target.value }))} placeholder="请输入新密码（至少6位）" className="w-full px-4 py-2.5 rounded-md border border-border bg-muted text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm" required />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1">确认新密码</label>
+                <input type="password" value={changePwdForm.confirmPassword} onChange={e => setChangePwdForm(prev => ({ ...prev, confirmPassword: e.target.value }))} placeholder="请再次输入新密码" className="w-full px-4 py-2.5 rounded-md border border-border bg-muted text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm" required />
+              </div>
+              {changePwdError && (
+                <div className="bg-destructive/10 border border-destructive/20 rounded-md px-4 py-2.5 text-sm text-destructive">{changePwdError}</div>
+              )}
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={() => { setShowChangePwd(false); setChangePwdError(''); setChangePwdForm({ oldPassword: '', newPassword: '', confirmPassword: '' }); }} className="flex-1 py-2.5 rounded-md border border-border text-sm text-muted-foreground hover:bg-muted transition-colors">取消</button>
+                <button type="submit" disabled={changePwdLoading} className="flex-1 py-2.5 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                  {changePwdLoading ? '提交中...' : '确认修改'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

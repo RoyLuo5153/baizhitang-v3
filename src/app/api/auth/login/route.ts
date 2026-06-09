@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
+import { signJWT } from '@/lib/auth/jwt';
+import bcrypt from 'bcryptjs';
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,10 +13,10 @@ export async function POST(request: NextRequest) {
 
     const client = getSupabaseClient();
 
-    // 查询用户
+    // 查询用户（含 password_hash）
     const { data: user, error: userError } = await client
       .from('users')
-      .select('id, username, real_name, role_id, stage, is_active')
+      .select('id, username, real_name, role_id, stage, is_active, password_hash')
       .eq('username', username)
       .maybeSingle();
 
@@ -26,8 +28,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '账号已停用' }, { status: 403 });
     }
 
-    // V1: 简单密码验证（所有测试账号密码为 bt2026）
-    if (password !== 'bt2026') {
+    // 密码验证：兼容旧格式(bt:)和新格式(bcrypt)
+    let passwordValid = false;
+    let forceChangePassword = false;
+
+    if (user.password_hash?.startsWith('bt:')) {
+      // 旧格式：提取 bt: 后面的部分做比对
+      const oldPassword = user.password_hash.slice(3);
+      if (password !== oldPassword) {
+        return NextResponse.json({ error: '用户名或密码错误' }, { status: 401 });
+      }
+      passwordValid = true;
+      forceChangePassword = true; // 旧格式密码登录后强制改密码
+    } else {
+      // 新格式：bcrypt 比对
+      const valid = await bcrypt.compare(password, user.password_hash || '');
+      if (!valid) {
+        return NextResponse.json({ error: '用户名或密码错误' }, { status: 401 });
+      }
+      passwordValid = true;
+    }
+
+    if (!passwordValid) {
       return NextResponse.json({ error: '用户名或密码错误' }, { status: 401 });
     }
 
@@ -57,17 +79,15 @@ export async function POST(request: NextRequest) {
       permissions = (perms || []).map((p: { code: string }) => p.code);
     }
 
-    // 简单token (V1先用base64, 后续改JWT)
-    const tokenPayload = {
+    // 签发 JWT
+    const token = await signJWT({
       userId: user.id,
       username: user.username,
       realName: user.real_name,
       role: roleName,
-      stage: user.stage,
+      stage: String(user.stage ?? 'foundation'),
       permissions,
-      exp: Date.now() + 24 * 60 * 60 * 1000,
-    };
-    const token = Buffer.from(JSON.stringify(tokenPayload)).toString('base64');
+    });
 
     // 更新最后登录时间
     await client
@@ -78,6 +98,7 @@ export async function POST(request: NextRequest) {
     const response = NextResponse.json({
       success: true,
       token,
+      forceChangePassword,
       user: {
         id: user.id,
         username: user.username,
@@ -91,7 +112,7 @@ export async function POST(request: NextRequest) {
 
     response.cookies.set('auth_token', token, {
       httpOnly: true,
-      secure: false,
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 86400,
       path: '/',

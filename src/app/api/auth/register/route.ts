@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
-
-// Simple hash for V1 - same as login (plaintext compare with 'bt2026')
-function simpleHash(password: string): string {
-  return `bt:${password}`;
-}
+import bcrypt from 'bcryptjs';
 
 export async function POST(request: NextRequest) {
   try {
@@ -38,8 +34,8 @@ export async function POST(request: NextRequest) {
       resolvedRoleId = roleData?.id || 1;
     }
 
-    // Hash password
-    const passwordHash = simpleHash(password);
+    // Hash password with bcrypt
+    const passwordHash = await bcrypt.hash(password, 10);
 
     // Create user
     const { data: user, error: createError } = await supabase
