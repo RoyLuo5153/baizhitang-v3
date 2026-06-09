@@ -23,6 +23,7 @@ export async function GET(request: NextRequest) {
       primaryRole: payload.role,
       stage: payload.stage,
       permissions: payload.permissions || [],
+      isSuperAdmin: payload.isSuperAdmin || false,
     },
   });
 }

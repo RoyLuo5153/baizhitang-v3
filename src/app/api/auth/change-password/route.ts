@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     // 获取当前用户的密码hash
     const { data: user, error: userError } = await supabase
       .from('users')
-      .select('id, username, password_hash, real_name, role_id, is_active, stage')
+      .select('id, username, password_hash, real_name, role_id, is_active, is_super_admin, stage')
       .eq('id', payload.userId)
       .single();
 
@@ -103,6 +103,7 @@ export async function POST(request: NextRequest) {
       role: roleName,
       stage: String(user.stage ?? 'foundation'),
       permissions,
+      isSuperAdmin: user.is_super_admin || false,
     });
 
     const response = NextResponse.json({ success: true });

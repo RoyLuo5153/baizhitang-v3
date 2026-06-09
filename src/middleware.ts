@@ -47,7 +47,7 @@ const ROUTE_PERMISSIONS: Record<string, RoleCode[]> = {
   '/settings': ['training_manager'],
 };
 
-async function parseToken(token: string): Promise<{ userId: string; username: string; role: string; permissions: string[] } | null> {
+async function parseToken(token: string): Promise<{ userId: string; username: string; role: string; permissions: string[]; isSuperAdmin: boolean } | null> {
   try {
     const secret = new TextEncoder().encode(
       process.env.JWT_SECRET || 'bz-training-dev-secret-key-2026'
@@ -59,6 +59,7 @@ async function parseToken(token: string): Promise<{ userId: string; username: st
         username: payload.username as string,
         role: payload.role as string,
         permissions: (payload.permissions as string[]) || [],
+        isSuperAdmin: (payload.isSuperAdmin as boolean) || false,
       };
     }
     return null;
@@ -117,6 +118,7 @@ export async function middleware(request: NextRequest) {
     requestHeaders.set('x-user-role', parsed.role);
     requestHeaders.set('x-user-name', parsed.username || '');
     requestHeaders.set('x-user-permissions', parsed.permissions.join(','));
+    requestHeaders.set('x-user-is-super-admin', parsed.isSuperAdmin ? '1' : '0');
     return NextResponse.next({ request: { headers: requestHeaders } });
   }
 

@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     // 查询用户（含 password_hash）
     const { data: user, error: userError } = await client
       .from('users')
-      .select('id, username, real_name, role_id, stage, is_active, password_hash')
+      .select('id, username, real_name, role_id, stage, is_active, is_super_admin, password_hash')
       .eq('username', username)
       .maybeSingle();
 
@@ -87,6 +87,7 @@ export async function POST(request: NextRequest) {
       role: roleName,
       stage: String(user.stage ?? 'foundation'),
       permissions,
+      isSuperAdmin: user.is_super_admin || false,
     });
 
     // 更新最后登录时间
@@ -107,6 +108,7 @@ export async function POST(request: NextRequest) {
         primaryRole: roleName,
         stage: user.stage,
         permissions,
+        isSuperAdmin: user.is_super_admin || false,
       },
     });
 

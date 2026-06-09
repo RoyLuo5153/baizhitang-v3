@@ -10,6 +10,7 @@ export interface AuthInfo {
   userId: string;
   role: string;
   username?: string;
+  isSuperAdmin: boolean;
 }
 
 /**
@@ -20,8 +21,9 @@ export function getAuthFromHeaders(request: Request): AuthInfo | null {
   const userId = request.headers.get('x-user-id');
   const role = request.headers.get('x-user-role');
   const username = request.headers.get('x-user-name') || undefined;
+  const isSuperAdmin = request.headers.get('x-user-is-super-admin') === '1';
   if (!userId || !role) return null;
-  return { id: userId, userId, role, username };
+  return { id: userId, userId, role, username, isSuperAdmin };
 }
 
 /**

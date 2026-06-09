@@ -20,6 +20,7 @@ export interface JWTPayload {
   role: string;
   stage: string;
   permissions: string[];
+  isSuperAdmin?: boolean;
 }
 
 /**
@@ -33,6 +34,7 @@ export async function signJWT(payload: JWTPayload): Promise<string> {
     role: payload.role,
     stage: payload.stage,
     permissions: payload.permissions,
+    isSuperAdmin: payload.isSuperAdmin || false,
   })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
@@ -53,6 +55,7 @@ export async function verifyJWT(token: string): Promise<JWTPayload | null> {
       role: payload.role as string,
       stage: payload.stage as string,
       permissions: (payload.permissions as string[]) || [],
+      isSuperAdmin: (payload.isSuperAdmin as boolean) || false,
     };
   } catch {
     return null;

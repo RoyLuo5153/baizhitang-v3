@@ -28,6 +28,7 @@ interface UserRecord {
   realName: string;
   roleId: number;
   roleName: string;
+  isSuperAdmin?: boolean;
   stage: number | null;
   cohort: string | null;
   mentorName: string | null;
@@ -1333,6 +1334,11 @@ export default function SettingsPage() {
                               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${roleStyle.bg} ${roleStyle.text}`}>
                                 {displayName}
                               </span>
+                              {user.isSuperAdmin && (
+                                <span className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-[#f59e0b]/15 text-[#f59e0b]">
+                                  超管
+                                </span>
+                              )}
                             </td>
                             <td className="px-5 py-4 text-center">
                               <span className="inline-flex items-center px-2.5 py-0.5 rounded-sm text-xs font-medium bg-muted text-muted-foreground">
@@ -1460,6 +1466,11 @@ export default function SettingsPage() {
                               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${roleStyle.bg} ${roleStyle.text}`}>
                                 {displayName}
                               </span>
+                              {user.isSuperAdmin && (
+                                <span className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-[#f59e0b]/15 text-[#f59e0b]">
+                                  超管
+                                </span>
+                              )}
                             </td>
                             <td className="px-5 py-4 text-center">
                               <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${

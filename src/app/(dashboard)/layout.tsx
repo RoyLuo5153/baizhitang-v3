@@ -140,6 +140,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </a>
             <span className="text-xs text-muted-foreground">
               {user.realName} · {roleLabel[userRole] || user.role}
+              {user.isSuperAdmin && (
+                <span className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-[#f59e0b]/15 text-[#f59e0b]">
+                  超管
+                </span>
+              )}
             </span>
             <button
               onClick={handleLogout}

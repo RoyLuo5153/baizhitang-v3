@@ -11,6 +11,7 @@ interface User {
   primaryRole: string;
   stage: number;
   permissions?: string[];
+  isSuperAdmin?: boolean;
 }
 
 interface AuthContextType {

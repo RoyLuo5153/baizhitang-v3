@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
 
     let query = supabase
       .from('users')
-      .select('id, username, real_name, role_id, is_active, created_at')
+      .select('id, username, real_name, role_id, is_active, is_super_admin, created_at')
       .order('id');
 
     if (roleIdFilter) {
@@ -72,12 +72,13 @@ export async function GET(req: NextRequest) {
 
     const stageNumberMap: Record<string, number> = { foundation: 1, practice: 2, independent: 3, proficient: 4 };
 
-    const users = (data || []).map((u: { id: string; username: string; real_name: string; role_id: number; is_active: boolean; created_at: string }) => ({
+    const users = (data || []).map((u: { id: string; username: string; real_name: string; role_id: number; is_active: boolean; is_super_admin: boolean; created_at: string }) => ({
       id: u.id,
       username: u.username,
       realName: u.real_name,
       roleId: u.role_id,
       roleName: roleMap[u.role_id] || '未知',
+      isSuperAdmin: u.is_super_admin || false,
       stage: profileMap[u.id]?.stage ? (stageNumberMap[profileMap[u.id].stage] || null) : null,
       cohort: profileMap[u.id]?.cohort || null,
       mentorName: mentorMap[u.id] || null,
@@ -196,6 +197,19 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: '不能修改自己的角色' }, { status: 403 });
     }
 
+    // 超级管理员保护：非超管不能修改超管的角色/状态/密码
+    if (!auth.isSuperAdmin) {
+      const supabase = getSupabaseClient();
+      const { data: targetUser } = await supabase
+        .from('users')
+        .select('is_super_admin')
+        .eq('id', userId)
+        .maybeSingle();
+      if (targetUser?.is_super_admin) {
+        return NextResponse.json({ error: '无权修改超级管理员账号' }, { status: 403 });
+      }
+    }
+
     // 操作审计：记录谁修改了谁
     console.log(`[AUDIT] 用户修改: 操作人=${auth.userId}(${auth.role}), 目标用户=${userId}, 变更字段=${Object.keys(body).filter(k => k !== 'userId').join(',')}`);
     const supabase = getSupabaseClient();
@@ -257,11 +271,27 @@ export async function PUT(req: NextRequest) {
 // DELETE /api/users — 删除用户
 export async function DELETE(req: NextRequest) {
   try {
+    // 鉴权：仅 training_manager/boss 可删除用户
+    const auth = getAuthFromHeaders(req);
+    if (!auth) return NextResponse.json({ error: '未登录' }, { status: 401 });
+    const denied = requireRoles(auth, ROLES.TRAINING_MANAGER, ROLES.BOSS);
+    if (denied) return denied;
+
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get('id');
     if (!userId) return NextResponse.json({ error: '缺少id参数' }, { status: 400 });
 
     const supabase = getSupabaseClient();
+
+    // 超级管理员保护：禁止删除超管账号
+    const { data: targetUser } = await supabase
+      .from('users')
+      .select('is_super_admin')
+      .eq('id', userId)
+      .maybeSingle();
+    if (targetUser?.is_super_admin && !auth.isSuperAdmin) {
+      return NextResponse.json({ error: '无权删除超级管理员账号' }, { status: 403 });
+    }
 
     // 先删除关联表
     await supabase.from('trainee_profiles').delete().eq('user_id', userId);
