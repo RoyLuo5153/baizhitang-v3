@@ -88,7 +88,7 @@ const DEFAULT_RESULT_THRESHOLDS: ThresholdConfig[] = [
 const ROLE_OPTIONS = [
   { id: 1, name: 'trainee', displayName: '新人' },
   { id: 2, name: 'mentor', displayName: '带教老师' },
-  { id: 3, name: 'teacher', displayName: '培训师' },
+  { id: 3, name: 'teacher', displayName: '培训老师' },
   { id: 4, name: 'training_manager', displayName: '培训负责人' },
   { id: 5, name: 'boss', displayName: '总经理' },
 ];

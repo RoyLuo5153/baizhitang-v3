@@ -315,10 +315,12 @@ export default function DiagnosisPage() {
   const [pushedSet, setPushedSet] = useState<Set<string>>(new Set());
   const [pushingKey, setPushingKey] = useState<string | null>(null);
   const [prescriptionPlan, setPrescriptionPlan] = useState<{ plan: EmpowerPlan; entry: AttributionEntry; memberId: string } | null>(null);
+  const [weeklyTrend, setWeeklyTrend] = useState<WeeklyFunnel[]>([]);
 
   useEffect(() => {
     fetchDiagnosis();
     fetchPlansAndExecutions();
+    fetchWeeklyTrend();
   }, []);
 
   async function fetchDiagnosis() {
@@ -340,6 +342,15 @@ export default function DiagnosisPage() {
       }
     });
     setPushedSet(set);
+  }
+
+  async function fetchWeeklyTrend() {
+    try {
+      const result = await apiGet<{ weeks: WeeklyFunnel[] }>('/api/business/weekly-trend?weeks=4', { weeks: [] });
+      setWeeklyTrend(result.weeks);
+    } catch {
+      setWeeklyTrend([]);
+    }
   }
 
   async function handlePushPlan(planId: string, memberId: string, metricKey: string) {
@@ -552,7 +563,7 @@ export default function DiagnosisPage() {
       )}
 
       {/* Funnel Trend Chart */}
-      <FunnelTrendSection members={members} />
+      <FunnelTrendSection members={members} weeklyTrend={weeklyTrend} />
     </div>
   );
 }
@@ -764,7 +775,7 @@ const FUNNEL_STAGES = [
   { key: 'registrationRate', label: '挂号率', threshold: 50 },
 ];
 
-function FunnelTrendSection({ members }: { members: Member[] }) {
+function FunnelTrendSection({ members, weeklyTrend }: { members: Member[]; weeklyTrend: WeeklyFunnel[] }) {
   // Compute team average for each funnel stage from member resultDetails
   const currentAverages = useMemo(() => {
     return FUNNEL_STAGES.map(stage => {
@@ -784,51 +795,23 @@ function FunnelTrendSection({ members }: { members: Member[] }) {
     });
   }, [members]);
 
-  // Weekly trend data (mock last 4 weeks)
-  const weeklyData: WeeklyFunnel[] = [
-    {
-      week: 'W1 (12/02)',
-      stages: [
-        { key: 'wechatAddRate', label: '加V率', value: 82, threshold: 90 },
-        { key: 'consultationRate', label: '面诊率', value: 78, threshold: 85 },
-        { key: 'receptionRate', label: '接诊率', value: 72, threshold: 80 },
-        { key: 'signRate', label: '签收率', value: 48, threshold: 60 },
-        { key: 'medicationRate', label: '用药率', value: 62, threshold: 70 },
-        { key: 'registrationRate', label: '挂号率', value: 38, threshold: 50 },
-      ],
-    },
-    {
-      week: 'W2 (12/09)',
-      stages: [
-        { key: 'wechatAddRate', label: '加V率', value: 85, threshold: 90 },
-        { key: 'consultationRate', label: '面诊率', value: 80, threshold: 85 },
-        { key: 'receptionRate', label: '接诊率', value: 74, threshold: 80 },
-        { key: 'signRate', label: '签收率', value: 52, threshold: 60 },
-        { key: 'medicationRate', label: '用药率', value: 65, threshold: 70 },
-        { key: 'registrationRate', label: '挂号率', value: 42, threshold: 50 },
-      ],
-    },
-    {
-      week: 'W3 (12/16)',
-      stages: [
-        { key: 'wechatAddRate', label: '加V率', value: 87, threshold: 90 },
-        { key: 'consultationRate', label: '面诊率', value: 83, threshold: 85 },
-        { key: 'receptionRate', label: '接诊率', value: 76, threshold: 80 },
-        { key: 'signRate', label: '签收率', value: 55, threshold: 60 },
-        { key: 'medicationRate', label: '用药率', value: 68, threshold: 70 },
-        { key: 'registrationRate', label: '挂号率', value: 45, threshold: 50 },
-      ],
-    },
-    {
-      week: 'W4 (12/23)',
-      stages: currentAverages.map(s => ({
-        key: s.key,
-        label: s.label,
-        value: s.value,
-        threshold: s.threshold,
-      })),
-    },
-  ];
+  // Weekly trend: 使用API获取真实数据，当前周追加currentAverages
+  const weeklyData: WeeklyFunnel[] = useMemo(() => {
+    const trend = [...weeklyTrend];
+    // 如果API数据中不包含本周，追加当前均值
+    if (currentAverages.length > 0) {
+      trend.push({
+        week: '本周',
+        stages: currentAverages.map(s => ({
+          key: s.key,
+          label: s.label,
+          value: Math.round(s.value),
+          threshold: s.threshold,
+        })),
+      });
+    }
+    return trend;
+  }, [weeklyTrend, currentAverages]);
 
   return (
     <div className="bg-card rounded-lg shadow-card border border-border overflow-hidden">
@@ -909,6 +892,11 @@ function FunnelTrendSection({ members }: { members: Member[] }) {
             <TrendingUp className="w-3.5 h-3.5 text-primary" />
             <span className="text-xs font-semibold text-foreground">近4周趋势</span>
           </div>
+          {weeklyData.length < 2 ? (
+            <div className="text-center py-6 text-muted-foreground text-xs">
+              暂无历史趋势数据，录入业务数据后自动生成
+            </div>
+          ) : (
           <div className="grid grid-cols-6 gap-3">
             {FUNNEL_STAGES.map(stage => {
               const stageValues = weeklyData.map(w => {
@@ -954,6 +942,7 @@ function FunnelTrendSection({ members }: { members: Member[] }) {
               );
             })}
           </div>
+          )}
         </div>
       </div>
     </div>

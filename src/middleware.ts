@@ -13,6 +13,7 @@ type RoleCode = 'trainee' | 'mentor' | 'teacher' | 'training_manager' | 'boss';
 // 无需鉴权的API路由白名单
 const PUBLIC_API_ROUTES = [
   '/api/auth/login',
+  '/api/auth/register',
   '/api/auth/me',
   '/api/auth/change-password',
 ];
