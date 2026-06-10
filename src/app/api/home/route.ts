@@ -192,6 +192,64 @@ async function getTrainingManagerDashboard(client: any, userId: string) {
     avgScore: Math.round(((r.score_business + r.score_service + r.score_communication + r.score_process) / 4) * 10) / 10,
   }));
 
+  // 第二层下钻：按学员分组质检数据
+  const traineeQcMap: Record<string, { name: string; scores: number[]; communication: number[]; service: number[]; process: number[]; business: number[] }> = {};
+  for (const r of allQcRecords || []) {
+    const uid = String(r.user_id);
+    if (!traineeQcMap[uid]) {
+      traineeQcMap[uid] = { name: (r.users as any)?.real_name || '未知', scores: [], communication: [], service: [], process: [], business: [] };
+    }
+    const avg = (r.score_business + r.score_service + r.score_communication + r.score_process) / 4;
+    traineeQcMap[uid].scores.push(avg);
+    traineeQcMap[uid].communication.push(r.score_communication || 0);
+    traineeQcMap[uid].service.push(r.score_service || 0);
+    traineeQcMap[uid].process.push(r.score_process || 0);
+    traineeQcMap[uid].business.push(r.score_business || 0);
+  }
+
+  // 按学员获取19动作得分
+  const { data: traineeActionScores } = await client
+    .from('action_scores')
+    .select('user_id, score')
+    .in('user_id', (trainees || []).map((t: any) => t.id));
+
+  const traineeActionMap: Record<string, { total: number; passed: number }> = {};
+  for (const a of traineeActionScores || []) {
+    const uid = String(a.user_id);
+    if (!traineeActionMap[uid]) traineeActionMap[uid] = { total: 0, passed: 0 };
+    traineeActionMap[uid].total++;
+    if (a.score >= 4) traineeActionMap[uid].passed++;
+  }
+
+  // 构建过程线下钻数据
+  const processBreakdown = (trainees || []).map((t: any) => {
+    const uid = String(t.id);
+    const qc = traineeQcMap[uid];
+    const action = traineeActionMap[uid];
+    const commAvg = qc ? Math.round(qc.communication.reduce((a: number, b: number) => a + b, 0) / qc.communication.length * 10) / 10 : 0;
+    const svcAvg = qc ? Math.round(qc.service.reduce((a: number, b: number) => a + b, 0) / qc.service.length * 10) / 10 : 0;
+    const procAvg = qc ? Math.round(qc.process.reduce((a: number, b: number) => a + b, 0) / qc.process.length * 10) / 10 : 0;
+    const bizAvg = qc ? Math.round(qc.business.reduce((a: number, b: number) => a + b, 0) / qc.business.length * 10) / 10 : 0;
+    const overallAvg = qc ? Math.round(qc.scores.reduce((a: number, b: number) => a + b, 0) / qc.scores.length * 10) / 10 : 0;
+    const actionPassRate = action && action.total > 0 ? Math.round((action.passed / action.total) * 100) : 0;
+    // 卡点：低于3分的维度
+    const bottlenecks: string[] = [];
+    if (commAvg > 0 && commAvg < 3) bottlenecks.push('首通电话');
+    if (svcAvg > 0 && svcAvg < 3) bottlenecks.push('第三天回访');
+    if (procAvg > 0 && procAvg < 3) bottlenecks.push('第五天预约');
+    if (bizAvg > 0 && bizAvg < 3) bottlenecks.push('面诊当天');
+    if (actionPassRate > 0 && actionPassRate < 80) bottlenecks.push('动作通过率不足');
+    return {
+      userId: uid,
+      name: t.real_name,
+      stage: t.stage || 1,
+      qcScores: { communication: commAvg, service: svcAvg, process: procAvg, business: bizAvg, overall: overallAvg },
+      actionPassRate,
+      qcCount: qc ? qc.scores.length : 0,
+      bottlenecks,
+    };
+  });
+
   // 第三层：业务指标
   const { data: latestBizData } = await client
     .from('business_data')
@@ -225,6 +283,51 @@ async function getTrainingManagerDashboard(client: any, userId: string) {
     else if (avg >= qualifiedVal) status = 'good';
     else if (avg >= qualifiedVal * 0.8) status = 'warning';
     return { key: ind.key, name: ind.name, value: avg, qualified: qualifiedVal, good: goodVal, status };
+  });
+
+  // 第三层下钻：按学员获取结果指标
+  const { data: traineeBizData } = await client
+    .from('business_data')
+    .select('user_id, wechat_add_rate, consultation_rate, reception_rate, delivery_rate, medication_rate, appointment_rate')
+    .not('user_id', 'is', null)
+    .order('period_start', { ascending: false });
+
+  const traineeBizMap: Record<string, Record<string, number[]>> = {};
+  for (const b of traineeBizData || []) {
+    const uid = String(b.user_id);
+    if (!traineeBizMap[uid]) traineeBizMap[uid] = {};
+    for (const ind of resultIndicators) {
+      const val = b[ind.key] ? parseFloat(String(b[ind.key])) : 0;
+      if (val > 0) {
+        if (!traineeBizMap[uid][ind.key]) traineeBizMap[uid][ind.key] = [];
+        traineeBizMap[uid][ind.key].push(val);
+      }
+    }
+  }
+
+  const resultBreakdown = (trainees || []).map((t: any) => {
+    const uid = String(t.id);
+    const biz = traineeBizMap[uid] || {};
+    const indicators = resultIndicators.map(ind => {
+      const vals = biz[ind.key] || [];
+      const avg = vals.length > 0 ? Math.round(vals.reduce((a: number, b: number) => a + b, 0) / vals.length) : 0;
+      const threshold = (thresholdData || []).find((th: any) => th.indicator_key === ind.key);
+      const qualifiedVal = threshold ? Number(threshold.qualified_value) : 70;
+      const goodVal = threshold ? Number(threshold.good_value) : 85;
+      let status: 'excellent' | 'good' | 'warning' | 'danger' = 'danger';
+      if (avg >= goodVal) status = 'excellent';
+      else if (avg >= qualifiedVal) status = 'good';
+      else if (avg >= qualifiedVal * 0.8) status = 'warning';
+      return { key: ind.key, name: ind.name, value: avg, qualified: qualifiedVal, status };
+    });
+    const unqualifiedIndicators = indicators.filter(i => i.status === 'warning' || i.status === 'danger').map(i => i.name);
+    return {
+      userId: uid,
+      name: t.real_name,
+      stage: t.stage || 1,
+      indicators,
+      unqualifiedIndicators,
+    };
   });
 
   // 结果触发的赋能
@@ -268,6 +371,7 @@ async function getTrainingManagerDashboard(client: any, userId: string) {
       avgScores: { business: avgQcBusiness, service: avgQcService, communication: avgQcCommunication, process: avgQcProcess },
       actionPassRate,
       lowScoreWarnings,
+      traineeBreakdown: processBreakdown,
     },
     layer3: {
       resultMetrics,
@@ -278,6 +382,7 @@ async function getTrainingManagerDashboard(client: any, userId: string) {
         indicatorKey: (e.empower_plans as any)?.indicator_key || '',
         status: e.status,
       })),
+      traineeBreakdown: resultBreakdown,
     },
     quickActions: [
       { label: '查看新人看板', href: '/trainee-board' },

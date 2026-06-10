@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/lib/auth/context';
 import Link from 'next/link';
 import {
-  BookOpen, Target, CheckCircle2, Clock, ChevronRight,
+  BookOpen, Target, CheckCircle2, Clock, ChevronRight, ChevronDown, ChevronUp,
   Users, AlertTriangle, ClipboardCheck, BarChart3,
   PlayCircle, FileText, Settings, MessageSquare, Star,
   TrendingUp, Shield, Zap, Eye, Calendar, Pencil, Plus, Trash2, Send, Check, X, Lock, Activity
@@ -875,8 +875,10 @@ function TrainingManagerHome({ data }: { data: any }) {
   const layer1 = data.layer1 || {};
   const layer2 = data.layer2 || {};
   const layer3 = data.layer3 || {};
-  const stageDist = layer1.stageDistribution || data.stats?.stageDistribution || {};
+  const [drillLayer2, setDrillLayer2] = useState(false);
+  const [drillLayer3, setDrillLayer3] = useState(false);
   const stageNames: Record<number, string> = { 1: '学习期', 2: '练习期', 3: '独立期', 4: '熟练期' };
+  const stageDist = layer1.stageDistribution || data.stats?.stageDistribution || {};
   const stageColors: Record<number, string> = { 1: '#2978B5', 2: '#F59E0B', 3: '#22C55E', 4: '#102A43' };
   const totalTrainees = data.stats?.totalTrainees || 0;
 
@@ -1067,6 +1069,77 @@ function TrainingManagerHome({ data }: { data: any }) {
           <Link href="/qc-flow" className="flex items-center gap-1 mt-3 text-xs" style={{ color: '#2978B5' }}>
             服务质量追踪 <ChevronRight className="w-3 h-3" />
           </Link>
+
+          {/* 下钻按钮 */}
+          <button
+            onClick={() => setDrillLayer2(!drillLayer2)}
+            className="flex items-center gap-1 mt-2 text-xs w-full justify-center py-1.5 rounded-lg transition-colors"
+            style={{ color: drillLayer2 ? '#2978B5' : '#667085', backgroundColor: drillLayer2 ? '#2978B510' : 'transparent' }}
+          >
+            {drillLayer2 ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+            {drillLayer2 ? '收起新人明细' : '查看新人过程明细'}
+          </button>
+
+          {/* 过程线下钻：新人明细 */}
+          {drillLayer2 && (layer2.traineeBreakdown || []).length > 0 && (
+            <div className="mt-3 space-y-2">
+              <div className="text-xs font-medium mb-1" style={{ color: '#102A43' }}>新人过程质量明细</div>
+              {(layer2.traineeBreakdown || []).map((t: any) => (
+                <div key={t.userId} className="p-2.5 rounded-lg border" style={{
+                  borderColor: t.bottlenecks.length > 0 ? '#EF444430' : '#E6E1D8',
+                  backgroundColor: t.bottlenecks.length > 0 ? '#FEF2F2' : '#F8F6F0'
+                }}>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-medium" style={{ color: '#102A43' }}>{t.name}</span>
+                      <span className="text-xs px-1 py-0.5 rounded" style={{ backgroundColor: '#2978B515', color: '#2978B5' }}>
+                        {stageNames[t.stage] || '学习期'}
+                      </span>
+                    </div>
+                    {t.bottlenecks.length > 0 && (
+                      <span className="text-xs px-1.5 py-0.5 rounded-full" style={{ backgroundColor: '#EF444415', color: '#EF4444' }}>
+                        {t.bottlenecks.length}个卡点
+                      </span>
+                    )}
+                  </div>
+                  {/* 4维度得分 */}
+                  <div className="grid grid-cols-4 gap-1 mb-1.5">
+                    {[
+                      { name: '首通', val: t.qcScores.communication },
+                      { name: '回访', val: t.qcScores.service },
+                      { name: '预约', val: t.qcScores.process },
+                      { name: '面诊', val: t.qcScores.business },
+                    ].map((d, i) => (
+                      <div key={i} className="text-center">
+                        <div className="text-xs" style={{ color: '#667085' }}>{d.name}</div>
+                        <div className="text-sm font-bold" style={{ color: d.val >= 4 ? '#22C55E' : d.val >= 3 ? '#F59E0B' : d.val > 0 ? '#EF4444' : '#999' }}>
+                          {d.val || '--'}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {/* 动作通过率 */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs" style={{ color: '#667085' }}>动作通过率 {t.actionPassRate}%</span>
+                    <div className="flex-1 mx-2 h-1 rounded-full" style={{ backgroundColor: '#E6E1D8' }}>
+                      <div className="h-full rounded-full" style={{
+                        width: `${t.actionPassRate}%`,
+                        backgroundColor: t.actionPassRate >= 80 ? '#22C55E' : t.actionPassRate >= 60 ? '#F59E0B' : '#EF4444'
+                      }} />
+                    </div>
+                  </div>
+                  {/* 卡点提示 */}
+                  {t.bottlenecks.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1.5">
+                      {t.bottlenecks.map((b: string, i: number) => (
+                        <span key={i} className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: '#EF444410', color: '#EF4444' }}>{b}</span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* 第三层：结果倒推 */}
@@ -1119,6 +1192,65 @@ function TrainingManagerHome({ data }: { data: any }) {
           <Link href="/diagnosis" className="flex items-center gap-1 mt-3 text-xs" style={{ color: '#2978B5' }}>
             双轨诊断 <ChevronRight className="w-3 h-3" />
           </Link>
+
+          {/* 下钻按钮 */}
+          <button
+            onClick={() => setDrillLayer3(!drillLayer3)}
+            className="flex items-center gap-1 mt-2 text-xs w-full justify-center py-1.5 rounded-lg transition-colors"
+            style={{ color: drillLayer3 ? '#2978B5' : '#667085', backgroundColor: drillLayer3 ? '#2978B510' : 'transparent' }}
+          >
+            {drillLayer3 ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+            {drillLayer3 ? '收起新人明细' : '查看新人结果明细'}
+          </button>
+
+          {/* 结果线下钻：新人明细 */}
+          {drillLayer3 && (layer3.traineeBreakdown || []).length > 0 && (
+            <div className="mt-3 space-y-2">
+              <div className="text-xs font-medium mb-1" style={{ color: '#102A43' }}>新人结果指标明细</div>
+              {(layer3.traineeBreakdown || []).map((t: any) => (
+                <div key={t.userId} className="p-2.5 rounded-lg border" style={{
+                  borderColor: t.unqualifiedIndicators.length > 0 ? '#F59E0B30' : '#E6E1D8',
+                  backgroundColor: t.unqualifiedIndicators.length > 0 ? '#FFFBEB' : '#F8F6F0'
+                }}>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-medium" style={{ color: '#102A43' }}>{t.name}</span>
+                      <span className="text-xs px-1 py-0.5 rounded" style={{ backgroundColor: '#2978B515', color: '#2978B5' }}>
+                        {stageNames[t.stage] || '学习期'}
+                      </span>
+                    </div>
+                    {t.unqualifiedIndicators.length > 0 && (
+                      <span className="text-xs px-1.5 py-0.5 rounded-full" style={{ backgroundColor: '#F59E0B15', color: '#F59E0B' }}>
+                        {t.unqualifiedIndicators.length}项不达标
+                      </span>
+                    )}
+                    {t.unqualifiedIndicators.length === 0 && (
+                      <span className="text-xs px-1.5 py-0.5 rounded-full" style={{ backgroundColor: '#22C55E15', color: '#22C55E' }}>全部达标</span>
+                    )}
+                  </div>
+                  {/* 6指标网格 */}
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {(t.indicators || []).map((ind: any) => (
+                      <div key={ind.key} className="text-center p-1.5 rounded" style={{ backgroundColor: ind.status === 'excellent' || ind.status === 'good' ? '#F0FDF4' : ind.status === 'warning' ? '#FFFBEB' : '#FEF2F2' }}>
+                        <div className="text-sm font-bold" style={{ color: ind.status === 'excellent' || ind.status === 'good' ? '#22C55E' : ind.status === 'warning' ? '#F59E0B' : '#EF4444' }}>
+                          {ind.value > 0 ? `${ind.value}%` : '--'}
+                        </div>
+                        <div className="text-xs" style={{ color: '#667085' }}>{ind.name}</div>
+                      </div>
+                    ))}
+                  </div>
+                  {/* 不达标指标 */}
+                  {t.unqualifiedIndicators.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1.5">
+                      {t.unqualifiedIndicators.map((name: string, i: number) => (
+                        <span key={i} className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: '#F59E0B10', color: '#F59E0B' }}>{name}</span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
