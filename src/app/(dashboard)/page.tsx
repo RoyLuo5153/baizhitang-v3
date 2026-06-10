@@ -38,6 +38,88 @@ interface WeekDay {
   isUnlocked: boolean;
 }
 
+// ========== 赋能任务卡片 ==========
+interface EmpowerTask {
+  id: number;
+  planName: string;
+  status: string;
+  assignedAt: string;
+  deadline: string | null;
+  progress: number;
+}
+
+function EmpowerTasksCard({ userId }: { userId?: string }) {
+  const [tasks, setTasks] = useState<EmpowerTask[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!userId) return;
+    (async () => {
+      try {
+        const res = await fetch(`/api/empower/executions?traineeId=${userId}&status=assigned,in_progress`);
+        if (res.ok) {
+          const result = await res.json();
+          setTasks(result.executions || []);
+        }
+      } catch {
+        // 静默失败
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [userId]);
+
+  if (loading) {
+    return (
+      <div className="bg-card rounded-xl p-6 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+        <div className="flex items-center gap-2 mb-4">
+          <Zap className="w-5 h-5" style={{ color: '#F59E0B' }} />
+          <h2 className="text-lg font-semibold" style={{ color: '#102A43' }}>我的赋能任务</h2>
+        </div>
+        <div className="text-sm" style={{ color: '#667085' }}>加载中...</div>
+      </div>
+    );
+  }
+
+  if (tasks.length === 0) return null;
+
+  const statusLabel: Record<string, string> = { assigned: '待开始', in_progress: '进行中', completed: '已完成' };
+  const statusColor: Record<string, string> = { assigned: '#F59E0B', in_progress: '#2978B5', completed: '#2E7D32' };
+
+  return (
+    <div className="bg-card rounded-xl p-6 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <Zap className="w-5 h-5" style={{ color: '#F59E0B' }} />
+          <h2 className="text-lg font-semibold" style={{ color: '#102A43' }}>我的赋能任务</h2>
+        </div>
+        <Link href="/empowerment" className="text-xs flex items-center gap-1" style={{ color: '#2978B5' }}>
+          查看全部 <ChevronRight className="w-3 h-3" />
+        </Link>
+      </div>
+      <div className="space-y-3">
+        {tasks.map((task) => (
+          <div key={task.id} className="flex items-center justify-between p-3 rounded-lg" style={{ backgroundColor: '#F8F6F0' }}>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-medium truncate" style={{ color: '#102A43' }}>{task.planName}</div>
+              <div className="text-xs mt-1" style={{ color: '#667085' }}>
+                {task.deadline && `截止: ${task.deadline.slice(0, 10)}`}
+                {task.progress > 0 && ` · 进度 ${task.progress}%`}
+              </div>
+            </div>
+            <span className="text-xs px-2 py-0.5 rounded-full ml-3 whitespace-nowrap" style={{
+              backgroundColor: `${statusColor[task.status] || '#667085'}15`,
+              color: statusColor[task.status] || '#667085'
+            }}>
+              {statusLabel[task.status] || task.status}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ========== 新人成长计划首页 ==========
 function TraineeHome({ data }: { data: any }) {
   const { user } = useAuth();
@@ -156,6 +238,9 @@ function TraineeHome({ data }: { data: any }) {
           </div>
         </div>
       )}
+
+      {/* 我的赋能任务 */}
+      <EmpowerTasksCard userId={data.userId || user?.id} />
 
       {/* 7天排课概览 */}
       <div className="bg-card rounded-xl p-6 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">

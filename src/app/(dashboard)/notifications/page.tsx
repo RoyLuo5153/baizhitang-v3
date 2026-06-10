@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Bell, AlertTriangle, TrendingDown, TrendingUp, BookOpen, MessageSquare, ChevronRight, Check, CheckCheck, Filter, ClipboardList } from 'lucide-react';
+import { Bell, AlertTriangle, TrendingDown, TrendingUp, BookOpen, MessageSquare, ChevronRight, Check, CheckCheck, Filter, ClipboardList, Clock, Users } from 'lucide-react';
+import { useAuth } from '@/lib/auth/context';
 
 interface Notification {
   id: number;
@@ -21,16 +22,27 @@ const TYPE_CONFIG: Record<string, { icon: typeof Bell; label: string; color: str
   overdue: { icon: AlertTriangle, label: '逾期提醒', color: 'text-[#ef4444]', bg: 'bg-[#ef4444]/10' },
   dropout: { icon: TrendingDown, label: '掉队预警', color: 'text-destructive', bg: 'bg-destructive/10' },
   empower: { icon: BookOpen, label: '赋能通知', color: 'text-primary', bg: 'bg-primary/10' },
+  empower_auto: { icon: BookOpen, label: '赋能方案', color: 'text-[#f59e0b]', bg: 'bg-[#f59e0b]/10' },
+  empower_due: { icon: Clock, label: '赋能到期', color: 'text-[#ef4444]', bg: 'bg-[#ef4444]/10' },
   assessment: { icon: ClipboardList, label: '考核提醒', color: 'text-[#f59e0b]', bg: 'bg-[#f59e0b]/10' },
   qc: { icon: MessageSquare, label: '质检通知', color: 'text-primary', bg: 'bg-primary/10' },
   stage: { icon: TrendingUp, label: '阶段通知', color: 'text-[#22c55e]', bg: 'bg-[#22c55e]/10' },
+  stage_transition: { icon: TrendingUp, label: '阶段转换', color: 'text-[#22c55e]', bg: 'bg-[#22c55e]/10' },
   trainee: { icon: AlertTriangle, label: '学员预警', color: 'text-[#f59e0b]', bg: 'bg-[#f59e0b]/10' },
+  trainee_registered: { icon: Users, label: '新人注册', color: 'text-[#2978B5]', bg: 'bg-[#2978B5]/10' },
+  quiz_failed: { icon: AlertTriangle, label: '闯关失败', color: 'text-[#ef4444]', bg: 'bg-[#ef4444]/10' },
+  task_overdue: { icon: AlertTriangle, label: '任务逾期', color: 'text-[#ef4444]', bg: 'bg-[#ef4444]/10' },
+  qc_low_score: { icon: MessageSquare, label: '质检低分', color: 'text-[#f59e0b]', bg: 'bg-[#f59e0b]/10' },
+  level_passed: { icon: TrendingUp, label: '闯关通过', color: 'text-[#22c55e]', bg: 'bg-[#22c55e]/10' },
+  practice_submitted: { icon: ClipboardList, label: '演练提交', color: 'text-[#2978B5]', bg: 'bg-[#2978B5]/10' },
+  qualification_overdue: { icon: AlertTriangle, label: '资格期超期', color: 'text-[#ef4444]', bg: 'bg-[#ef4444]/10' },
   system: { icon: Bell, label: '系统通知', color: 'text-muted-foreground', bg: 'bg-muted' },
 };
 
 const PRIORITY_ORDER = { urgent: 0, high: 1, normal: 2, low: 3 };
 
 export default function NotificationsPage() {
+  const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'unread' | 'urgent'>('all');
@@ -38,11 +50,11 @@ export default function NotificationsPage() {
 
   useEffect(() => {
     fetchNotifications();
-  }, []);
+  }, [user?.id]);
 
   const fetchNotifications = async () => {
     try {
-      const res = await fetch('/api/notifications?userId=1');
+      const res = await fetch(`/api/notifications${user?.id ? `?userId=${user.id}` : ''}`);
       if (res.ok) {
         const data = await res.json();
         setNotifications(data.notifications || []);
@@ -102,13 +114,26 @@ export default function NotificationsPage() {
     switch (n.related_type) {
       case 'level': return '/learning';
       case 'empower_execution': return '/empowerment';
+      case 'empower_plan': return '/empowerment';
       case 'diagnosis': return '/diagnosis';
       case 'assessment': return '/assessment';
       case 'qc_record': return '/qc-review';
       case 'stage': return '/settings';
       case 'trainee': return '/trainee-board';
+      case 'trainee_profile': return '/trainee-profiles';
       case 'course': return '/courses';
-      default: return null;
+      case 'qualification': return '/trainee-profiles';
+      default:
+        // 按通知类型推断
+        switch (n.type) {
+          case 'empower_auto': case 'empower_due': return '/empowerment';
+          case 'stage_transition': return '/trainee-profiles';
+          case 'trainee_registered': return '/trainee-profiles';
+          case 'quiz_failed': case 'level_passed': return '/learning';
+          case 'qc_low_score': case 'practice_submitted': return '/practice';
+          case 'qualification_overdue': return '/trainee-profiles';
+          default: return null;
+        }
     }
   };
 

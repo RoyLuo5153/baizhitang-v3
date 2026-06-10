@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
 import { getAuthFromHeaders } from '@/lib/auth/api-auth';
+import { onAlertTriggered } from '@/lib/triggers';
 
 interface AlertItem {
   userId: string;
@@ -429,6 +430,21 @@ export async function GET(request: NextRequest) {
     // Sort by alert level priority: danger > warning > info
     const levelPriority = { danger: 0, warning: 1, info: 2 };
     alerts.sort((a, b) => levelPriority[a.alertLevel] - levelPriority[b.alertLevel]);
+
+    // 触发通知：danger级别预警通知相关方
+    const dangerAlerts = alerts.filter(a => a.alertLevel === 'danger' || a.alertLevel === 'warning');
+    for (const alert of dangerAlerts.slice(0, 10)) {
+      try {
+        await onAlertTriggered(
+          alert.userId,
+          alert.realName,
+          alert.alertType,
+          alert.message
+        );
+      } catch {
+        // 通知失败不影响预警查询
+      }
+    }
 
     // Stats
     const stats = {

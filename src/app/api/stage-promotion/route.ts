@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
+import { onStageTransition } from '@/lib/triggers';
 
 /**
  * POST /api/stage-promotion
@@ -75,6 +76,15 @@ export async function POST(request: NextRequest) {
         message: `恭喜！您已从阶段${fromStage}晋升至阶段${toStage}`,
         is_read: false,
       });
+
+      // 通知培训负责人
+      try {
+        const { data: userData } = await client.from('users').select('real_name').eq('id', userId).single();
+        const realName = userData?.real_name || userId;
+        await onStageTransition(String(userId), realName, String(fromStage), String(toStage));
+      } catch {
+        // 通知失败不影响主流程
+      }
 
       return NextResponse.json({
         success: true,

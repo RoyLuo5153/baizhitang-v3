@@ -19,6 +19,11 @@ export type NotificationType =
   | 'process_flagged'    // 过程线预警
   | 'process_recovered'  // 过程线恢复
   | 'qualification_overdue'  // 资格期超期
+  | 'empower_assigned'      // 赋能方案已分配
+  | 'empower_due_soon'      // 赋能方案即将到期
+  | 'trainee_registered'    // 新人注册完成
+  | 'mentor_signoff_done'   // 带教签收完成
+  | 'alert_triggered'       // 预警触发
   | 'general';           // 通用通知
 
 interface NotificationPayload {
@@ -650,4 +655,264 @@ export async function onQcCompletedUpdateProcessStatus(
       });
     }
   }
+}
+
+/**
+ * 赋能方案推送联动
+ * 推送赋能方案给新人 → 通知新人 + 通知培训负责人
+ */
+export async function onEmpowerAssigned(
+  traineeId: string,
+  traineeName: string,
+  planName: string,
+  planId: number,
+  assignedBy: string
+): Promise<void> {
+  // 1. 通知新人
+  await sendNotification({
+    userId: traineeId,
+    type: 'empower_assigned',
+    title: '新的赋能任务',
+    message: `您被分配了赋能方案「${planName}」，请及时完成`,
+    relatedUserId: assignedBy,
+    relatedId: planId,
+    priority: 'medium',
+  });
+
+  // 2. 通知培训负责人
+  const managerIds = await getTrainingManagerIds();
+  for (const mgrId of managerIds) {
+    await sendNotification({
+      userId: mgrId,
+      type: 'empower_assigned',
+      title: '新人赋能方案已推送',
+      message: `学员${traineeName}被分配了赋能方案「${planName}」`,
+      relatedUserId: traineeId,
+      relatedId: planId,
+      priority: 'low',
+    });
+  }
+
+  // 3. 通知带教老师
+  const mentorId = await getMentorId(traineeId);
+  if (mentorId) {
+    await sendNotification({
+      userId: mentorId,
+      type: 'empower_assigned',
+      title: `学员${traineeName}被分配赋能方案`,
+      message: `学员${traineeName}被分配了赋能方案「${planName}」，请关注执行进度`,
+      relatedUserId: traineeId,
+      relatedId: planId,
+      priority: 'medium',
+    });
+  }
+}
+
+/**
+ * 赋能方案即将到期联动
+ * 距截止日3天 → 通知新人 + 带教老师
+ */
+export async function onEmpowerDueSoon(
+  traineeId: string,
+  traineeName: string,
+  planName: string,
+  planId: number,
+  daysRemaining: number
+): Promise<void> {
+  // 通知新人
+  await sendNotification({
+    userId: traineeId,
+    type: 'empower_due_soon',
+    title: '赋能方案即将到期',
+    message: `您的赋能方案「${planName}」将在${daysRemaining}天后到期，请尽快完成`,
+    relatedId: planId,
+    priority: 'high',
+  });
+
+  // 通知带教老师
+  const mentorId = await getMentorId(traineeId);
+  if (mentorId) {
+    await sendNotification({
+      userId: mentorId,
+      type: 'empower_due_soon',
+      title: `学员${traineeName}赋能方案即将到期`,
+      message: `学员${traineeName}的赋能方案「${planName}」将在${daysRemaining}天后到期`,
+      relatedUserId: traineeId,
+      relatedId: planId,
+      priority: 'medium',
+    });
+  }
+}
+
+/**
+ * 新人注册完成联动
+ * 创建账号后 → 通知带教老师
+ */
+export async function onTraineeRegistered(
+  traineeId: string,
+  traineeName: string,
+  mentorId?: string
+): Promise<void> {
+  // 通知带教老师
+  if (mentorId) {
+    await sendNotification({
+      userId: mentorId,
+      type: 'trainee_registered',
+      title: '您的学员已注册',
+      message: `您的学员${traineeName}已完成注册，请关注其学习进度`,
+      relatedUserId: traineeId,
+      priority: 'medium',
+    });
+  }
+
+  // 通知培训负责人
+  const managerIds = await getTrainingManagerIds();
+  for (const mgrId of managerIds) {
+    await sendNotification({
+      userId: mgrId,
+      type: 'trainee_registered',
+      title: '新人注册完成',
+      message: `新人${traineeName}已注册，带教老师：${mentorId ? '已分配' : '未分配'}`,
+      relatedUserId: traineeId,
+      priority: 'low',
+    });
+  }
+}
+
+/**
+ * 带教签收完成联动
+ * 所有关键动作签收完成 → 通知培训负责人
+ */
+export async function onMentorSignoffComplete(
+  traineeId: string,
+  traineeName: string
+): Promise<void> {
+  const managerIds = await getTrainingManagerIds();
+  for (const mgrId of managerIds) {
+    await sendNotification({
+      userId: mgrId,
+      type: 'mentor_signoff_done',
+      title: `${traineeName}已完成所有核心动作签收`,
+      message: `学员${traineeName}已完成所有核心动作的带教签收，请关注后续进展`,
+      relatedUserId: traineeId,
+      priority: 'medium',
+    });
+  }
+
+  // 也通知带教老师
+  const mentorId = await getMentorId(traineeId);
+  if (mentorId) {
+    await sendNotification({
+      userId: mentorId,
+      type: 'mentor_signoff_done',
+      title: `${traineeName}签收全部完成`,
+      message: `学员${traineeName}的所有核心动作签收已完成`,
+      relatedUserId: traineeId,
+      priority: 'low',
+    });
+  }
+}
+
+/**
+ * 预警触发联动
+ * 指标低于预警线 → 通知带教老师 + 培训负责人
+ */
+export async function onAlertTriggered(
+  traineeId: string,
+  traineeName: string,
+  alertType: string,
+  alertDetail: string
+): Promise<void> {
+  const stageNames: Record<string, string> = {
+    wechat_add_rate: '加V率',
+    consultation_rate: '面诊率',
+    reception_rate: '接诊率',
+    delivery_rate: '签收率',
+    medication_rate: '用药率',
+    appointment_rate: '挂号率',
+  };
+  const label = stageNames[alertType] || alertType;
+
+  // 通知带教老师
+  const mentorId = await getMentorId(traineeId);
+  if (mentorId) {
+    await sendNotification({
+      userId: mentorId,
+      type: 'alert_triggered',
+      title: `${traineeName}${label}低于预警线`,
+      message: `${traineeName}的${label}${alertDetail}，请及时安排辅导`,
+      relatedUserId: traineeId,
+      priority: 'high',
+    });
+  }
+
+  // 通知培训负责人
+  const managerIds = await getTrainingManagerIds();
+  for (const mgrId of managerIds) {
+    await sendNotification({
+      userId: mgrId,
+      type: 'alert_triggered',
+      title: `${traineeName}${label}低于预警线`,
+      message: `学员${traineeName}的${label}${alertDetail}，带教老师：${mentorId ? '已通知' : '未分配'}`,
+      relatedUserId: traineeId,
+      priority: 'medium',
+    });
+  }
+}
+
+/**
+ * 检查即将到期的赋能方案（距截止日3天）
+ * 供定时任务或手动调用
+ */
+export async function checkEmpowerDueSoon(): Promise<{ notifiedCount: number }> {
+  const client = getSupabaseClient();
+
+  // 查询3天内到期的赋能执行记录
+  const { data: dueSoonExecutions } = await client
+    .from('empower_executions')
+    .select('id, user_id, plan_id, due_date, status, empower_plans(title)')
+    .in('status', ['assigned', 'in_progress'])
+    .gte('due_date', new Date().toISOString().split('T')[0])
+    .lte('due_date', new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
+
+  if (!dueSoonExecutions || dueSoonExecutions.length === 0) {
+    return { notifiedCount: 0 };
+  }
+
+  let notifiedCount = 0;
+  for (const exec of dueSoonExecutions) {
+    // 检查今天是否已发过通知
+    const today = new Date().toISOString().split('T')[0];
+    const { data: existing } = await client
+      .from('notifications')
+      .select('id')
+      .eq('related_id', String(exec.id))
+      .eq('type', 'empower_due_soon')
+      .gte('created_at', today)
+      .maybeSingle();
+
+    if (existing) continue;
+
+    // 获取新人姓名
+    const { data: user } = await client
+      .from('users')
+      .select('real_name')
+      .eq('id', exec.user_id)
+      .maybeSingle();
+
+    const planName = (exec.empower_plans as any)?.title || '未命名方案';
+    const dueDate = new Date(exec.due_date);
+    const daysRemaining = Math.ceil((dueDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+
+    await onEmpowerDueSoon(
+      exec.user_id,
+      user?.real_name || '未知学员',
+      planName,
+      exec.plan_id,
+      daysRemaining
+    );
+    notifiedCount++;
+  }
+
+  return { notifiedCount };
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
 import { getAuthFromHeaders, requireRoles, ROLES } from '@/lib/auth/api-auth';
+import { onTraineeRegistered } from '@/lib/triggers';
 import bcrypt from 'bcryptjs';
 
 // GET /api/users — 获取用户列表（支持?roleId=2筛选带教老师）
@@ -170,6 +171,19 @@ export async function POST(req: NextRequest) {
 
       if (profileError) {
         console.error('创建trainee_profile失败:', profileError.message);
+      }
+
+      // 通知带教老师 + 培训负责人
+      try {
+        // 尝试查找学员的导师
+        const { data: mentorLink } = await supabase
+          .from('mentor_trainees')
+          .select('mentor_id')
+          .eq('trainee_id', newUser.id)
+          .maybeSingle();
+        await onTraineeRegistered(newUser.id, realName, mentorLink?.mentor_id || undefined);
+      } catch {
+        // 通知失败不影响主流程
       }
     }
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
 import { getAuthFromHeaders } from '@/lib/auth/api-auth';
+import { onEmpowerAssigned } from '@/lib/triggers';
 
 export async function GET(request: NextRequest) {
   const auth = getAuthFromHeaders(request);
@@ -76,6 +77,31 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) throw error;
+
+    // 联动通知：通知新人 + 培训负责人 + 带教老师
+    try {
+      const { data: planInfo } = await supabase
+        .from('empower_plans')
+        .select('name')
+        .eq('id', planId)
+        .single();
+
+      const { data: traineeInfo } = await supabase
+        .from('users')
+        .select('real_name')
+        .eq('id', traineeId)
+        .maybeSingle();
+
+      await onEmpowerAssigned(
+        traineeId,
+        traineeInfo?.real_name || '未知学员',
+        planInfo?.name || '未命名方案',
+        planId,
+        assignedBy || ''
+      );
+    } catch {
+      // 通知失败不影响主流程
+    }
 
     return NextResponse.json({ success: true, execution: data });
   } catch (err: unknown) {
