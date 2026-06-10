@@ -1146,7 +1146,7 @@ function transformApiResponse(raw: any, currentUser: any): GrowthData {
 
   const DIAGNOSES: Record<string, string> = {
     wechat_add_rate: '加微承接服务用语不熟练，高峰期遗漏较多，需强化场景化服务用语训练',
-    consultation_rate: '客户需求挖掘深度不足，产品价值传递不够清晰',
+    consultation_rate: '客户需求挖掘深度不足，治疗动机引导和安全感建立不够到位',
     reception_rate: '接待流程执行不够规范，建议加强接待SOP训练',
     delivery_rate: '交付流程存在薄弱环节，需优化交付节奏把控',
     medication_rate: '专业表达能力偏弱，方案说服力不够，建议加强医学知识专项学习',
@@ -1183,7 +1183,7 @@ function transformApiResponse(raw: any, currentUser: any): GrowthData {
         ...(resultMetrics.find(m => m.key === 'consultation_rate' && !m.qualified) ? [{
           id: 2,
           title: '咨询转化力提升方案',
-          description: '强化需求挖掘技巧和产品价值传递能力，提升从咨询到转化的全链路效率',
+          description: '强化治疗动机深度挖掘和安全感建立能力，提升从咨询到转化的全链路效率',
           targetMetrics: ['咨询转化率'],
           duration: '3周',
           priority: 'high' as const,

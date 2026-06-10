@@ -598,6 +598,6 @@ function deriveTaskTag(title: string): string {
   if (title.includes('面诊')) return '面诊当天';
   if (title.includes('综合') || title.includes('全流程')) return '综合演练';
   if (title.includes('特殊')) return '特殊情况处理';
-  if (title.includes('异议')) return '异议处理';
+  if (title.includes('顾虑') || title.includes('异议')) return '顾虑消除';
   return '通用';
 }

@@ -561,7 +561,7 @@ export default function PracticePage() {
                 type="text"
                 value={newTask.title}
                 onChange={e => setNewTask({ ...newTask, title: e.target.value })}
-                placeholder="如：异议处理专项演练"
+                placeholder="如：顾虑消除专项演练"
                 className="mt-1 w-full border rounded-lg px-3 py-2 text-sm"
                 style={{ borderColor: '#E6E1D8' }}
               />
@@ -572,7 +572,7 @@ export default function PracticePage() {
                 type="text"
                 value={newTask.taskTag}
                 onChange={e => setNewTask({ ...newTask, taskTag: e.target.value })}
-                placeholder="如：异议处理、首通电话"
+                placeholder="如：顾虑消除、首通电话"
                 className="mt-1 w-full border rounded-lg px-3 py-2 text-sm"
                 style={{ borderColor: '#E6E1D8' }}
               />

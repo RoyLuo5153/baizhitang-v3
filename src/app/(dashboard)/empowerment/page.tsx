@@ -581,7 +581,7 @@ function EditPlanDialog({ plan, onClose, onSaved }: { plan: EmpowerPlan; onClose
 
             <div>
               <label className="text-sm font-medium text-foreground flex items-center gap-1.5"><Compass className="w-3.5 h-3.5 text-primary" />调理方向</label>
-              <input value={direction} onChange={e => setDirection(e.target.value)} className="w-full mt-1 px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm" placeholder="如：强化首通电话价值传递能力" />
+              <input value={direction} onChange={e => setDirection(e.target.value)} className="w-full mt-1 px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm" placeholder="如：强化首通电话安全感建立能力" />
             </div>
 
             <div>
@@ -1516,7 +1516,7 @@ function NewPlanDialog({ onClose, onCreated }: { onClose: () => void; onCreated:
                 value={direction}
                 onChange={e => setDirection(e.target.value)}
                 className="w-full mt-1 px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm"
-                placeholder="如：强化首通电话价值传递能力，提升患者信任度"
+                placeholder="如：强化首通电话安全感建立能力，提升患者信任度"
               />
             </div>
 

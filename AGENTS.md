@@ -28,10 +28,16 @@
 - **预警联动**: 闯关逾期→预警+通知导师 / 演练低分→自动赋能 / 诊断D类→复训触发 / 即将下组→确认提醒
 - **质检自动触发**: 演练提交→自动创建质检任务(非手动新建)，source_type追踪触发来源
 - **四阶段成长模型**: 学习期(1周7天排课) → 练习期(2-4周19动作演练) → 独立期(2-3月) → 熟练期(3月+)
-- **19核心动作4节点**: 首通电话(6动作30%) + 第三天回访(4动作25%) + 第五天预约(6动作30%) + 面诊当天(3动作15%)
+- **19核心动作4节点(v2迁移完成)**: 
+  - 首通电话(6动作30%): 治疗动机深度挖掘/用药反应告知与接受/血糖波动提醒/舌苔留存/价格预期管理/家属态度确认
+  - 第三天回访(4动作25%): 身体轻微变化询问/糖尿病认知教育/逆转案例分享/变化发现与引导
+  - 第五天预约(6动作30%): 5天变化了解/清理内环境比喻/权威视频增信/病史长现状警示/复诊预约确认/效果对比确认
+  - 面诊当天(3动作15%): 顾虑提前了解/顾虑针对性消除/接诊电话沟通技巧
 - **5级评分标准**: 5分(全面完成有亮点) / 4分(按要求完成) / 3分(勉强完成) / 2分(明显遗漏) / 0分(未执行)
-- **信任度公式**: 患者信任度 = 认知水平 × 专业感知 × 安全感
-- **4类特殊情况**: 未按时用药/延迟用药/用药中断/不规律用药(10个补充动作)
+- **信任度公式**: 患者信任度 = 认知水平 × 专业感知 × 安全感（信任建立顺序：安全感→专业度→归属感）
+- **v2设计哲学**: 前置化——从"出了问题再补救"→"提前预防"。新增4动作(价格预期管理/家属态度确认/变化发现与引导/效果对比确认)均为前置化动作
+- **4类特殊情况(10个补充动作)**: 未按时用药(用药催促) / 延迟用药(延迟原因挖掘+承诺建立) / 用药中断(中断响应+原因挖掘+重新激活话术+阶段性归零) / 不规律用药(习惯培养+多重提醒+依从性评估)
+- **特殊情况信任度延伸**: 患者信任度 = 认知水平 × 专业感知 × 安全感 × 障碍清除
 - **联动模块推送(P1已完成)**: 诊断页/带教看板/新人视图/新人看板/总经看板 5个视图联动显示推荐赋能方案+一键推送
 - **带教进度安排(P1已完成)**: MentorHome展示学员双线状态+模块通关进度+预警高亮+推荐赋能方案
 - **排课快捷操作(P1已完成)**: 用户管理页子Tab区分新人管理/团队管理 + cohort筛选+多选学员+批量分配期数/调整阶段
@@ -96,7 +102,7 @@
 
 ## 数据库表（24张）
 
-核心表: users, roles, permissions, role_permissions, learning_levels, level_progress, quiz_attempts, questions, qc_records, business_data, thresholds, empower_plans, empower_executions, mentor_trainees, stage_rules, announcements, resources, daily_assessments, configurations, growth_stages, daily_plans, core_actions, action_scores, special_patient_actions
+核心表: users, roles, permissions, role_permissions, learning_levels, level_progress, quiz_attempts, questions, qc_records, business_data, thresholds, empower_plans, empower_executions, mentor_trainees, stage_rules, announcements, resources, daily_assessments, configurations, growth_stages, daily_plans, core_actions(v2已迁移), action_scores, special_patient_actions(v2已迁移)
 
 ## 测试账号
 
