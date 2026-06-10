@@ -37,6 +37,10 @@ interface TraineeProfile {
   monthly_data: Record<string, MonthlyData>;
   user_status: string;
   created_at: string;
+  qualification_period_days: number;
+  qualification_deadline: string | null;
+  is_overdue: boolean;
+  overdue_days: number;
 }
 
 interface MentorOption {
@@ -115,6 +119,10 @@ export default function TraineeProfilesPage() {
           monthly_data: {},
           user_status: 'active',
           created_at: '',
+          qualification_period_days: (p.qualificationPeriodDays as number) || 90,
+          qualification_deadline: (p.qualificationDeadline as string) || null,
+          is_overdue: (p.isOverdue as boolean) || false,
+          overdue_days: (p.overdueDays as number) || 0,
         })));
       }
     } catch { /* ignore */ }
@@ -401,10 +409,33 @@ export default function TraineeProfilesPage() {
                 profiles.map((p, idx) => (
                   <tr key={p.user_id} className={idx % 2 === 0 ? 'bg-background' : 'bg-muted/30'}>
                     <td className="px-2 py-1.5 border-b border-r border-border font-medium text-foreground">
-                      {p.real_name || p.username}
+                      <div className="flex flex-col gap-0.5">
+                        <span>{p.real_name || p.username}</span>
+                        {p.is_overdue ? (
+                          <span className="inline-block text-[10px] px-1.5 py-0.5 rounded font-medium leading-none"
+                            style={{
+                              background: p.overdue_days >= 15 ? '#FEE2E2' : '#FEF3C7',
+                              color: p.overdue_days >= 15 ? '#DC2626' : '#D97706',
+                            }}>
+                            {p.overdue_days >= 15 ? '严重超期' : `已超期${p.overdue_days}天`}
+                          </span>
+                        ) : p.qualification_deadline ? (
+                          <span className="inline-block text-[10px] px-1.5 py-0.5 rounded font-medium leading-none"
+                            style={{ background: '#DCFCE7', color: '#16A34A' }}>
+                            资格期内 ✓
+                          </span>
+                        ) : null}
+                      </div>
                     </td>
                     <td className="px-1 py-1 border-b border-r border-border">
-                      {renderDateInput('hire_date', p.user_id, p.hire_date, '入职日期')}
+                      <div className="flex flex-col gap-0.5">
+                        {renderDateInput('hire_date', p.user_id, p.hire_date, '入职日期')}
+                        {p.hire_date && (
+                          <span className="text-[10px] text-muted-foreground text-center">
+                            在职{Math.ceil((Date.now() - new Date(p.hire_date).getTime()) / (1000 * 60 * 60 * 24))}天
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-1 py-1 border-b border-r border-border">
                       {renderDateInput('expected_group_date', p.user_id, p.expected_group_date, '预计下组')}

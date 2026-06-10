@@ -111,6 +111,17 @@ export async function GET(request: NextRequest) {
         stage: profile.stage || 'foundation',
         processStatus: profile.process_status || 'not_started',
         resultStatus: profile.result_status || 'not_started',
+        qualificationPeriodDays: profile.qualification_period_days || 90,
+        qualificationDeadline: profile.qualification_deadline || null,
+        isOverdue: (() => {
+          if (!profile.qualification_deadline || profile.profile_status === 'qualified') return false;
+          return new Date() > new Date(profile.qualification_deadline);
+        })(),
+        overdueDays: (() => {
+          if (!profile.qualification_deadline || profile.profile_status === 'qualified') return 0;
+          const diff = Math.ceil((Date.now() - new Date(profile.qualification_deadline).getTime()) / (1000 * 60 * 60 * 24));
+          return diff > 0 ? diff : 0;
+        })(),
       };
     });
 
@@ -150,6 +161,7 @@ export async function PATCH(request: NextRequest) {
       profileStatus: 'profile_status',
       cohort: 'cohort',
       remarks: 'remarks',
+      qualificationPeriodDays: 'qualification_period_days',
     };
 
     const dbField = fieldMap[field];
@@ -185,14 +197,27 @@ export async function PATCH(request: NextRequest) {
     // 更新 trainee_profiles 表
     const { data: existingProfile } = await supabase
       .from('trainee_profiles')
-      .select('id')
+      .select('id, hire_date')
       .eq('user_id', userId)
       .single();
+
+    // 构建更新字段
+    const updateFields: Record<string, unknown> = { [dbField]: value || null, updated_at: new Date().toISOString() };
+
+    // 如果更新了资格期天数，自动重算截止日期
+    if (field === 'qualificationPeriodDays' && value) {
+      const hireDate = existingProfile?.hire_date;
+      if (hireDate) {
+        const deadline = new Date(hireDate);
+        deadline.setDate(deadline.getDate() + Number(value));
+        updateFields.qualification_deadline = deadline.toISOString().split('T')[0];
+      }
+    }
 
     if (existingProfile) {
       const { error } = await supabase
         .from('trainee_profiles')
-        .update({ [dbField]: value || null, updated_at: new Date().toISOString() })
+        .update(updateFields)
         .eq('user_id', userId);
 
       if (error) {
@@ -200,9 +225,15 @@ export async function PATCH(request: NextRequest) {
         return NextResponse.json({ error: '更新失败' }, { status: 500 });
       }
     } else {
+      // 创建新档案时，如果有入职日期，也计算资格期截止日
+      if (field === 'hireDate' && value) {
+        const deadline = new Date(value);
+        deadline.setDate(deadline.getDate() + 90);
+        updateFields.qualification_deadline = deadline.toISOString().split('T')[0];
+      }
       const { error } = await supabase
         .from('trainee_profiles')
-        .insert({ user_id: userId, [dbField]: value || null });
+        .insert({ user_id: userId, ...updateFields });
 
       if (error) {
         console.error('[trainee-profiles] PATCH insert error:', error);

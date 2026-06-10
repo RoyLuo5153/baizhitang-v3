@@ -18,6 +18,7 @@ export type NotificationType =
   | 'module_failed'      // 模块通关未通过
   | 'process_flagged'    // 过程线预警
   | 'process_recovered'  // 过程线恢复
+  | 'qualification_overdue'  // 资格期超期
   | 'general';           // 通用通知
 
 interface NotificationPayload {
@@ -115,6 +116,58 @@ export async function onQuizFailed(
         relatedUserId: traineeId,
         relatedId: levelId,
         priority: 'medium',
+      });
+    }
+  }
+}
+
+/**
+ * 获取总经理(boss)ID列表
+ */
+async function getBossIds(): Promise<string[]> {
+  const client = getSupabaseClient();
+  const { data } = await client
+    .from('users')
+    .select('id')
+    .eq('role_id', 5)
+    .eq('is_active', true);
+  return (data || []).map((u: { id: string }) => u.id);
+}
+
+/**
+ * 资格期超期通知
+ * 超期当天 → 通知培训负责人
+ * 超期15天以上 → 通知总经理
+ */
+export async function onQualificationOverdue(
+  traineeId: string,
+  traineeName: string,
+  overdueDays: number
+): Promise<void> {
+  // 通知培训负责人
+  const managerIds = await getTrainingManagerIds();
+  for (const mgrId of managerIds) {
+    await sendNotification({
+      userId: mgrId,
+      type: 'qualification_overdue',
+      title: `${traineeName}资格期已超期`,
+      message: `${traineeName}已超期${overdueDays}天，请及时处理（转出或延期）`,
+      relatedUserId: traineeId,
+      priority: overdueDays >= 15 ? 'high' : 'medium',
+    });
+  }
+
+  // 超期15天以上 → 通知总经理
+  if (overdueDays >= 15) {
+    const bossIds = await getBossIds();
+    for (const bossId of bossIds) {
+      await sendNotification({
+        userId: bossId,
+        type: 'qualification_overdue',
+        title: `${traineeName}资格期严重超期`,
+        message: `${traineeName}已超期${overdueDays}天，需要关注处理`,
+        relatedUserId: traineeId,
+        priority: 'high',
       });
     }
   }
