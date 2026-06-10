@@ -57,11 +57,52 @@ export default function QcFlowPage() {
   const [loading, setLoading] = useState(true);
   const [expandedCase, setExpandedCase] = useState<string | null>(null);
   const [mentorNote, setMentorNote] = useState('');
+  const [selectedTrainee, setSelectedTrainee] = useState<{id: string; realName: string; stage: number} | null>(null);
+  const [trainees, setTrainees] = useState<{id: string; realName: string; stage: number}[]>([]);
+
+  const isTrainee = user?.role === 'trainee';
+  const viewUserId = selectedTrainee?.id || user?.id;
+
+  // Stage label helper
+  const stageLabel = (stage: number | undefined) => {
+    switch (stage) {
+      case 1: return '学习期';
+      case 2: return '练习期';
+      case 3: return '独立期';
+      case 4: return '熟练期';
+      default: return '学习期';
+    }
+  };
+
+  // Fetch trainee list for non-trainee roles
+  useEffect(() => {
+    if (!user?.id || isTrainee) return;
+    const fetchTrainees = async () => {
+      try {
+        const res = await fetch('/api/users?roleId=1&isActive=true', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        });
+        if (res.ok) {
+          const json = await res.json();
+          const list = (json.users || json || []).map((u: any) => ({
+            id: u.id, realName: u.realName || u.username, stage: u.stage || 1,
+          }));
+          setTrainees(list);
+          if (list.length > 0 && !selectedTrainee) {
+            setSelectedTrainee(list[0]);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch trainees:', err);
+      }
+    };
+    fetchTrainees();
+  }, [user?.id, isTrainee]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchData = useCallback(async () => {
-    if (!user?.id) return;
+    if (!viewUserId) return;
     try {
-      const res = await fetch(`/api/qc-flow?userId=${user.id}`, {
+      const res = await fetch(`/api/qc-flow?userId=${viewUserId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       if (res.ok) {
@@ -73,7 +114,7 @@ export default function QcFlowPage() {
     } finally {
       setLoading(false);
     }
-  }, [user?.id]);
+  }, [viewUserId]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -100,10 +141,34 @@ export default function QcFlowPage() {
         </div>
         {user && (
           <div className="flex items-center gap-3">
-            <span className="text-sm font-medium" style={{ color: '#102A43' }}>{user.realName || user.username}</span>
-            <span className="text-xs px-2 py-1 rounded-full" style={{ backgroundColor: '#2978B515', color: '#2978B5' }}>
-              练习期
+            {/* Trainee selector for non-trainee roles */}
+            {!isTrainee && trainees.length > 0 && (
+              <select
+                className="text-sm border rounded-lg px-3 py-1.5 bg-white"
+                style={{ borderColor: '#E6E1D8', color: '#102A43' }}
+                value={selectedTrainee?.id || ''}
+                onChange={(e) => {
+                  const t = trainees.find(tr => tr.id === e.target.value);
+                  setSelectedTrainee(t || null);
+                }}
+              >
+                {trainees.map(t => (
+                  <option key={t.id} value={t.id}>{t.realName} ({stageLabel(t.stage)})</option>
+                ))}
+              </select>
+            )}
+            <span className="text-sm font-medium" style={{ color: '#102A43' }}>
+              {selectedTrainee ? selectedTrainee.realName : (user.realName || user.username)}
             </span>
+            {selectedTrainee ? (
+              <span className="text-xs px-2 py-1 rounded-full" style={{ backgroundColor: '#2978B515', color: '#2978B5' }}>
+                {stageLabel(selectedTrainee.stage)}
+              </span>
+            ) : user.role === 'trainee' ? (
+              <span className="text-xs px-2 py-1 rounded-full" style={{ backgroundColor: '#2978B515', color: '#2978B5' }}>
+                {stageLabel(user.stage)}
+              </span>
+            ) : null}
           </div>
         )}
       </div>
