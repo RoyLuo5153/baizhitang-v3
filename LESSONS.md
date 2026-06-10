@@ -30,6 +30,38 @@
 
 ---
 
+## #003 API响应无类型导致null.map()页面崩溃白屏
+
+- **症状**：learning页面、diagnosis页面等多处因API返回{error}或字段为undefined，前端直接对undefined调用.map()导致TypeError: Cannot read properties of undefined (reading 'map')，页面白屏崩溃
+- **根因**：结构性缺陷——`fetch().json()`返回any类型，TypeScript编译器无法在编译时拦截null/undefined访问。所有页面用原生fetch获取数据后直接解构，没有运行时校验也没有类型定义。一旦API返回非预期结构（如{error}而非{modules:[]}），前端必然崩溃
+- **修复**：
+  1. 创建`src/lib/api-client.ts`——safeFetch泛型函数+sanitizeArrays自动用默认值替换缺失数组+apiGet/apiPost封装
+  2. 创建`src/components/error-boundary.tsx`——React ErrorBoundary页面级崩溃兜底，不再白屏
+  3. 将10个高风险页面的fetch调用迁移到apiGet（diagnosis/empowerment/trainee-board/notifications/trainee-profiles/qc-review/scrm-import/assessment/dashboard/overview）
+  4. 修复learning/modules API无userId时返回模块概览而非{error}
+- **防错规则**：
+  1. 所有新增页面必须使用`apiGet<T>('/api/xxx', { defaultValue })`，禁止直接使用fetch
+  2. apiGet的sanitizeArrays会自动将undefined数组字段替换为[]，从结构上消除null.map()的可能
+  3. ErrorBoundary包裹在layout层，任何未捕获的渲染错误都有兜底UI
+- **类别**：类型安全/状态管理
+- **日期**：2026-06-08
+
+---
+
+## #004 规则型防错无效——"为什么制定那么多规则还是出问题"
+
+- **症状**：AGENTS.md写了大量编码规则（"检查null"、"用|| []"），但页面依然因null.map()崩溃
+- **根因**：规则型防错靠人记住，人一定会忘。真正有效的是结构性防错——让系统自动拦截，犯错不可能发生
+- **修复**：
+  1. api-client.ts的sanitizeArrays = 结构性防错（API响应自动补全缺失数组，开发者不需要记得检查）
+  2. ErrorBoundary = 结构性防错（渲染崩溃自动兜底，开发者不需要记得try-catch）
+  3. TypeScript泛型 = 结构性防错（编译时类型校验，apiGet<T>返回的data有类型，字段缺失编译报错）
+- **防错规则**：任何防错措施优先选择结构性（系统自动拦截），而非规则性（靠人记住）。判断标准：忘了会怎样？规则型照犯，结构型犯不了
+- **类别**：类型安全
+- **日期**：2026-06-08
+
+---
+
 ## #002 前后端字段名snake_case/camelCase不一致导致创建/编辑用户失败
 
 - **症状**：前端添加用户弹窗点击"创建"返回"缺少必要参数"；编辑期数/阶段不生效；trainee_profile创建失败

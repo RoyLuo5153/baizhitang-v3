@@ -7,6 +7,7 @@ import {
   Headphones, FileText, User, Filter
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth/context';
+import { apiGet } from '@/lib/api-client';
 
 // ─── Types ──────────────────────────────────────────────
 
@@ -241,19 +242,12 @@ export default function QcReviewPage() {
   const isTrainee = user?.role === 'trainee';
 
   const fetchRecords = useCallback(async () => {
-    try {
-      const params = new URLSearchParams();
-      if (user?.id) params.set('userId', user.id);
-      const res = await fetch(`/api/qc?${params}`);
-      if (res.ok) {
-        const json = await res.json();
-        setRecords(json.records || []);
-        setStats(json.stats || { total: 0, pendingCount: 0, completedCount: 0, avgScore: 0 });
-        setRoleId(json.roleId || 1);
-      }
-    } catch {
-      // ignore
-    }
+    const params = new URLSearchParams();
+    if (user?.id) params.set('userId', user.id);
+    const result = await apiGet<{ records: any[]; stats: { total: number; pendingCount: number; completedCount: number; avgScore: number }; roleId: number }>(`/api/qc?${params}`, { records: [], stats: { total: 0, pendingCount: 0, completedCount: 0, avgScore: 0 }, roleId: 1 });
+    setRecords(result.records);
+    setStats(result.stats);
+    setRoleId(result.roleId);
     setLoading(false);
   }, [user?.id]);
 

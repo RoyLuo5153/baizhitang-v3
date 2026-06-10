@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth/context';
+import { apiGet, apiPost } from '@/lib/api-client';
 import {
   Zap, Plus, Library, PlayCircle, CheckCircle2, Clock, Users, Target,
   MessageCirclePlus, Pill, Mic, BookOpen, ChevronRight, ChevronDown, ArrowRight, TrendingUp,
@@ -116,25 +117,15 @@ export default function EmpowermentPage() {
   }, []);
 
   async function fetchTrainees() {
-    try {
-      const res = await fetch('/api/trainee-profiles');
-      if (res.ok) {
-        const json = await res.json();
-        setTrainees((json.profiles || []).map((p: Record<string, unknown>) => ({ id: String(p.user_id || p.id), name: String(p.realName || p.real_name || '') })));
-      }
-    } catch { /* ignore */ }
+    const result = await apiGet<{ profiles: Record<string, unknown>[] }>('/api/trainee-profiles', { profiles: [] });
+    setTrainees(result.profiles.map((p) => ({ id: String(p.user_id || p.id), name: String(p.realName || p.real_name || '') })));
   }
 
   async function fetchMyExecutions() {
     if (!user?.id) return;
     setMyExecLoading(true);
-    try {
-      const res = await fetch(`/api/empower/executions?userId=${user.id}`);
-      if (res.ok) {
-        const json = await res.json();
-        setMyExecutions(json.executions || []);
-      }
-    } catch { /* ignore */ }
+    const result = await apiGet<{ executions: any[] }>(`/api/empower/executions?userId=${user.id}`, { executions: [] });
+    setMyExecutions(result.executions);
     setMyExecLoading(false);
   }
 
@@ -163,32 +154,16 @@ export default function EmpowermentPage() {
   }
 
   async function fetchData() {
-    try {
-      const [plansRes, alertsRes, execRes, coachingRes] = await Promise.all([
-        fetch('/api/empower'),
-        fetch('/api/empower/alerts'),
-        fetch('/api/empower/executions'),
-        fetch('/api/empower/coaching'),
-      ]);
-      if (plansRes.ok) {
-        const json = await plansRes.json();
-        setPlans(json.plans || []);
-      }
-      if (alertsRes.ok) {
-        const json = await alertsRes.json();
-        setAlerts(json.alerts || []);
-      }
-      if (execRes.ok) {
-        const json = await execRes.json();
-        setExecutions(json.executions || []);
-      }
-      if (coachingRes.ok) {
-        const json = await coachingRes.json();
-        setCoachingRecords(json.records || []);
-      }
-    } catch {
-      // ignore
-    }
+    const [plansResult, alertsResult, execResult, coachingResult] = await Promise.all([
+      apiGet<{ plans: any[] }>('/api/empower', { plans: [] }),
+      apiGet<{ alerts: any[] }>('/api/empower/alerts', { alerts: [] }),
+      apiGet<{ executions: any[] }>('/api/empower/executions', { executions: [] }),
+      apiGet<{ records: any[] }>('/api/empower/coaching', { records: [] }),
+    ]);
+    setPlans(plansResult.plans);
+    setAlerts(alertsResult.alerts);
+    setExecutions(execResult.executions);
+    setCoachingRecords(coachingResult.records);
     setLoading(false);
   }
 

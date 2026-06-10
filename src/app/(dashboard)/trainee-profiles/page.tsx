@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import {
   Users, AlertTriangle, Plus, Loader2, Archive,
 } from 'lucide-react';
+import { apiGet } from '@/lib/api-client';
 
 // === Types ===
 
@@ -92,54 +93,42 @@ export default function TraineeProfilesPage() {
   });
 
   const fetchProfiles = useCallback(async () => {
-    try {
-      const res = await fetch('/api/trainee-profiles');
-      if (res.ok) {
-        const json = await res.json();
-        const list = json.trainees || [];
-        // 转换API字段名为页面内部使用的格式
-        setProfiles(list.map((p: Record<string, unknown>) => ({
-          user_id: String(p.id),
-          real_name: (p.realName as string) || '',
-          username: (p.username as string) || '',
-          hire_date: (p.hireDate as string) || '',
-          expected_group_date: (p.expectedGroupDate as string) || '',
-          group_date: (p.groupDate as string) || null,
-          department: (p.department as string) || '',
-          position: (p.position as string) || '',
-          phone: '',
-          mentor_id: (p.mentorId as string) || null,
-          mentor_name: (p.mentorName as string) || null,
-          profile_status: (p.profileStatus as string) || 'training',
-          remark: (p.remarks as string) || '',
-          cohort: (p.cohort as string) || '',
-          passed_levels: 0,
-          completed_tasks: 0,
-          open_weaknesses: 0,
-          monthly_data: {},
-          user_status: 'active',
-          created_at: '',
-          qualification_period_days: (p.qualificationPeriodDays as number) || 90,
-          qualification_deadline: (p.qualificationDeadline as string) || null,
-          is_overdue: (p.isOverdue as boolean) || false,
-          overdue_days: (p.overdueDays as number) || 0,
-        })));
-      }
-    } catch { /* ignore */ }
+    const result = await apiGet<{ trainees: Record<string, unknown>[] }>('/api/trainee-profiles', { trainees: [] });
+    setProfiles(result.trainees.map((p) => ({
+      user_id: String(p.id),
+      real_name: (p.realName as string) || '',
+      username: (p.username as string) || '',
+      hire_date: (p.hireDate as string) || '',
+      expected_group_date: (p.expectedGroupDate as string) || '',
+      group_date: (p.groupDate as string) || null,
+      department: (p.department as string) || '',
+      position: (p.position as string) || '',
+      phone: '',
+      mentor_id: (p.mentorId as string) || null,
+      mentor_name: (p.mentorName as string) || null,
+      profile_status: (p.profileStatus as string) || 'training',
+      remark: (p.remarks as string) || '',
+      cohort: (p.cohort as string) || '',
+      passed_levels: 0,
+      completed_tasks: 0,
+      open_weaknesses: 0,
+      monthly_data: {},
+      user_status: 'active',
+      created_at: '',
+      qualification_period_days: (p.qualificationPeriodDays as number) || 90,
+      qualification_deadline: (p.qualificationDeadline as string) || null,
+      is_overdue: (p.isOverdue as boolean) || false,
+      overdue_days: (p.overdueDays as number) || 0,
+    })));
     setLoading(false);
   }, []);
 
   const fetchMentors = useCallback(async () => {
-    try {
-      const res = await fetch('/api/users?roleId=2');
-      if (res.ok) {
-        const json = await res.json();
-        setMentors((json.users || []).map((u: { id: string; realName: string }) => ({
-          id: u.id,
-          real_name: u.realName,
-        })));
-      }
-    } catch { /* ignore */ }
+    const result = await apiGet<{ users: { id: string; realName: string }[] }>('/api/users?roleId=2', { users: [] });
+    setMentors(result.users.map((u) => ({
+      id: u.id,
+      real_name: u.realName,
+    })));
   }, []);
 
   useEffect(() => { fetchProfiles(); fetchMentors(); }, [fetchProfiles, fetchMentors]);

@@ -6,6 +6,7 @@ import {
   CheckCircle2, TrendingUp, ChevronUp,
   FileUp, Download, X, FileText,
 } from 'lucide-react';
+import { apiGet } from '@/lib/api-client';
 
 /* ── Types ── */
 interface BusinessRecord {
@@ -53,18 +54,8 @@ export default function ScrmImportPage() {
   }, []);
 
   async function fetchData() {
-    try {
-      const [bizRes, usersRes] = await Promise.all([
-        fetch('/api/business'),
-        fetch('/api/auth/me'),
-      ]);
-      if (bizRes.ok) {
-        const json = await bizRes.json();
-        setRecords(json.data || []);
-      }
-    } catch {
-      // empty
-    }
+    const result = await apiGet<{ data: BusinessRecord[] }>('/api/business', { data: [] });
+    setRecords(result.data);
     setLoading(false);
   }
 
@@ -194,16 +185,9 @@ function FunnelChart() {
 
   useEffect(() => {
     async function fetchFunnel() {
-      try {
-        const res = await fetch('/api/business/funnel');
-        if (res.ok) {
-          const json = await res.json();
-          if (json.teamAverages) setTeamAverages(json.teamAverages as Record<FunnelStageKey, number>);
-          if (json.traineeBreakdowns) setTraineeBreakdowns(json.traineeBreakdowns as Record<FunnelStageKey, { name: string; rate: number }[]>);
-        }
-      } catch {
-        // API请求失败，不使用mock数据
-      }
+      const result = await apiGet<{ teamAverages?: Record<FunnelStageKey, number>; traineeBreakdowns?: Record<FunnelStageKey, { name: string; rate: number }[]> }>('/api/business/funnel', {});
+      if (result.teamAverages) setTeamAverages(result.teamAverages);
+      if (result.traineeBreakdowns) setTraineeBreakdowns(result.traineeBreakdowns);
       setFunnelLoading(false);
     }
     fetchFunnel();

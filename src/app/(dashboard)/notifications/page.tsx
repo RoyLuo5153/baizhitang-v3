@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Bell, AlertTriangle, TrendingDown, TrendingUp, BookOpen, MessageSquare, ChevronRight, Check, CheckCheck, Filter, ClipboardList, Clock, Users } from 'lucide-react';
 import { useAuth } from '@/lib/auth/context';
+import { apiGet } from '@/lib/api-client';
 
 interface Notification {
   id: number;
@@ -53,17 +54,8 @@ export default function NotificationsPage() {
   }, [user?.id]);
 
   const fetchNotifications = async () => {
-    try {
-      const res = await fetch(`/api/notifications${user?.id ? `?userId=${user.id}` : ''}`);
-      if (res.ok) {
-        const data = await res.json();
-        setNotifications(data.notifications || []);
-      } else {
-        setNotifications([]);
-      }
-    } catch {
-      setNotifications([]);
-    }
+    const result = await apiGet<{ notifications: Notification[] }>(`/api/notifications${user?.id ? `?userId=${user.id}` : ''}`, { notifications: [] });
+    setNotifications(result.notifications);
     setLoading(false);
   };
 

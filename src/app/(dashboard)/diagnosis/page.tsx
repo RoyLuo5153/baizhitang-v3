@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useMemo, useCallback } from 'react';
+import { apiGet } from '@/lib/api-client';
 import {
   ScanSearch, Users, AlertTriangle, CheckCircle2, TrendingDown,
   ChevronRight, Activity, Target, Route as RouteIcon, User,
@@ -321,40 +322,24 @@ export default function DiagnosisPage() {
   }, []);
 
   async function fetchDiagnosis() {
-    try {
-      const res = await fetch('/api/diagnosis?view=team');
-      if (res.ok) {
-        const json = await res.json();
-        setData(json);
-      }
-    } catch {
-      // API请求失败，不使用mock数据，展示空状态
-    }
+    const result = await apiGet<DiagnosisData | null>('/api/diagnosis?view=team', null);
+    setData(result);
     setLoading(false);
   }
 
   async function fetchPlansAndExecutions() {
-    try {
-      const [plansRes, execRes] = await Promise.all([
-        fetch('/api/empower'),
-        fetch('/api/empower/executions'),
-      ]);
-      if (plansRes.ok) {
-        const json = await plansRes.json();
-        setPlans(json.plans || []);
+    const [plansResult, execResult] = await Promise.all([
+      apiGet<{ plans: EmpowerPlan[] }>('/api/empower', { plans: [] }),
+      apiGet<{ executions: { plan_id: string; user_id: string; status: string }[] }>('/api/empower/executions', { executions: [] }),
+    ]);
+    setPlans(plansResult.plans);
+    const set = new Set<string>();
+    execResult.executions.forEach((e) => {
+      if (e.status === 'assigned' || e.status === 'in_progress') {
+        set.add(`${e.plan_id}:${e.user_id}`);
       }
-      if (execRes.ok) {
-        const json = await execRes.json();
-        const execs = json.executions || [];
-        const set = new Set<string>();
-        execs.forEach((e: { plan_id: string; user_id: string; status: string }) => {
-          if (e.status === 'assigned' || e.status === 'in_progress') {
-            set.add(`${e.plan_id}:${e.user_id}`);
-          }
-        });
-        setPushedSet(set);
-      }
-    } catch { /* ignore */ }
+    });
+    setPushedSet(set);
   }
 
   async function handlePushPlan(planId: string, memberId: string, metricKey: string) {

@@ -7,6 +7,7 @@ import {
   AlertTriangle, Star, Users,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth/context';
+import { apiGet } from '@/lib/api-client';
 
 // === Types ===
 
@@ -117,16 +118,9 @@ export default function AssessmentPage() {
   const [scoringRecord, setScoringRecord] = useState<AssessmentRecord | null>(null);
 
   const fetchData = useCallback(async () => {
-    try {
-      const res = await fetch('/api/assessment');
-      if (res.ok) {
-        const json = await res.json();
-        setTasks(json.tasks || []);
-        setRecords(json.assessments || []);
-      }
-    } catch {
-      // empty
-    }
+    const result = await apiGet<{ tasks: AssessmentTask[]; assessments: AssessmentRecord[] }>('/api/assessment', { tasks: [], assessments: [] });
+    setTasks(result.tasks);
+    setRecords(result.assessments);
     setLoading(false);
   }, []);
 

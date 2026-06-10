@@ -70,4 +70,23 @@
 
 > 当 LESSONS.md 中同类别经验累计 ≥3 条时，提炼预防规则写入此处。
 
-（暂无提炼规则，待经验积累后生成）
+### R1: API调用必须使用apiClient，禁止原生fetch
+
+**来源**：#002 + #003 + #004 → 类型安全类经验 ≥3 条
+
+| 规则 | 说明 |
+|------|------|
+| 禁止原生fetch | 新增页面的数据获取必须用`apiGet<T>('/api/xxx', { defaultValue })`，不用`fetch().json()` |
+| 默认值必填 | apiGet的defaultValue必须包含所有数组字段，sanitizeArrays依赖此值兜底 |
+| 类型必填 | apiGet的泛型T必须定义完整响应结构，禁止用any或省略泛型 |
+| API不返回{error} | 后端API在无数据时应返回空数组/空对象的结构化响应，而非`{error: 'xxx'}` |
+
+**为什么是结构防错而非规则**：原生fetch返回any，TypeScript无法拦截null.map()崩溃。apiGet的sanitizeArrays自动补全缺失数组，开发者不需要记得检查null——结构让人不可能犯这个错。
+
+### R2: 页面必须被ErrorBoundary包裹
+
+**来源**：#003 + #004
+
+- 所有dashboard子页面已通过layout.tsx的ErrorBoundary自动包裹
+- 新增独立页面（如login）如果不在dashboard布局下，需手动包裹
+- ErrorBoundary确保渲染错误有友好兜底UI，不会白屏

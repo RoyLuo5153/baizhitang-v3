@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/lib/auth/context';
+import { apiGet } from '@/lib/api-client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertTriangle, TrendingUp, TrendingDown, Minus, Activity, Users, BookOpen, Target, Zap } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell } from 'recharts';
@@ -64,13 +65,11 @@ export default function GlobalOverviewPage() {
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
-    try {
-      // 获取诊断数据
-      const diagRes = await fetch('/api/diagnosis?view=overview');
-      const diagJson = await diagRes.json();
+    // 获取诊断数据
+    const diagResult = await apiGet<{ members: DiagnosisMember[]; summary: DiagnosisSummary }>('/api/diagnosis?view=overview', { members: [], summary: { total: 0, A: 0, B: 0, C: 0, D: 0 } });
 
-      const members: DiagnosisMember[] = diagJson.members || [];
-      const summary: DiagnosisSummary = diagJson.summary || { total: 0, A: 0, B: 0, C: 0, D: 0 };
+    const members: DiagnosisMember[] = diagResult.members;
+    const summary: DiagnosisSummary = diagResult.summary;
 
       // 计算KPI
       const totalTrainees = members.length;
@@ -107,20 +106,15 @@ export default function GlobalOverviewPage() {
 
       // 赋能执行统计 — 从executions API获取真实数据
       let empowerStats = { assigned: 0, inProgress: 0, completed: 0, verified: 0, total: 0 };
-      try {
-        const execRes = await fetch('/api/empower/executions');
-        if (execRes.ok) {
-          const execJson = await execRes.json();
-          const execs = execJson.executions || [];
-          empowerStats = {
-            assigned: execs.filter((e: any) => e.status === 'assigned').length,
-            inProgress: execs.filter((e: any) => e.status === 'in_progress').length,
-            completed: execs.filter((e: any) => e.status === 'completed').length,
-            verified: execs.filter((e: any) => e.status === 'verified').length,
-            total: execs.length,
-          };
-        }
-      } catch { /* ignore */ }
+      const execResult = await apiGet<{ executions: any[] }>('/api/empower/executions', { executions: [] });
+      const execs = execResult.executions;
+      empowerStats = {
+        assigned: execs.filter((e: any) => e.status === 'assigned').length,
+        inProgress: execs.filter((e: any) => e.status === 'in_progress').length,
+        completed: execs.filter((e: any) => e.status === 'completed').length,
+        verified: execs.filter((e: any) => e.status === 'verified').length,
+        total: execs.length,
+      };
 
       // 雷达图数据 — 各维度团队均值 vs 基准(75)
       const allDimensions = new Set<string>();
@@ -184,11 +178,7 @@ export default function GlobalOverviewPage() {
         alerts: alerts.slice(0, 8),
         radarData,
       });
-    } catch (err) {
-      console.error('Failed to fetch overview data:', err);
-    } finally {
       setLoading(false);
-    }
   }, []);
 
   useEffect(() => { fetchData(); }, [fetchData]);

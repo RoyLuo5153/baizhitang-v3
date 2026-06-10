@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { apiGet } from '@/lib/api-client';
 import {
   AlertTriangle, AlertCircle, Info, Bell, Users, Clock, TrendingDown,
   Zap, Shield, FileQuestion, Headphones, BookOpen, Loader2,
@@ -70,25 +71,20 @@ export default function TraineeBoardPage() {
 
   // Get current user
   useEffect(() => {
-    fetch('/api/auth/me').then(r => r.ok ? r.json() : null).then(d => {
+    apiGet<{ user?: { id: string; role: string } } | null>('/api/auth/me', null).then(d => {
       if (d?.user) setCurrentUser({ id: d.user.id, role: d.user.role });
-    }).catch(() => {});
+    });
   }, []);
 
   const fetchAlerts = useCallback(async () => {
     if (!currentUser) return;
-    try {
-      const params = new URLSearchParams({
-        userId: currentUser.id,
-        roleId: currentUser.role,
-      });
-      const res = await fetch(`/api/trainee-alerts?${params}`);
-      if (res.ok) {
-        const json = await res.json();
-        setAlerts(json.alerts || []);
-        setStats(json.stats || null);
-      }
-    } catch { /* ignore */ }
+    const params = new URLSearchParams({
+      userId: currentUser.id,
+      roleId: currentUser.role,
+    });
+    const result = await apiGet<{ alerts: AlertItem[]; stats: AlertStats | null }>(`/api/trainee-alerts?${params}`, { alerts: [], stats: null });
+    setAlerts(result.alerts);
+    setStats(result.stats);
     setLoading(false);
   }, [currentUser]);
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useAuth } from '@/lib/auth/context';
+import ErrorBoundary from '@/components/error-boundary';
 import { useRouter, usePathname } from 'next/navigation';
 import { getNavForRole, NAV_ITEMS, ROLE_DISPLAY, RoleCode } from '@/lib/auth/permissions';
 import {
@@ -158,7 +159,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {/* Page content */}
         <main className="flex-1 overflow-y-auto p-6">
-          {children}
+          <ErrorBoundary>
+            {children}
+          </ErrorBoundary>
         </main>
       </div>
     </div>

@@ -5,6 +5,7 @@ import {
   ChartBar, Users, TrendingUp, Target, AlertTriangle,
   CheckCircle2, Clock, Award,
 } from 'lucide-react';
+import { apiGet } from '@/lib/api-client';
 
 interface DashboardData {
   summary: {
@@ -419,29 +420,21 @@ export default function DashboardPage() {
 
   useEffect(() => {
     async function loadDashboard() {
-      try {
-        const [diagRes, heatmapRes] = await Promise.all([
-          fetch('/api/diagnosis?view=team'),
-          fetch('/api/learning/heatmap'),
-        ]);
+      const [diagResult, heatmapResult] = await Promise.all([
+        apiGet<{ summary: { A: number; B: number; C: number; D: number; total: number } }>('/api/diagnosis?view=team', { summary: { A: 0, B: 0, C: 0, D: 0, total: 0 } }),
+        apiGet<any>('/api/learning/heatmap', {}),
+      ]);
 
-        let quadrantDist = { A: 0, B: 0, C: 0, D: 0 };
-        let totalMembers = 0;
+      let quadrantDist = { A: 0, B: 0, C: 0, D: 0 };
+      let totalMembers = 0;
 
-        if (diagRes.ok) {
-          const diagJson = await diagRes.json();
-          quadrantDist = diagJson.summary || quadrantDist;
-          totalMembers = diagJson.summary?.total || 0;
-        }
+      quadrantDist = diagResult.summary;
+      totalMembers = diagResult.summary.total;
 
-        if (heatmapRes.ok) {
-          const heatmapJson = await heatmapRes.json();
-          setHeatmapData(heatmapJson);
-          // Use heatmap trainee count as source of truth for total
-          if (heatmapJson.trainees?.length > 0) {
-            totalMembers = heatmapJson.trainees.length;
-          }
-        }
+      setHeatmapData(heatmapResult);
+      if (heatmapResult.trainees?.length > 0) {
+        totalMembers = heatmapResult.trainees.length;
+      }
 
         // Compute real avg learning progress from heatmap data
         let avgLearningProgress = 0;
@@ -462,10 +455,6 @@ export default function DashboardPage() {
           },
           quadrantDistribution: quadrantDist,
         });
-      } catch {
-        // No fallback to mock — show empty state
-        setData(null);
-      }
       setLoading(false);
     }
     loadDashboard();
