@@ -67,20 +67,30 @@ export default function TraineeBoardPage() {
   const [loading, setLoading] = useState(true);
   const [filterLevel, setFilterLevel] = useState<string>('all');
   const [filterType, setFilterType] = useState<string>('all');
-  const [currentUser, setCurrentUser] = useState<{ id: string; role: string } | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ id: string; role: string; roleId: number } | null>(null);
+
+  // Role name to roleId mapping
+  const roleNameToId: Record<string, number> = {
+    trainee: 1, mentor: 2, teacher: 3, training_manager: 4, boss: 5
+  };
 
   // Get current user
   useEffect(() => {
     apiGet<{ user?: { id: string; role: string } } | null>('/api/auth/me', null).then(d => {
-      if (d?.user) setCurrentUser({ id: d.user.id, role: d.user.role });
-    });
+      if (d?.user) {
+        setCurrentUser({ id: d.user.id, role: d.user.role, roleId: roleNameToId[d.user.role] || 1 });
+      } else {
+        // auth/me failed - stop loading
+        setLoading(false);
+      }
+    }).catch(() => setLoading(false));
   }, []);
 
   const fetchAlerts = useCallback(async () => {
     if (!currentUser) return;
     const params = new URLSearchParams({
       userId: currentUser.id,
-      roleId: currentUser.role,
+      roleId: String(currentUser.roleId),
     });
     const result = await apiGet<{ alerts: AlertItem[]; stats: AlertStats | null }>(`/api/trainee-alerts?${params}`, { alerts: [], stats: null });
     setAlerts(result.alerts);
@@ -99,12 +109,12 @@ export default function TraineeBoardPage() {
 
   // Role-based label
   const roleLabel = (() => {
-    switch (currentUser?.role) {
-      case '1': return '我的待办';
-      case '3': return '带教预警';
-      case '4': return '教务预警';
-      case '2': return '全局预警';
-      case '5': return '经营预警';
+    switch (currentUser?.roleId) {
+      case 1: return '我的待办';
+      case 2: return '带教预警';
+      case 3: return '教务预警';
+      case 4: return '培训管理预警';
+      case 5: return '经营预警';
       default: return '预警看板';
     }
   })();
