@@ -510,7 +510,7 @@ function TraineeModuleView({ user }: { user: { id: string; role: string } }) {
     );
   }
 
-  if (!data) {
+  if (!data || !data.modules) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-destructive">加载失败，请刷新重试</div>
@@ -707,7 +707,7 @@ function TraineeModuleView({ user }: { user: { id: string; role: string } }) {
               <span className="text-xs font-medium text-yellow-400">推荐赋能方案</span>
             </div>
             <div className="space-y-2">
-              {data.recommendedPlans.map((rp, idx) => (
+              {(data.recommendedPlans || []).map((rp, idx) => (
                 <div key={idx} className="flex items-center gap-3 p-2.5 rounded-md bg-white/5">
                   <Activity className="w-4 h-4 text-white/60 shrink-0" />
                   <span className="text-sm text-white/80 flex-1">{rp.planName}</span>
@@ -801,7 +801,7 @@ function NonTraineeView({ user }: { user: { id: string; role: string } }) {
             </tr>
           </thead>
           <tbody>
-            {data.modules.map(mod => (
+            {(data.modules || []).map(mod => (
               <tr key={mod.code} className="border-b border-border/50 hover:bg-muted/50">
                 <td className="px-4 py-3 font-medium text-foreground">{mod.name}</td>
                 <td className="px-4 py-3 text-muted-foreground">{mod.stageName}</td>

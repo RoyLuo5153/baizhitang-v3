@@ -17,8 +17,57 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const userId = searchParams.get('userId');
 
+  // 无userId时返回模块概览（不含学员进度）
   if (!userId) {
-    return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
+    const { data: modules, error: modulesError } = await client
+      .from('assessment_modules')
+      .select('*')
+      .eq('is_active', true)
+      .order('sort_order');
+
+    if (modulesError) {
+      return NextResponse.json({ error: modulesError.message }, { status: 500 });
+    }
+
+    const { data: questionStats } = await client
+      .from('questions')
+      .select('module, question_type')
+      .eq('is_active', true);
+
+    const moduleQuestionMap: Record<string, number> = {};
+    for (const q of (questionStats || []) as Array<{ module: string | null }>) {
+      const mod = q.module || 'unknown';
+      moduleQuestionMap[mod] = (moduleQuestionMap[mod] || 0) + 1;
+    }
+
+    const result = (modules || []).map((m: Record<string, unknown>) => ({
+      code: m.code,
+      name: m.name,
+      stage: m.stage,
+      stageName: STAGE_NAMES[m.stage as string] || '未知阶段',
+      sortOrder: m.sort_order,
+      description: m.description || '',
+      questionCount: moduleQuestionMap[m.code as string] || (m.question_count as number) || 10,
+      passThreshold: m.pass_threshold || 80,
+      status: 'active' as const,
+      bestScore: null,
+      attempts: 0,
+      lastAttemptAt: null,
+      passedAt: null,
+      questionStats: { single: 0, multi: 0, tf: 0, total: moduleQuestionMap[m.code as string] || 0 },
+    }));
+
+    return NextResponse.json({
+      modules: result,
+      currentStage: 'foundation',
+      processStatus: 'not_started',
+      resultStatus: 'not_started',
+      stageProgress: {},
+      totalPassed: 0,
+      totalModules: result.length,
+      recommendedPlans: [],
+      hasAlert: false,
+    });
   }
 
   // 1. 获取所有模块定义
