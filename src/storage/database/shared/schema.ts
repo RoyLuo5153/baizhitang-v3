@@ -279,6 +279,22 @@ export const stageRules = pgTable("stage_rules", {
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }),
 });
 
+export const stageTransitions = pgTable("stage_transitions", {
+	id: serial().primaryKey().notNull(),
+	userId: varchar("user_id", { length: 36 }).notNull(),
+	fromStage: integer("from_stage").notNull(),
+	toStage: integer("to_stage").notNull(),
+	ruleId: integer("rule_id"),
+	triggeredBy: varchar("triggered_by", { length: 36 }),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("st_user_id_idx").on(table.userId),
+	index("st_created_at_idx").on(table.createdAt),
+	foreignKey({ columns: [table.userId], foreignColumns: [users.id] }),
+	foreignKey({ columns: [table.ruleId], foreignColumns: [stageRules.id] }),
+	foreignKey({ columns: [table.triggeredBy], foreignColumns: [users.id] }),
+]);
+
 export const roles = pgTable("roles", {
 	id: serial().primaryKey().notNull(),
 	name: varchar({ length: 50 }).notNull(),

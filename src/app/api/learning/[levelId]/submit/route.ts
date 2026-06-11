@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
 import { onQuizFailed, onQuizPassed } from '@/lib/triggers';
+import { checkAndTransitionStage } from '@/lib/stage-engine';
 
 export const dynamic = 'force-dynamic';
 
@@ -159,6 +160,17 @@ export async function POST(
         .eq('user_id', userId);
       const totalPassed = (allProgress || []).filter((p: any) => p.status === 'passed').length;
       await onQuizPassed(userId, traineeName, level, totalPassed);
+
+      // 阶段转换引擎：闯关通过后自动检查是否满足阶段转换条件
+      try {
+        const transitionResult = await checkAndTransitionStage(userId);
+        if (transitionResult.transitioned) {
+          console.info(`Stage transitioned: user=${userId} ${transitionResult.fromStage}->${transitionResult.toStage} reason=${transitionResult.reason}`);
+        }
+      } catch (transitionErr) {
+        // 阶段转换失败不影响答题结果
+        console.error('Stage transition error:', transitionErr);
+      }
     }
   } catch (triggerErr) {
     // 联动触发失败不影响答题结果

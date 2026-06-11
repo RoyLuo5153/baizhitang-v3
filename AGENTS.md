@@ -20,6 +20,7 @@
 - **逐项对标**: 每指标独立对标合格/良好/优秀阈值，非加权总分
 - **四象限**: A(全合格)/B(结果不合格)/C(过程不合格)/D(全不合格)
 - **三阶段**: 阶段一→二(闯关7关全通过)→三(连续4周A类)，连续2周D类触发复训
+- **阶段转换引擎(L1已完成)**: stage-engine.ts消费stage_rules表，自动检查闯关进度+业务指标阈值，满足条件自动UPDATE users.stage + INSERT stage_transitions记录 + 通知相关人。3条规则：1→2(闯关全通过)、2→3(闯关+面诊率60%)、3→4(闯关+面诊率80%+加V率70%)。幂等设计：已转换阶段不会重复触发
 - **5角色**: trainee/mentor/teacher/training_manager/boss
 - **系统盯人**: 角色动作分离 + 联动触发（演练提交→自动质检→低分赋能→通知导师）
 - **角色权限**: 闯关解锁仅对trainee生效，其他角色全量可见可操作
@@ -85,7 +86,10 @@
 │   │       ├── trainee-profiles/ # 新人档案
 │   │       ├── trainee-monthly/ # 月度数据
 │   │       ├── users/       # 用户管理CRUD
-│   │       ├── stage-rules/ # 阶段规则CRUD
+│   │       ├── stage-rules/       # 阶段规则CRUD
+│   │       ├── stage-transitions/ # 阶段转换记录
+│   │       ├── action-scores/     # 3视角动作评分
+│   │       ├── trust-score/       # 信任度计算
 │   │       ├── resources/   # 资料CRUD
 │   │       ├── resources/categories/ # 资料分类CRUD
 │   │       ├── knowledge/   # 知识库CRUD
@@ -93,6 +97,9 @@
 │   ├── components/ui/      # Shadcn UI 组件库
 │   ├── lib/
 │   │   ├── auth/           # 认证（context/jwt/permissions）
+│   │   ├── stage-engine.ts # 阶段转换引擎
+│   │   ├── trust-engine.ts # 信任度计算引擎
+│   │   ├── triggers.ts     # 事件触发器（通知+联动）
 │   │   └── utils.ts        # cn工具函数
 │   └── storage/database/   # Supabase客户端+Schema
 ├── next.config.ts
@@ -100,9 +107,9 @@
 └── tsconfig.json
 ```
 
-## 数据库表（24张）
+## 数据库表（26张）
 
-核心表: users, roles, permissions, role_permissions, learning_levels, level_progress, quiz_attempts, questions, qc_records, business_data, thresholds, empower_plans, empower_executions, mentor_trainees, stage_rules, announcements, resources, daily_assessments, configurations, growth_stages, daily_plans, core_actions(v2已迁移), action_scores, special_patient_actions(v2已迁移)
+核心表: users, roles, permissions, role_permissions, learning_levels, level_progress, quiz_attempts, questions, qc_records, business_data, thresholds, empower_plans, empower_executions, mentor_trainees, stage_rules, stage_transitions, announcements, resources, daily_assessments, configurations, growth_stages, daily_plans, core_actions(v2已迁移), action_scores(v2已迁移), special_patient_actions(v2已迁移), service_nodes, trust_snapshots
 
 ## 测试账号
 

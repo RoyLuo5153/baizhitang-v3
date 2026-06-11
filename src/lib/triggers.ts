@@ -231,11 +231,7 @@ export async function onQuizPassed(
   totalPassed: number
 ): Promise<void> {
   const mentorId = await getMentorId(traineeId);
-
-  // 闯关7关全通过 → 进入练习期
-  if (totalPassed === 7) {
-    await onStageTransition(traineeId, traineeName, 'learning', 'practice');
-  }
+  // 阶段转换已由 stage-engine.ts 自动处理，此处不再硬编码
 }
 
 /**
@@ -476,15 +472,7 @@ export async function onModulePassed(
   const allModulesPassed = await checkAllModulesPassed(traineeId, stage);
 
   if (allModulesPassed) {
-    if (stage === 'foundation') {
-      // 基础通关全部通过 → 进入实操阶段
-      await updateTraineeStage(traineeId, 'practice', 'monitoring', 'insufficient_data');
-      await onStageTransition(traineeId, traineeName, '基础通关', '实操通关');
-    } else if (stage === 'practice') {
-      // 实操通关全部通过 → 进入合格阶段
-      await updateTraineeStage(traineeId, 'qualified', 'passed', 'passed');
-      await onStageTransition(traineeId, traineeName, '实操通关', '独立达标');
-    }
+    // 阶段转换已由 stage-engine.ts 自动处理，此处仅做模块通关通知
   }
 
   // 通知带教老师该模块已通过
