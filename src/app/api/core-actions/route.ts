@@ -3,27 +3,29 @@ import { getSupabaseClient } from '@/storage/database/supabase-client';
 
 export const dynamic = 'force-dynamic';
 
-// GET /api/core-actions - 获取19个核心动作及评分
+// GET /api/core-actions - 获取19个核心动作(按节点分组)
+// 查询参数: nodeId, trustElement, withScores(userId), withNodes
 export async function GET(request: NextRequest) {
   const token = request.headers.get('authorization')?.replace('Bearer ', '');
   const client = getSupabaseClient(token);
 
   const { searchParams } = new URL(request.url);
+  const nodeId = searchParams.get('nodeId');
+  const trustElement = searchParams.get('trustElement');
   const userId = searchParams.get('userId');
-  const nodeKey = searchParams.get('nodeKey');
+  const withNodes = searchParams.get('withNodes') === 'true';
 
   // 获取核心动作
   let query = client
     .from('core_actions')
     .select('*')
-    .order('node_key, action_index');
+    .order('action_no');
 
-  if (nodeKey) {
-    query = client
-      .from('core_actions')
-      .select('*')
-      .eq('node_key', nodeKey)
-      .order('action_index');
+  if (nodeId) {
+    query = query.eq('node_id', Number(nodeId));
+  }
+  if (trustElement) {
+    query = query.eq('trust_element', trustElement);
   }
 
   const { data: actions, error } = await query;
@@ -32,123 +34,109 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  // 获取用户的评分记录
-  let userScores: any[] = [];
-  if (userId) {
-    const { data: scores } = await client
-      .from('action_scores')
+  // 获取节点定义
+  let nodes: any[] = [];
+  if (withNodes || !nodeId) {
+    const { data: nodeData } = await client
+      .from('service_nodes')
       .select('*')
-      .eq('user_id', userId)
-      .order('scored_at', { ascending: false });
-    userScores = scores || [];
+      .order('sort_order');
+    nodes = nodeData || [];
   }
 
-  // 获取特殊情况补充动作
-  const { data: specialActions } = await client
-    .from('special_patient_actions')
-    .select('*')
-    .order('case_type, action_index');
+  // 获取用户评分记录（如果提供了userId）
+  let userScores: Record<string, any[]> = {};
+  if (userId) {
+    // 先获取用户的质检记录ID
+    const { data: qcRecords } = await client
+      .from('qc_records')
+      .select('id')
+      .eq('user_id', userId);
+
+    const recordIds = (qcRecords || []).map(r => r.id);
+
+    if (recordIds.length > 0) {
+      const { data: scores } = await client
+        .from('action_scores')
+        .select('*')
+        .in('record_id', recordIds);
+
+      // 按 action_no 分组
+      for (const s of scores || []) {
+        if (!userScores[s.action_no]) userScores[s.action_no] = [];
+        userScores[s.action_no].push(s);
+      }
+    }
+  }
 
   // 按节点分组
-  const nodeGroups: Record<string, any> = {};
+  const nodeGroups: Record<number, any> = {};
+  for (const node of nodes) {
+    nodeGroups[node.id] = {
+      id: node.id,
+      name: node.node_name,
+      timeType: node.time_type,
+      weight: Number(node.weight),
+      trustFocus: node.trust_focus,
+      description: node.description,
+      actions: [],
+    };
+  }
+
   for (const action of actions || []) {
-    if (!nodeGroups[action.node_key]) {
-      nodeGroups[action.node_key] = {
-        key: action.node_key,
-        name: action.node_name,
-        weight: action.node_weight,
+    if (!nodeGroups[action.node_id]) {
+      // 动作引用了不存在的节点，创建占位
+      nodeGroups[action.node_id] = {
+        id: action.node_id,
+        name: `节点${action.node_id}`,
         actions: [],
       };
     }
-    
-    // 查找该动作的最新评分
-    const latestScore = userScores.find(s => s.action_id === action.id);
-    
-    nodeGroups[action.node_key].actions.push({
-      id: action.id,
-      index: action.action_index,
+
+    const scores = userScores[action.action_no] || [];
+    const latestScore = scores.length > 0
+      ? scores.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
+      : null;
+
+    nodeGroups[action.node_id].actions.push({
+      actionNo: action.action_no,
       name: action.action_name,
-      description: action.action_description,
+      timeType: action.time_type,
+      isV2New: action.is_v2_new,
+      trustElement: action.trust_element,
+      weight: Number(action.weight),
+      description: action.description,
+      purpose: action.purpose,
       keyPoints: action.key_points,
-      scriptTemplate: action.script_template,
-      scoring: {
-        5: action.scoring_5,
-        4: action.scoring_4,
-        3: action.scoring_3,
-        2: action.scoring_2,
-        0: action.scoring_0,
-      },
+      scoringCriteria: action.scoring_criteria,
+      executionForms: action.execution_forms,
       latestScore: latestScore ? {
         score: latestScore.score,
-        perspective: latestScore.review_perspective,
-        comment: latestScore.comment,
-        scoredAt: latestScore.scored_at,
+        perspective: latestScore.perspective,
+        executed: latestScore.executed,
+        notes: latestScore.notes,
+        scoredAt: latestScore.created_at,
       } : null,
     });
   }
 
-  // 特殊情况按类型分组
-  const specialGroups: Record<string, any> = {};
-  for (const sa of specialActions || []) {
-    if (!specialGroups[sa.case_type]) {
-      specialGroups[sa.case_type] = {
-        key: sa.case_type,
-        name: sa.case_name,
-        actions: [],
-      };
-    }
-    specialGroups[sa.case_type].actions.push({
-      id: sa.id,
-      index: sa.action_index,
-      name: sa.action_name,
-      description: sa.action_description,
-      scriptTemplate: sa.script_template,
-    });
-  }
+  // 获取特殊情况类型列表
+  const { data: specialTypes } = await client
+    .from('special_patient_actions')
+    .select('special_type')
+    .limit(1);
+
+  const specialCaseTypes = [
+    { key: '未按时用药', name: '未按时用药', actions: ['用药催促'] },
+    { key: '延迟用药', name: '延迟用药', actions: ['延迟原因挖掘', '承诺建立'] },
+    { key: '用药中断', name: '用药中断', actions: ['中断响应', '原因挖掘', '重新激活话术', '阶段性归零'] },
+    { key: '不规律用药', name: '不规律用药', actions: ['习惯培养', '多重提醒', '依从性评估'] },
+  ];
 
   return NextResponse.json({
-    nodes: Object.values(nodeGroups),
-    specialCases: Object.values(specialGroups),
+    nodes: Object.values(nodeGroups).sort((a: any, b: any) => (a.id ?? 0) - (b.id ?? 0)),
+    specialCases: specialCaseTypes,
     totalActions: (actions || []).length,
+    v2NewCount: (actions || []).filter((a: any) => a.is_v2_new).length,
   });
-}
-
-// POST /api/core-actions - 提交核心动作评分
-export async function POST(request: NextRequest) {
-  const token = request.headers.get('authorization')?.replace('Bearer ', '');
-  const client = getSupabaseClient(token);
-
-  try {
-    const body = await request.json();
-    const { userId, actionId, score, perspective, reviewerId, comment } = body;
-
-    if (!userId || !actionId || score === undefined) {
-      return NextResponse.json({ error: '缺少必要参数' }, { status: 400 });
-    }
-
-    if (![0, 2, 3, 4, 5].includes(score)) {
-      return NextResponse.json({ error: '评分必须为0/2/3/4/5' }, { status: 400 });
-    }
-
-    const { data, error } = await client
-      .from('action_scores')
-      .insert({
-        user_id: userId,
-        action_id: actionId,
-        score,
-        review_perspective: perspective || 'self',
-        reviewer_id: reviewerId || null,
-        comment: comment || null,
-      })
-      .select()
-      .maybeSingle();
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    return NextResponse.json({ success: true, scoreRecord: data });
-  } catch (err) {
-    return NextResponse.json({ error: '请求格式错误' }, { status: 400 });
-  }
 }

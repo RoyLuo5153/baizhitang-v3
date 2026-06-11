@@ -27,16 +27,14 @@ interface PracticeTask {
 }
 
 interface CoreAction {
-  id: number;
-  node_key: string;
-  node_name: string;
-  action_index: number;
-  action_name: string;
-  scoring_5: string | null;
-  scoring_4: string | null;
-  scoring_3: string | null;
-  scoring_2: string | null;
-  scoring_0: string | null;
+  actionNo: number;
+  name: string;
+  nodeId: number;
+  nodeName: string;
+  trustElement: string;
+  weight: number;
+  scoringCriteria: Record<string, string> | null;
+  executionForms: string[] | null;
 }
 
 const SCORE_LABELS: Record<number, { label: string; color: string }> = {
@@ -487,11 +485,11 @@ export default function PracticePage() {
               <div className="p-3 rounded-lg border text-xs" style={{ backgroundColor: '#FAFAFA', borderColor: '#E6E1D8' }}>
                 <p className="font-medium mb-1" style={{ color: '#102A43' }}>评分标准参考：</p>
                 {coreActions
-                  .filter(a => reviewModal.task_tag?.includes(a.node_name) || reviewModal.title.includes(a.action_name))
+                  .filter(a => reviewModal.task_tag?.includes(a.nodeName) || reviewModal.title.includes(a.name))
                   .slice(0, 3)
                   .map(a => (
-                    <div key={a.id} className="mb-1" style={{ color: '#667085' }}>
-                      {a.action_name}：{a[`scoring_${reviewScore}` as keyof CoreAction] as string || '—'}
+                    <div key={a.actionNo} className="mb-1" style={{ color: '#667085' }}>
+                      {a.name}：{a.scoringCriteria?.[String(reviewScore)] || '—'}
                     </div>
                   ))
                 }

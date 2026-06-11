@@ -150,18 +150,38 @@ export async function GET(request: NextRequest) {
         };
       });
 
-      // 获取核心动作列表（用于评分）
+      // 获取核心动作列表（用于评分，新schema）
       const { data: coreActions } = await supabase
         .from('core_actions')
-        .select('id, node_key, node_name, action_index, action_name, scoring_5, scoring_4, scoring_3, scoring_2, scoring_0')
-        .order('node_key', { ascending: true })
-        .order('action_index', { ascending: true });
+        .select('action_no, action_name, node_id, trust_element, weight, scoring_criteria, execution_forms')
+        .order('action_no');
+
+      // 获取节点名称映射
+      const { data: serviceNodes } = await supabase
+        .from('service_nodes')
+        .select('id, node_name')
+        .order('sort_order');
+      const nodeNameMap: Record<number, string> = {};
+      for (const n of serviceNodes || []) {
+        nodeNameMap[(n as any).id] = (n as any).node_name;
+      }
+
+      const formattedActions = (coreActions || []).map((a: any) => ({
+        actionNo: a.action_no,
+        name: a.action_name,
+        nodeId: a.node_id,
+        nodeName: nodeNameMap[a.node_id] || `节点${a.node_id}`,
+        trustElement: a.trust_element,
+        weight: Number(a.weight),
+        scoringCriteria: a.scoring_criteria,
+        executionForms: a.execution_forms,
+      }));
 
       return NextResponse.json({
         role: 'reviewer',
         pendingReview: pendingWithDetails,
         reviewedHistory: reviewedWithDetails,
-        coreActions: coreActions || [],
+        coreActions: formattedActions,
         stats: {
           pendingReview: (pendingReview || []).length,
           reviewed: (reviewedHistory || []).length,

@@ -334,8 +334,8 @@ export async function DELETE(req: NextRequest) {
       { table: 'notifications', column: 'user_id' },
       // 成长计划
       { table: 'daily_plans', column: 'user_id' },
-      // 核心动作评分
-      { table: 'action_scores', column: 'user_id' },
+      // 核心动作评分(通过qc_records关联)
+      // action_scores无user_id列，通过record_id→qc_records.user_id级联删除
       // 演练任务
       { table: 'practice_tasks', column: 'assigned_to' },
       // 阶段申请

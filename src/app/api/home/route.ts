@@ -173,13 +173,13 @@ async function getTrainingManagerDashboard(client: any, userId: string) {
   const avgQcCommunication = qcScores.length > 0 ? Math.round(qcScores.reduce((s: number, r: any) => s + (r.score_communication || 0), 0) / qcScores.length * 10) / 10 : 0;
   const avgQcProcess = qcScores.length > 0 ? Math.round(qcScores.reduce((s: number, r: any) => s + (r.score_process || 0), 0) / qcScores.length * 10) / 10 : 0;
 
-  // 19动作通过率
+  // 19动作通过率(通过qc_records关联)
   const { data: actionScoresData } = await client
     .from('action_scores')
-    .select('score')
+    .select('score, record_id')
     .limit(200);
   const totalActionScores = (actionScoresData || []).length;
-  const passedActions = (actionScoresData || []).filter((a: any) => a.score >= 4).length;
+  const passedActions = (actionScoresData || []).filter((a: any) => a.score >= 3).length;
   const actionPassRate = totalActionScores > 0 ? Math.round((passedActions / totalActionScores) * 100) : 0;
 
   // 低分质检预警
@@ -207,18 +207,41 @@ async function getTrainingManagerDashboard(client: any, userId: string) {
     traineeQcMap[uid].business.push(r.score_business || 0);
   }
 
-  // 按学员获取19动作得分
-  const { data: traineeActionScores } = await client
-    .from('action_scores')
-    .select('user_id, score')
-    .in('user_id', (trainees || []).map((t: any) => t.id));
+  // 按学员获取19动作得分(新schema: action_scores通过record_id关联qc_records获取user_id)
+  const traineeIds = (trainees || []).map((t: any) => t.id);
+  let traineeActionScores: any[] = [];
+  if (traineeIds.length > 0) {
+    // 先获取这些学员的质检记录
+    const { data: traineeQcRecords } = await client
+      .from('qc_records')
+      .select('id, user_id')
+      .in('user_id', traineeIds);
+    const qcRecordMap: Record<number, string> = {};
+    const qcIds: number[] = [];
+    for (const r of traineeQcRecords || []) {
+      qcRecordMap[(r as any).id] = String((r as any).user_id);
+      qcIds.push((r as any).id);
+    }
+    if (qcIds.length > 0) {
+      const { data: scoreData } = await client
+        .from('action_scores')
+        .select('record_id, score')
+        .in('record_id', qcIds);
+      // 映射回user_id
+      traineeActionScores = (scoreData || []).map((s: any) => ({
+        user_id: qcRecordMap[s.record_id] || '',
+        score: s.score,
+      }));
+    }
+  }
 
   const traineeActionMap: Record<string, { total: number; passed: number }> = {};
-  for (const a of traineeActionScores || []) {
+  for (const a of traineeActionScores) {
     const uid = String(a.user_id);
+    if (!uid) continue;
     if (!traineeActionMap[uid]) traineeActionMap[uid] = { total: 0, passed: 0 };
     traineeActionMap[uid].total++;
-    if (a.score >= 4) traineeActionMap[uid].passed++;
+    if (a.score >= 3) traineeActionMap[uid].passed++;
   }
 
   // 构建过程线下钻数据

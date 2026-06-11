@@ -410,6 +410,117 @@ export const assessmentModules = pgTable("assessment_modules", {
 	unique("assessment_modules_code_unique").on(table.code),
 ]);
 
+export const coreActions = pgTable("core_actions", {
+	actionNo: integer("action_no").primaryKey().notNull(),
+	actionName: text("action_name").notNull(),
+	nodeId: integer("node_id").notNull(),
+	timeType: text("time_type").notNull(),
+	isV2New: boolean("is_v2_new").default(false).notNull(),
+	trustElement: text("trust_element").notNull(),
+	weight: numeric("weight", { precision: 3, scale: 1 }).default('1.0').notNull(),
+	description: text(),
+	purpose: text(),
+	keyPoints: text("key_points"),
+	scoringCriteria: jsonb("scoring_criteria"),
+	executionForms: jsonb("execution_forms"),
+}, (table) => [
+	index("ca_node_id_idx").using("btree", table.nodeId.asc().nullsLast().op("int4_ops")),
+	index("ca_trust_element_idx").using("btree", table.trustElement.asc().nullsLast().op("text_ops")),
+	index("ca_is_v2_new_idx").using("btree", table.isV2New.asc().nullsLast().op("bool_ops")),
+]);
+
+export const actionScores = pgTable("action_scores", {
+	id: varchar({ length: 36 }).default(sql`gen_random_uuid()`).primaryKey().notNull(),
+	recordId: integer("record_id"),
+	actionNo: integer("action_no").notNull(),
+	score: integer(),
+	perspective: varchar({ length: 20 }),
+	executed: boolean("executed").default(true),
+	executionForm: text("execution_form"),
+	notes: text(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("as_record_id_idx").using("btree", table.recordId.asc().nullsLast().op("int4_ops")),
+	index("as_action_no_idx").using("btree", table.actionNo.asc().nullsLast().op("int4_ops")),
+	index("as_perspective_idx").using("btree", table.perspective.asc().nullsLast().op("text_ops")),
+	foreignKey({
+		columns: [table.recordId],
+		foreignColumns: [qcRecords.id],
+		name: "action_scores_record_id_qc_records_id_fk"
+	}).onDelete("cascade"),
+	foreignKey({
+		columns: [table.actionNo],
+		foreignColumns: [coreActions.actionNo],
+		name: "action_scores_action_no_core_actions_action_no_fk"
+	}),
+]);
+
+export const specialPatientActions = pgTable("special_patient_actions", {
+	id: varchar({ length: 36 }).default(sql`gen_random_uuid()`).primaryKey().notNull(),
+	patientId: varchar("patient_id", { length: 36 }).notNull(),
+	originalNodeId: integer("original_node_id"),
+	specialType: varchar("special_type", { length: 20 }).notNull(),
+	adjustedNodeId: integer("adjusted_node_id"),
+	adjustedDate: timestamp("adjusted_date", { withTimezone: true, mode: 'string' }),
+	reason: text(),
+	resolved: boolean("resolved").default(false),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("spa_patient_id_idx").using("btree", table.patientId.asc().nullsLast().op("text_ops")),
+	index("spa_special_type_idx").using("btree", table.specialType.asc().nullsLast().op("text_ops")),
+	index("spa_resolved_idx").using("btree", table.resolved.asc().nullsLast().op("bool_ops")),
+	foreignKey({
+		columns: [table.patientId],
+		foreignColumns: [users.id],
+		name: "special_patient_actions_patient_id_users_id_fk"
+	}).onDelete("cascade"),
+]);
+
+export const serviceNodes = pgTable("service_nodes", {
+	id: serial().primaryKey().notNull(),
+	nodeName: text("node_name").notNull(),
+	timeType: text("time_type").notNull(),
+	weight: numeric("weight", { precision: 3, scale: 2 }).notNull(),
+	trustFocus: text("trust_focus"),
+	description: text(),
+	sortOrder: integer("sort_order").default(0),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+});
+
+export const trustSnapshots = pgTable("trust_snapshots", {
+	id: varchar({ length: 36 }).default(sql`gen_random_uuid()`).primaryKey().notNull(),
+	recordId: integer("record_id"),
+	userId: varchar("user_id", { length: 36 }).notNull(),
+	nodeId: integer("node_id"),
+	cognitiveScore: numeric("cognitive_score", { precision: 5, scale: 2 }),
+	professionalScore: numeric("professional_score", { precision: 5, scale: 2 }),
+	safetyScore: numeric("safety_score", { precision: 5, scale: 2 }),
+	obstacleClearanceScore: numeric("obstacle_clearance_score", { precision: 5, scale: 2 }),
+	totalTrust: numeric("total_trust", { precision: 5, scale: 2 }),
+	bottleneck: text(),
+	suggestion: text(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("ts_user_id_idx").using("btree", table.userId.asc().nullsLast().op("text_ops")),
+	index("ts_node_id_idx").using("btree", table.nodeId.asc().nullsLast().op("int4_ops")),
+	index("ts_record_id_idx").using("btree", table.recordId.asc().nullsLast().op("int4_ops")),
+	foreignKey({
+		columns: [table.recordId],
+		foreignColumns: [qcRecords.id],
+		name: "trust_snapshots_record_id_qc_records_id_fk"
+	}),
+	foreignKey({
+		columns: [table.userId],
+		foreignColumns: [users.id],
+		name: "trust_snapshots_user_id_users_id_fk"
+	}),
+	foreignKey({
+		columns: [table.nodeId],
+		foreignColumns: [serviceNodes.id],
+		name: "trust_snapshots_node_id_service_nodes_id_fk"
+	}),
+]);
+
 export const moduleProgress = pgTable("module_progress", {
 	id: serial().primaryKey().notNull(),
 	userId: varchar("user_id", { length: 36 }).notNull(),
