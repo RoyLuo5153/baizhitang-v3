@@ -16,14 +16,26 @@ export async function GET(req: NextRequest) {
     const supabase = getSupabaseClient();
     const url = new URL(req.url);
     const roleIdFilter = url.searchParams.get('roleId');
+    const roleNameFilter = url.searchParams.get('role'); // e.g. ?role=mentor
+
+    // 如果按角色名查询，先查角色ID
+    let resolvedRoleId = roleIdFilter ? Number(roleIdFilter) : null;
+    if (roleNameFilter && !resolvedRoleId) {
+      const { data: roleData } = await supabase
+        .from('roles')
+        .select('id')
+        .eq('name', roleNameFilter)
+        .maybeSingle();
+      if (roleData) resolvedRoleId = roleData.id;
+    }
 
     let query = supabase
       .from('users')
-      .select('id, username, real_name, role_id, is_active, is_super_admin, created_at')
+      .select('id, username, real_name, role_id, is_active, is_super_admin, created_at, mentor_id, mentor_status')
       .order('id');
 
-    if (roleIdFilter) {
-      query = query.eq('role_id', Number(roleIdFilter));
+    if (resolvedRoleId) {
+      query = query.eq('role_id', resolvedRoleId);
     }
 
     const { data, error } = await query;
@@ -203,7 +215,7 @@ export async function PUT(req: NextRequest) {
     if (denied) return denied;
 
     const body = await req.json();
-    const { userId, realName, roleId, stage, status, cohort, password, resetPassword } = body;
+    const { userId, realName, roleId, stage, status, cohort, password, resetPassword, mentorId } = body;
     if (!userId) return NextResponse.json({ error: '缺少userId' }, { status: 400 });
 
     // 禁止修改自己的角色（防止提权/降权）
@@ -249,9 +261,51 @@ export async function PUT(req: NextRequest) {
       updateData.password_hash = await bcrypt.hash(password, 10);
     }
 
+    // 更新带教老师分配
+    if (mentorId !== undefined) {
+      updateData.mentor_id = mentorId || null;
+      updateData.mentor_status = mentorId ? 'assigned' : null;
+    }
+
     if (Object.keys(updateData).length > 0) {
       const { error } = await supabase.from('users').update(updateData).eq('id', userId);
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    // 分配带教老师后，同步更新mentor_trainees表 + 发送通知
+    if (mentorId !== undefined && mentorId) {
+      // upsert mentor_trainees
+      const { data: existingMt } = await supabase
+        .from('mentor_trainees')
+        .select('id')
+        .eq('mentor_id', mentorId)
+        .eq('trainee_id', userId)
+        .maybeSingle();
+      if (!existingMt) {
+        await supabase.from('mentor_trainees').insert({
+          mentor_id: mentorId,
+          trainee_id: userId,
+          status: 'active',
+        });
+      }
+      // 通知带教老师
+      try {
+        const { sendNotification } = await import('@/lib/triggers');
+        // 获取新人姓名
+        const { data: traineeUser } = await supabase
+          .from('users')
+          .select('real_name')
+          .eq('id', userId)
+          .single();
+        await sendNotification({
+          userId: mentorId,
+          type: 'mentor_assigned',
+          title: '新分配的带教学员',
+          message: `${traineeUser?.real_name || '新人'}已分配给您作为带教学员，请关注其成长进度`,
+        });
+      } catch (notifErr) {
+        console.error('[L2] 通知发送失败:', notifErr);
+      }
     }
 
     // 更新阶段和期数（trainee_profiles表）

@@ -349,6 +349,7 @@ export const users = pgTable("users", {
 	stage: integer().default(1).notNull(),
 	isActive: boolean("is_active").default(true).notNull(),
 	mentorId: varchar("mentor_id", { length: 36 }),
+	mentorStatus: varchar("mentor_status", { length: 20 }).default('assigned'),
 	department: varchar({ length: 100 }),
 	joinDate: timestamp("join_date", { withTimezone: true, mode: 'string' }),
 	lastLogin: timestamp("last_login", { withTimezone: true, mode: 'string' }),

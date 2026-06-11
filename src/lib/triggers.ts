@@ -23,6 +23,7 @@ export type NotificationType =
   | 'empower_due_soon'      // 赋能方案即将到期
   | 'trainee_registered'    // 新人注册完成
   | 'mentor_signoff_done'   // 带教签收完成
+  | 'mentor_assigned'       // 带教老师被分配新人
   | 'alert_triggered'       // 预警触发
   | 'general';           // 通用通知
 
