@@ -214,8 +214,8 @@ async function calculateQuadrant(client: any, userId: string) {
   const resultQualified = Object.values(resultItems).every((item: any) => item.level !== 'unqualified');
 
   const quadrant = processQualified && resultQualified ? 'A' :
-    processQualified && !resultQualified ? 'B' :
-    !processQualified && resultQualified ? 'C' : 'D';
+    !processQualified && resultQualified ? 'B' :
+    processQualified && !resultQualified ? 'C' : 'D';
 
   return {
     quadrant,

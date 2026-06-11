@@ -160,11 +160,11 @@ const RESULT_ATTRIBUTIONS: Record<string, Omit<AttributionEntry, 'currentValue' 
     planHours: 5,
     planSteps: ['顾虑提前了解与消除训练', '接诊电话沟通技巧演练', '成交信号识别与临门一脚'],
   },
-  signRate: {
-    metricKey: 'signRate',
+  deliveryRate: {
+    metricKey: 'deliveryRate',
     metricLabel: '签收率',
     unit: '%',
-    threshold: 60,
+    threshold: 85,
     problemLabel: '签收转化弱',
     problemDesc: '价格预期管理与顾虑消除能力不足，需加强成交技巧',
     planName: '签收转化突破',
@@ -182,11 +182,11 @@ const RESULT_ATTRIBUTIONS: Record<string, Omit<AttributionEntry, 'currentValue' 
     planHours: 4,
     planSteps: ['用药反应告知与接受训练', '血糖波动提醒与监测指导', '变化发现与引导技巧'],
   },
-  registrationRate: {
-    metricKey: 'registrationRate',
+  appointmentRate: {
+    metricKey: 'appointmentRate',
     metricLabel: '挂号率',
     unit: '%',
-    threshold: 50,
+    threshold: 80,
     problemLabel: '挂号率偏低',
     problemDesc: '复诊引导意识薄弱，需强化长期管理思维',
     planName: '挂号引导训练',
@@ -211,16 +211,16 @@ const QUADRANT_CONFIG: Record<string, {
     icon: CheckCircle2,
   },
   B: {
-    label: 'B类 · 结果待提升',
-    desc: '过程线合格 + 结果线有不合格',
+    label: 'B类 · 过程待提升',
+    desc: '过程线有不合格 + 结果线合格（运气型）',
     color: 'text-[#f59e0b]',
     bgColor: 'bg-[#f59e0b]/5',
     borderColor: 'border-[#f59e0b]/30',
     icon: TrendingDown,
   },
   C: {
-    label: 'C类 · 过程待提升',
-    desc: '过程线有不合格 + 结果线合格',
+    label: 'C类 · 结果待提升',
+    desc: '过程线合格 + 结果线有不合格（成长型）',
     color: 'text-[#ef4444]',
     bgColor: 'bg-[#ef4444]/5',
     borderColor: 'border-[#ef4444]/30',
@@ -770,9 +770,9 @@ const FUNNEL_STAGES = [
   { key: 'wechatAddRate', label: '加V率', threshold: 90 },
   { key: 'consultationRate', label: '面诊率', threshold: 85 },
   { key: 'receptionRate', label: '接诊率', threshold: 80 },
-  { key: 'signRate', label: '签收率', threshold: 60 },
-  { key: 'medicationRate', label: '用药率', threshold: 70 },
-  { key: 'registrationRate', label: '挂号率', threshold: 50 },
+  { key: 'deliveryRate', label: '签收率', threshold: 85 },
+  { key: 'medicationRate', label: '用药率', threshold: 90 },
+  { key: 'appointmentRate', label: '挂号率', threshold: 80 },
 ];
 
 function FunnelTrendSection({ members, weeklyTrend }: { members: Member[]; weeklyTrend: WeeklyFunnel[] }) {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
 import { getAuthFromHeaders } from '@/lib/auth/api-auth';
+import { calculateQuadrant, saveQuadrantSnapshot } from '@/lib/quadrant-engine';
 
 export const dynamic = 'force-dynamic';
 
@@ -60,5 +61,14 @@ export async function POST(request: NextRequest) {
     .maybeSingle();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // 自动触发四象限计算
+  try {
+    const result = await calculateQuadrant(userId);
+    await saveQuadrantSnapshot(userId, result, periodType || 'weekly');
+  } catch (e) {
+    console.error('Quadrant calculation failed after business data insert:', e);
+  }
+
   return NextResponse.json({ data });
 }
