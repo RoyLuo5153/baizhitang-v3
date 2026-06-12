@@ -2,9 +2,10 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import {
-  Users, AlertTriangle, Plus, Loader2, Archive,
+  Users, AlertTriangle, Plus, Loader2, Archive, GraduationCap, CheckCircle, XCircle,
 } from 'lucide-react';
 import { apiGet } from '@/lib/api-client';
+import { useAuth } from '@/lib/auth/context';
 
 // === Types ===
 
@@ -42,6 +43,9 @@ interface TraineeProfile {
   qualification_deadline: string | null;
   is_overdue: boolean;
   overdue_days: number;
+  // 出师相关
+  graduation_date?: string | null;
+  graduation_confirmed_by?: string | null;
 }
 
 interface MentorOption {
@@ -82,11 +86,16 @@ const MONTH_HEADERS = [
 ];
 
 export default function TraineeProfilesPage() {
+  const { user: currentUser } = useAuth();
   const [profiles, setProfiles] = useState<TraineeProfile[]>([]);
   const [mentors, setMentors] = useState<MentorOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [graduationChecks, setGraduationChecks] = useState<Record<string, { eligible: boolean; missingConditions: string[]; checking: boolean }>>({});
+  const [graduating, setGraduating] = useState<string | null>(null);
+  const [showGraduationModal, setShowGraduationModal] = useState<{ userId: string; name: string } | null>(null);
+  const [activeTab, setActiveTab] = useState<'training' | 'graduated'>('training');
   const [newTrainee, setNewTrainee] = useState({
     username: '', real_name: '', password: 'bt2026',
     department: '', position: '', mentor_id: '',
@@ -184,6 +193,54 @@ export default function TraineeProfilesPage() {
     } catch { /* ignore */ }
   };
 
+  // Check graduation eligibility
+  const checkGraduation = async (userId: string) => {
+    setGraduationChecks(prev => ({ ...prev, [userId]: { eligible: false, missingConditions: [], checking: true } }));
+    try {
+      const res = await fetch(`/api/graduation?userId=${userId}`);
+      const data = await res.json();
+      setGraduationChecks(prev => ({
+        ...prev,
+        [userId]: { eligible: data.eligible, missingConditions: data.missingConditions || [], checking: false },
+      }));
+    } catch {
+      setGraduationChecks(prev => ({ ...prev, [userId]: { eligible: false, missingConditions: ['检查失败'], checking: false } }));
+    }
+  };
+
+  // Confirm graduation
+  const confirmGraduation = async (userId: string) => {
+    setGraduating(userId);
+    try {
+      const res = await fetch('/api/graduation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setShowGraduationModal(null);
+        fetchProfiles();
+      } else {
+        alert(data.message || '出师失败');
+      }
+    } catch {
+      alert('出师请求失败');
+    }
+    setGraduating(null);
+  };
+
+  const isManager = currentUser?.role === 'training_manager' || currentUser?.role === 'boss';
+
+  // Filter profiles based on active tab
+  const filteredProfiles = profiles.filter(p => {
+    if (activeTab === 'training') {
+      return !p.graduation_date; // 在培新人（未出师）
+    } else {
+      return !!p.graduation_date; // 已出师新人
+    }
+  });
+
   const formatDate = (dateStr: string | null | undefined): string => {
     if (!dateStr) return '';
     const d = new Date(dateStr);
@@ -279,9 +336,10 @@ export default function TraineeProfilesPage() {
     );
   };
 
-  const total = profiles.length;
-  const trainingCount = profiles.filter(p => p.profile_status === 'training').length;
-  const assignedCount = profiles.filter(p => p.profile_status === 'assigned').length;
+  const total = filteredProfiles.length;
+  const trainingCount = filteredProfiles.filter(p => p.profile_status === 'training').length;
+  const assignedCount = filteredProfiles.filter(p => p.profile_status === 'assigned').length;
+  const graduatedCount = profiles.filter(p => p.graduation_date).length;
 
   if (loading) {
     return (
@@ -305,13 +363,43 @@ export default function TraineeProfilesPage() {
           </div>
           <p className="text-sm text-muted-foreground mt-1">完整业务数据追踪表格</p>
         </div>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-1.5 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          添加新人
-        </button>
+        <div className="flex items-center gap-3">
+          {/* Tabs */}
+          <div className="flex bg-muted rounded-lg p-0.5">
+            <button
+              onClick={() => setActiveTab('training')}
+              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                activeTab === 'training'
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              在培新人
+            </button>
+            <button
+              onClick={() => setActiveTab('graduated')}
+              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                activeTab === 'graduated'
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              已出师
+              {graduatedCount > 0 && (
+                <span className="ml-1.5 inline-flex items-center justify-center w-4 h-4 text-[10px] rounded-full" style={{ background: '#16A34A', color: 'white' }}>
+                  {graduatedCount}
+                </span>
+              )}
+            </button>
+          </div>
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-1.5 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            添加新人
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -395,11 +483,52 @@ export default function TraineeProfilesPage() {
                   </td>
                 </tr>
               ) : (
-                profiles.map((p, idx) => (
+                filteredProfiles.map((p, idx) => (
                   <tr key={p.user_id} className={idx % 2 === 0 ? 'bg-background' : 'bg-muted/30'}>
                     <td className="px-2 py-1.5 border-b border-r border-border font-medium text-foreground">
                       <div className="flex flex-col gap-0.5">
-                        <span>{p.real_name || p.username}</span>
+                        <div className="flex items-center gap-1.5">
+                          <span>{p.real_name || p.username}</span>
+                          {isManager && (
+                            <button
+                              onClick={() => {
+                                const gc = graduationChecks[p.user_id];
+                                if (gc?.eligible) {
+                                  setShowGraduationModal({ userId: p.user_id, name: p.real_name || p.username });
+                                } else {
+                                  checkGraduation(p.user_id);
+                                }
+                              }}
+                              disabled={graduationChecks[p.user_id]?.checking || graduating === p.user_id}
+                              className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] rounded font-medium transition-colors"
+                              style={{
+                                background: graduationChecks[p.user_id]?.eligible ? '#DCFCE7' : '#FEF3C7',
+                                color: graduationChecks[p.user_id]?.eligible ? '#16A34A' : '#D97706',
+                              }}
+                              title={graduationChecks[p.user_id]?.eligible ? '点击确认出师' : '检查出师条件'}
+                            >
+                              {graduationChecks[p.user_id]?.checking ? (
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                              ) : graduationChecks[p.user_id]?.eligible ? (
+                                <CheckCircle className="w-3 h-3" />
+                              ) : (
+                                <GraduationCap className="w-3 h-3" />
+                              )}
+                              出师
+                            </button>
+                          )}
+                        </div>
+                        {/* Graduation check result tooltip */}
+                        {graduationChecks[p.user_id] && !graduationChecks[p.user_id].checking && !graduationChecks[p.user_id].eligible && graduationChecks[p.user_id].missingConditions.length > 0 && (
+                          <div className="text-[10px] px-1.5 py-0.5 rounded leading-tight" style={{ background: '#FEF2F2', color: '#DC2626' }}>
+                            {graduationChecks[p.user_id].missingConditions.map((c, i) => (
+                              <div key={i} className="flex items-center gap-0.5">
+                                <XCircle className="w-2.5 h-2.5 flex-shrink-0" />
+                                <span>{c}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                         {p.is_overdue ? (
                           <span className="inline-block text-[10px] px-1.5 py-0.5 rounded font-medium leading-none"
                             style={{
@@ -555,6 +684,65 @@ export default function TraineeProfilesPage() {
             <div className="flex justify-end gap-3 mt-6">
               <button onClick={() => setShowAddModal(false)} className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground">取消</button>
               <button onClick={addTrainee} className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90">确认添加</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Graduation Confirm Modal */}
+      {showGraduationModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setShowGraduationModal(null)}>
+          <div className="bg-card rounded-lg shadow-xl p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-lg" style={{ background: '#DCFCE7' }}>
+                <GraduationCap className="w-6 h-6" style={{ color: '#16A34A' }} />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-foreground">确认出师</h2>
+                <p className="text-sm text-muted-foreground">{showGraduationModal.name}</p>
+              </div>
+            </div>
+            <div className="p-3 rounded-lg mb-4" style={{ background: '#F0FDF4' }}>
+              <p className="text-sm" style={{ color: '#166534' }}>
+                确认该新人满足出师条件：
+              </p>
+              <ul className="mt-2 text-sm space-y-1" style={{ color: '#15803D' }}>
+                <li className="flex items-center gap-1.5">
+                  <CheckCircle className="w-4 h-4" /> 已达到独立服务阶段 (stage=3)
+                </li>
+                <li className="flex items-center gap-1.5">
+                  <CheckCircle className="w-4 h-4" /> 最近3次质检合格 ({'>='}60分)
+                </li>
+                <li className="flex items-center gap-1.5">
+                  <CheckCircle className="w-4 h-4" /> 管理员手动确认
+                </li>
+              </ul>
+            </div>
+            <p className="text-sm text-muted-foreground mb-6">
+              出师后新人将从"在培"列表移至"已出师"列表，并通知培训负责人和老板。
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowGraduationModal(null)}
+                className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground"
+              >
+                取消
+              </button>
+              <button
+                onClick={() => confirmGraduation(showGraduationModal.userId)}
+                disabled={graduating === showGraduationModal.userId}
+                className="px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
+                style={{ background: '#16A34A', color: 'white' }}
+              >
+                {graduating === showGraduationModal.userId ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    确认中...
+                  </>
+                ) : (
+                  '确认出师'
+                )}
+              </button>
             </div>
           </div>
         </div>

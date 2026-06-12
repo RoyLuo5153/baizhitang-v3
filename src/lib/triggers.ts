@@ -25,6 +25,7 @@ export type NotificationType =
   | 'mentor_signoff_done'   // 带教签收完成
   | 'mentor_assigned'       // 带教老师被分配新人
   | 'alert_triggered'       // 预警触发
+  | 'graduation'           // 出师通知
   | 'general';           // 通用通知
 
 interface NotificationPayload {
