@@ -14,6 +14,7 @@
 
 import { pgQuery } from '@/storage/database/pg-client';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
+import { onQuadrantChange } from '@/lib/triggers';
 
 export interface QuadrantDetail {
   label: string;
@@ -183,8 +184,16 @@ export async function calculateQuadrant(userId: string): Promise<QuadrantResult>
   const processScore = calcAggregateScore(processItems);
   const resultScore = calcAggregateScore(resultItems);
 
+  // 获取用户姓名
+  const userRows = await pgQuery<{ real_name: string; username: string }>(
+    "SELECT real_name, username FROM users WHERE id = $1",
+    [userId]
+  );
+  const userName = userRows.length > 0 ? (userRows[0].real_name || userRows[0].username || undefined) : undefined;
+
   return {
     userId,
+    userName,
     quadrant,
     quadrantName: QUADRANT_NAMES[quadrant],
     processQualified,
@@ -257,6 +266,13 @@ export async function saveQuadrantSnapshot(
     level: detail.level,
   }));
 
+  // 查询该用户上一个快照的象限
+  const prevSnapshots = await pgQuery<{ quadrant: string }>(
+    "SELECT quadrant FROM quadrant_snapshots WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1",
+    [userId]
+  );
+  const oldQuadrant = prevSnapshots.length > 0 ? prevSnapshots[0].quadrant : null;
+
   await pgQuery(
     `INSERT INTO quadrant_snapshots (
       user_id, period_type, period_start, period_end,
@@ -282,6 +298,24 @@ export async function saveQuadrantSnapshot(
       JSON.stringify(resultItems),
     ]
   );
+
+  // 象限变化时触发赋能方案推送
+  const newQuadrant = result.quadrant;
+  if (oldQuadrant !== null && oldQuadrant !== newQuadrant) {
+    try {
+      await onQuadrantChange(userId, oldQuadrant, newQuadrant, result.unqualifiedItems);
+    } catch (err) {
+      // 触发器失败不影响主流程
+      console.error('[quadrant-engine] onQuadrantChange error:', err);
+    }
+  } else if (oldQuadrant === null && ['C', 'D'].includes(newQuadrant)) {
+    // 首次快照且已落入C/D类，也触发
+    try {
+      await onQuadrantChange(userId, 'A', newQuadrant, result.unqualifiedItems);
+    } catch (err) {
+      console.error('[quadrant-engine] onQuadrantChange error:', err);
+    }
+  }
 }
 
 // === 工具函数 ===

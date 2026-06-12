@@ -114,7 +114,7 @@ export async function PATCH(request: NextRequest) {
   try {
     const supabase = getSupabaseClient();
     const body = await request.json();
-    const { executionId, status, progress, completedSteps, mentorNotes } = body;
+    const { executionId, status, progress, completedSteps, mentorNotes, improvementPct, afterQuadrant } = body;
 
     if (!executionId) {
       return NextResponse.json({ error: 'Missing executionId' }, { status: 400 });
@@ -125,6 +125,8 @@ export async function PATCH(request: NextRequest) {
     if (progress !== undefined) updateData.progress = progress;
     if (completedSteps !== undefined) updateData.completed_steps = completedSteps;
     if (mentorNotes !== undefined) updateData.mentor_notes = mentorNotes;
+    if (afterQuadrant !== undefined) updateData.after_quadrant = afterQuadrant;
+    if (improvementPct !== undefined) updateData.improvement_pct = improvementPct;
     if (status === 'completed') {
       updateData.completed_at = new Date().toISOString();
       updateData.progress = 100;

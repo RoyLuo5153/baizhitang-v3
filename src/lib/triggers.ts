@@ -850,6 +850,159 @@ export async function onAlertTriggered(
 }
 
 /**
+ * 四象限变化触发赋能方案推送
+ * 当用户落入C/D象限时，自动匹配赋能方案并创建执行记录 + 通知三方
+ */
+export async function onQuadrantChange(
+  userId: string,
+  oldQuadrant: string,
+  newQuadrant: string,
+  unqualifiedItems: string[] = []
+): Promise<void> {
+  // 仅 C/D 类触发
+  if (!['C', 'D'].includes(newQuadrant)) return;
+
+  const client = getSupabaseClient();
+
+  // 1. 获取用户姓名
+  const { data: user } = await client
+    .from('users')
+    .select('real_name, username')
+    .eq('id', userId)
+    .maybeSingle();
+  const userName = user?.real_name || user?.username || '未知学员';
+
+  // 2. 获取活跃赋能方案
+  const { data: plans } = await client
+    .from('empower_plans')
+    .select('*')
+    .eq('is_active', true);
+
+  if (!plans || plans.length === 0) return;
+
+  // 3. 根据不合格指标匹配方案
+  const matchedPlans: { id: number; name: string; indicatorKey: string }[] = [];
+  const matchedIds = new Set<number>();
+
+  // C类=过程线不达标 → 匹配过程线相关指标
+  // D类=全不达标 → 匹配所有不合格指标 + 综合
+  for (const itemKey of unqualifiedItems) {
+    // 精确匹配 indicator_key
+    const exact = plans.find(p => p.indicator_key === itemKey);
+    if (exact && !matchedIds.has(exact.id)) {
+      matchedIds.add(exact.id);
+      matchedPlans.push({ id: exact.id, name: exact.name, indicatorKey: exact.indicator_key });
+    }
+
+    // 匹配 target_indicators 包含该指标
+    const byTarget = plans.filter(p =>
+      Array.isArray(p.target_indicators) && p.target_indicators.includes(itemKey) && !matchedIds.has(p.id)
+    );
+    for (const p of byTarget) {
+      matchedIds.add(p.id);
+      matchedPlans.push({ id: p.id, name: p.name, indicatorKey: p.indicator_key });
+    }
+  }
+
+  // D类额外匹配综合方案
+  if (newQuadrant === 'D') {
+    const general = plans.find(p => p.indicator_key === 'general' && !matchedIds.has(p.id));
+    if (general) {
+      matchedIds.add(general.id);
+      matchedPlans.push({ id: general.id, name: general.name, indicatorKey: general.indicator_key });
+    }
+  }
+
+  // 兜底：如果没匹配到，用通用方案
+  if (matchedPlans.length === 0) {
+    const general = plans.find(p => p.indicator_key === 'general');
+    if (general) {
+      matchedPlans.push({ id: general.id, name: general.name, indicatorKey: general.indicator_key });
+    }
+  }
+
+  if (matchedPlans.length === 0) return;
+
+  // 4. 获取已有执行中/已分配的赋能记录（去重）
+  const { data: activeExecs } = await client
+    .from('empower_executions')
+    .select('plan_id')
+    .eq('user_id', userId)
+    .in('status', ['assigned', 'in_progress']);
+  const activePlanIds = new Set((activeExecs || []).map((e: { plan_id: number }) => e.plan_id));
+
+  // 5. 创建执行记录（仅不存在活跃记录的方案）
+  const quadrantLabel = newQuadrant === 'C' ? '成长型' : '危险型';
+  const createdPlans: string[] = [];
+
+  for (const plan of matchedPlans) {
+    if (activePlanIds.has(plan.id)) continue; // 已有活跃记录，跳过
+
+    // 获取方案内容快照
+    const { data: planData } = await client
+      .from('empower_plans')
+      .select('content')
+      .eq('id', plan.id)
+      .single();
+
+    await client.from('empower_executions').insert({
+      user_id: userId,
+      plan_id: plan.id,
+      triggered_by: `quadrant_${newQuadrant.toLowerCase()}`,
+      status: 'assigned',
+      progress: 0,
+      started_at: new Date().toISOString(),
+      before_quadrant: oldQuadrant,
+      prescription_content: planData?.content || null,
+      completed_steps: [],
+    });
+
+    createdPlans.push(plan.name);
+    activePlanIds.add(plan.id);
+  }
+
+  if (createdPlans.length === 0) return; // 所有方案都已有活跃记录
+
+  // 6. 发送通知
+  const plansSummary = createdPlans.join('、');
+
+  // 6a. 通知新人
+  await sendNotification({
+    userId,
+    type: 'empower_auto',
+    title: '您有新的赋能方案',
+    message: `您被判定为${quadrantLabel}（${newQuadrant}类），系统已为您推送赋能方案：${plansSummary}，请及时完成`,
+    priority: 'high',
+  });
+
+  // 6b. 通知带教老师
+  const mentorId = await getMentorId(userId);
+  if (mentorId) {
+    await sendNotification({
+      userId: mentorId,
+      type: 'empower_auto',
+      title: `您的新人${userName}有新赋能方案`,
+      message: `${userName}被判定为${quadrantLabel}（${newQuadrant}类），已自动推送：${plansSummary}`,
+      relatedUserId: userId,
+      priority: 'high',
+    });
+  }
+
+  // 6c. 通知培训负责人
+  const managerIds = await getTrainingManagerIds();
+  for (const mgrId of managerIds) {
+    await sendNotification({
+      userId: mgrId,
+      type: 'empower_auto',
+      title: `新人${userName}已自动推送赋能方案`,
+      message: `${userName}被判定为${quadrantLabel}（${newQuadrant}类，原${oldQuadrant}类），已自动推送：${plansSummary}`,
+      relatedUserId: userId,
+      priority: 'medium',
+    });
+  }
+}
+
+/**
  * 检查即将到期的赋能方案（距截止日3天）
  * 供定时任务或手动调用
  */
