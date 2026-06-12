@@ -227,6 +227,7 @@ function ArticleEditor({
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [showNewCat, setShowNewCat] = useState(false);
+  const [showCreate, setShowCreate] = useState(false);
   const [newCatName, setNewCatName] = useState('');
   const [newCatStatus, setNewCatStatus] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -1112,7 +1113,13 @@ export default function KnowledgeBasePage() {
         {filtered.length === 0 ? (
           <div className="bg-card rounded-lg p-12 text-center">
             <BookOpen className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
-            <p className="text-muted-foreground text-sm">{showBookmarks ? '暂无收藏的文章' : '暂无匹配的文章'}</p>
+            <p className="text-muted-foreground text-sm mb-4">{showBookmarks ? '暂无收藏的文章' : '暂无匹配的文章'}</p>
+            {!showBookmarks && (
+              <button onClick={() => setEditorArticle('new')} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors">
+                <Plus className="w-4 h-4" />
+                创建第一篇文章
+              </button>
+            )}
           </div>
         ) : filtered.map(article => {
           const displayName = article.categoryName || article.category;

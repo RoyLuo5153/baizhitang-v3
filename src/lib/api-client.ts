@@ -28,7 +28,7 @@ export type ArraySafe<T, K extends keyof T> = Omit<T, K> & {
  */
 export async function apiGet<T>(url: string, defaultValue: T): Promise<T> {
   try {
-    const res = await fetch(url);
+    const res = await fetch(url, { credentials: 'include' });
     if (!res.ok) {
       console.warn(`API GET ${url} returned ${res.status}`);
       return defaultValue;
@@ -58,6 +58,7 @@ export async function apiPost<TReq, TRes>(
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify(body),
     });
     if (!res.ok) {
@@ -88,6 +89,7 @@ export async function apiPut<TReq, TRes>(
     const res = await fetch(url, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify(body),
     });
     if (!res.ok) {
@@ -111,7 +113,7 @@ export async function apiPut<TReq, TRes>(
  */
 export async function apiDelete<T>(url: string, defaultValue: T): Promise<T> {
   try {
-    const res = await fetch(url, { method: 'DELETE' });
+    const res = await fetch(url, { method: 'DELETE', credentials: 'include' });
     if (!res.ok) {
       console.warn(`API DELETE ${url} returned ${res.status}`);
       return defaultValue;
@@ -134,6 +136,11 @@ export async function apiDelete<T>(url: string, defaultValue: T): Promise<T> {
  * 这是结构性的——调用者不需要记住判空，数组字段不可能为 undefined
  */
 function sanitizeArrays<T>(response: Record<string, unknown>, defaultValue: T): T {
+  // 结构性防错：defaultValue 为 null/undefined 或非对象时，直接返回响应
+  if (defaultValue == null || typeof defaultValue !== 'object') {
+    return response as unknown as T;
+  }
+  
   const result = { ...response } as Record<string, unknown>;
   const def = defaultValue as Record<string, unknown>;
   

@@ -581,7 +581,7 @@ export default function TraineeProfilesPage() {
                         type="text"
                         className="w-full text-xs text-center px-1 py-1 border border-transparent hover:border-border rounded bg-transparent"
                         defaultValue={p.cohort || ''}
-                        placeholder="如：第1期"
+                        placeholder="第1期"
                         onBlur={(e) => updateProfile(p.user_id, 'cohort', e.target.value)}
                       />
                     </td>

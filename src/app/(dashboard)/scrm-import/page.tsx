@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import * as XLSX from 'xlsx';
 import {
   Database, Upload, FileSpreadsheet, Save, AlertCircle,
   CheckCircle2, TrendingUp, ChevronUp,
@@ -519,10 +520,140 @@ function TraineeBreakdown({
 /* ══════════════════════════════════════════════
    Batch Import Modal
    ══════════════════════════════════════════════ */
-function BatchImportModal({ onClose }: { onClose: () => void }) {
+interface ParsedRow {
+  period: string;
+  name: string;
+  wechat: number;
+  consultation: number;
+  reception: number;
+  delivery: number;
+  medication: number;
+  appointment: number;
+  periodStart: string;
+  periodEnd: string;
+  userId: string;
+}
+
+function BatchImportModal({ onClose, onSaved }: { onClose: () => void; onSaved?: () => void }) {
   const [dragActive, setDragActive] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [parseStep, setParseStep] = useState<'upload' | 'preview'>('upload');
+  const [parseStep, setParseStep] = useState<'upload' | 'preview' | 'success'>('upload');
+  const [parsedRows, setParsedRows] = useState<ParsedRow[]>([]);
+  const [parseError, setParseError] = useState('');
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<{ success: number; failed: number; message?: string; details?: string[] } | null>(null);
+  const [stats, setStats] = useState<{ total: number; passed: number; failed: number }>({ total: 0, passed: 0, failed: 0 });
+
+  // 真正解析Excel文件
+  const handleParseExcel = useCallback(async () => {
+    if (!uploadedFile) return;
+    setParseError('');
+    try {
+      const arrayBuffer = await uploadedFile.arrayBuffer();
+      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const jsonData = XLSX.utils.sheet_to_json<Record<string, string | number>>(sheet, { defval: '' });
+
+      if (jsonData.length === 0) {
+        setParseError('Excel文件为空或格式不正确');
+        return;
+      }
+
+      // 标准化列名映射（支持多种表头写法）
+      const columnMap: Record<string, string> = {
+        '周期': 'period', '周': 'period', 'week': 'period', '日期': 'period',
+        '姓名': 'name', '名字': 'name', 'name': 'name',
+        '加V率': 'add_v_rate', '加v率': 'add_v_rate', '加微信率': 'add_v_rate',
+        '面诊率': 'consultation_rate', '面诊': 'consultation_rate',
+        '接诊率': 'reception_rate', '接诊': 'reception_rate',
+        '签收率': 'sign_rate', '签收': 'sign_rate',
+        '用药率': 'medication_rate', '用药': 'medication_rate',
+        '挂号率': 'registration_rate', '挂号': 'registration_rate',
+      };
+
+      const FIELDS = ['period', 'name', 'add_v_rate', 'consultation_rate', 'reception_rate', 'sign_rate', 'medication_rate', 'registration_rate'];
+      const FIELD_LABELS: Record<string, string> = { period: '周期', name: '姓名', add_v_rate: '加V率', consultation_rate: '面诊率', reception_rate: '接诊率', sign_rate: '签收率', medication_rate: '用药率', registration_rate: '挂号率' };
+      const RATE_FIELDS = ['add_v_rate', 'consultation_rate', 'reception_rate', 'sign_rate', 'medication_rate', 'registration_rate'];
+
+      const rows: Record<string, string | number>[] = [];
+      let validCount = 0;
+      let allPassCount = 0;
+
+      for (const rawRow of jsonData) {
+        const mapped: Record<string, string | number> = {};
+        for (const [key, val] of Object.entries(rawRow)) {
+          const normalized = columnMap[key.trim().toLowerCase()] || columnMap[key.trim()];
+          if (normalized) mapped[normalized] = val;
+        }
+
+        // 必须有姓名
+        if (!mapped.name) continue;
+
+        // 标准化百分比值（支持"96%"或0.96格式）
+        for (const f of RATE_FIELDS) {
+          let v = mapped[f];
+          if (typeof v === 'string') {
+            v = parseFloat(v.replace('%', ''));
+            if (!isNaN(v)) mapped[f] = v > 1 ? v : Math.round(v * 100); // 0.96 → 96
+          } else if (typeof v === 'number' && v <= 1 && v >= 0) {
+            mapped[f] = Math.round(v * 100);
+          }
+        }
+
+        // 补全周期
+        if (!mapped.period) mapped.period = new Date().toISOString().slice(0, 10);
+
+        validCount++;
+
+        // 检查是否全部达标
+        const hasUnqualified = RATE_FIELDS.some(f => {
+          const v = Number(mapped[f]);
+          return !isNaN(v) && v < 80;
+        });
+        if (!hasUnqualified) allPassCount++;
+
+        rows.push(mapped);
+      }
+
+      if (rows.length === 0) {
+        setParseError('未找到有效数据行，请检查表头是否包含"姓名"列');
+        return;
+      }
+
+      setParsedRows(rows as unknown as ParsedRow[]);
+      setStats({
+        total: rows.length,
+        passed: allPassCount,
+        failed: rows.length - allPassCount,
+      });
+      setParseStep('preview');
+    } catch (err) {
+      setParseError('Excel文件解析失败: ' + (err instanceof Error ? err.message : '未知错误'));
+    }
+  }, [uploadedFile]);
+
+  // 确认导入到数据库
+  const handleConfirmImport = useCallback(async () => {
+    if (parsedRows.length === 0) return;
+    setImporting(true);
+    setImportResult(null);
+    try {
+      const res = await fetch('/api/business/batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ records: parsedRows }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || '导入失败');
+      setImportResult({ success: data.inserted ?? parsedRows.length, failed: data.failed ?? 0 });
+      setParseStep('success');
+    } catch (err) {
+      setParseError('导入失败: ' + (err instanceof Error ? err.message : '未知错误'));
+    } finally {
+      setImporting(false);
+    }
+  }, [parsedRows]);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -541,6 +672,7 @@ function BatchImportModal({ onClose }: { onClose: () => void }) {
     const file = e.dataTransfer.files?.[0];
     if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.xls') || file.name.endsWith('.csv'))) {
       setUploadedFile(file);
+      setParseError('');
     }
   }, []);
 
@@ -548,22 +680,9 @@ function BatchImportModal({ onClose }: { onClose: () => void }) {
     const file = e.target.files?.[0];
     if (file) {
       setUploadedFile(file);
+      setParseError('');
     }
   }, []);
-
-  const handleSimulateParse = () => {
-    /* V1: just move to preview step with placeholder data */
-    setParseStep('preview');
-  };
-
-  /* Mock preview rows */
-  const PREVIEW_ROWS = [
-    { period: '2024-W45', name: '张明', wechat: 96, consultation: 89, reception: 85, delivery: 92, medication: 94, appointment: 80 },
-    { period: '2024-W45', name: '李婷', wechat: 94, consultation: 85, reception: 82, delivery: 90, medication: 88, appointment: 78 },
-    { period: '2024-W45', name: '王磊', wechat: 88, consultation: 72, reception: 70, delivery: 80, medication: 78, appointment: 62 },
-    { period: '2024-W45', name: '赵雪', wechat: 91, consultation: 88, reception: 90, delivery: 94, medication: 92, appointment: 82 },
-    { period: '2024-W45', name: '陈浩', wechat: 82, consultation: 68, reception: 65, delivery: 78, medication: 74, appointment: 58 },
-  ];
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
@@ -664,16 +783,16 @@ function BatchImportModal({ onClose }: { onClose: () => void }) {
                 </div>
               </div>
 
-              {/* V1 placeholder notice */}
-              <div className="flex items-start gap-3 p-3 bg-[#f59e0b]/5 rounded-lg border border-[#f59e0b]/20">
-                <AlertCircle className="w-4 h-4 text-[#f59e0b] mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-sm font-medium text-foreground">功能预告</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Excel解析功能即将上线，当前请使用单条录入。下方预览为演示数据。
-                  </p>
+              {/* Parse error notice */}
+              {parseError && (
+                <div className="flex items-start gap-3 p-3 bg-destructive/5 rounded-lg border border-destructive/20">
+                  <AlertCircle className="w-4 h-4 text-destructive mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium text-foreground">解析错误</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{parseError}</p>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Action buttons */}
               <div className="flex justify-end gap-3 pt-2">
@@ -684,11 +803,12 @@ function BatchImportModal({ onClose }: { onClose: () => void }) {
                   取消
                 </button>
                 <button
-                  onClick={handleSimulateParse}
-                  className="px-4 py-2 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:opacity-90 active:scale-[0.98] transition-all inline-flex items-center gap-2"
+                  onClick={handleParseExcel}
+                  disabled={!uploadedFile}
+                  className="px-4 py-2 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:opacity-90 active:scale-[0.98] transition-all inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <FileText className="w-3.5 h-3.5" />
-                  预览数据
+                  解析数据
                 </button>
               </div>
             </div>
@@ -701,7 +821,7 @@ function BatchImportModal({ onClose }: { onClose: () => void }) {
                 <div>
                   <p className="text-sm font-medium text-foreground">数据解析完成</p>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    共解析 {PREVIEW_ROWS.length} 条记录（预览前5行）
+                    共解析 {parsedRows.length} 条记录（预览前5行）
                   </p>
                 </div>
               </div>
@@ -722,7 +842,7 @@ function BatchImportModal({ onClose }: { onClose: () => void }) {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
-                    {PREVIEW_ROWS.map((row, i) => (
+                    {(parsedRows.length > 0 ? parsedRows : []).slice(0, 5).map((row, i) => (
                       <tr key={i} className="hover:bg-muted/30 transition-colors">
                         <td className="px-3 py-2 text-foreground font-medium">{row.period}</td>
                         <td className="px-3 py-2 text-foreground">{row.name}</td>
@@ -753,34 +873,42 @@ function BatchImportModal({ onClose }: { onClose: () => void }) {
               {/* Validation summary */}
               <div className="grid grid-cols-3 gap-3">
                 <div className="bg-muted/30 rounded-lg p-3 text-center">
-                  <p className="text-lg font-bold text-foreground">{PREVIEW_ROWS.length}</p>
+                  <p className="text-lg font-bold text-foreground">{stats.total}</p>
                   <p className="text-[10px] text-muted-foreground">有效记录</p>
                 </div>
                 <div className="bg-[#22c55e]/5 rounded-lg p-3 text-center">
-                  <p className="text-lg font-bold text-[#22c55e]">3</p>
+                  <p className="text-lg font-bold text-[#22c55e]">{stats.passed}</p>
                   <p className="text-[10px] text-muted-foreground">全部达标</p>
                 </div>
                 <div className="bg-destructive/5 rounded-lg p-3 text-center">
-                  <p className="text-lg font-bold text-destructive">2</p>
+                  <p className="text-lg font-bold text-destructive">{stats.failed}</p>
                   <p className="text-[10px] text-muted-foreground">存在不达标项</p>
                 </div>
               </div>
 
-              {/* V1 notice on confirm */}
-              <div className="flex items-start gap-3 p-3 bg-[#f59e0b]/5 rounded-lg border border-[#f59e0b]/20">
-                <AlertCircle className="w-4 h-4 text-[#f59e0b] mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-sm font-medium text-foreground">功能预告</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Excel解析功能即将上线，当前请使用单条录入。确认导入按钮暂时不可用。
-                  </p>
+              {/* Import result message */}
+              {importResult && (
+                <div className="flex items-start gap-3 p-3 rounded-lg border bg-emerald-50 border-emerald-200">
+                  <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 text-emerald-600" />
+                  <div>
+                    <p className="text-sm font-medium text-emerald-800">导入完成：成功 {importResult.success} 条{importResult.failed > 0 ? `，失败 ${importResult.failed} 条` : ''}</p>
+                  </div>
                 </div>
-              </div>
+              )}
+              {parseError && (
+                <div className="flex items-start gap-3 p-3 bg-red-50 rounded-lg border border-red-200">
+                  <AlertCircle className="w-4 h-4 text-red-600 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium text-red-800">解析错误</p>
+                    <p className="text-xs text-red-600 mt-0.5">{parseError}</p>
+                  </div>
+                </div>
+              )}
 
               {/* Action buttons */}
               <div className="flex justify-between pt-2">
                 <button
-                  onClick={() => setParseStep('upload')}
+                  onClick={() => { setParseStep('upload'); setParsedRows([]); setStats({ total: 0, passed: 0, failed: 0 }); setImportResult(null); setParseError(''); }}
                   className="px-4 py-2 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors inline-flex items-center gap-1"
                 >
                   返回上传
@@ -793,12 +921,12 @@ function BatchImportModal({ onClose }: { onClose: () => void }) {
                     取消
                   </button>
                   <button
-                    disabled
-                    className="px-4 py-2 rounded-md text-sm font-medium bg-primary text-primary-foreground opacity-50 cursor-not-allowed inline-flex items-center gap-2"
-                    title="Excel解析功能即将上线"
+                    onClick={handleConfirmImport}
+                    disabled={importing || !parsedRows || parsedRows.length === 0}
+                    className="px-4 py-2 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2 transition-colors"
                   >
                     <Save className="w-3.5 h-3.5" />
-                    确认导入
+                    {importing ? '导入中...' : `确认导入 (${parsedRows?.length || 0}条)`}
                   </button>
                 </div>
               </div>

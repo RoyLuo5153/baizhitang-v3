@@ -50,9 +50,9 @@ export async function GET(request: NextRequest) {
       .order('view_count', { ascending: false });
 
     // 按角色过滤状态：
-    // trainee只能看approved；其他角色可按statusFilter查看，默认看全部非draft
+    // trainee只能看已发布(approved/published)；其他角色可按statusFilter查看，默认看全部非draft
     if (role === 'trainee') {
-      query = query.eq('status', 'approved');
+      query = query.in('status', ['approved', 'published']);
     } else if (statusFilter) {
       query = query.eq('status', statusFilter);
     }

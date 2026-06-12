@@ -67,9 +67,9 @@ interface QuestionItem {
 // === Status Helpers ===
 
 const STAGE_LABELS: Record<string, string> = {
-  foundation: '基础通关',
-  practice: '实操通关',
-  qualified: '合格阶段',
+  foundation: '阶段一 · 理论基础',
+  practice: '阶段二 · 实战演练',
+  qualified: '阶段三 · 综合达标',
 };
 
 const PROCESS_STATUS_MAP: Record<string, { label: string; color: string }> = {
@@ -481,7 +481,7 @@ function TraineeModuleView({ user }: { user: { id: string; role: string } }) {
 
   const handleModuleClick = (mod: ModuleInfo) => {
     if (mod.status === 'locked') {
-      showToast('完成基础通关后解锁');
+      showToast('完成阶段一·理论基础后解锁');
       return;
     }
     setActiveModule(mod);
@@ -688,12 +688,12 @@ function TraineeModuleView({ user }: { user: { id: string; role: string } }) {
       {/* 2. 阶段进度条区域 */}
       <div className="bg-card rounded-lg shadow-card p-5">
         <div className="grid grid-cols-2 gap-6">
-          {/* 基础通关 */}
+          {/* 阶段一 · 理论基础 */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <BookOpen className="w-4 h-4 text-primary" />
-                <span className="text-base font-semibold text-foreground">基础通关</span>
+                <span className="text-base font-semibold text-foreground">阶段一 · 理论基础</span>
               </div>
               <span className={`inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium ${
                 foundationProgress.allPassed
@@ -717,12 +717,12 @@ function TraineeModuleView({ user }: { user: { id: string; role: string } }) {
             </div>
           </div>
 
-          {/* 实操通关 */}
+          {/* 阶段二 · 实战演练 */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Wrench className="w-4 h-4 text-muted-foreground" />
-                <span className="text-base font-semibold text-foreground">实操通关</span>
+                <span className="text-base font-semibold text-foreground">阶段二 · 实战演练</span>
               </div>
               <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-sm text-xs font-medium ${
                 practiceUnlocked
@@ -752,11 +752,11 @@ function TraineeModuleView({ user }: { user: { id: string; role: string } }) {
         </div>
       </div>
 
-      {/* 3. 基础通关模块卡片网格 */}
+      {/* 3. 阶段一 · 理论基础 模块卡片网格 */}
       <div>
         <div className="flex items-center gap-2 mb-4">
           <BookOpen className="w-4 h-4 text-primary" />
-          <h2 className="text-base font-semibold text-foreground">基础通关</h2>
+          <h2 className="text-base font-semibold text-foreground">阶段一 · 理论基础</h2>
           <span className="text-xs text-muted-foreground ml-1">{foundationModules.length}个模块 · 通过分数线80分</span>
         </div>
         <div className="grid grid-cols-2 gap-4">
@@ -766,13 +766,13 @@ function TraineeModuleView({ user }: { user: { id: string; role: string } }) {
         </div>
       </div>
 
-      {/* 4. 实操通关模块卡片网格 */}
+      {/* 4. 阶段二 · 实战演练 模块卡片网格 */}
       <div>
         <div className="flex items-center gap-2 mb-4">
           <Wrench className="w-4 h-4 text-muted-foreground" />
-          <h2 className="text-base font-semibold text-foreground">实操通关</h2>
+          <h2 className="text-base font-semibold text-foreground">阶段二 · 实战演练</h2>
           <span className="text-xs text-muted-foreground ml-1">
-            {practiceModules.length}个模块{practiceUnlocked ? '' : ' · 完成基础通关后解锁'}
+            {practiceModules.length}个模块{practiceUnlocked ? '' : ' · 完成阶段一后解锁'}
           </span>
         </div>
         <div className="relative">
@@ -780,7 +780,7 @@ function TraineeModuleView({ user }: { user: { id: string; role: string } }) {
             <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
               <div className="bg-foreground/70 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
                 <Lock className="w-4 h-4" />
-                完成基础通关后解锁
+                完成阶段一后解锁
               </div>
             </div>
           )}
@@ -791,7 +791,7 @@ function TraineeModuleView({ user }: { user: { id: string; role: string } }) {
                 module={practiceUnlocked ? mod : { ...mod, status: 'locked' as const }}
                 onClick={() => {
                   if (practiceUnlocked) handleModuleClick(mod);
-                  else showToast('完成基础通关后解锁');
+                  else showToast('完成阶段一·理论基础后解锁');
                 }}
               />
             ))}

@@ -6,7 +6,7 @@ import {
   ScanSearch, Users, AlertTriangle, CheckCircle2, TrendingDown,
   ChevronRight, Activity, Target, Route as RouteIcon, User,
   X, ArrowRight, Zap, Clock, ListChecks, Send, BarChart3,
-  TrendingUp, TrendingDown as TrendingDownIcon, CheckCircle, Eye, Pill, Compass, Search,
+  TrendingUp, TrendingDown as TrendingDownIcon, CheckCircle, Eye, Pill, Compass, Search, Upload,
 } from 'lucide-react';
 
 /* ------------------------------------------------------------------ */
@@ -400,7 +400,15 @@ export default function DiagnosisPage() {
         <ScanSearch className="w-16 h-16 text-muted-foreground/30 mb-4" />
         <h3 className="text-lg font-semibold text-foreground mb-2">暂无诊断数据</h3>
         <p className="text-sm text-muted-foreground">尚未录入业务数据，无法进行双轨诊断</p>
-        <p className="text-xs text-muted-foreground mt-1">请先在"业务数据"页面录入学员指标</p>
+        <div className="flex gap-3 mt-4">
+          <a href="/scrm-import" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors">
+            <Upload className="w-4 h-4" />
+            导入业务数据
+          </a>
+          <a href="/trainee-profiles" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-sm font-medium hover:bg-muted transition-colors">
+            查看新人档案
+          </a>
+        </div>
       </div>
     );
   }

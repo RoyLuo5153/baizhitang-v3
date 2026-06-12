@@ -117,6 +117,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <button
             onClick={() => setCollapsed(!collapsed)}
             className="w-full flex items-center justify-center py-1.5 rounded-lg text-muted-foreground hover:bg-muted/50 text-xs"
+            title={collapsed ? '展开侧边栏' : '收起侧边栏'}
           >
             <ChevronDown className={`w-3.5 h-3.5 transition ${collapsed ? 'rotate-90' : '-rotate-90'}`} />
           </button>

@@ -66,6 +66,14 @@ interface StageApplication {
   reviewed_at: string | null;
 }
 
+// === 部门-职位级联映射 ===
+const DEPARTMENT_POSITIONS: Record<string, string[]> = {
+  '糖尿病管理一部': ['健康顾问', '高级顾问', '资深顾问'],
+  '糖尿病管理二部': ['见习顾问', '健康顾问', '高级顾问'],
+  '糖尿病管理三部': ['健康顾问', '高级顾问', '资深顾问', '首席顾问'],
+};
+const ALL_POSITIONS = ['健康顾问', '高级顾问', '资深顾问', '见习顾问', '首席顾问'];
+
 // === Default Threshold Configs ===
 
 const DEFAULT_PROCESS_THRESHOLDS: ThresholdConfig[] = [
@@ -306,37 +314,39 @@ function UserDialog({
           )}
           {form.roleId === 1 && (
             <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1.5 block">职位</label>
-              <input
-                value={form.position}
-                onChange={e => setForm(prev => ({ ...prev, position: e.target.value }))}
+              <label className="text-xs font-medium text-muted-foreground mb-1.5 block">部门</label>
+              <select
+                value={form.department}
+                onChange={e => {
+                  const dept = e.target.value;
+                  // 切换部门时，如果当前职位不在新部门的职位列表中，清空职位
+                  const deptPositions = DEPARTMENT_POSITIONS[dept] || ALL_POSITIONS;
+                  const newPosition = deptPositions.includes(form.position) ? form.position : '';
+                  setForm(prev => ({ ...prev, department: dept, position: newPosition }));
+                }}
                 className="w-full h-9 rounded-md border border-border bg-transparent px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
-                placeholder="如：健康顾问、高级顾问"
-                list="position-suggestions"
-              />
-              <datalist id="position-suggestions">
-                <option value="健康顾问" />
-                <option value="高级顾问" />
-                <option value="资深顾问" />
-                <option value="见习顾问" />
-              </datalist>
+              >
+                <option value="">请选择部门</option>
+                {Object.keys(DEPARTMENT_POSITIONS).map(dept => (
+                  <option key={dept} value={dept}>{dept}</option>
+                ))}
+              </select>
             </div>
           )}
           {form.roleId === 1 && (
             <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1.5 block">部门</label>
-              <input
-                value={form.department}
-                onChange={e => setForm(prev => ({ ...prev, department: e.target.value }))}
+              <label className="text-xs font-medium text-muted-foreground mb-1.5 block">职位</label>
+              <select
+                value={form.position}
+                onChange={e => setForm(prev => ({ ...prev, position: e.target.value }))}
                 className="w-full h-9 rounded-md border border-border bg-transparent px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
-                placeholder="如：糖尿病管理一部"
-                list="department-suggestions"
-              />
-              <datalist id="department-suggestions">
-                <option value="糖尿病管理一部" />
-                <option value="糖尿病管理二部" />
-                <option value="糖尿病管理三部" />
-              </datalist>
+                disabled={!form.department}
+              >
+                <option value="">{form.department ? '请选择职位' : '请先选择部门'}</option>
+                {(DEPARTMENT_POSITIONS[form.department] || (form.department ? ALL_POSITIONS : [])).map(pos => (
+                  <option key={pos} value={pos}>{pos}</option>
+                ))}
+              </select>
             </div>
           )}
           {form.roleId === 1 && (
