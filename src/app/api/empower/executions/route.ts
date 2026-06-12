@@ -104,6 +104,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ executions: enriched });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error';
+    console.error('[empower/executions POST] Error:', message, err);
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
@@ -118,18 +119,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing planId or traineeId' }, { status: 400 });
     }
 
+    const numericPlanId = Number(planId);
+    if (isNaN(numericPlanId)) {
+      return NextResponse.json({ error: 'Invalid planId: must be a number' }, { status: 400 });
+    }
+
     // Get plan content for prescription snapshot
     const { data: plan } = await supabase
       .from('empower_plans')
       .select('content')
-      .eq('id', planId)
+      .eq('id', numericPlanId)
       .single();
 
     const { data, error } = await supabase
       .from('empower_executions')
       .insert({
         user_id: traineeId,
-        plan_id: planId,
+        plan_id: numericPlanId,
         assigned_by: assignedBy || null,
         triggered_by: triggeredBy || 'manual',
         status: 'assigned',
@@ -148,7 +154,7 @@ export async function POST(request: NextRequest) {
       const { data: planInfo } = await supabase
         .from('empower_plans')
         .select('name')
-        .eq('id', planId)
+        .eq('id', numericPlanId)
         .single();
 
       const { data: traineeInfo } = await supabase
@@ -161,7 +167,7 @@ export async function POST(request: NextRequest) {
         traineeId,
         traineeInfo?.real_name || '未知学员',
         planInfo?.name || '未命名方案',
-        planId,
+        numericPlanId,
         assignedBy || ''
       );
     } catch {

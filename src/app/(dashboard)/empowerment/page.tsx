@@ -867,7 +867,7 @@ function ExecutionDetailPanel({ execution, plans, coachingRecords, userId, userR
           )}
 
           {/* 病情分析 + 调理方向 + 达标标准 (处方详情) */}
-          {content.analysis && (
+          {Boolean(content.analysis) && (
             <section className="bg-[#102A43]/5 rounded-lg p-4 border border-[#102A43]/10">
               <div className="flex items-center gap-2 mb-2">
                 <Search className="w-4 h-4 text-[#102A43]/60" />
@@ -877,14 +877,14 @@ function ExecutionDetailPanel({ execution, plans, coachingRecords, userId, userR
             </section>
           )}
 
-          {content.direction && (
+          {Boolean(content.direction) && (
             <section className="flex items-center gap-2">
               <Compass className="w-4 h-4 text-[#2978B5]" />
               <span className="text-sm font-medium text-[#2978B5]">{String(content.direction)}</span>
             </section>
           )}
 
-          {content.standard && (
+          {Boolean(content.standard) && (
             <section className="bg-[#22c55e]/5 rounded-lg p-4 border border-[#22c55e]/10">
               <div className="flex items-center gap-2 mb-2">
                 <Target className="w-4 h-4 text-[#22c55e]" />
@@ -1476,8 +1476,8 @@ function PlanCardExpandable({ plan, expanded, onToggle, onPreview, onEdit, onDel
             <span className="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-muted text-muted-foreground">
               {INDICATOR_LABELS[plan.indicator_key || ''] || plan.indicator_key || '综合提升'}
             </span>
-            {content.analysis && (
-              <span className="text-xs text-muted-foreground line-clamp-1 max-w-xs">{content.analysis}</span>
+            {Boolean(content.analysis) && (
+              <span className="text-xs text-muted-foreground line-clamp-1 max-w-xs">{String(content.analysis)}</span>
             )}
             {plan.created_at && (
               <span className="text-xs text-muted-foreground">创建于 {new Date(plan.created_at).toLocaleDateString()}</span>
@@ -1499,7 +1499,7 @@ function PlanCardExpandable({ plan, expanded, onToggle, onPreview, onEdit, onDel
       {expanded && (
         <div className="border-t border-border/20 px-5 pb-5 pt-4 space-y-4">
           {/* 病情分析 */}
-          {content.analysis && (
+          {Boolean(content.analysis) && (
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <Search className="w-4 h-4 text-muted-foreground" />
@@ -1512,7 +1512,7 @@ function PlanCardExpandable({ plan, expanded, onToggle, onPreview, onEdit, onDel
           )}
 
           {/* 调理方向 */}
-          {content.direction && (
+          {Boolean(content.direction) && (
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <Compass className="w-4 h-4 text-muted-foreground" />
@@ -1537,9 +1537,9 @@ function PlanCardExpandable({ plan, expanded, onToggle, onPreview, onEdit, onDel
                   <div key={i} className="flex gap-3">
                     <div className="flex flex-col items-center">
                       <div className="w-6 h-6 rounded-full bg-[#2978B5] text-white flex items-center justify-center text-xs font-bold">{i + 1}</div>
-                      {i < content.prescription!.length - 1 && <div className="w-0.5 flex-1 bg-border/30 my-1" />}
+                      {(content.prescription as unknown[]) && i < (content.prescription as unknown[]).length - 1 && <div className="w-0.5 flex-1 bg-border/30 my-1" />}
                     </div>
-                    <div className={i < content.prescription!.length - 1 ? 'pb-4' : ''}>
+                    <div className={(content.prescription as unknown[]) && i < (content.prescription as unknown[]).length - 1 ? 'pb-4' : ''}>
                       <div className="text-sm font-semibold text-foreground mb-1">{item.step}</div>
                       <div className="text-xs text-muted-foreground mb-1">{item.detail}</div>
                       <div className="flex items-center gap-2">
@@ -1565,7 +1565,7 @@ function PlanCardExpandable({ plan, expanded, onToggle, onPreview, onEdit, onDel
                 <span className="text-sm font-semibold text-foreground">达标标准</span>
               </div>
               <div className="space-y-1.5">
-                {content.standard!.split(/[；;\n]/).filter(s => s.trim()).map((s, i) => (
+                {String(content.standard).split(/[；;\n]/).filter(s => s.trim()).map((s, i) => (
                   <div key={i} className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-[#22c55e]" />
                     <span className="text-sm text-foreground">{s.trim()}</span>
@@ -1576,7 +1576,7 @@ function PlanCardExpandable({ plan, expanded, onToggle, onPreview, onEdit, onDel
           )}
 
           {/* 兼容旧格式 steps */}
-          {!content.analysis && !content.prescription && content.steps && (
+          {!content.analysis && !content.prescription && Boolean(content.steps) && (
             <div>
               <h3 className="text-sm font-semibold text-foreground mb-2">方案内容</h3>
               <div className="space-y-3">
@@ -1649,7 +1649,7 @@ function PrescriptionPreviewModal({ plan, traineeName, onClose, onPush, pushing 
           {/* 4段式处方 */}
           {content && typeof content === 'object' && (
             <div className="space-y-4">
-              {content.analysis && (
+              {Boolean(content.analysis) && (
                 <div className="bg-[#102A43]/5 rounded-lg p-4 border border-[#102A43]/10">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-6 h-6 rounded-full bg-[#102A43]/10 flex items-center justify-center">
@@ -1660,7 +1660,7 @@ function PrescriptionPreviewModal({ plan, traineeName, onClose, onPush, pushing 
                   <p className="text-sm text-foreground/90 leading-relaxed pl-8">{content.analysis}</p>
                 </div>
               )}
-              {content.direction && (
+              {Boolean(content.direction) && (
                 <div className="bg-primary/5 rounded-lg p-4 border border-primary/10">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-6 h-6 rounded-full bg-primary/15 flex items-center justify-center">
@@ -1696,7 +1696,7 @@ function PrescriptionPreviewModal({ plan, traineeName, onClose, onPush, pushing 
                   </div>
                 </div>
               )}
-              {content.standard && (
+              {Boolean(content.standard) && (
                 <div className="bg-[#22c55e]/5 rounded-lg p-4 border border-[#22c55e]/10">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-6 h-6 rounded-full bg-[#22c55e]/15 flex items-center justify-center">
@@ -1705,7 +1705,7 @@ function PrescriptionPreviewModal({ plan, traineeName, onClose, onPush, pushing 
                     <h4 className="text-sm font-semibold text-[#22c55e]">达标标准</h4>
                   </div>
                   <div className="space-y-1.5 pl-8">
-                    {content.standard.split(/[；;\n]/).filter(s => s.trim()).map((s, i) => (
+                    {String(content.standard || '').split(/[；;\n]/).filter(s => s.trim()).map((s, i) => (
                       <div key={i} className="flex items-center gap-2">
                         <CheckCircle2 className="w-4 h-4 text-[#22c55e]" />
                         <span className="text-sm text-foreground">{s.trim()}</span>
@@ -1714,7 +1714,7 @@ function PrescriptionPreviewModal({ plan, traineeName, onClose, onPush, pushing 
                   </div>
                 </div>
               )}
-              {!content.analysis && !content.prescription && content.steps && (
+              {!content.analysis && !content.prescription && Boolean(content.steps) && (
                 <div className="mb-4">
                   <h4 className="text-sm font-semibold text-foreground mb-2">方案内容</h4>
                   <div className="space-y-3">
