@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
-import { onModulePassed, onModuleFailed } from '@/lib/triggers';
+import { onModuleFailed, onModulePassed } from '@/lib/triggers';
 
 export const dynamic = 'force-dynamic';
+
+const PASSING_SCORE = 80;
 
 // POST /api/learning/modules/[moduleCode]/submit - 模块化答题提交
 export async function POST(
@@ -25,29 +27,34 @@ export async function POST(
   const client = getSupabaseClient(token);
 
   // 1. 获取模块配置
-  const { data: moduleConfig, error: modError } = await client
+  const { data: moduleConfig, error: moduleError } = await client
     .from('assessment_modules')
     .select('*')
     .eq('code', moduleCode)
     .eq('is_active', true)
     .maybeSingle();
 
-  if (modError || !moduleConfig) {
-    return NextResponse.json({ error: '模块不存在或未激活' }, { status: 404 });
+  if (moduleError || !moduleConfig) {
+    return NextResponse.json({ error: '模块不存在或已停用' }, { status: 404 });
   }
 
   const passThreshold = moduleConfig.pass_threshold || 80;
-  const stage = moduleConfig.stage as string;
+  const questionCount = moduleConfig.question_count || 10;
 
-  // 2. 获取该模块的题目（含正确答案）
+  // 2. 从questions表按module+stage随机抽题
   const { data: questions, error: qError } = await client
     .from('questions')
     .select('id, question_type, answer, explanation')
     .eq('module', moduleCode)
-    .eq('is_active', true);
+    .eq('is_active', true)
+    .limit(questionCount);
 
   if (qError) {
     return NextResponse.json({ error: qError.message }, { status: 500 });
+  }
+
+  if (!questions || questions.length === 0) {
+    return NextResponse.json({ error: '该模块暂无题目' }, { status: 400 });
   }
 
   // 3. 评分
@@ -59,6 +66,8 @@ export async function POST(
     correctAnswer: string | string[];
     explanation: string;
   }> = [];
+
+  const wrongQuestionIds: number[] = [];
 
   for (const q of questions || []) {
     const userAnswer = answers[q.id];
@@ -73,7 +82,11 @@ export async function POST(
       isCorrect = JSON.stringify(userArr) === JSON.stringify(correctArr);
     }
 
-    if (isCorrect) correctCount++;
+    if (isCorrect) {
+      correctCount++;
+    } else {
+      wrongQuestionIds.push(q.id);
+    }
 
     results.push({
       questionId: q.id,
@@ -84,21 +97,25 @@ export async function POST(
     });
   }
 
-  const totalQuestions = questions?.length || 0;
+  const totalQuestions = questions.length;
   const score = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0;
   const passed = score >= passThreshold;
 
-  // 4. 记录答题记录（复用quiz_attempts，用level_id=0标记模块答题）
-  await client
+  // 4. 记录答题记录（复用quiz_attempts，新增module_code字段）
+  const { error: attemptError } = await client
     .from('quiz_attempts')
     .insert({
       user_id: userId,
-      level_id: 0, // 模块答题标记
+      level_id: 0, // 模块化答题不绑定level_id
       score,
       total_questions: totalQuestions,
       correct_count: correctCount,
-      answers: { moduleCode, results },
+      answers: results,
     });
+
+  if (attemptError) {
+    console.error('Failed to save attempt:', attemptError.message);
+  }
 
   // 5. 更新模块进度
   const { data: existingProgress } = await client
@@ -108,16 +125,18 @@ export async function POST(
     .eq('module_code', moduleCode)
     .maybeSingle();
 
+  const now = new Date().toISOString();
   if (existingProgress) {
     const updateData: Record<string, unknown> = {
       attempts: (existingProgress.attempts || 0) + 1,
-      last_attempt_at: new Date().toISOString(),
+      last_attempt_at: now,
       best_score: Math.max(existingProgress.best_score || 0, score),
-      updated_at: new Date().toISOString(),
     };
     if (passed && existingProgress.status !== 'passed') {
       updateData.status = 'passed';
-      updateData.passed_at = new Date().toISOString();
+      updateData.passed_at = now;
+    } else if (!passed && existingProgress.status === 'locked') {
+      updateData.status = 'active';
     }
     await client
       .from('module_progress')
@@ -127,11 +146,11 @@ export async function POST(
     await client.from('module_progress').insert({
       user_id: userId,
       module_code: moduleCode,
-      status: passed ? 'passed' : 'failed',
+      status: passed ? 'passed' : 'active',
       best_score: score,
       attempts: 1,
-      last_attempt_at: new Date().toISOString(),
-      passed_at: passed ? new Date().toISOString() : null,
+      last_attempt_at: now,
+      passed_at: passed ? now : null,
     });
   }
 
@@ -142,19 +161,18 @@ export async function POST(
       .select('real_name')
       .eq('id', userId)
       .maybeSingle();
-    const traineeName = (userData as Record<string, unknown>)?.real_name as string || userId;
-
-    // 收集错题ID
-    const wrongQuestionIds = results.filter(r => !r.correct).map(r => r.questionId);
+    const traineeName = userData?.real_name || userId;
+    const moduleName = moduleConfig.name || moduleCode;
+    const stage = moduleConfig.stage || 'foundation';
 
     if (!passed) {
       const failCount = (existingProgress?.attempts || 0) + 1;
-      await onModuleFailed(userId, traineeName, moduleCode, moduleConfig.name as string, failCount, wrongQuestionIds);
+      await onModuleFailed(userId, traineeName, moduleCode, moduleName, failCount, wrongQuestionIds);
     } else {
       await onModulePassed(userId, traineeName, moduleCode, stage);
     }
   } catch (triggerErr) {
-    console.error('Trigger error:', triggerErr);
+    console.error('Module trigger error:', triggerErr);
   }
 
   return NextResponse.json({

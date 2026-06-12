@@ -517,7 +517,7 @@ function TraineeModuleView({ user }: { user: { id: string; role: string } }) {
       const res = await fetch(`/api/learning/modules/${activeModule.code}/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ answers }),
+        body: JSON.stringify({ userId: user.id, answers }),
       });
       if (!res.ok) throw new Error('Submit failed');
       const result = await res.json();

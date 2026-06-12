@@ -73,6 +73,7 @@
 │   │   └── api/            # API路由
 │   │       ├── auth/       # 登录/登出/当前用户
 │   │       ├── learning/   # 学习关卡+答题提交
+│   │       │   └── modules/    # J: 模块化通关(列表+详情+提交)
 │   │       ├── growth/     # 成长档案
 │   │       ├── growth-plan/ # 成长计划（每日任务+阶段进度）
 │   │       ├── core-actions/ # 19核心动作+评分
@@ -115,7 +116,7 @@
 
 ## 数据库表（30张）
 
-核心表: users, roles, permissions, role_permissions, learning_levels, level_progress, quiz_attempts, questions, qc_records, business_data, thresholds, empower_plans, empower_executions, mentor_trainees, stage_rules, stage_transitions, announcements, resources, daily_assessments, configurations, growth_stages, daily_plans, core_actions(v2已迁移), action_scores(v2已迁移), special_patient_actions(v2已迁移), service_nodes, trust_snapshots, quadrant_snapshots(L3新增), workday_calendar(M1新增), learning_path_templates(M1新增), learning_plans(M1新增), learning_plan_edit_logs(M1新增)
+核心表: users, roles, permissions, role_permissions, learning_levels, level_progress, quiz_attempts, questions, qc_records, business_data, thresholds, empower_plans, empower_executions, mentor_trainees, stage_rules, stage_transitions, announcements, resources, daily_assessments, configurations, growth_stages, daily_plans, core_actions(v2已迁移), action_scores(v2已迁移), special_patient_actions(v2已迁移), service_nodes, trust_snapshots, quadrant_snapshots(L3新增), workday_calendar(M1新增), learning_path_templates(M1新增), learning_plans(M1新增), learning_plan_edit_logs(M1新增), assessment_modules(J新增), module_progress(J新增)
 
 ## 测试账号
 

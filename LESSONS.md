@@ -30,6 +30,17 @@
 
 ---
 
+## #003 模块化答题API路由缺失导致GET返回空响应
+
+- **症状**：`GET /api/learning/modules/diabetes_basics` 返回空响应（非JSON），前端解析失败
+- **根因**：只创建了 `modules/[moduleCode]/submit/route.ts`，遗漏了 `modules/[moduleCode]/route.ts`（GET详情路由）。Next.js App Router 中动态路由段必须有对应的 `route.ts` 才能处理请求
+- **修复**：新建 `src/app/api/learning/modules/[moduleCode]/route.ts`，实现 GET 返回模块配置+题目列表+用户进度
+- **防错规则**：创建动态路由API时，必须同时检查是否需要父级路由文件和子级路由文件；`[param]/submit/route.ts` 和 `[param]/route.ts` 是两个独立文件
+- **类别**：路由/API
+- **日期**：2026-06-12
+
+---
+
 ## #012 pg库参数序列化导致pg_strtoint32_safe错误
 
 - **症状**：使用`pg`库的`pgQuery`/`pgInsert`执行INSERT时，PostgreSQL报`pg_strtoint32_safe`错误，所有参数被序列化为字符串，无法隐式转换为整数列

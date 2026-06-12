@@ -476,7 +476,76 @@ export async function onModulePassed(
   const allModulesPassed = await checkAllModulesPassed(traineeId, stage);
 
   if (allModulesPassed) {
-    // 阶段转换已由 stage-engine.ts 自动处理，此处仅做模块通关通知
+    if (stage === 'foundation') {
+      // 基础通关全部通过 → 进入实操阶段
+      await updateTraineeStage(traineeId, 'practice', 'monitoring', 'insufficient_data');
+
+      // 记录阶段转换
+      const client = getSupabaseClient();
+      await client.from('stage_transitions').insert({
+        user_id: traineeId,
+        from_stage: 'foundation',
+        to_stage: 'practice',
+        reason: '基础通关4个模块全部通过',
+        triggered_by: 'module_pass',
+      });
+
+      // 通知新人阶段升级
+      await sendNotification({
+        userId: traineeId,
+        type: 'stage_transition',
+        title: '恭喜进入实操阶段',
+        message: '基础通关全部通过，已进入实操通关阶段，请继续完成实操模块考核。',
+        priority: 'high',
+      });
+
+      // 通知培训负责人
+      const managerIds = await getTrainingManagerIds();
+      for (const mgrId of managerIds) {
+        await sendNotification({
+          userId: mgrId,
+          type: 'stage_transition',
+          title: `${traineeName}进入实操阶段`,
+          message: `${traineeName}已完成基础通关全部模块，进入实操阶段。`,
+          relatedUserId: traineeId,
+          priority: 'medium',
+        });
+      }
+    } else if (stage === 'practice') {
+      // 实操通关全部通过 → 进入合格阶段
+      await updateTraineeStage(traineeId, 'qualified', 'passed', 'passed');
+
+      const client = getSupabaseClient();
+      await client.from('stage_transitions').insert({
+        user_id: traineeId,
+        from_stage: 'practice',
+        to_stage: 'qualified',
+        reason: '实操通关4个模块全部通过',
+        triggered_by: 'module_pass',
+      });
+
+      // 通知新人
+      await sendNotification({
+        userId: traineeId,
+        type: 'stage_transition',
+        title: '恭喜进入独立达标阶段',
+        message: '实操通关全部通过，已进入独立达标阶段！',
+        priority: 'high',
+      });
+
+      // 通知培训负责人
+      const managerIds = await getTrainingManagerIds();
+      for (const mgrId of managerIds) {
+        await sendNotification({
+          userId: mgrId,
+          type: 'stage_transition',
+          title: `${traineeName}进入独立达标阶段`,
+          message: `${traineeName}已完成实操通关全部模块，进入独立达标阶段。`,
+          relatedUserId: traineeId,
+          priority: 'medium',
+        });
+      }
+    }
   }
 
   // 通知带教老师该模块已通过
