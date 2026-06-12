@@ -1,101 +1,100 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { S3Storage } from 'coze-coding-dev-sdk';
+import { getSupabaseClient } from '@/storage/database/supabase-client';
 import { getAuthFromHeaders } from '@/lib/auth/api-auth';
 
-// ─── 文件类型限制配置 ─────────────────────────────────────
-const FILE_LIMITS: Record<string, { exts: string[]; maxSize: number }> = {
-  image: { exts: ['jpg', 'jpeg', 'png', 'gif', 'webp'], maxSize: 5 * 1024 * 1024 },
-  audio: { exts: ['mp3', 'wav', 'webm', 'm4a'], maxSize: 20 * 1024 * 1024 },
-  video: { exts: ['mp4', 'webm'], maxSize: 100 * 1024 * 1024 },
-  document: { exts: ['pdf', 'doc', 'docx'], maxSize: 20 * 1024 * 1024 },
-  spreadsheet: { exts: ['xlsx', 'xls', 'csv'], maxSize: 10 * 1024 * 1024 },
-};
+export const dynamic = 'force-dynamic';
 
-const ALL_ALLOWED_EXTS = Object.values(FILE_LIMITS).flatMap(l => l.exts);
+// 文件类型和大小限制
+const ALLOWED_TYPES = [
+  { mime: 'image/jpeg', maxSize: 5 * 1024 * 1024 },
+  { mime: 'image/png', maxSize: 5 * 1024 * 1024 },
+  { mime: 'image/gif', maxSize: 5 * 1024 * 1024 },
+  { mime: 'image/webp', maxSize: 5 * 1024 * 1024 },
+  { mime: 'audio/mpeg', maxSize: 20 * 1024 * 1024 },
+  { mime: 'audio/wav', maxSize: 20 * 1024 * 1024 },
+  { mime: 'audio/webm', maxSize: 20 * 1024 * 1024 },
+  { mime: 'audio/x-m4a', maxSize: 20 * 1024 * 1024 },
+  { mime: 'video/mp4', maxSize: 100 * 1024 * 1024 },
+  { mime: 'video/webm', maxSize: 100 * 1024 * 1024 },
+  { mime: 'application/pdf', maxSize: 20 * 1024 * 1024 },
+  { mime: 'application/msword', maxSize: 20 * 1024 * 1024 },
+  { mime: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', maxSize: 20 * 1024 * 1024 },
+  { mime: 'application/vnd.ms-excel', maxSize: 10 * 1024 * 1024 },
+  { mime: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', maxSize: 10 * 1024 * 1024 },
+  { mime: 'text/csv', maxSize: 10 * 1024 * 1024 },
+];
 
-function getFileCategory(ext: string): string | null {
-  for (const [category, config] of Object.entries(FILE_LIMITS)) {
-    if (config.exts.includes(ext)) return category;
-  }
-  return null;
+function generateUUID(): string {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
 }
 
-function getMaxSizeForExt(ext: string): number {
-  const category = getFileCategory(ext);
-  if (!category) return 0;
-  return FILE_LIMITS[category].maxSize;
-}
-
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return bytes + 'B';
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + 'KB';
-  return (bytes / (1024 * 1024)).toFixed(1) + 'MB';
-}
-
-// 从cookie解析用户身份
-
-// POST /api/upload — 上传文件到对象存储
+// POST /api/upload — 上传文件到 Supabase Storage
 export async function POST(request: NextRequest) {
   try {
-    // 1. 鉴权：新人无权上传
     const userInfo = getAuthFromHeaders(request);
     const role = userInfo?.role || 'trainee';
+
+    // trainee不能上传
     if (role === 'trainee') {
       return NextResponse.json({ error: '新人无权上传文件' }, { status: 403 });
     }
 
-    // 2. 解析 multipart/form-data
     const formData = await request.formData();
-    const file = formData.get('file') as File | null;
+    const file = formData.get('file') as File;
+
     if (!file) {
-      return NextResponse.json({ error: '未选择文件' }, { status: 400 });
+      return NextResponse.json({ error: '缺少文件' }, { status: 400 });
     }
 
-    // 3. 后端格式校验
-    const originalName = file.name;
-    const ext = originalName.split('.').pop()?.toLowerCase() || '';
-    if (!ALL_ALLOWED_EXTS.includes(ext)) {
-      return NextResponse.json(
-        { error: `不支持的文件格式 .${ext}，允许：${ALL_ALLOWED_EXTS.join(', ')}` },
-        { status: 400 }
-      );
+    // 校验文件类型
+    const rule = ALLOWED_TYPES.find(r => r.mime === file.type);
+    if (!rule) {
+      return NextResponse.json({ error: `不支持的文件类型: ${file.type}` }, { status: 400 });
     }
 
-    // 4. 大小校验
-    const maxSize = getMaxSizeForExt(ext);
-    if (file.size > maxSize) {
-      return NextResponse.json(
-        { error: `文件过大（${formatFileSize(file.size)}），${getFileCategory(ext)}类最大 ${formatFileSize(maxSize)}` },
-        { status: 400 }
-      );
+    // 校验文件大小
+    if (file.size > rule.maxSize) {
+      const maxMB = (rule.maxSize / (1024 * 1024)).toFixed(0);
+      return NextResponse.json({ error: `文件过大，最大支持 ${maxMB}MB` }, { status: 400 });
     }
 
-    // 5. 上传到对象存储
-    const storage = new S3Storage({
-      endpointUrl: process.env.COZE_BUCKET_ENDPOINT_URL,
-      accessKey: '',
-      secretKey: '',
-      bucketName: process.env.COZE_BUCKET_NAME,
-      region: 'cn-beijing',
-    });
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      return NextResponse.json({ error: 'Storage unavailable' }, { status: 500 });
+    }
 
-    const fileBuffer = Buffer.from(await file.arrayBuffer());
-    const category = getFileCategory(ext) || 'other';
-    const storageKey = await storage.uploadFile({
-      fileContent: fileBuffer,
-      fileName: `knowledge-attachments/${category}/${originalName}`,
-      contentType: file.type || 'application/octet-stream',
-    });
+    // 文件名加UUID前缀避免冲突
+    const fileName = `${generateUUID()}-${file.name}`;
+    const fileBuffer = await file.arrayBuffer();
 
-    // 6. 返回元信息（存key，不存URL）
+    const { error: uploadError } = await supabase.storage
+      .from('knowledge-attachments')
+      .upload(fileName, fileBuffer, {
+        contentType: file.type,
+        upsert: false,
+      });
+
+    if (uploadError) {
+      return NextResponse.json({ error: uploadError.message }, { status: 500 });
+    }
+
+    // 获取公开URL
+    const { data: urlData } = supabase.storage
+      .from('knowledge-attachments')
+      .getPublicUrl(fileName);
+
     return NextResponse.json({
-      key: storageKey,
-      type: category,
-      name: originalName,
+      url: urlData.publicUrl,
+      key: fileName,
+      type: file.type,
+      name: file.name,
       size: file.size,
     });
   } catch (e) {
-    console.error('[Upload API] Error:', e);
     return NextResponse.json({ error: String(e) }, { status: 500 });
   }
 }
