@@ -52,12 +52,12 @@ export async function GET(req: NextRequest) {
     const userIds = (data || []).map((u: { id: string }) => u.id);
     const { data: profiles } = await supabase
       .from('trainee_profiles')
-      .select('user_id, stage, cohort')
+      .select('user_id, stage, cohort, position, department')
       .in('user_id', userIds);
 
-    const profileMap: Record<string, { stage: string; cohort: string | null }> = {};
-    (profiles || []).forEach((p: { user_id: string; stage: string; cohort: string | null }) => {
-      profileMap[p.user_id] = { stage: p.stage, cohort: p.cohort };
+    const profileMap: Record<string, { stage: string; cohort: string | null; position: string | null; department: string | null }> = {};
+    (profiles || []).forEach((p: { user_id: string; stage: string; cohort: string | null; position: string | null; department: string | null }) => {
+      profileMap[p.user_id] = { stage: p.stage, cohort: p.cohort, position: p.position, department: p.department };
     });
 
     // 获取学员的带教老师信息
@@ -95,6 +95,8 @@ export async function GET(req: NextRequest) {
       isSuperAdmin: u.is_super_admin || false,
       stage: profileMap[u.id]?.stage ? (stageNumberMap[profileMap[u.id].stage] || null) : null,
       cohort: profileMap[u.id]?.cohort || null,
+      position: profileMap[u.id]?.position || null,
+      department: profileMap[u.id]?.department || null,
       mentorName: mentorMap[u.id] || null,
       status: u.is_active !== false ? 'active' : 'inactive',
       createdAt: u.created_at,
@@ -116,7 +118,7 @@ export async function POST(req: NextRequest) {
     if (denied) return denied;
 
     const body = await req.json();
-    const { username, realName, password, roleId, stage, cohort } = body;
+    const { username, realName, password, roleId, stage, cohort, position, department } = body;
 
     if (!username || !realName || !roleId) {
       return NextResponse.json({ error: '缺少必填字段: username, realName, roleId' }, { status: 400 });
@@ -177,6 +179,8 @@ export async function POST(req: NextRequest) {
         hire_date: new Date().toISOString().split('T')[0],
       };
       if (cohort) profileData.cohort = cohort;
+      if (position) profileData.position = position;
+      if (department) profileData.department = department;
 
       const { error: profileError } = await supabase
         .from('trainee_profiles')
@@ -223,7 +227,7 @@ export async function PUT(req: NextRequest) {
     if (denied) return denied;
 
     const body = await req.json();
-    const { userId, realName, roleId, stage, status, cohort, password, resetPassword, mentorId } = body;
+    const { userId, realName, roleId, stage, status, cohort, password, resetPassword, mentorId, position, department } = body;
     if (!userId) return NextResponse.json({ error: '缺少userId' }, { status: 400 });
 
     // 禁止修改自己的角色（防止提权/降权）
@@ -323,6 +327,8 @@ export async function PUT(req: NextRequest) {
       profileUpdate.stage = typeof stage === 'number' ? (stageMap[stage] || 'foundation') : stage;
     }
     if (cohort !== undefined) profileUpdate.cohort = cohort;
+    if (position !== undefined) profileUpdate.position = position;
+    if (department !== undefined) profileUpdate.department = department;
 
     if (Object.keys(profileUpdate).length > 0) {
       const { data: existing } = await supabase

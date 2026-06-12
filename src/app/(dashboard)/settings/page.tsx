@@ -31,6 +31,8 @@ interface UserRecord {
   isSuperAdmin?: boolean;
   stage: number | null;
   cohort: string | null;
+  position: string | null;
+  department: string | null;
   mentorName: string | null;
   status: string;
   createdAt: string;
@@ -168,6 +170,8 @@ function UserDialog({
     roleId: user?.roleId || 1,
     stage: user?.stage ?? 1,
     cohort: user?.cohort || '',
+    position: user?.position || '',
+    department: user?.department || '',
     status: user?.status || 'active',
   });
   const [saving, setSaving] = useState(false);
@@ -196,6 +200,8 @@ function UserDialog({
             roleId: form.roleId,
             stage: form.roleId === 1 ? form.stage : undefined,
             cohort: form.roleId === 1 ? form.cohort : undefined,
+            position: form.roleId === 1 ? form.position : undefined,
+            department: form.roleId === 1 ? form.department : undefined,
           }),
         });
         if (!res.ok) {
@@ -212,6 +218,8 @@ function UserDialog({
             roleId: form.roleId,
             stage: form.roleId === 1 ? form.stage : undefined,
             cohort: form.roleId === 1 ? form.cohort : undefined,
+            position: form.roleId === 1 ? form.position : undefined,
+            department: form.roleId === 1 ? form.department : undefined,
             status: form.status,
           }),
         });
@@ -294,6 +302,41 @@ function UserDialog({
                 className="w-full h-9 rounded-md border border-border bg-transparent px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
                 placeholder="如：第1期、2026年3月期"
               />
+            </div>
+          )}
+          {form.roleId === 1 && (
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1.5 block">职位</label>
+              <input
+                value={form.position}
+                onChange={e => setForm(prev => ({ ...prev, position: e.target.value }))}
+                className="w-full h-9 rounded-md border border-border bg-transparent px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+                placeholder="如：健康顾问、高级顾问"
+                list="position-suggestions"
+              />
+              <datalist id="position-suggestions">
+                <option value="健康顾问" />
+                <option value="高级顾问" />
+                <option value="资深顾问" />
+                <option value="见习顾问" />
+              </datalist>
+            </div>
+          )}
+          {form.roleId === 1 && (
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1.5 block">部门</label>
+              <input
+                value={form.department}
+                onChange={e => setForm(prev => ({ ...prev, department: e.target.value }))}
+                className="w-full h-9 rounded-md border border-border bg-transparent px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+                placeholder="如：糖尿病管理一部"
+                list="department-suggestions"
+              />
+              <datalist id="department-suggestions">
+                <option value="糖尿病管理一部" />
+                <option value="糖尿病管理二部" />
+                <option value="糖尿病管理三部" />
+              </datalist>
             </div>
           )}
           {form.roleId === 1 && (
@@ -1295,6 +1338,8 @@ export default function SettingsPage() {
                         <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">角色</th>
                         <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">阶段</th>
                         <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">期数</th>
+                        <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">职位</th>
+                        <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">部门</th>
                         <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">带教老师</th>
                         <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">状态</th>
                         <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">操作</th>
@@ -1345,6 +1390,20 @@ export default function SettingsPage() {
                                 user.cohort ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
                               }`}>
                                 {user.cohort || '未分配'}
+                              </span>
+                            </td>
+                            <td className="px-5 py-4 text-center">
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-sm text-xs font-medium ${
+                                user.position ? 'bg-[#f59e0b]/10 text-[#f59e0b]' : 'bg-muted text-muted-foreground'
+                              }`}>
+                                {user.position || '未设置'}
+                              </span>
+                            </td>
+                            <td className="px-5 py-4 text-center">
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-sm text-xs font-medium ${
+                                user.department ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
+                              }`}>
+                                {user.department || '未设置'}
                               </span>
                             </td>
                             <td className="px-5 py-4 text-center">
