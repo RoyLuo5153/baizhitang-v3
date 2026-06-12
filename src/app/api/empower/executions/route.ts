@@ -26,13 +26,78 @@ export async function GET(request: NextRequest) {
 
     if (error) throw error;
 
-    // Enrich executions with prescription content
+    // Collect unique user_ids for batch lookup
+    const userIds = [...new Set((executions || []).map((e: Record<string, unknown>) => String(e.user_id)))];
+
+    // Batch fetch user info (trainee names)
+    let userMap: Record<string, { real_name: string; role_id: number }> = {};
+    if (userIds.length > 0) {
+      const { data: users } = await supabase
+        .from('users')
+        .select('id, real_name, role_id')
+        .in('id', userIds);
+      (users || []).forEach((u: Record<string, unknown>) => {
+        userMap[String(u.id)] = { real_name: String(u.real_name || ''), role_id: Number(u.role_id || 0) };
+      });
+    }
+
+    // Batch fetch latest QC records for each trainee (last 30 days)
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString();
+    let qcMap: Record<string, { avg_score: number; latest_date: string }> = {};
+    if (userIds.length > 0) {
+      const { data: qcRecords } = await supabase
+        .from('qc_records')
+        .select('user_id, score, created_at')
+        .in('user_id', userIds)
+        .gte('created_at', thirtyDaysAgo)
+        .order('created_at', { ascending: false });
+      // Group by user_id, compute avg score of latest 5
+      const grouped: Record<string, number[]> = {};
+      (qcRecords || []).forEach((qc: Record<string, unknown>) => {
+        const uid = String(qc.user_id);
+        if (!grouped[uid]) grouped[uid] = [];
+        if (grouped[uid].length < 5) grouped[uid].push(Number(qc.score || 0));
+      });
+      for (const [uid, scores] of Object.entries(grouped)) {
+        const latest = qcRecords?.find((qc: Record<string, unknown>) => String(qc.user_id) === uid);
+        qcMap[uid] = {
+          avg_score: scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length * 10) / 10 : 0,
+          latest_date: latest ? String(latest.created_at) : '',
+        };
+      }
+    }
+
+    // Batch fetch coaching record counts per execution
+    const executionIds = (executions || []).map((e: Record<string, unknown>) => Number(e.id));
+    let coachingCountMap: Record<number, number> = {};
+    if (executionIds.length > 0) {
+      const { data: coachingCounts } = await supabase
+        .from('coaching_records')
+        .select('execution_id')
+        .in('execution_id', executionIds);
+      (coachingCounts || []).forEach((cr: Record<string, unknown>) => {
+        const eid = Number(cr.execution_id);
+        coachingCountMap[eid] = (coachingCountMap[eid] || 0) + 1;
+      });
+    }
+
+    // Enrich executions with user info, QC data, prescription content
     const enriched = (executions || []).map((exec: Record<string, unknown>) => {
       const plan = exec.empower_plans as Record<string, unknown> | null;
       // If execution doesn't have prescription_content, use plan's content
       if (!exec.prescription_content && plan?.content) {
         exec.prescription_content = plan.content;
       }
+      // Attach trainee info
+      const userInfo = userMap[String(exec.user_id)];
+      exec.trainee_name = userInfo?.real_name || '未知学员';
+      exec.trainee_role_id = userInfo?.role_id || 0;
+      // Attach QC info
+      const qcInfo = qcMap[String(exec.user_id)];
+      exec.latest_qc_avg = qcInfo?.avg_score || 0;
+      exec.latest_qc_date = qcInfo?.latest_date || '';
+      // Attach coaching record count
+      exec.coaching_count = coachingCountMap[Number(exec.id)] || 0;
       return exec;
     });
 
