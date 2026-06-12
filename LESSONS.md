@@ -30,6 +30,31 @@
 
 ---
 
+## #012 pg库参数序列化导致pg_strtoint32_safe错误
+
+- **症状**：使用`pg`库的`pgQuery`/`pgInsert`执行INSERT时，PostgreSQL报`pg_strtoint32_safe`错误，所有参数被序列化为字符串，无法隐式转换为整数列
+- **根因**：`pg`库（`node-postgres`）默认将所有参数序列化为字符串类型，PostgreSQL的严格类型检查无法将字符串隐式转换为`integer`/`smallint`等数值类型。即使传入`Number(x)`，`pg`库内部仍按字符串发送
+- **修复**：对需要INSERT数值列的场景，改用Supabase客户端（`getSupabaseClient().from('table').insert({...})`），Supabase客户端通过PostgREST发送JSON，类型由PostgREST自动处理。`pgQuery`仅用于SELECT查询（返回值类型映射无此问题）
+- **防错规则**：
+  1. 涉及INSERT/UPDATE数值列时，优先使用Supabase客户端而非`pg`库直连
+  2. 如必须用`pg`库，需在SQL中显式CAST：`$1::integer`
+  3. 新表优先通过Supabase客户端操作
+- **类别**：数据库
+- **日期**：2026-06-12
+
+---
+
+## #013 动态路由[planId]与查询参数路由冲突
+
+- **症状**：`POST /api/learning-plans/generate` 被 `[planId]` 动态路由捕获，`planId="generate"` → `parseInt("generate")` = `NaN` → 传入pg查询触发`pg_strtoint32_safe`
+- **根因**：Next.js App Router中，`/api/learning-plans/[planId]/route.ts` 和 `/api/learning-plans/route.ts` 共存时，`/api/learning-plans/generate` 被前者匹配（动态段优先级高于查询参数）
+- **修复**：将generate/add/reschedule等操作统一放在`/api/learning-plans/route.ts`的POST中，通过`?action=xxx`查询参数区分，而非创建独立路径段
+- **防错规则**：API设计中，操作型端点使用查询参数`?action=xxx`而非路径段，避免与动态路由`[id]`冲突
+- **类别**：导航/路由
+- **日期**：2026-06-12
+
+---
+
 ## #003 API响应无类型导致null.map()页面崩溃白屏
 
 - **症状**：learning页面、diagnosis页面等多处因API返回{error}或字段为undefined，前端直接对undefined调用.map()导致TypeError: Cannot read properties of undefined (reading 'map')，页面白屏崩溃

@@ -179,8 +179,15 @@ async function checkRule(
   const config = rule.rule_config;
 
   switch (rule.rule_type) {
-    case 'level_completion':
-      return checkLevelCompletion(userId, currentStage, config);
+    case 'level_completion': {
+      const lcResult = await checkLevelCompletion(userId, currentStage, config);
+      // Stage 1→2 额外要求: D7综合考核完成
+      if (lcResult.satisfied && currentStage === 1) {
+        const d7Result = await checkD7Completion(userId);
+        if (!d7Result.satisfied) return d7Result;
+      }
+      return lcResult;
+    }
 
     case 'level_and_business':
       return checkLevelAndBusiness(userId, currentStage, config);
@@ -425,4 +432,24 @@ async function notifyStageTransition(
       priority: 'medium',
     });
   }
+}
+
+/**
+ * 检查D7综合考核是否完成
+ * Stage 1→2 的必要条件
+ */
+async function checkD7Completion(
+  userId: string
+): Promise<{ satisfied: boolean; reason: string }> {
+  const result = await pgQuery(
+    `SELECT status FROM learning_plans 
+     WHERE user_id = $1 AND day_number = 7 AND status = 'completed'
+     LIMIT 1`,
+    [userId]
+  );
+
+  if (result.length > 0) {
+    return { satisfied: true, reason: 'D7综合考核已完成' };
+  }
+  return { satisfied: false, reason: 'D7综合考核未完成' };
 }

@@ -93,12 +93,18 @@
 │   │       ├── resources/   # 资料CRUD
 │   │       ├── resources/categories/ # 资料分类CRUD
 │   │       ├── knowledge/   # 知识库CRUD
+│   │       ├── learning-plans/ # 学习路径计划（M1新增）
+│   │       ├── graduation/     # 出师判定（L5新增）
 │   │       └── migrate/    # 数据迁移
 │   ├── components/ui/      # Shadcn UI 组件库
 │   ├── lib/
 │   │   ├── auth/           # 认证（context/jwt/permissions）
 │   │   ├── stage-engine.ts # 阶段转换引擎
 │   │   ├── trust-engine.ts # 信任度计算引擎
+│   │   ├── quadrant-engine.ts # 四象限分类引擎（L3）
+│   │   ├── graduation-engine.ts # 出师判定引擎（L5）
+│   │   ├── learning-path-engine.ts # 学习路径引擎（M1）
+│   │   ├── workday-utils.ts # 工作日计算工具（M1）
 │   │   ├── triggers.ts     # 事件触发器（通知+联动）
 │   │   └── utils.ts        # cn工具函数
 │   └── storage/database/   # Supabase客户端+Schema
@@ -107,9 +113,9 @@
 └── tsconfig.json
 ```
 
-## 数据库表（26张）
+## 数据库表（30张）
 
-核心表: users, roles, permissions, role_permissions, learning_levels, level_progress, quiz_attempts, questions, qc_records, business_data, thresholds, empower_plans, empower_executions, mentor_trainees, stage_rules, stage_transitions, announcements, resources, daily_assessments, configurations, growth_stages, daily_plans, core_actions(v2已迁移), action_scores(v2已迁移), special_patient_actions(v2已迁移), service_nodes, trust_snapshots
+核心表: users, roles, permissions, role_permissions, learning_levels, level_progress, quiz_attempts, questions, qc_records, business_data, thresholds, empower_plans, empower_executions, mentor_trainees, stage_rules, stage_transitions, announcements, resources, daily_assessments, configurations, growth_stages, daily_plans, core_actions(v2已迁移), action_scores(v2已迁移), special_patient_actions(v2已迁移), service_nodes, trust_snapshots, quadrant_snapshots(L3新增), workday_calendar(M1新增), learning_path_templates(M1新增), learning_plans(M1新增), learning_plan_edit_logs(M1新增)
 
 ## 测试账号
 

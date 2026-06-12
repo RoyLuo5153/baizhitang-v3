@@ -17,6 +17,8 @@ export type NotificationType =
   | 'module_passed'      // 模块通关通过
   | 'module_failed'      // 模块通关未通过
   | 'process_flagged'    // 过程线预警
+  | 'learning_plan_generated' // 学习计划生成
+  | 'learning_plan_overdue'   // 学习任务逾期
   | 'process_recovered'  // 过程线恢复
   | 'qualification_overdue'  // 资格期超期
   | 'empower_assigned'      // 赋能方案已分配
@@ -1058,4 +1060,96 @@ export async function checkEmpowerDueSoon(): Promise<{ notifiedCount: number }> 
   }
 
   return { notifiedCount };
+}
+
+// ─── 学习计划超时检查 ───────────────────────────
+
+/**
+ * 检查学习计划超时
+ * 每日定时调用：查询所有 pending 状态且 deadline < NOW() 的计划
+ * 更新 status='overdue' + 发送通知
+ */
+export async function checkLearningPlanOverdue(): Promise<{ updatedCount: number }> {
+  const client = getSupabaseClient();
+
+  // 查询所有超时未完成的计划
+  const { data: overduePlans } = await client
+    .from('learning_plans')
+    .select('id, user_id, day_number, title, deadline')
+    .eq('status', 'pending')
+    .lt('deadline', new Date().toISOString());
+
+  if (!overduePlans || overduePlans.length === 0) {
+    return { updatedCount: 0 };
+  }
+
+  let updatedCount = 0;
+  for (const plan of overduePlans) {
+    // 更新状态为 overdue
+    await client
+      .from('learning_plans')
+      .update({ status: 'overdue', updated_at: new Date().toISOString() })
+      .eq('id', plan.id);
+
+    // 获取用户信息
+    const { data: user } = await client
+      .from('users')
+      .select('real_name')
+      .eq('id', plan.user_id)
+      .maybeSingle();
+
+    const userName = user?.real_name || '未知学员';
+
+    // 通知新人
+    await sendNotification({
+      userId: plan.user_id,
+      type: 'empower_auto',
+      title: `学习任务超时: ${plan.title}`,
+      message: `您的D${plan.day_number}学习任务"${plan.title}"已超时，请尽快完成。`,
+      relatedId: plan.id,
+      priority: 'high',
+    });
+
+    // 通知带教老师
+    const { data: mentor } = await client
+      .from('mentor_trainees')
+      .select('mentor_id')
+      .eq('trainee_id', plan.user_id)
+      .maybeSingle();
+
+    if (mentor) {
+      await sendNotification({
+        userId: mentor.mentor_id,
+        type: 'empower_auto',
+        title: `新人学习任务超时: ${userName}`,
+        message: `新人${userName}的D${plan.day_number}任务"${plan.title}"已超时，请关注。`,
+        relatedUserId: plan.user_id,
+        relatedId: plan.id,
+        priority: 'high',
+      });
+    }
+
+    // 通知培训负责人
+    const { data: managers } = await client
+      .from('users')
+      .select('id')
+      .eq('role_id', 4)
+      .eq('is_active', true);
+
+    for (const mgr of managers || []) {
+      await sendNotification({
+        userId: mgr.id,
+        type: 'empower_auto',
+        title: `新人学习任务超时: ${userName}`,
+        message: `新人${userName}的D${plan.day_number}任务"${plan.title}"已超时。`,
+        relatedUserId: plan.user_id,
+        relatedId: plan.id,
+        priority: 'medium',
+      });
+    }
+
+    updatedCount++;
+  }
+
+  return { updatedCount };
 }

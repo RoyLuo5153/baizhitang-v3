@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
 import { getAuthFromHeaders, requireRoles, ROLES } from '@/lib/auth/api-auth';
 import { onTraineeRegistered } from '@/lib/triggers';
+import { generateLearningPlan } from '@/lib/learning-path-engine';
 import bcrypt from 'bcryptjs';
 
 // GET /api/users — 获取用户列表（支持?roleId=2筛选带教老师）
@@ -183,6 +184,13 @@ export async function POST(req: NextRequest) {
 
       if (profileError) {
         console.error('创建trainee_profile失败:', profileError.message);
+      }
+
+      // 自动生成学习计划（D1-D7）
+      try {
+        await generateLearningPlan(newUser.id);
+      } catch (e) {
+        console.error('生成学习计划失败:', e);
       }
 
       // 通知带教老师 + 培训负责人

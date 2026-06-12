@@ -5,6 +5,7 @@ import { useEffect, useState, useCallback } from 'react';
 import {
   Check, Lock, Play, Flame, BookOpen, Wrench, PencilLine,
   User, X, ChevronRight, Zap, Activity, Send,
+  Calendar, Clock, CheckCircle2, AlertTriangle, GraduationCap, ArrowRight,
 } from 'lucide-react';
 
 // === Types ===
@@ -41,6 +42,21 @@ interface ModulesData {
   hasAlert?: boolean;
 }
 
+interface DailyPlan {
+  id: number;
+  day_number: number;
+  title: string;
+  purpose: string;
+  problem_solved: string | null;
+  learning_form: string | null;
+  verification_standard: string | null;
+  scheduled_date: string;
+  deadline: string;
+  status: 'pending' | 'completed' | 'overdue' | 'skipped';
+  completed_at: string | null;
+  sort_order: number;
+}
+
 interface QuestionItem {
   id: number;
   question_type: string;
@@ -70,6 +86,10 @@ const RESULT_STATUS_MAP: Record<string, { label: string; color: string }> = {
   yellow_alert: { label: '黄灯预警', color: 'text-yellow-400' },
   red_alert: { label: '红灯预警', color: 'text-red-400' },
   passed: { label: '已达标', color: 'text-green-400' },
+};
+
+const DAY_LABELS: Record<number, string> = {
+  1: 'D1', 2: 'D2', 3: 'D3', 4: 'D4', 5: 'D5', 6: 'D6', 7: 'D7',
 };
 
 // === Module Card Component ===
@@ -409,6 +429,8 @@ function TraineeModuleView({ user }: { user: { id: string; role: string } }) {
   const [questions, setQuestions] = useState<QuestionItem[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [dailyPlans, setDailyPlans] = useState<DailyPlan[]>([]);
+  const [plansLoading, setPlansLoading] = useState(true);
 
   const fetchModules = useCallback(async () => {
     try {
@@ -425,7 +447,32 @@ function TraineeModuleView({ user }: { user: { id: string; role: string } }) {
 
   useEffect(() => {
     fetchModules();
+    fetchDailyPlans();
   }, [fetchModules]);
+
+  const fetchDailyPlans = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/learning-plans?userId=${user.id}`);
+      if (!res.ok) return;
+      const json = await res.json();
+      setDailyPlans(json.plans || []);
+    } catch (err) {
+      console.error('Failed to load daily plans:', err);
+    } finally {
+      setPlansLoading(false);
+    }
+  }, [user.id]);
+
+  const handleCompletePlan = async (planId: number) => {
+    try {
+      const res = await fetch(`/api/learning-plans/${planId}?action=complete`, { method: 'POST' });
+      if (!res.ok) throw new Error('Failed to complete');
+      showToast('任务已完成！');
+      fetchDailyPlans();
+    } catch {
+      showToast('操作失败，请重试');
+    }
+  };
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -531,6 +578,98 @@ function TraineeModuleView({ user }: { user: { id: string; role: string } }) {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
+      {/* 0. 每日学习计划 */}
+      {!plansLoading && dailyPlans.length > 0 && (
+        <div className="bg-card rounded-xl shadow-card border border-border overflow-hidden">
+          <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-primary" />
+              <h2 className="text-lg font-semibold text-foreground">每日学习计划</h2>
+              <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                D1-D7 学习期
+              </span>
+            </div>
+          </div>
+          <div className="divide-y divide-border">
+            {dailyPlans.map((plan) => {
+              const isToday = plan.scheduled_date === new Date().toISOString().slice(0, 10);
+              const isOverdue = plan.status === 'overdue';
+              const isCompleted = plan.status === 'completed';
+              const isPending = plan.status === 'pending';
+              return (
+                <div
+                  key={plan.id}
+                  className={`px-5 py-4 flex items-start gap-4 transition-colors ${
+                    isOverdue ? 'bg-destructive/5' : isCompleted ? 'bg-muted/30' : ''
+                  }`}
+                >
+                  <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${
+                    isCompleted ? 'bg-primary/10 text-primary' :
+                    isOverdue ? 'bg-destructive/10 text-destructive' :
+                    'bg-muted text-muted-foreground'
+                  }`}>
+                    {isCompleted ? <CheckCircle2 className="w-5 h-5" /> : `D${plan.day_number}`}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className={`font-semibold ${isCompleted ? 'text-muted-foreground line-through' : 'text-foreground'}`}>
+                        {plan.title}
+                      </h3>
+                      {isToday && isPending && (
+                        <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">今日</span>
+                      )}
+                      {isOverdue && (
+                        <span className="text-xs bg-destructive/10 text-destructive px-2 py-0.5 rounded-full font-medium flex items-center gap-1">
+                          <AlertTriangle className="w-3 h-3" /> 已超时
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-1.5 space-y-1">
+                      <p className="text-sm text-muted-foreground">
+                        <span className="font-medium text-foreground/80">目的：</span>{plan.purpose}
+                      </p>
+                      {plan.problem_solved && (
+                        <p className="text-sm text-muted-foreground">
+                          <span className="font-medium text-foreground/80">解决：</span>{plan.problem_solved}
+                        </p>
+                      )}
+                      {plan.learning_form && (
+                        <p className="text-sm text-muted-foreground">
+                          <span className="font-medium text-foreground/80">形式：</span>{plan.learning_form}
+                        </p>
+                      )}
+                    </div>
+                    <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-3.5 h-3.5" />
+                        {plan.scheduled_date}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5" />
+                        {new Date(plan.deadline).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })} 截止
+                      </span>
+                    </div>
+                  </div>
+                  {isPending && (
+                    <button
+                      onClick={() => handleCompletePlan(plan.id)}
+                      className="flex-shrink-0 px-3 py-1.5 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+                    >
+                      完成
+                    </button>
+                  )}
+                  {isCompleted && (
+                    <span className="flex-shrink-0 text-sm text-muted-foreground">
+                      {plan.completed_at ? new Date(plan.completed_at).toLocaleDateString('zh-CN') : ''} 已完成
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* 1. 顶部标题栏 */}
       <div className="flex items-center justify-between">
         <div>
