@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import Link from 'next/link';
+import ActionQuickRef from '@/components/action-quickref/ActionQuickRef';
 
 // icon字符串到lucide组件的映射
 const ICON_MAP: Record<string, React.ElementType> = {
@@ -132,6 +133,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {NAV_ITEMS.find(i => i.href === pathname)?.label || '首页'}
           </h2>
           <div className="flex items-center gap-3">
+            <ActionQuickRef />
             <a
               href="/notifications"
               className="relative p-1.5 rounded-lg text-muted-foreground hover:bg-muted/50 hover:text-foreground transition"

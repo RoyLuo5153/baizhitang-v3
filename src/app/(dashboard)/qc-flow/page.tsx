@@ -5,8 +5,9 @@ import { useAuth } from '@/lib/auth/context';
 import {
   Phone, PhoneCall, CalendarCheck, Stethoscope, ChevronRight,
   AlertTriangle, CheckCircle2, XCircle, Clock, Shield, Zap,
-  ChevronDown, ChevronUp, MessageSquare, Save
+  ChevronDown, ChevronUp, MessageSquare, Save, Eye
 } from 'lucide-react';
+import TrustDashboard from '@/components/trust/TrustDashboard';
 
 interface ActionScore {
   id: number;
@@ -278,6 +279,11 @@ export default function QcFlowPage() {
           )}
         </div>
       </div>
+
+      {/* 信任度仪表盘 */}
+      {viewUserId && (
+        <TrustDashboard userId={viewUserId} nodeId={selectedTrainee?.stage || user?.stage || 1} />
+      )}
 
       {/* 特殊患者情况区 */}
       <div className="bg-card rounded-xl p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
