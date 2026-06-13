@@ -1283,10 +1283,10 @@ export default function SettingsPage() {
                         onChange={e => setBatchStage(Number(e.target.value))}
                         className="h-8 rounded-md border border-border bg-transparent px-2 text-xs text-foreground outline-none focus:border-primary"
                       >
-                        <option value={1}>阶段1-学习期</option>
-                        <option value={2}>阶段2-练习期</option>
-                        <option value={3}>阶段3-独立期</option>
-                        <option value={4}>阶段4-熟练期</option>
+                        <option value={1}>阶段1-首通电话</option>
+                        <option value={2}>阶段2-三天回访</option>
+                        <option value={3}>阶段3-五天预约</option>
+                        <option value={4}>阶段4-面诊当天</option>
                       </select>
                     </>
                   )}

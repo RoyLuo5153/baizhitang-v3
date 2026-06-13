@@ -248,7 +248,7 @@ export async function onStageTransition(
   toStage: string
 ): Promise<void> {
   const stageNames: Record<string, string> = {
-    learning: '学习期', practice: '练习期', independent: '独立期', proficient: '熟练期',
+    foundation: '首通电话', practice: '三天回访', independent: '五天预约', proficient: '面诊当天',
   };
 
   const title = `${traineeName}进入${stageNames[toStage]}`;
@@ -455,7 +455,7 @@ async function updateTraineeStage(
     .eq('user_id', traineeId);
 
   // 同步更新users.stage（向后兼容）
-  const stageMap: Record<string, number> = { foundation: 1, practice: 2, qualified: 3 };
+  const stageMap: Record<string, number> = { foundation: 1, practice: 2, independent: 3, proficient: 4 };
   await client
     .from('users')
     .update({ stage: stageMap[stage] || 1, updated_at: new Date().toISOString() })
@@ -477,7 +477,7 @@ export async function onModulePassed(
 
   if (allModulesPassed) {
     if (stage === 'foundation') {
-      // 基础通关全部通过 → 进入实操阶段
+      // 首通电话全部通过 → 进入三天回访阶段
       await updateTraineeStage(traineeId, 'practice', 'monitoring', 'insufficient_data');
 
       // 记录阶段转换
@@ -512,14 +512,14 @@ export async function onModulePassed(
         });
       }
     } else if (stage === 'practice') {
-      // 实操通关全部通过 → 进入合格阶段
-      await updateTraineeStage(traineeId, 'qualified', 'passed', 'passed');
+      // 实操通关全部通过 → 进入五天预约阶段
+      await updateTraineeStage(traineeId, 'independent', 'passed', 'passed');
 
       const client = getSupabaseClient();
       await client.from('stage_transitions').insert({
         user_id: traineeId,
         from_stage: 'practice',
-        to_stage: 'qualified',
+        to_stage: 'independent',
         reason: '实操通关4个模块全部通过',
         triggered_by: 'module_pass',
       });
@@ -528,8 +528,8 @@ export async function onModulePassed(
       await sendNotification({
         userId: traineeId,
         type: 'stage_transition',
-        title: '恭喜进入独立达标阶段',
-        message: '实操通关全部通过，已进入独立达标阶段！',
+        title: '恭喜进入五天预约阶段',
+        message: '实操通关全部通过，已进入五天预约阶段！',
         priority: 'high',
       });
 
@@ -539,8 +539,8 @@ export async function onModulePassed(
         await sendNotification({
           userId: mgrId,
           type: 'stage_transition',
-          title: `${traineeName}进入独立达标阶段`,
-          message: `${traineeName}已完成实操通关全部模块，进入独立达标阶段。`,
+          title: `${traineeName}进入五天预约阶段`,
+          message: `${traineeName}已完成实操通关全部模块，进入五天预约阶段。`,
           relatedUserId: traineeId,
           priority: 'medium',
         });

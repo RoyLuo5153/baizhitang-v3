@@ -54,9 +54,9 @@ export async function checkGraduation(userId: string): Promise<GraduationCheckRe
     };
   }
 
-  const stageOk = user.stage >= 3;
+  const stageOk = user.stage >= 4;
   if (!stageOk) {
-    missingConditions.push(`当前阶段为${user.stage}，需达到阶段3（独立服务阶段）`);
+    missingConditions.push(`当前阶段为${user.stage}，需达到阶段4（面诊当天完成）`);
   }
 
   // 2. 检查最近N次质检
@@ -156,8 +156,8 @@ export async function executeGraduation(
     .from('stage_transitions')
     .insert({
       user_id: userId,
-      from_stage: 3,
-      to_stage: 4,
+      from_stage: 4,
+      to_stage: 5,
       triggered_by: confirmedBy,
       reason: '管理员确认出师',
       created_at: now,
@@ -192,7 +192,7 @@ export async function executeGraduation(
           userId: manager.id,
           type: 'graduation',
           title: '新人出师通知',
-          message: `新人「${userName}」已通过出师判定，正式进入熟练期`,
+          message: `新人「${userName}」已通过出师判定，正式出师`,
           priority: 'high',
           relatedUserId: userId,
         });

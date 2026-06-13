@@ -17,17 +17,19 @@ interface DashboardData {
   quadrantDistribution: { A: number; B: number; C: number; D: number };
 }
 
-/* ── Level metadata: 21 levels across 3 stages ── */
+/* ── Level metadata: 21 levels across 4 stages ── */
 const LEVEL_NAMES = [
-  '服务礼仪', '企业文化', '产品知识(基础)', '沟通技巧', '系统操作', '工单流程', '质检标准',
-  '投诉处理', '产品知识(进阶)', '疑难工单', '服务用语规范', '情绪管理', '数据录入', '跨部门协作',
-  '独立接诊', '复杂案例', '业务复盘', '带教指导', '流程优化', '客户经营', '团队管理',
+  '服务礼仪', '企业文化', '产品知识(基础)', '沟通技巧', '系统操作', '工单流程',
+  '投诉处理', '产品知识(进阶)', '疑难工单', '服务用语规范',
+  '情绪管理', '数据录入', '跨部门协作', '独立接诊', '复杂案例', '业务复盘',
+  '带教指导', '流程优化', '客户经营', '团队管理', '综合考核',
 ] as const;
 
-const STAGE_RANGES: { stage: number; label: string; range: string }[] = [
-  { stage: 1, label: '基础培训', range: 'L1–L7' },
-  { stage: 2, label: '进阶培训', range: 'L8–L14' },
-  { stage: 3, label: '独立接诊', range: 'L15–L21' },
+const STAGE_RANGES: { stage: number; label: string; range: string; levels: number[] }[] = [
+  { stage: 1, label: '首通电话', range: 'L1–L6', levels: [1,2,3,4,5,6] },
+  { stage: 2, label: '三天回访', range: 'L7–L10', levels: [7,8,9,10] },
+  { stage: 3, label: '五天预约', range: 'L11–L16', levels: [11,12,13,14,15,16] },
+  { stage: 4, label: '面诊当天', range: 'L17–L21', levels: [17,18,19,20,21] },
 ];
 
 /* status: passed=2, in-progress=1, locked=0 */
@@ -98,12 +100,12 @@ function HeatmapCell({
 function computeStageStats(trainees: TraineeProgress[]) {
   const totalTrainees = trainees.length || 1;
   return STAGE_RANGES.map(s => {
-    const start = (s.stage - 1) * 7;
-    const end = start + 7;
+    // Use levels array for dynamic per-stage level count
+    const levelIndices = s.levels.map(l => l - 1); // 0-based indices
     let allPassed = 0;
     let anyInProgress = 0;
     trainees.forEach(t => {
-      const slice = t.levels.slice(start, end);
+      const slice = levelIndices.map(i => t.levels[i] ?? 0);
       const allDone = slice.every(st => st === 2);
       const hasProgress = slice.some(st => st === 1);
       if (allDone) allPassed++;
@@ -171,20 +173,21 @@ function ProgressHeatmap({ data }: { data: HeatmapData | null }) {
           className="grid gap-[3px] mb-2 pl-[72px]"
           style={{ gridTemplateColumns: `repeat(${levelCount}, ${cellSize})` }}
         >
-          {STAGE_RANGES.filter(s => {
-            const start = (s.stage - 1) * 7;
-            return start < levelCount;
-          }).map(s => {
-            const start = (s.stage - 1) * 7;
-            const span = Math.min(7, levelCount - start);
+          {STAGE_RANGES.filter(s => s.levels[0] - 1 < levelCount).map(s => {
+            const start = s.levels[0] - 1; // 0-based
+            const span = Math.min(s.levels.length, levelCount - start);
+            const stageColors: Record<number, { bg: string; color: string }> = {
+              1: { bg: 'rgba(34,197,94,0.1)', color: '#22c55e' },
+              2: { bg: 'rgba(var(--primary),0.1)', color: 'var(--primary)' },
+              3: { bg: 'rgba(168,85,247,0.1)', color: '#a855f7' },
+              4: { bg: 'rgba(245,158,11,0.1)', color: '#f59e0b' },
+            };
+            const sc = stageColors[s.stage] || stageColors[1];
             return (
-              <div key={s.stage} className="col-span-7 text-center" style={{ gridColumn: `${start + 1} / span ${span}` }}>
+              <div key={s.stage} style={{ gridColumn: `${start + 1} / span ${span}` }}>
                 <span
                   className="inline-block text-[9px] font-medium px-1.5 py-0.5 rounded-full"
-                  style={{
-                    backgroundColor: s.stage === 1 ? 'rgba(34,197,94,0.1)' : s.stage === 2 ? 'rgba(var(--primary),0.1)' : 'rgba(168,85,247,0.1)',
-                    color: s.stage === 1 ? '#22c55e' : s.stage === 2 ? 'var(--primary)' : '#a855f7',
-                  }}
+                  style={{ backgroundColor: sc.bg, color: sc.color }}
                 >
                   {s.label}
                 </span>
@@ -585,7 +588,7 @@ export default function DashboardPage() {
                 <CheckCircle2 className="w-4 h-4 text-[#22c55e] mt-0.5 shrink-0" />
                 <div>
                   <p className="text-sm font-medium text-foreground">{qd.A}人全面达标</p>
-                  <p className="text-xs text-muted-foreground">可进入阶段三独立接诊</p>
+                  <p className="text-xs text-muted-foreground">可进入阶段四面诊当天</p>
                 </div>
               </div>
             )}

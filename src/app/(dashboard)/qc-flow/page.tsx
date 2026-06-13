@@ -66,11 +66,11 @@ export default function QcFlowPage() {
   // Stage label helper
   const stageLabel = (stage: number | undefined) => {
     switch (stage) {
-      case 1: return '学习期';
-      case 2: return '练习期';
-      case 3: return '独立期';
-      case 4: return '熟练期';
-      default: return '学习期';
+      case 1: return '首通电话';
+      case 2: return '三天回访';
+      case 3: return '五天预约';
+      case 4: return '面诊当天';
+      default: return '首通电话';
     }
   };
 

@@ -369,10 +369,10 @@ async function hasTransitionRecord(
 // ─── 通知 ───────────────────────────────────
 
 const STAGE_NAMES: Record<number, string> = {
-  1: '学习期',
-  2: '练习期',
-  3: '独立期',
-  4: '熟练期',
+  1: '首通电话',
+  2: '用药第三天回访',
+  3: '用药第五天预约',
+  4: '面诊当天',
 };
 
 async function notifyStageTransition(

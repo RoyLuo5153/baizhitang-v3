@@ -340,7 +340,7 @@ export default function GlobalOverviewPage() {
               name: m.name,
               processScore: m.processScore,
               resultScore: m.resultScore,
-              trainingDays: m.stage ? m.stage * 7 : 30,
+              trainingDays: m.stage ? [0, 6, 10, 16, 22][m.stage] ?? 22 : 30,
               quadrant: m.quadrant,
             }))}
             quadrantSummary={data.summary}

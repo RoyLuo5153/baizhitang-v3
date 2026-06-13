@@ -586,7 +586,7 @@ function TraineeModuleView({ user }: { user: { id: string; role: string } }) {
               <Calendar className="w-5 h-5 text-primary" />
               <h2 className="text-lg font-semibold text-foreground">每日学习计划</h2>
               <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-                D1-D7 学习期
+                D1-D7 首通电话
               </span>
             </div>
           </div>

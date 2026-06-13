@@ -183,7 +183,7 @@ function TraineeHome({ data }: { data: any }) {
             <h2 className="text-lg font-semibold" style={{ color: '#102A43' }}>成长阶段</h2>
           </div>
           <span className="text-sm" style={{ color: '#667085' }}>
-            当前: {currentStage.name || '学习期'} · 闯关通过 {passedLevels}/7
+            当前: {currentStage.name || '首通电话'} · 闯关通过 {passedLevels}/7
           </span>
         </div>
         <div className="flex gap-2">
@@ -215,7 +215,7 @@ function TraineeHome({ data }: { data: any }) {
             <div className="p-3 rounded-lg text-center" style={{ backgroundColor: '#102A4308' }}>
               <div className="text-xs mb-1" style={{ color: '#667085' }}>当前阶段</div>
               <div className="text-sm font-semibold" style={{ color: '#102A43' }}>
-                {({ foundation: '学习期', practice: '练习期', independent: '独立期', proficient: '熟练期' } as Record<string, string>)[data.dualTrackStatus.stage] || '学习期'}
+                {({ foundation: '首通电话', practice: '三天回访', independent: '五天预约', proficient: '面诊当天' } as Record<string, string>)[data.dualTrackStatus.stage] || '首通电话'}
               </div>
               <div className="text-xs mt-1" style={{ color: '#667085' }}>通关 {data.dualTrackStatus.moduleProgress}</div>
             </div>
@@ -247,7 +247,7 @@ function TraineeHome({ data }: { data: any }) {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Calendar className="w-5 h-5" style={{ color: '#F59E0B' }} />
-            <h2 className="text-lg font-semibold" style={{ color: '#102A43' }}>学习期7天排课</h2>
+            <h2 className="text-lg font-semibold" style={{ color: '#102A43' }}>首通电话7天排课</h2>
           </div>
           {(canEdit || canSuggest) && (
             <span className="text-xs px-2 py-1 rounded-full" style={{
@@ -555,7 +555,7 @@ function MentorHome({ data }: { data: any }) {
   const [pushingPlanId, setPushingPlanId] = useState<string | null>(null);
   const [pushedPlans, setPushedPlans] = useState<Set<string>>(new Set());
 
-  const stageNames: Record<string, string> = { foundation: '学习期', practice: '练习期', independent: '独立期', proficient: '熟练期' };
+  const stageNames: Record<string, string> = { foundation: '首通电话', practice: '三天回访', independent: '五天预约', proficient: '面诊当天' };
   const processLabels: Record<string, { text: string; bg: string; color: string }> = {
     not_started: { text: '未开始', bg: '#E6E1D830', color: '#667085' },
     monitoring: { text: '监控中', bg: '#2978B515', color: '#2978B5' },
@@ -687,7 +687,7 @@ function MentorHome({ data }: { data: any }) {
                     <span className="text-sm font-medium" style={{ color: '#102A43' }}>{m.name}</span>
                     <span className="text-xs px-2 py-0.5 rounded-full"
                       style={{ backgroundColor: '#2978B515', color: '#2978B5' }}>
-                      {stageNames[m.stage] || m.stage || '学习期'}
+                      {stageNames[m.stage] || m.stage || '首通电话'}
                     </span>
                     {/* 双线状态标签 */}
                     <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: ps.bg, color: ps.color }}>
@@ -798,7 +798,7 @@ function TeacherHome({ data }: { data: any }) {
 
 // ========== 总经理概览 ==========
 function BossHome({ data }: { data: any }) {
-  const stageNames: Record<number, string> = { 1: '学习期', 2: '练习期', 3: '独立期', 4: '熟练期' };
+  const stageNames: Record<number, string> = { 1: '首通电话', 2: '三天回访', 3: '五天预约', 4: '面诊当天' };
   const metricLabels: Record<string, string> = {
     wechat_add_rate: '加V率', consultation_rate: '面诊率', reception_rate: '接诊率',
     delivery_rate: '签收率', medication_rate: '用药率', appointment_rate: '挂号率',
@@ -877,7 +877,7 @@ function TrainingManagerHome({ data }: { data: any }) {
   const layer3 = data.layer3 || {};
   const [drillLayer2, setDrillLayer2] = useState(false);
   const [drillLayer3, setDrillLayer3] = useState(false);
-  const stageNames: Record<number, string> = { 1: '学习期', 2: '练习期', 3: '独立期', 4: '熟练期' };
+  const stageNames: Record<number, string> = { 1: '首通电话', 2: '三天回访', 3: '五天预约', 4: '面诊当天' };
   const stageDist = layer1.stageDistribution || data.stats?.stageDistribution || {};
   const stageColors: Record<number, string> = { 1: '#2978B5', 2: '#F59E0B', 3: '#22C55E', 4: '#102A43' };
   const totalTrainees = data.stats?.totalTrainees || 0;
@@ -962,7 +962,7 @@ function TrainingManagerHome({ data }: { data: any }) {
                 {layer1.pendingStageApprovals.slice(0, 3).map((a: any) => (
                   <div key={a.id} className="flex items-center gap-2 p-2 rounded-lg" style={{ backgroundColor: '#F8F6F0' }}>
                     <span className="text-xs font-medium" style={{ color: '#102A43' }}>{a.traineeName}</span>
-                    <span className="text-xs" style={{ color: '#667085' }}>{stageNames[a.currentStage] || '学习期'}→{stageNames[a.currentStage + 1] || '下一阶段'}</span>
+                    <span className="text-xs" style={{ color: '#667085' }}>{stageNames[a.currentStage] || '首通电话'}→{stageNames[a.currentStage + 1] || '下一阶段'}</span>
                     <div className="ml-auto flex items-center gap-1">
                       <button
                         className="text-xs px-2 py-0.5 rounded font-medium"
@@ -1093,7 +1093,7 @@ function TrainingManagerHome({ data }: { data: any }) {
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-medium" style={{ color: '#102A43' }}>{t.name}</span>
                       <span className="text-xs px-1 py-0.5 rounded" style={{ backgroundColor: '#2978B515', color: '#2978B5' }}>
-                        {stageNames[t.stage] || '学习期'}
+                        {stageNames[t.stage] || '首通电话'}
                       </span>
                     </div>
                     {t.bottlenecks.length > 0 && (
@@ -1216,7 +1216,7 @@ function TrainingManagerHome({ data }: { data: any }) {
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-medium" style={{ color: '#102A43' }}>{t.name}</span>
                       <span className="text-xs px-1 py-0.5 rounded" style={{ backgroundColor: '#2978B515', color: '#2978B5' }}>
-                        {stageNames[t.stage] || '学习期'}
+                        {stageNames[t.stage] || '首通电话'}
                       </span>
                     </div>
                     {t.unqualifiedIndicators.length > 0 && (
@@ -1351,7 +1351,7 @@ export default function HomePage() {
         <div className="flex items-center gap-2">
           <Eye className="w-4 h-4" style={{ color: '#2978B5' }} />
           <span className="text-xs" style={{ color: '#667085' }}>
-            {roleName === 'trainee' ? `学习期 · Day${homeData.currentDayIndex || 1}` : `${roleLabels[roleName]}`}
+            {roleName === 'trainee' ? `首通电话 · Day${homeData.currentDayIndex || 1}` : `${roleLabels[roleName]}`}
           </span>
         </div>
       </div>

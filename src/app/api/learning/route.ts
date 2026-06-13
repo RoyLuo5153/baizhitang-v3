@@ -4,12 +4,14 @@ import { getSupabaseClient } from '@/storage/database/supabase-client';
 export const dynamic = 'force-dynamic';
 
 const STAGE_NAMES: Record<number, string> = {
-  1: '理论基础',
-  2: '实战演练',
-  3: '综合达标',
+  1: '首通电话',
+  2: '用药第三天回访',
+  3: '用药第五天预约',
+  4: '面诊当天',
 };
 
 // Fallback if DB doesn't have learning_levels
+// Stage 1: 首通电话 (6关), Stage 2: 三天回访 (4关), Stage 3: 五天预约 (6关), Stage 4: 面诊当天 (5关)
 const FALLBACK_NAMES: Record<number, { name: string; stage: number }> = {
   1:  { name: '初心启航', stage: 1 },
   2:  { name: '角色认知', stage: 1 },
@@ -17,21 +19,21 @@ const FALLBACK_NAMES: Record<number, { name: string; stage: number }> = {
   4:  { name: '血糖监测原理', stage: 1 },
   5:  { name: '药物分类认知', stage: 1 },
   6:  { name: '营养饮食指导', stage: 1 },
-  7:  { name: '并发症预防', stage: 1 },
-  8:  { name: '首诊服务用语实训', stage: 2 },
-  9:  { name: '加微承接服务用语', stage: 2 },
-  10: { name: '用药关怀服务用语', stage: 2 },
-  11: { name: '实战服务用语演练', stage: 2 },
-  12: { name: '复诊邀约服务用语', stage: 2 },
-  13: { name: '续方确认服务用语', stage: 2 },
-  14: { name: '综合实战考核', stage: 2 },
-  15: { name: '全流程模拟', stage: 3 },
-  16: { name: '紧急情况应对', stage: 3 },
-  17: { name: '患者异议处理', stage: 3 },
-  18: { name: '服务质量达标', stage: 3 },
-  19: { name: '业务指标达标', stage: 3 },
-  20: { name: '独立接诊验证', stage: 3 },
-  21: { name: '综合能力达标', stage: 3 },
+  7:  { name: '首诊服务用语实训', stage: 2 },
+  8:  { name: '加微承接服务用语', stage: 2 },
+  9:  { name: '用药关怀服务用语', stage: 2 },
+  10: { name: '实战服务用语演练', stage: 2 },
+  11: { name: '复诊邀约服务用语', stage: 3 },
+  12: { name: '续方确认服务用语', stage: 3 },
+  13: { name: '综合实战考核', stage: 3 },
+  14: { name: '全流程模拟', stage: 3 },
+  15: { name: '紧急情况应对', stage: 3 },
+  16: { name: '患者异议处理', stage: 3 },
+  17: { name: '服务质量达标', stage: 4 },
+  18: { name: '业务指标达标', stage: 4 },
+  19: { name: '独立接诊验证', stage: 4 },
+  20: { name: '综合能力达标', stage: 4 },
+  21: { name: '面诊实战考核', stage: 4 },
 };
 
 const PASSING_SCORE = 80;
@@ -120,8 +122,9 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  const stage1Complete = maxPassedLevel >= 7;
-  const stage2Complete = maxPassedLevel >= 14;
+  const stage1Complete = maxPassedLevel >= 6;
+  const stage2Complete = maxPassedLevel >= 10;
+  const stage3Complete = maxPassedLevel >= 16;
 
   const levels = [];
   for (let i = 1; i <= 21; i++) {
@@ -136,7 +139,11 @@ export async function GET(request: NextRequest) {
       status = 'disabled';
     } else if (p?.status === 'passed') {
       status = 'passed';
+    } else if (info.stage === 2 && !stage1Complete) {
+      status = 'locked-stage';
     } else if (info.stage === 3 && !stage2Complete) {
+      status = 'locked-stage';
+    } else if (info.stage === 4 && !stage3Complete) {
       status = 'locked-stage';
     } else if (i <= maxPassedLevel + 1) {
       status = p?.status === 'in_progress' ? 'in_progress' : (i === maxPassedLevel + 1 ? 'active' : 'locked');
@@ -160,9 +167,10 @@ export async function GET(request: NextRequest) {
   }
 
   const stageProgress = {
-    1: { completed: levels.filter(l => l.stage === 1 && l.status === 'passed').length, total: 7 },
-    2: { completed: levels.filter(l => l.stage === 2 && l.status === 'passed').length, total: 7 },
-    3: { completed: levels.filter(l => l.stage === 3 && l.status === 'passed').length, total: 7 },
+    1: { completed: levels.filter(l => l.stage === 1 && l.status === 'passed').length, total: 6 },
+    2: { completed: levels.filter(l => l.stage === 2 && l.status === 'passed').length, total: 4 },
+    3: { completed: levels.filter(l => l.stage === 3 && l.status === 'passed').length, total: 6 },
+    4: { completed: levels.filter(l => l.stage === 4 && l.status === 'passed').length, total: 5 },
   };
 
   return NextResponse.json({

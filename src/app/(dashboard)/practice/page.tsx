@@ -253,7 +253,7 @@ export default function PracticePage() {
                   )}
                   {task.linked_stage && (
                     <p className="text-xs" style={{ color: '#667085' }}>
-                      {task.linked_stage === 'learning' ? '学习期' : '练习期'} Day{task.linked_day_index}
+                      {task.linked_stage === 'learning' ? '首通电话' : '三天回访'} Day{task.linked_day_index}
                     </p>
                   )}
                   {task.deadline && (

@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
       (mentors || []).forEach((m: { id: string; real_name: string }) => { mentorMap[m.id] = m.real_name; });
     }
 
-    // 2. 检查闯关逾期（学习期>7天未完成）
+    // 2. 检查闯关逾期（首通电话>7天未完成）
     const traineeIds = (trainees || []).map((t: { id: string }) => t.id);
     if (traineeIds.length > 0) {
       // 闯关进度
@@ -85,7 +85,7 @@ export async function GET(request: NextRequest) {
               alertType: 'level_overdue',
               alertLevel: daysSince > 14 ? 'danger' : 'warning',
               message: `${t.real_name} 入职${daysSince}天，仅通过${passedLevels}/7关`,
-              detail: `阶段1学习期已超时，预期7天完成7关闯关`,
+              detail: `阶段1首通电话已超时，预期7天完成6关闯关`,
               relatedModule: 'learning',
               relatedId: t.id,
               createdAt: new Date().toISOString(),

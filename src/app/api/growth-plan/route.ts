@@ -94,7 +94,7 @@ export async function GET(request: NextRequest) {
   // 5. 获取指定天的任务（支持dayIndex参数）
   const targetDay = dayIndexParam ? parseInt(dayIndexParam) : currentDayIndex;
 
-  // 获取该用户所有学习期计划（用于计算解锁状态和7天概览）
+  // 获取该用户所有首通电话阶段计划（用于计算解锁状态和7天概览）
   const { data: allStagePlans } = await client
     .from('daily_plans')
     .select('*')
