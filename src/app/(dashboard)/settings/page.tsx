@@ -944,7 +944,7 @@ export default function SettingsPage() {
   const [stageApplications, setStageApplications] = useState<StageApplication[]>([]);
 
   // 配置中心
-  const [configDict, setConfigDict] = useState<Record<string, Record<string, { config_key: string; config_value: string; value_type: string; description: string }>>>({});
+  const [configDict, setConfigDict] = useState<Record<string, Record<string, { key: string; value: string; valueType: string; description: string }>>>({});
   const [configLoading, setConfigLoading] = useState(true);
   const [configEdit, setConfigEdit] = useState<{ category: string; key: string; value: string; valueType: string; description: string } | null>(null);
   const [configSaving, setConfigSaving] = useState(false);
@@ -1127,10 +1127,10 @@ export default function SettingsPage() {
           const json = await res.json();
           const configs = json.configs || [];
           // 按 category 分组
-          const grouped: Record<string, Record<string, { config_key: string; config_value: string; value_type: string; description: string }>> = {};
+          const grouped: Record<string, Record<string, { key: string; value: string; valueType: string; description: string }>> = {};
           configs.forEach((c: { category: string; key: string; value: string; valueType: string; description: string }) => {
             if (!grouped[c.category]) grouped[c.category] = {};
-            grouped[c.category][c.key] = { config_key: c.key, config_value: c.value, value_type: c.valueType, description: c.description };
+            grouped[c.category][c.key] = { key: c.key, value: c.value, valueType: c.valueType, description: c.description };
           });
           setConfigDict(grouped);
         }
@@ -1173,7 +1173,7 @@ export default function SettingsPage() {
         setConfigDict(prev => {
           const updated = { ...prev };
           if (updated[configEdit.category]?.[configEdit.key]) {
-            updated[configEdit.category][configEdit.key].config_value = configEdit.value;
+            updated[configEdit.category][configEdit.key].value = configEdit.value;
           }
           return updated;
         });
@@ -2274,26 +2274,26 @@ export default function SettingsPage() {
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-border/50">
-                            {entries.map((item) => (
-                              <tr key={item.config_key} className="hover:bg-muted/20 transition">
+                            {entries.map((item: any) => (
+                              <tr key={item.key} className="hover:bg-muted/20 transition">
                                 <td className="px-5 py-3">
-                                  <span className="text-sm font-medium text-foreground">{item.description || item.config_key}</span>
-                                  <code className="block text-[10px] text-muted-foreground font-mono mt-0.5">{item.config_key}</code>
+                                  <span className="text-sm font-medium text-foreground">{item.description || item.key}</span>
+                                  <code className="block text-[10px] text-muted-foreground font-mono mt-0.5">{item.key}</code>
                                 </td>
                                 <td className="px-5 py-3">
-                                  {item.value_type === 'boolean' ? (
-                                    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${item.config_value === 'true' ? 'bg-[#22c55e]/10 text-[#22c55e]' : 'bg-muted text-muted-foreground'}`}>
-                                      <span className={`w-1.5 h-1.5 rounded-full ${item.config_value === 'true' ? 'bg-[#22c55e]' : 'bg-muted-foreground'}`} />
-                                      {item.config_value === 'true' ? '启用' : '禁用'}
+                                  {item.valueType === 'boolean' ? (
+                                    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${String(item.value) === 'true' ? 'bg-[#22c55e]/10 text-[#22c55e]' : 'bg-muted text-muted-foreground'}`}>
+                                      <span className={`w-1.5 h-1.5 rounded-full ${String(item.value) === 'true' ? 'bg-[#22c55e]' : 'bg-muted-foreground'}`} />
+                                      {String(item.value) === 'true' ? '启用' : '禁用'}
                                     </span>
                                   ) : (
-                                    <span className="text-foreground font-medium">{item.config_value}</span>
+                                    <span className="text-foreground font-medium">{String(item.value)}</span>
                                   )}
                                 </td>
                                 <td className="px-5 py-3 text-muted-foreground">{item.description || '-'}</td>
                                 <td className="px-5 py-3 text-right">
                                   <button
-                                    onClick={() => setConfigEdit({ category, key: item.config_key, value: item.config_value, valueType: item.value_type, description: item.description || '' })}
+                                    onClick={() => setConfigEdit({ category, key: item.key, value: String(item.value), valueType: item.valueType, description: item.description || '' })}
                                     className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium text-primary hover:bg-primary/10 transition"
                                   >
                                     <Pencil className="w-3 h-3" />
