@@ -1125,7 +1125,14 @@ export default function SettingsPage() {
         const res = await fetch('/api/config');
         if (res.ok) {
           const json = await res.json();
-          setConfigDict(json.data || {});
+          const configs = json.configs || [];
+          // 按 category 分组
+          const grouped: Record<string, Record<string, { config_key: string; config_value: string; value_type: string; description: string }>> = {};
+          configs.forEach((c: { category: string; key: string; value: string; valueType: string; description: string }) => {
+            if (!grouped[c.category]) grouped[c.category] = {};
+            grouped[c.category][c.key] = { config_key: c.key, config_value: c.value, value_type: c.valueType, description: c.description };
+          });
+          setConfigDict(grouped);
         }
       } catch {}
       setConfigLoading(false);
@@ -1140,7 +1147,7 @@ export default function SettingsPage() {
         const res = await fetch('/api/stage-definitions');
         if (res.ok) {
           const json = await res.json();
-          setStageDefs(json.data || []);
+          setStageDefs(json.stages || []);
         }
       } catch {}
       setStageDefsLoading(false);
@@ -1157,9 +1164,9 @@ export default function SettingsPage() {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          category: configEdit.category,
-          config_key: configEdit.key,
-          config_value: configEdit.value,
+          key: configEdit.key,
+          value: configEdit.value,
+          valueType: configEdit.valueType,
         }),
       });
       if (res.ok) {
@@ -1180,16 +1187,21 @@ export default function SettingsPage() {
   const saveStageDef = async () => {
     if (!stageDefEdit) return;
     try {
+      const stage = stageDefs.find(s => s.id === stageDefEdit.id);
+      if (!stage) return;
+      const body: Record<string, unknown> = { stageName: stage.stage_name };
+      if (stageDefEdit.field === 'duration_days') {
+        body.durationDays = Number(stageDefEdit.value);
+      } else if (stageDefEdit.field === 'is_active') {
+        body.isActive = stageDefEdit.value === 'true';
+      }
       const res = await fetch('/api/stage-definitions', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: stageDefEdit.id,
-          [stageDefEdit.field]: stageDefEdit.value,
-        }),
+        body: JSON.stringify(body),
       });
       if (res.ok) {
-        setStageDefs(prev => prev.map(s => s.id === stageDefEdit.id ? { ...s, [stageDefEdit.field]: stageDefEdit.value } : s));
+        setStageDefs(prev => prev.map(s => s.id === stageDefEdit.id ? { ...s, [stageDefEdit.field]: stageDefEdit.field === 'duration_days' ? Number(stageDefEdit.value) : stageDefEdit.value === 'true' } : s));
         setStageDefEdit(null);
       }
     } catch {}
@@ -2238,10 +2250,10 @@ export default function SettingsPage() {
                   const entries = Object.values(items);
                   if (entries.length === 0) return null;
                   const categoryLabels: Record<string, string> = {
-                    thresholds: '阈值参数',
-                    weights: '权重配置',
-                    stages: '阶段参数',
-                    system: '系统设置',
+                    阈值: '阈值参数',
+                    权重: '权重配置',
+                    阶段: '阶段参数',
+                    系统: '系统设置',
                   };
                   return (
                     <details key={category} className="bg-card rounded-lg shadow-card overflow-hidden group" open>

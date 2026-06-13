@@ -31,7 +31,7 @@ function convertValue(raw: string, type: string): string | number | boolean | ob
 // GET /api/config — 查询配置
 export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
+    const { searchParams } = req.nextUrl;
     const category = searchParams.get('category');
     const key = searchParams.get('key');
 
