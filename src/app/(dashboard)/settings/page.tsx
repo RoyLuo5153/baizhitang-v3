@@ -2267,7 +2267,7 @@ export default function SettingsPage() {
                         <table className="w-full text-sm">
                           <thead>
                             <tr className="bg-muted/30">
-                              <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">配置键</th>
+                              <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">配置项</th>
                               <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">当前值</th>
                               <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">说明</th>
                               <th className="text-right px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">操作</th>
@@ -2277,7 +2277,8 @@ export default function SettingsPage() {
                             {entries.map((item) => (
                               <tr key={item.config_key} className="hover:bg-muted/20 transition">
                                 <td className="px-5 py-3">
-                                  <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono text-foreground">{item.config_key}</code>
+                                  <span className="text-sm font-medium text-foreground">{item.description || item.config_key}</span>
+                                  <code className="block text-[10px] text-muted-foreground font-mono mt-0.5">{item.config_key}</code>
                                 </td>
                                 <td className="px-5 py-3">
                                   {item.value_type === 'boolean' ? (
