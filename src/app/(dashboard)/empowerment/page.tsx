@@ -1282,7 +1282,6 @@ function CoachingTab({ coachingRecords, executions, onOpenExecution, onRefresh, 
           </div>
           <StandaloneCoachingForm
             mentorId={userId}
-            trainees={[]}
             executions={executions}
             onSaved={async () => { setShowNewCoaching(false); await onRefresh(); }}
           />
@@ -1298,10 +1297,10 @@ function CoachingTab({ coachingRecords, executions, onOpenExecution, onRefresh, 
 
 function StandaloneCoachingForm({ mentorId, executions, onSaved }: {
   mentorId: string;
-  trainees: { id: string; name: string }[];
   executions: Execution[];
   onSaved: () => Promise<void>;
 }) {
+  const [trainees, setTrainees] = useState<{ id: string; name: string }[]>([]);
   const [traineeId, setTraineeId] = useState('');
   const [executionId, setExecutionId] = useState<number | null>(null);
   const [content, setContent] = useState('');
@@ -1309,6 +1308,16 @@ function StandaloneCoachingForm({ mentorId, executions, onSaved }: {
   const [nextSteps, setNextSteps] = useState('');
   const [duration, setDuration] = useState(30);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/user-profiles?role=trainee')
+      .then(r => r.json())
+      .then(d => {
+        const list = (d.profiles || []).map((p: any) => ({ id: p.user_id, name: p.real_name }));
+        setTrainees(list);
+      })
+      .catch(() => {});
+  }, []);
 
   // Filter executions by selected trainee
   const traineeExecutions = executions.filter(e => e.user_id === traineeId && (e.status === 'in_progress' || e.status === 'assigned'));
@@ -1342,8 +1351,13 @@ function StandaloneCoachingForm({ mentorId, executions, onSaved }: {
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="text-xs font-medium text-muted-foreground">学员ID *</label>
-          <input value={traineeId} onChange={e => { setTraineeId(e.target.value); setExecutionId(null); }} className="w-full mt-1 px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm" placeholder="输入学员ID" />
+          <label className="text-xs font-medium text-muted-foreground">学员 *</label>
+          <select value={traineeId} onChange={e => { setTraineeId(e.target.value); setExecutionId(null); }} className="w-full mt-1 px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm">
+            <option value="">请选择学员</option>
+            {trainees.map(t => (
+              <option key={t.id} value={t.id}>{t.name}</option>
+            ))}
+          </select>
         </div>
         <div>
           <label className="text-xs font-medium text-muted-foreground">关联方案（可选）</label>

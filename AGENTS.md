@@ -97,6 +97,12 @@
 │   │       ├── knowledge/   # 知识库CRUD
 │   │       ├── learning-plans/ # 学习路径计划（M1新增）
 │   │       ├── graduation/     # 出师判定（L5新增）
+│   │       ├── departments/  # 部门管理CRUD (DT新增)
+│   │       ├── user-profiles/ # 用户画像CRUD (DT新增)
+│   │       ├── config/        # 配置字典CRUD (DT新增)
+│   │       ├── events/        # 统一事件流 (DT新增)
+│   │       ├── capability/    # 能力评分CRUD (DT新增)
+│   │       ├── stage-definitions/ # 阶段定义CRUD (DT新增)
 │   │       └── migrate/    # 数据迁移
 │   ├── components/ui/      # Shadcn UI 组件库
 │   ├── lib/
@@ -115,9 +121,9 @@
 └── tsconfig.json
 ```
 
-## 数据库表（30张）
+## 数据库表（43张，含DT新增5张）
 
-核心表: users, roles, permissions, role_permissions, learning_levels, level_progress, quiz_attempts, questions, qc_records, business_data, thresholds, empower_plans, empower_executions, mentor_trainees, stage_rules, stage_transitions, announcements, resources, daily_assessments, configurations, growth_stages, daily_plans, core_actions(v2已迁移), action_scores(v2已迁移), special_patient_actions(v2已迁移), service_nodes, trust_snapshots, quadrant_snapshots(L3新增), workday_calendar(M1新增), learning_path_templates(M1新增), learning_plans(M1新增), learning_plan_edit_logs(M1新增), assessment_modules(J新增), module_progress(J新增)
+核心表: users, roles, permissions, role_permissions, learning_levels, level_progress, quiz_attempts, questions, qc_records, business_data, thresholds, empower_plans, empower_executions, mentor_trainees, stage_rules, stage_transitions, announcements, resources, daily_assessments, configurations, growth_stages, daily_plans, core_actions(v2已迁移), action_scores(v2已迁移), special_patient_actions(v2已迁移), service_nodes, trust_snapshots, quadrant_snapshots(L3新增), workday_calendar(M1新增), learning_path_templates(M1新增), learning_plans(M1新增), learning_plan_edit_logs(M1新增), assessment_modules(J新增), module_progress(J新增), departments(DT新增), config_dict(DT新增), events(DT新增), capability_scores(DT新增), stage_definitions(DT新增)
 
 ## 测试账号
 

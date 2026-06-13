@@ -173,6 +173,24 @@ export async function POST(request: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
+  // DT-3: 同步事件流
+  try {
+    const totalScore = [scoreBusiness, scoreService, scoreCommunication, scoreProcess]
+      .filter((s: unknown) => s != null) as number[];
+    const avgScore = totalScore.length > 0
+      ? totalScore.reduce((a: number, b: number) => a + b, 0) / totalScore.length
+      : null;
+    await client.from('events').insert({
+      event_type: 'quality_check',
+      user_id: userId,
+      actor_id: reviewerId || null,
+      source_table: 'qc_records',
+      source_id: (data as any)?.id || 0,
+      event_data: { total_score: avgScore, qc_type: qcType, status: insertData.status },
+      happened_at: new Date().toISOString(),
+    });
+  } catch { /* 事件同步失败不影响主流程 */ }
+
   // 联动触发：质检低分自动赋能
   try {
     const scores = [scoreBusiness, scoreService, scoreCommunication, scoreProcess].filter((s: unknown) => s != null) as number[];

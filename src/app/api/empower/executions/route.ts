@@ -149,6 +149,19 @@ export async function POST(request: NextRequest) {
 
     if (error) throw error;
 
+    // DT-3: 同步事件流
+    try {
+      await supabase.from('events').insert({
+        event_type: 'empowerment',
+        user_id: traineeId,
+        actor_id: assignedBy || null,
+        source_table: 'empower_executions',
+        source_id: (data as any)?.id || 0,
+        event_data: { plan_id: numericPlanId, triggered_by: triggeredBy || 'manual' },
+        happened_at: new Date().toISOString(),
+      });
+    } catch { /* 事件同步失败不影响主流程 */ }
+
     // 联动通知：通知新人 + 培训负责人 + 带教老师
     try {
       const { data: planInfo } = await supabase
