@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/jquery/jquery-3.7.1.min.js"></script>
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/lucide/lucide-1.11.0.min.js"></script>
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/tailwindcss/tailwindcss-browser-4.2.4.min.js"></script>
+
+  <link href="https://lf-code-agent.coze.cn/obj/x-ai-cn/fonts/google/google-all-fonts.css" rel="stylesheet"/>
+  <style type="text/tailwindcss">
+    @theme {
+      /* === 品牌色 === */
+      --color-primary:              #2978B5;
+      --color-primary-container:    #D6E8F7;
+      --color-on-primary:           #ffffff;
+      /* === 背景 / 表面 === */
+      --color-background:                 #F8F6F0;
+      --color-surface-container-lowest:   #FCFBF8;
+      --color-surface:                    #F8F6F0;
+      --color-surface-container:          #EFEDE5;
+      --color-surface-container-high:     #E8E5DC;
+      --color-surface-container-highest:  #E0DDD4;
+      /* === 文字 === */
+      --color-on-surface:           #1D2733;
+      --color-on-surface-variant:   #667085;
+      /* === 功能色 === */
+      --color-success:  #22c55e;
+      --color-error:    #ef4444;
+      --color-warning:  #f59e0b;
+      /* === 边框 === */
+      --color-outline:          #D1CFC8;
+      --color-outline-variant:  #E6E1D8;
+      /* === 圆角 === */
+      --radius-sm:   0.25rem;
+      --radius-md:   0.5rem;
+      --radius-lg:   0.75rem;
+      --radius-xl:   1rem;
+      --radius-2xl:  1.25rem;
+      --radius-full: 9999px;
+      /* === 阴影 === */
+      --shadow-card:   0 2px 8px rgba(0,0,0,0.08);
+      --shadow-float:  0 10px 25px rgba(0,0,0,0.10);
+      --shadow-dialog: 0 25px 50px rgba(0,0,0,0.15);
+      /* === 字体 === */
+      --font-sans: "Noto Sans SC", system-ui, sans-serif;
+    }
+  </style>
+
+  <script>
+    document.addEventListener('error', function (e) {
+      const img = e.target;
+      if (img.tagName !== 'IMG' || img.dataset.fallback) return;
+      img.dataset.fallback = '1';
+      const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const cat = img.getAttribute('data-category') || '其他';
+      const alt = img.getAttribute('alt') || '';
+      const label = esc(alt.length > 8 ? alt.slice(0, 8) + '…' : alt);
+      const icons = { '人物': '👤', '自然风景': '🏞', '动物': '🐾', '建筑城市': '🏙', '运动体育': '⚽', '交通工具': '🚗', '食物': '🍽', '服饰时尚': '👗', '商业科技': '💼', '游戏娱乐': '🎮', '艺术': '🎨', '其他': '🖼' };
+      const icon = icons[cat] || '🖼';
+      const w = img.width || 400, h = img.height || 300;
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="45%" text-anchor="middle" font-size="${Math.min(w, h) * 0.18}" dominant-baseline="central">${icon}</text><text x="50%" y="68%" text-anchor="middle" font-size="${Math.min(w, h) * 0.07}" fill="%239ca3af" font-family="system-ui,sans-serif" dominant-baseline="central">${label}</text></svg>`;
+      img.src = 'data:image/svg+xml,' + svg;
+    }, true);
+  </script>
+</head>
+
+<body class="bg-background text-on-surface font-sans">
+
+  <!-- @nav:start 导航组件 -->
+  <header class="bg-surface sticky top-0 z-40 h-14 flex items-center justify-between px-6 border-b border-outline-variant/30">
+    <div class="flex items-center gap-2.5">
+      <i data-lucide="heart-pulse" class="text-primary w-5 h-5"></i>
+      <span class="font-semibold text-sm text-on-surface">百芝堂赋能</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="text-xs text-on-surface-variant">小初</span>
+      <div class="w-7 h-7 rounded-full bg-primary/15 flex items-center justify-center text-xs font-medium text-primary">初</div>
+    </div>
+  </header>
+
+  <div class="flex" style="height: calc(100vh - 3.5rem)">
+    <aside class="w-56 shrink-0 bg-surface-container-lowest border-r border-outline-variant/20 overflow-y-auto">
+      <div class="p-3 space-y-0.5">
+        <div class="text-[10px] uppercase tracking-wider text-on-surface-variant/50 px-3 pt-2 pb-1">主菜单</div>
+        <a href="home.html" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="home" class="w-4 h-4"></i>首页
+        </a>
+        <a href="diagnosis.html" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="scan-search" class="w-4 h-4"></i>双轨诊断
+        </a>
+        <a href="trainee-profiles.html" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="users" class="w-4 h-4"></i>新人档案
+        </a>
+        <div class="text-[10px] uppercase tracking-wider text-on-surface-variant/50 px-3 pt-3 pb-1">设置</div>
+        <a href="settings-config.html" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>配置中心
+        </a>
+        <a href="settings-stages.html" class="flex items-center gap-3 px-3 py-2.5 rounded-md bg-primary/10 text-primary font-medium text-sm" aria-current="page">
+          <i data-lucide="git-branch" class="w-4 h-4"></i>阶段规则
+        </a>
+      </div>
+    </aside>
+
+    <!-- @main-content:start -->
+    <main class="flex-1 min-w-0 overflow-y-auto bg-background p-6">
+    <!-- @main-content:end -->
+
+      <!-- 页面标题区 -->
+      <div class="mb-8">
+        <h1 class="text-2xl font-bold text-on-surface">阶段规则</h1>
+        <p class="text-sm text-on-surface-variant mt-1">管理四阶段成长模型的定义与参数</p>
+      </div>
+
+      <!-- 阶段卡片 2x2 网格 -->
+      <div class="grid grid-cols-2 gap-5">
+
+        <!-- 卡片-学习期 -->
+        <div id="stage-card-1" class="bg-surface rounded-lg shadow-card p-5 flex flex-col gap-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary text-sm font-bold">1</span>
+              <h2 class="text-base font-semibold text-on-surface">学习期</h2>
+            </div>
+            <div class="flex items-center gap-2">
+              <span id="stage-status-1" class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已激活</span>
+              <button id="btn-edit-stage-1" class="w-8 h-8 flex items-center justify-center rounded-md text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors" title="编辑阶段规则">
+                <i data-lucide="pencil" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <i data-lucide="calendar" class="w-4 h-4 text-on-surface-variant"></i>
+            <span class="text-sm text-on-surface-variant">持续天数：</span>
+            <span class="text-sm font-semibold text-on-surface">7 天</span>
+          </div>
+
+          <div class="space-y-1.5">
+            <div class="flex items-start gap-2">
+              <i data-lucide="check-circle" class="w-4 h-4 text-success mt-0.5 shrink-0"></i>
+              <div>
+                <span class="text-xs text-on-surface-variant">退出条件</span>
+                <p class="text-sm text-on-surface">闯关全部通过</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-1.5">
+            <div class="flex items-start gap-2">
+              <i data-lucide="alert-triangle" class="w-4 h-4 text-warning mt-0.5 shrink-0"></i>
+              <div>
+                <span class="text-xs text-on-surface-variant">预警阈值</span>
+                <p class="text-sm text-on-surface">逾期 3 天预警</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 卡片-练习期 -->
+        <div id="stage-card-2" class="bg-surface rounded-lg shadow-card p-5 flex flex-col gap-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary text-sm font-bold">2</span>
+              <h2 class="text-base font-semibold text-on-surface">练习期</h2>
+            </div>
+            <div class="flex items-center gap-2">
+              <span id="stage-status-2" class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已激活</span>
+              <button id="btn-edit-stage-2" class="w-8 h-8 flex items-center justify-center rounded-md text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors" title="编辑阶段规则">
+                <i data-lucide="pencil" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <i data-lucide="calendar" class="w-4 h-4 text-on-surface-variant"></i>
+            <span class="text-sm text-on-surface-variant">持续天数：</span>
+            <span class="text-sm font-semibold text-on-surface">28 天</span>
+          </div>
+
+          <div class="space-y-1.5">
+            <div class="flex items-start gap-2">
+              <i data-lucide="check-circle" class="w-4 h-4 text-success mt-0.5 shrink-0"></i>
+              <div>
+                <span class="text-xs text-on-surface-variant">退出条件</span>
+                <p class="text-sm text-on-surface">闯关全部通过 + 面诊率 ≥ 50%</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-1.5">
+            <div class="flex items-start gap-2">
+              <i data-lucide="alert-triangle" class="w-4 h-4 text-warning mt-0.5 shrink-0"></i>
+              <div>
+                <span class="text-xs text-on-surface-variant">预警阈值</span>
+                <p class="text-sm text-on-surface">逾期 7 天预警 / 能力评分 &lt; 60 预警</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 卡片-独立期 -->
+        <div id="stage-card-3" class="bg-surface rounded-lg shadow-card p-5 flex flex-col gap-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary text-sm font-bold">3</span>
+              <h2 class="text-base font-semibold text-on-surface">独立期</h2>
+            </div>
+            <div class="flex items-center gap-2">
+              <span id="stage-status-3" class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已激活</span>
+              <button id="btn-edit-stage-3" class="w-8 h-8 flex items-center justify-center rounded-md text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors" title="编辑阶段规则">
+                <i data-lucide="pencil" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <i data-lucide="calendar" class="w-4 h-4 text-on-surface-variant"></i>
+            <span class="text-sm text-on-surface-variant">持续天数：</span>
+            <span class="text-sm font-semibold text-on-surface">90 天</span>
+          </div>
+
+          <div class="space-y-1.5">
+            <div class="flex items-start gap-2">
+              <i data-lucide="check-circle" class="w-4 h-4 text-success mt-0.5 shrink-0"></i>
+              <div>
+                <span class="text-xs text-on-surface-variant">退出条件</span>
+                <p class="text-sm text-on-surface">面诊率 ≥ 70% + 独立接诊 ≥ 30 例</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-1.5">
+            <div class="flex items-start gap-2">
+              <i data-lucide="alert-triangle" class="w-4 h-4 text-warning mt-0.5 shrink-0"></i>
+              <div>
+                <span class="text-xs text-on-surface-variant">预警阈值</span>
+                <p class="text-sm text-on-surface">逾期 14 天预警 / 面诊率 &lt; 50% 预警</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 卡片-熟练期 -->
+        <div id="stage-card-4" class="bg-surface rounded-lg shadow-card p-5 flex flex-col gap-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary text-sm font-bold">4</span>
+              <h2 class="text-base font-semibold text-on-surface">熟练期</h2>
+            </div>
+            <div class="flex items-center gap-2">
+              <span id="stage-status-4" class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已激活</span>
+              <button id="btn-edit-stage-4" class="w-8 h-8 flex items-center justify-center rounded-md text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors" title="编辑阶段规则">
+                <i data-lucide="pencil" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <i data-lucide="calendar" class="w-4 h-4 text-on-surface-variant"></i>
+            <span class="text-sm text-on-surface-variant">持续天数：</span>
+            <span class="text-sm font-semibold text-on-surface">180 天</span>
+          </div>
+
+          <div class="space-y-1.5">
+            <div class="flex items-start gap-2">
+              <i data-lucide="check-circle" class="w-4 h-4 text-success mt-0.5 shrink-0"></i>
+              <div>
+                <span class="text-xs text-on-surface-variant">退出条件</span>
+                <p class="text-sm text-on-surface">独立接诊 ≥ 100 例 + 综合评分 ≥ 85</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-1.5">
+            <div class="flex items-start gap-2">
+              <i data-lucide="alert-triangle" class="w-4 h-4 text-warning mt-0.5 shrink-0"></i>
+              <div>
+                <span class="text-xs text-on-surface-variant">预警阈值</span>
+                <p class="text-sm text-on-surface">逾期 30 天预警 / 综合评分 &lt; 70 预警</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+
+  <!-- 编辑抽屉面板 -->
+  <div id="drawer-overlay" class="fixed inset-0 bg-black/30 z-50 hidden transition-opacity"></div>
+  <div id="drawer-panel" class="fixed top-0 right-0 h-full w-[480px] max-w-[90vw] bg-surface shadow-dialog z-50 transform translate-x-full transition-transform duration-300 flex flex-col">
+    <!-- 抽屉头部 -->
+    <div class="flex items-center justify-between px-6 py-4 border-b border-outline-variant/20 shrink-0">
+      <div>
+        <h3 id="drawer-title" class="text-base font-semibold text-on-surface">编辑阶段规则</h3>
+        <p id="drawer-subtitle" class="text-xs text-on-surface-variant mt-0.5">学习期</p>
+      </div>
+      <button id="btn-drawer-close" class="w-8 h-8 flex items-center justify-center rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+    </div>
+
+    <!-- 抽屉内容 -->
+    <div class="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+      <!-- 阶段名称（只读） -->
+      <div>
+        <label class="block text-xs font-medium text-on-surface-variant mb-1.5">阶段名称</label>
+        <input id="drawer-stage-name" type="text" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" readonly disabled />
+      </div>
+
+      <!-- 持续天数 -->
+      <div>
+        <label class="block text-xs font-medium text-on-surface-variant mb-1.5">持续天数</label>
+        <input id="drawer-duration" type="number" min="1" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" />
+      </div>
+
+      <!-- 激活状态 -->
+      <div>
+        <label class="block text-xs font-medium text-on-surface-variant mb-1.5">激活状态</label>
+        <div class="flex items-center gap-3">
+          <button id="drawer-toggle-active" class="relative w-10 h-5 rounded-full transition-colors bg-success" role="switch" aria-checked="true">
+            <span class="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform translate-x-5"></span>
+          </button>
+          <span id="drawer-toggle-label" class="text-sm text-on-surface">已激活</span>
+        </div>
+      </div>
+
+      <!-- 退出条件 -->
+      <div>
+        <label class="block text-xs font-medium text-on-surface-variant mb-1.5">退出条件（JSON）</label>
+        <textarea id="drawer-exit-criteria" rows="4" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors font-mono resize-none"></textarea>
+        <p class="text-xs text-on-surface-variant/60 mt-1">格式：{"condition_type": "all_pass", "params": {}}</p>
+      </div>
+
+      <!-- 预警阈值 -->
+      <div>
+        <label class="block text-xs font-medium text-on-surface-variant mb-1.5">预警阈值（JSON）</label>
+        <textarea id="drawer-warning-thresholds" rows="4" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors font-mono resize-none"></textarea>
+        <p class="text-xs text-on-surface-variant/60 mt-1">格式：{"overdue_days": 3, "min_score": 60}</p>
+      </div>
+    </div>
+
+    <!-- 抽屉底部按钮 -->
+    <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-outline-variant/20 shrink-0">
+      <button id="btn-drawer-cancel" class="bg-surface-container text-on-surface border-none px-4 py-2 rounded-md text-sm font-medium hover:bg-surface-container-high active:scale-[0.98] transition-all">取消</button>
+      <button id="btn-drawer-save" class="bg-primary text-on-primary px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all inline-flex items-center gap-2">
+        <i data-lucide="check" class="w-3.5 h-3.5"></i>保存
+      </button>
+    </div>
+  </div>
+
+  <script>lucide.createIcons();</script>
+
+  <script>
+    $(function() {
+
+      // Mock 数据：4 个阶段定义
+      var stageData = {
+        1: {
+          stageName: '学习期',
+          durationDays: 7,
+          isActive: true,
+          exitCriteria: '{"condition_type": "all_pass", "params": {"required_tasks": "all"}}',
+          warningThresholds: '{"overdue_days": 3}'
+        },
+        2: {
+          stageName: '练习期',
+          durationDays: 28,
+          isActive: true,
+          exitCriteria: '{"condition_type": "all_pass_and_rate", "params": {"required_tasks": "all", "min_face_rate": 0.5}}',
+          warningThresholds: '{"overdue_days": 7, "min_score": 60}'
+        },
+        3: {
+          stageName: '独立期',
+          durationDays: 90,
+          isActive: true,
+          exitCriteria: '{"condition_type": "face_rate_and_cases", "params": {"min_face_rate": 0.7, "min_cases": 30}}',
+          warningThresholds: '{"overdue_days": 14, "min_face_rate": 0.5}'
+        },
+        4: {
+          stageName: '熟练期',
+          durationDays: 180,
+          isActive: true,
+          exitCriteria: '{"condition_type": "cases_and_score", "params": {"min_cases": 100, "min_score": 85}}',
+          warningThresholds: '{"overdue_days": 30, "min_score": 70}'
+        }
+      };
+
+      var currentStageId = null;
+
+      // 打开抽屉
+      function openDrawer(stageId) {
+        currentStageId = stageId;
+        var data = stageData[stageId];
+
+        $('#drawer-stage-name').val(data.stageName);
+        $('#drawer-duration').val(data.durationDays);
+        $('#drawer-exit-criteria').val(data.exitCriteria);
+        $('#drawer-warning-thresholds').val(data.warningThresholds);
+        $('#drawer-subtitle').text(data.stageName);
+
+        // 设置激活状态开关
+        if (data.isActive) {
+          $('#drawer-toggle-active').addClass('bg-success').removeClass('bg-surface-container-high');
+          $('#drawer-toggle-active').find('span').addClass('translate-x-5').removeClass('translate-x-0.5');
+          $('#drawer-toggle-active').attr('aria-checked', 'true');
+          $('#drawer-toggle-label').text('已激活');
+        } else {
+          $('#drawer-toggle-active').removeClass('bg-success').addClass('bg-surface-container-high');
+          $('#drawer-toggle-active').find('span').removeClass('translate-x-5').addClass('translate-x-0.5');
+          $('#drawer-toggle-active').attr('aria-checked', 'false');
+          $('#drawer-toggle-label').text('已停用');
+        }
+
+        $('#drawer-overlay').removeClass('hidden');
+        setTimeout(function() {
+          $('#drawer-panel').removeClass('translate-x-full');
+        }, 10);
+      }
+
+      // 关闭抽屉
+      function closeDrawer() {
+        $('#drawer-panel').addClass('translate-x-full');
+        setTimeout(function() {
+          $('#drawer-overlay').addClass('hidden');
+          currentStageId = null;
+        }, 300);
+      }
+
+      // 保存抽屉数据
+      function saveDrawer() {
+        if (!currentStageId) return;
+
+        var newDuration = parseInt($('#drawer-duration').val(), 10);
+        var newExitCriteria = $('#drawer-exit-criteria').val().trim();
+        var newWarningThresholds = $('#drawer-warning-thresholds').val().trim();
+        var newIsActive = $('#drawer-toggle-active').attr('aria-checked') === 'true';
+
+        // 更新 mock 数据
+        stageData[currentStageId].durationDays = newDuration;
+        stageData[currentStageId].exitCriteria = newExitCriteria;
+        stageData[currentStageId].warningThresholds = newWarningThresholds;
+        stageData[currentStageId].isActive = newIsActive;
+
+        // 更新卡片上的持续天数显示
+        var cardSelector = '#stage-card-' + currentStageId;
+        $(cardSelector + ' .flex.items-center.gap-2 span.font-semibold').text(newDuration + ' 天');
+
+        // 更新激活状态 badge
+        var statusBadge = $('#stage-status-' + currentStageId);
+        if (newIsActive) {
+          statusBadge.removeClass('bg-error/15 text-error').addClass('bg-success/15 text-success').text('已激活');
+        } else {
+          statusBadge.removeClass('bg-success/15 text-success').addClass('bg-error/15 text-error').text('已停用');
+        }
+
+        // 更新退出条件摘要显示
+        // 退出条件摘要更新逻辑：
+        // 1. 尝试解析 JSON，提取关键字段生成可读摘要
+        // 2. 若解析失败，直接显示原始文本（截断至 50 字符）
+        var exitSummary = '';
+        try {
+          var ec = JSON.parse(newExitCriteria);
+          if (ec.condition_type === 'all_pass') {
+            exitSummary = '闯关全部通过';
+          } else if (ec.condition_type === 'all_pass_and_rate') {
+            exitSummary = '闯关全部通过 + 面诊率 ≥ ' + (ec.params.min_face_rate * 100) + '%';
+          } else if (ec.condition_type === 'face_rate_and_cases') {
+            exitSummary = '面诊率 ≥ ' + (ec.params.min_face_rate * 100) + '% + 独立接诊 ≥ ' + ec.params.min_cases + ' 例';
+          } else if (ec.condition_type === 'cases_and_score') {
+            exitSummary = '独立接诊 ≥ ' + ec.params.min_cases + ' 例 + 综合评分 ≥ ' + ec.params.min_score;
+          } else {
+            exitSummary = newExitCriteria.substring(0, 50);
+          }
+        } catch(e) {
+          exitSummary = newExitCriteria.substring(0, 50);
+        }
+        $(cardSelector + ' .flex.items-start.gap-2 .text-sm.text-on-surface').first().text(exitSummary);
+
+        // 更新预警阈值摘要显示
+        var warnSummary = '';
+        try {
+          var wt = JSON.parse(newWarningThresholds);
+          var parts = [];
+          if (wt.overdue_days) parts.push('逾期 ' + wt.overdue_days + ' 天预警');
+          if (wt.min_score) parts.push('能力评分 < ' + wt.min_score + ' 预警');
+          if (wt.min_face_rate) parts.push('面诊率 < ' + (wt.min_face_rate * 100) + '% 预警');
+          warnSummary = parts.join(' / ') || newWarningThresholds.substring(0, 50);
+        } catch(e) {
+          warnSummary = newWarningThresholds.substring(0, 50);
+        }
+        $(cardSelector + ' .flex.items-start.gap-2 .text-sm.text-on-surface').last().text(warnSummary);
+
+        console.log('保存阶段规则: stage_id=' + currentStageId + ', data=' + JSON.stringify(stageData[currentStageId]));
+        closeDrawer();
+      }
+
+      // 切换激活状态
+      $('#drawer-toggle-active').on('click', function() {
+        var isActive = $(this).attr('aria-checked') === 'true';
+        if (isActive) {
+          $(this).removeClass('bg-success').addClass('bg-surface-container-high');
+          $(this).find('span').removeClass('translate-x-5').addClass('translate-x-0.5');
+          $(this).attr('aria-checked', 'false');
+          $('#drawer-toggle-label').text('已停用');
+        } else {
+          $(this).addClass('bg-success').removeClass('bg-surface-container-high');
+          $(this).find('span').addClass('translate-x-5').removeClass('translate-x-0.5');
+          $(this).attr('aria-checked', 'true');
+          $('#drawer-toggle-label').text('已激活');
+        }
+      });
+
+      // 编辑按钮事件绑定
+      $('#btn-edit-stage-1').on('click', function() { openDrawer(1); });
+      $('#btn-edit-stage-2').on('click', function() { openDrawer(2); });
+      $('#btn-edit-stage-3').on('click', function() { openDrawer(3); });
+      $('#btn-edit-stage-4').on('click', function() { openDrawer(4); });
+
+      // 抽屉关闭
+      $('#btn-drawer-close').on('click', closeDrawer);
+      $('#btn-drawer-cancel').on('click', closeDrawer);
+      $('#drawer-overlay').on('click', closeDrawer);
+
+      // 抽屉保存
+      $('#btn-drawer-save').on('click', saveDrawer);
+
+      // ESC 关闭抽屉
+      $(document).on('keydown', function(e) {
+        if (e.key === 'Escape' && currentStageId !== null) {
+          closeDrawer();
+        }
+      });
+
+    });
+  </script>
+
+</body>
+
+</html>

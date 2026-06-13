@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/jquery/jquery-3.7.1.min.js"></script>
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/lucide/lucide-1.11.0.min.js"></script>
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/tailwindcss/tailwindcss-browser-4.2.4.min.js"></script>
+
+  <link href="https://lf-code-agent.coze.cn/obj/x-ai-cn/fonts/google/google-all-fonts.css" rel="stylesheet"/>
+  <style type="text/tailwindcss">
+    @theme {
+      /* === 品牌色 === */
+      --color-primary:              #2978B5;
+      --color-primary-container:    #D6E8F7;
+      --color-on-primary:           #ffffff;
+      /* === 背景 / 表面 === */
+      --color-background:                 #F8F6F0;
+      --color-surface-container-lowest:   #FCFBF8;
+      --color-surface:                    #F8F6F0;
+      --color-surface-container:          #EFEDE5;
+      --color-surface-container-high:     #E8E5DC;
+      --color-surface-container-highest:  #E0DDD4;
+      /* === 文字 === */
+      --color-on-surface:           #1D2733;
+      --color-on-surface-variant:   #667085;
+      /* === 功能色 === */
+      --color-success:  #22c55e;
+      --color-error:    #ef4444;
+      --color-warning:  #f59e0b;
+      /* === 边框 === */
+      --color-outline:          #D1CFC8;
+      --color-outline-variant:  #E6E1D8;
+      /* === 圆角 === */
+      --radius-sm:   0.25rem;
+      --radius-md:   0.5rem;
+      --radius-lg:   0.75rem;
+      --radius-xl:   1rem;
+      --radius-2xl:  1.25rem;
+      --radius-full: 9999px;
+      /* === 阴影 === */
+      --shadow-card:   0 2px 8px rgba(0,0,0,0.08);
+      --shadow-float:  0 10px 25px rgba(0,0,0,0.10);
+      --shadow-dialog: 0 25px 50px rgba(0,0,0,0.15);
+      /* === 字体 === */
+      --font-sans: "Noto Sans SC", system-ui, sans-serif;
+    }
+  </style>
+
+  <!-- 图片兜底 -->
+  <script>
+    document.addEventListener('error', function (e) {
+      const img = e.target;
+      if (img.tagName !== 'IMG' || img.dataset.fallback) return;
+      img.dataset.fallback = '1';
+      const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const cat = img.getAttribute('data-category') || '其他';
+      const alt = img.getAttribute('alt') || '';
+      const label = esc(alt.length > 8 ? alt.slice(0, 8) + '…' : alt);
+      const icons = { '人物': '👤', '自然风景': '🏞', '动物': '🐾', '建筑城市': '🏙', '运动体育': '⚽', '交通工具': '🚗', '食物': '🍽', '服饰时尚': '👗', '商业科技': '💼', '游戏娱乐': '🎮', '艺术': '🎨', '其他': '🖼' };
+      const icon = icons[cat] || '🖼';
+      const w = img.width || 400, h = img.height || 300;
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="45%" text-anchor="middle" font-size="${Math.min(w, h) * 0.18}" dominant-baseline="central">${icon}</text><text x="50%" y="68%" text-anchor="middle" font-size="${Math.min(w, h) * 0.07}" fill="%239ca3af" font-family="system-ui,sans-serif" dominant-baseline="central">${label}</text></svg>`;
+      img.src = 'data:image/svg+xml,' + svg;
+    }, true);
+  </script>
+</head>
+
+<body class="bg-background text-on-surface font-sans">
+
+  <!-- @nav:start 导航组件 -->
+  <header class="bg-surface sticky top-0 z-40 h-14 flex items-center justify-between px-6 border-b border-outline-variant/30">
+    <div class="flex items-center gap-2.5">
+      <i data-lucide="heart-pulse" class="text-primary w-5 h-5"></i>
+      <span class="font-semibold text-sm text-on-surface">百芝堂赋能</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="text-xs text-on-surface-variant">小初</span>
+      <div class="w-7 h-7 rounded-full bg-primary/15 flex items-center justify-center text-xs font-medium text-primary">初</div>
+    </div>
+  </header>
+
+  <div class="flex" style="height: calc(100vh - 3.5rem)">
+    <aside class="w-56 shrink-0 bg-surface-container-lowest border-r border-outline-variant/20 overflow-y-auto">
+      <div class="p-3 space-y-0.5">
+        <div class="text-[10px] uppercase tracking-wider text-on-surface-variant/50 px-3 pt-2 pb-1">主菜单</div>
+        <a href="diagnosis.html" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="scan-search" class="w-4 h-4"></i>双轨诊断
+        </a>
+        <a href="trainee-profiles.html" class="flex items-center gap-3 px-3 py-2.5 rounded-md bg-primary/10 text-primary font-medium text-sm" aria-current="page">
+          <i data-lucide="users" class="w-4 h-4"></i>新人档案
+        </a>
+        <div class="text-[10px] uppercase tracking-wider text-on-surface-variant/50 px-3 pt-3 pb-1">设置</div>
+        <a href="settings-config.html" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>配置中心
+        </a>
+        <a href="settings-stages.html" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="git-branch" class="w-4 h-4"></i>阶段规则
+        </a>
+      </div>
+    </aside>
+
+    <!-- @main-content:start -->
+    <main class="flex-1 min-w-0 overflow-y-auto bg-background p-6">
+
+      <!-- 页面标题区 -->
+      <div class="mb-6">
+        <h1 class="text-2xl font-bold text-on-surface">新人档案</h1>
+        <p class="text-sm text-on-surface-variant mt-1">业务追踪表 · 事件时间线</p>
+      </div>
+
+      <!-- 筛选栏 -->
+      <div class="bg-surface rounded-lg shadow-card p-4 mb-6">
+        <div class="flex items-center gap-4 flex-wrap">
+          <!-- 状态筛选 -->
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-medium text-on-surface-variant">状态</span>
+            <div class="flex gap-1" id="status-filter-group">
+              <button class="px-3 py-1.5 rounded-md text-xs font-medium bg-primary/10 text-primary transition-colors" data-status="all" id="status-all">全部</button>
+              <button class="px-3 py-1.5 rounded-md text-xs font-medium text-on-surface-variant bg-surface-container hover:bg-surface-container-high transition-colors" data-status="training" id="status-training">在培训</button>
+              <button class="px-3 py-1.5 rounded-md text-xs font-medium text-on-surface-variant bg-surface-container hover:bg-surface-container-high transition-colors" data-status="assigned" id="status-assigned">下组</button>
+              <button class="px-3 py-1.5 rounded-md text-xs font-medium text-on-surface-variant bg-surface-container hover:bg-surface-container-high transition-colors" data-status="rotating" id="status-rotating">轮组</button>
+              <button class="px-3 py-1.5 rounded-md text-xs font-medium text-on-surface-variant bg-surface-container hover:bg-surface-container-high transition-colors" data-status="resigned" id="status-resigned">离职</button>
+            </div>
+          </div>
+          <!-- 搜索框 -->
+          <div class="flex-1 min-w-[200px] max-w-[320px]">
+            <div class="relative">
+              <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-on-surface-variant/50"></i>
+              <input id="search-input" class="w-full bg-surface-container border-none rounded-md pl-9 pr-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors" placeholder="搜索姓名、部门..."/>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 学员列表表格 -->
+      <div class="bg-surface rounded-lg shadow-card overflow-hidden mb-6">
+        <!-- 表头 -->
+        <div class="grid grid-cols-7 px-4 py-3 bg-surface-container text-xs font-semibold text-on-surface-variant uppercase tracking-wide">
+          <span>姓名</span>
+          <span>部门</span>
+          <span>职位</span>
+          <span>入职时间</span>
+          <span>状态</span>
+          <span>阶段</span>
+          <span>带教老师</span>
+        </div>
+        <!-- 表格内容 -->
+        <div class="divide-y divide-outline-variant/50" id="trainee-table-body">
+          <!-- 列表-学员1 -->
+          <div class="grid grid-cols-7 px-4 py-3 hover:bg-surface-container/50 transition-colors cursor-pointer trainee-row" data-id="1" data-status="training">
+            <span class="text-sm font-medium text-on-surface">陈思远</span>
+            <span class="text-sm text-on-surface-variant">运营部</span>
+            <span class="text-sm text-on-surface-variant">运营专员</span>
+            <span class="text-sm text-on-surface-variant">2025-06-01</span>
+            <span><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-primary/15 text-primary">在培训</span></span>
+            <span class="text-sm text-on-surface-variant">学习期</span>
+            <span class="text-sm text-on-surface-variant">王晓明</span>
+          </div>
+          <!-- 列表-学员2 -->
+          <div class="grid grid-cols-7 px-4 py-3 hover:bg-surface-container/50 transition-colors cursor-pointer trainee-row" data-id="2" data-status="assigned">
+            <span class="text-sm font-medium text-on-surface">林雨桐</span>
+            <span class="text-sm text-on-surface-variant">市场部</span>
+            <span class="text-sm text-on-surface-variant">市场助理</span>
+            <span class="text-sm text-on-surface-variant">2025-05-15</span>
+            <span><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">下组</span></span>
+            <span class="text-sm text-on-surface-variant">练习期</span>
+            <span class="text-sm text-on-surface-variant">赵丽华</span>
+          </div>
+          <!-- 列表-学员3 -->
+          <div class="grid grid-cols-7 px-4 py-3 hover:bg-surface-container/50 transition-colors cursor-pointer trainee-row" data-id="3" data-status="training">
+            <span class="text-sm font-medium text-on-surface">张浩然</span>
+            <span class="text-sm text-on-surface-variant">技术部</span>
+            <span class="text-sm text-on-surface-variant">前端开发</span>
+            <span class="text-sm text-on-surface-variant">2025-06-10</span>
+            <span><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-primary/15 text-primary">在培训</span></span>
+            <span class="text-sm text-on-surface-variant">学习期</span>
+            <span class="text-sm text-on-surface-variant">李志强</span>
+          </div>
+          <!-- 列表-学员4 -->
+          <div class="grid grid-cols-7 px-4 py-3 hover:bg-surface-container/50 transition-colors cursor-pointer trainee-row" data-id="4" data-status="rotating">
+            <span class="text-sm font-medium text-on-surface">王思琪</span>
+            <span class="text-sm text-on-surface-variant">产品部</span>
+            <span class="text-sm text-on-surface-variant">产品助理</span>
+            <span class="text-sm text-on-surface-variant">2025-04-20</span>
+            <span><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-warning/15 text-warning">轮组</span></span>
+            <span class="text-sm text-on-surface-variant">独立期</span>
+            <span class="text-sm text-on-surface-variant">陈建国</span>
+          </div>
+          <!-- 列表-学员5 -->
+          <div class="grid grid-cols-7 px-4 py-3 hover:bg-surface-container/50 transition-colors cursor-pointer trainee-row" data-id="5" data-status="assigned">
+            <span class="text-sm font-medium text-on-surface">刘子涵</span>
+            <span class="text-sm text-on-surface-variant">客服部</span>
+            <span class="text-sm text-on-surface-variant">客服专员</span>
+            <span class="text-sm text-on-surface-variant">2025-05-08</span>
+            <span><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">下组</span></span>
+            <span class="text-sm text-on-surface-variant">练习期</span>
+            <span class="text-sm text-on-surface-variant">孙丽萍</span>
+          </div>
+          <!-- 列表-学员6 -->
+          <div class="grid grid-cols-7 px-4 py-3 hover:bg-surface-container/50 transition-colors cursor-pointer trainee-row" data-id="6" data-status="resigned">
+            <span class="text-sm font-medium text-on-surface">赵文博</span>
+            <span class="text-sm text-on-surface-variant">销售部</span>
+            <span class="text-sm text-on-surface-variant">销售代表</span>
+            <span class="text-sm text-on-surface-variant">2025-03-12</span>
+            <span><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-error/15 text-error">离职</span></span>
+            <span class="text-sm text-on-surface-variant">—</span>
+            <span class="text-sm text-on-surface-variant">周明辉</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 详情面板（默认隐藏） -->
+      <div id="detail-panel" class="bg-surface rounded-lg shadow-card overflow-hidden hidden">
+        <!-- 详情面板头部 -->
+        <div class="flex items-center justify-between px-5 py-4 border-b border-outline-variant/20">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-primary/15 flex items-center justify-center text-sm font-medium text-primary" id="detail-avatar">陈</div>
+            <div>
+              <h2 class="text-base font-semibold text-on-surface" id="detail-name">陈思远</h2>
+              <p class="text-xs text-on-surface-variant" id="detail-dept">运营部 · 运营专员</p>
+            </div>
+          </div>
+          <button id="btn-close-detail" class="p-1.5 rounded-md hover:bg-surface-container transition-colors">
+            <i data-lucide="x" class="w-4 h-4 text-on-surface-variant"></i>
+          </button>
+        </div>
+
+        <!-- 详情面板内容 -->
+        <div class="p-5 space-y-8">
+          <!-- 基本信息区块 -->
+          <div>
+            <h3 class="text-sm font-semibold text-on-surface mb-4 flex items-center gap-2">
+              <i data-lucide="user-circle" class="w-4 h-4 text-primary"></i>基本信息
+            </h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div>
+                <span class="text-xs text-on-surface-variant">姓名</span>
+                <p class="text-sm font-medium text-on-surface mt-0.5" id="info-name">陈思远</p>
+              </div>
+              <div>
+                <span class="text-xs text-on-surface-variant">手机</span>
+                <p class="text-sm font-medium text-on-surface mt-0.5" id="info-phone">138****6789</p>
+              </div>
+              <div>
+                <span class="text-xs text-on-surface-variant">入职日期</span>
+                <p class="text-sm font-medium text-on-surface mt-0.5" id="info-entry">2025-06-01</p>
+              </div>
+              <div>
+                <span class="text-xs text-on-surface-variant">预计下组日期</span>
+                <p class="text-sm font-medium text-on-surface mt-0.5" id="info-estimate">2025-07-15</p>
+              </div>
+              <div>
+                <span class="text-xs text-on-surface-variant">实际下组日期</span>
+                <p class="text-sm font-medium text-on-surface mt-0.5" id="info-actual">—</p>
+              </div>
+              <div>
+                <span class="text-xs text-on-surface-variant">带教老师</span>
+                <p class="text-sm font-medium text-on-surface mt-0.5" id="info-mentor">王晓明</p>
+              </div>
+              <div>
+                <span class="text-xs text-on-surface-variant">当前阶段</span>
+                <p class="text-sm font-medium text-on-surface mt-0.5" id="info-stage">学习期</p>
+              </div>
+              <div>
+                <span class="text-xs text-on-surface-variant">闯关进度</span>
+                <p class="text-sm font-medium text-on-surface mt-0.5" id="info-progress">已通过 3/共 8 关</p>
+              </div>
+              <div class="col-span-2 md:col-span-4">
+                <span class="text-xs text-on-surface-variant">出师状态</span>
+                <p class="text-sm font-medium text-on-surface mt-0.5" id="info-graduation">
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-primary/15 text-primary">培训中</span>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 事件时间线区块 -->
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-sm font-semibold text-on-surface flex items-center gap-2">
+                <i data-lucide="clock" class="w-4 h-4 text-primary"></i>事件时间线
+              </h3>
+              <!-- 时间范围切换 -->
+              <div class="flex gap-1" id="time-range-group">
+                <button class="px-2.5 py-1 rounded-md text-xs font-medium bg-primary/10 text-primary transition-colors" data-range="7" id="range-7">7天</button>
+                <button class="px-2.5 py-1 rounded-md text-xs font-medium text-on-surface-variant bg-surface-container hover:bg-surface-container-high transition-colors" data-range="30" id="range-30">30天</button>
+                <button class="px-2.5 py-1 rounded-md text-xs font-medium text-on-surface-variant bg-surface-container hover:bg-surface-container-high transition-colors" data-range="90" id="range-90">90天</button>
+              </div>
+            </div>
+            <!-- 事件类型筛选 -->
+            <div class="flex gap-1.5 mb-4" id="event-type-filter-group">
+              <button class="px-2.5 py-1 rounded-md text-xs font-medium bg-primary/10 text-primary transition-colors" data-type="all" id="etype-all">全部</button>
+              <button class="px-2.5 py-1 rounded-md text-xs font-medium text-on-surface-variant bg-surface-container hover:bg-surface-container-high transition-colors" data-type="quality" id="etype-quality">🔍 质检</button>
+              <button class="px-2.5 py-1 rounded-md text-xs font-medium text-on-surface-variant bg-surface-container hover:bg-surface-container-high transition-colors" data-type="task" id="etype-task">✅ 任务</button>
+              <button class="px-2.5 py-1 rounded-md text-xs font-medium text-on-surface-variant bg-surface-container hover:bg-surface-container-high transition-colors" data-type="empower" id="etype-empower">⚡ 赋能</button>
+              <button class="px-2.5 py-1 rounded-md text-xs font-medium text-on-surface-variant bg-surface-container hover:bg-surface-container-high transition-colors" data-type="stage" id="etype-stage">🔄 阶段变更</button>
+            </div>
+            <!-- 时间线列表 -->
+            <div class="relative pl-6" id="timeline-list">
+              <!-- 时间线-事件1：质检（最新） -->
+              <div class="relative pb-5 timeline-item" data-type="quality" data-date="2025-07-08">
+                <div class="absolute left-0 top-0 w-2.5 h-2.5 rounded-full bg-warning border-2 border-surface -translate-x-[5px]"></div>
+                <div class="absolute left-0 top-2.5 bottom-0 w-px bg-outline-variant/40 -translate-x-px timeline-line"></div>
+                <div class="ml-3">
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="text-xs font-medium text-warning">🔍 质检</span>
+                    <span class="text-xs text-on-surface-variant/60">2025-07-08 14:30</span>
+                  </div>
+                  <p class="text-sm text-on-surface">通话质检未通过，需重新学习沟通话术规范</p>
+                </div>
+              </div>
+              <!-- 时间线-事件2：任务 -->
+              <div class="relative pb-5 timeline-item" data-type="task" data-date="2025-07-07">
+                <div class="absolute left-0 top-0 w-2.5 h-2.5 rounded-full bg-success border-2 border-surface -translate-x-[5px]"></div>
+                <div class="absolute left-0 top-2.5 bottom-0 w-px bg-outline-variant/40 -translate-x-px timeline-line"></div>
+                <div class="ml-3">
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="text-xs font-medium text-success">✅ 任务</span>
+                    <span class="text-xs text-on-surface-variant/60">2025-07-07 10:15</span>
+                  </div>
+                  <p class="text-sm text-on-surface">完成"客户异议处理"模拟演练，得分 85 分</p>
+                </div>
+              </div>
+              <!-- 时间线-事件3：赋能 -->
+              <div class="relative pb-5 timeline-item" data-type="empower" data-date="2025-07-05">
+                <div class="absolute left-0 top-0 w-2.5 h-2.5 rounded-full bg-primary border-2 border-surface -translate-x-[5px]"></div>
+                <div class="absolute left-0 top-2.5 bottom-0 w-px bg-outline-variant/40 -translate-x-px timeline-line"></div>
+                <div class="ml-3">
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="text-xs font-medium text-primary">⚡ 赋能</span>
+                    <span class="text-xs text-on-surface-variant/60">2025-07-05 09:00</span>
+                  </div>
+                  <p class="text-sm text-on-surface">参加"高效沟通技巧"赋能培训课程，时长 2 小时</p>
+                </div>
+              </div>
+              <!-- 时间线-事件4：阶段变更 -->
+              <div class="relative pb-5 timeline-item" data-type="stage" data-date="2025-07-02">
+                <div class="absolute left-0 top-0 w-2.5 h-2.5 rounded-full bg-error border-2 border-surface -translate-x-[5px]"></div>
+                <div class="absolute left-0 top-2.5 bottom-0 w-px bg-outline-variant/40 -translate-x-px timeline-line"></div>
+                <div class="ml-3">
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="text-xs font-medium text-error">🔄 阶段变更</span>
+                    <span class="text-xs text-on-surface-variant/60">2025-07-02 16:00</span>
+                  </div>
+                  <p class="text-sm text-on-surface">阶段变更：入职期 → 学习期，开始系统培训</p>
+                </div>
+              </div>
+              <!-- 时间线-事件5：任务 -->
+              <div class="relative pb-5 timeline-item" data-type="task" data-date="2025-06-28">
+                <div class="absolute left-0 top-0 w-2.5 h-2.5 rounded-full bg-success border-2 border-surface -translate-x-[5px]"></div>
+                <div class="absolute left-0 top-2.5 bottom-0 w-px bg-outline-variant/40 -translate-x-px timeline-line"></div>
+                <div class="ml-3">
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="text-xs font-medium text-success">✅ 任务</span>
+                    <span class="text-xs text-on-surface-variant/60">2025-06-28 11:30</span>
+                  </div>
+                  <p class="text-sm text-on-surface">完成产品知识考核，得分 92 分，通过第一关</p>
+                </div>
+              </div>
+              <!-- 时间线-事件6：质检 -->
+              <div class="relative pb-5 timeline-item" data-type="quality" data-date="2025-06-25">
+                <div class="absolute left-0 top-0 w-2.5 h-2.5 rounded-full bg-warning border-2 border-surface -translate-x-[5px]"></div>
+                <div class="absolute left-0 top-2.5 bottom-0 w-px bg-outline-variant/40 -translate-x-px timeline-line"></div>
+                <div class="ml-3">
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="text-xs font-medium text-warning">🔍 质检</span>
+                    <span class="text-xs text-on-surface-variant/60">2025-06-25 15:45</span>
+                  </div>
+                  <p class="text-sm text-on-surface">服务流程质检：整体达标，需改进响应速度</p>
+                </div>
+              </div>
+              <!-- 时间线-事件7：赋能 -->
+              <div class="relative pb-5 timeline-item" data-type="empower" data-date="2025-06-20">
+                <div class="absolute left-0 top-0 w-2.5 h-2.5 rounded-full bg-primary border-2 border-surface -translate-x-[5px]"></div>
+                <div class="absolute left-0 top-2.5 bottom-0 w-px bg-outline-variant/40 -translate-x-px timeline-line"></div>
+                <div class="ml-3">
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="text-xs font-medium text-primary">⚡ 赋能</span>
+                    <span class="text-xs text-on-surface-variant/60">2025-06-20 14:00</span>
+                  </div>
+                  <p class="text-sm text-on-surface">导师一对一辅导：数据分析基础与报表解读</p>
+                </div>
+              </div>
+              <!-- 时间线-事件8：任务 -->
+              <div class="relative pb-5 timeline-item" data-type="task" data-date="2025-06-18">
+                <div class="absolute left-0 top-0 w-2.5 h-2.5 rounded-full bg-success border-2 border-surface -translate-x-[5px]"></div>
+                <div class="absolute left-0 top-2.5 bottom-0 w-px bg-outline-variant/40 -translate-x-px timeline-line"></div>
+                <div class="ml-3">
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="text-xs font-medium text-success">✅ 任务</span>
+                    <span class="text-xs text-on-surface-variant/60">2025-06-18 09:45</span>
+                  </div>
+                  <p class="text-sm text-on-surface">完成公司制度与流程学习，通过第二关考核</p>
+                </div>
+              </div>
+              <!-- 时间线-事件9：阶段变更 -->
+              <div class="relative pb-5 timeline-item" data-type="stage" data-date="2025-06-12">
+                <div class="absolute left-0 top-0 w-2.5 h-2.5 rounded-full bg-error border-2 border-surface -translate-x-[5px]"></div>
+                <div class="absolute left-0 top-2.5 bottom-0 w-px bg-outline-variant/40 -translate-x-px timeline-line"></div>
+                <div class="ml-3">
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="text-xs font-medium text-error">🔄 阶段变更</span>
+                    <span class="text-xs text-on-surface-variant/60">2025-06-12 10:00</span>
+                  </div>
+                  <p class="text-sm text-on-surface">新人入职报到，进入入职期阶段</p>
+                </div>
+              </div>
+              <!-- 时间线-事件10：质检 -->
+              <div class="relative timeline-item" data-type="quality" data-date="2025-06-10">
+                <div class="absolute left-0 top-0 w-2.5 h-2.5 rounded-full bg-warning border-2 border-surface -translate-x-[5px]"></div>
+                <div class="ml-3">
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="text-xs font-medium text-warning">🔍 质检</span>
+                    <span class="text-xs text-on-surface-variant/60">2025-06-10 16:20</span>
+                  </div>
+                  <p class="text-sm text-on-surface">入职资料完整性检查：材料齐全，归档完成</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+    <!-- @main-content:end -->
+  </div>
+
+  <script>
+    $(function() {
+
+      // ========== 状态筛选 ==========
+      $('#status-filter-group').on('click', 'button', function() {
+        var $btn = $(this);
+        var status = $btn.data('status');
+
+        // 更新激活态
+        $('#status-filter-group button').removeClass('bg-primary/10 text-primary')
+          .addClass('text-on-surface-variant bg-surface-container');
+        $btn.addClass('bg-primary/10 text-primary').removeClass('text-on-surface-variant bg-surface-container');
+
+        // 筛选行
+        if (status === 'all') {
+          $('.trainee-row').show();
+        } else {
+          $('.trainee-row').each(function() {
+            var $row = $(this);
+            if ($row.data('status') === status) {
+              $row.show();
+            } else {
+              $row.hide();
+            }
+          });
+        }
+      });
+
+      // ========== 搜索 ==========
+      $('#search-input').on('input', function() {
+        var keyword = $(this).val().toLowerCase().trim();
+        $('.trainee-row').each(function() {
+          var $row = $(this);
+          var text = $row.text().toLowerCase();
+          if (text.indexOf(keyword) > -1) {
+            $row.show();
+          } else {
+            $row.hide();
+          }
+        });
+      });
+
+      // ========== 点击学员行展开详情面板 ==========
+      // 学员 mock 数据映射
+      var traineeData = {
+        '1': {
+          name: '陈思远', dept: '运营部', position: '运营专员', avatar: '陈',
+          phone: '138****6789', entry: '2025-06-01', estimate: '2025-07-15',
+          actual: '—', mentor: '王晓明', stage: '学习期', progress: '已通过 3/共 8 关',
+          graduation: '<span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-primary/15 text-primary">培训中</span>'
+        },
+        '2': {
+          name: '林雨桐', dept: '市场部', position: '市场助理', avatar: '林',
+          phone: '139****2345', entry: '2025-05-15', estimate: '2025-06-30',
+          actual: '2025-06-28', mentor: '赵丽华', stage: '练习期', progress: '已通过 5/共 8 关',
+          graduation: '<span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已出师</span>'
+        },
+        '3': {
+          name: '张浩然', dept: '技术部', position: '前端开发', avatar: '张',
+          phone: '137****8901', entry: '2025-06-10', estimate: '2025-07-25',
+          actual: '—', mentor: '李志强', stage: '学习期', progress: '已通过 2/共 8 关',
+          graduation: '<span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-primary/15 text-primary">培训中</span>'
+        },
+        '4': {
+          name: '王思琪', dept: '产品部', position: '产品助理', avatar: '王',
+          phone: '136****4567', entry: '2025-04-20', estimate: '2025-06-15',
+          actual: '2025-06-10', mentor: '陈建国', stage: '独立期', progress: '已通过 7/共 8 关',
+          graduation: '<span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-warning/15 text-warning">轮组中</span>'
+        },
+        '5': {
+          name: '刘子涵', dept: '客服部', position: '客服专员', avatar: '刘',
+          phone: '135****0123', entry: '2025-05-08', estimate: '2025-06-22',
+          actual: '2025-06-20', mentor: '孙丽萍', stage: '练习期', progress: '已通过 6/共 8 关',
+          graduation: '<span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">已出师</span>'
+        },
+        '6': {
+          name: '赵文博', dept: '销售部', position: '销售代表', avatar: '赵',
+          phone: '134****7890', entry: '2025-03-12', estimate: '2025-05-01',
+          actual: '—', mentor: '周明辉', stage: '—', progress: '已通过 4/共 8 关',
+          graduation: '<span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-error/15 text-error">已离职</span>'
+        }
+      };
+
+      $('.trainee-row').on('click', function() {
+        var $row = $(this);
+        var id = $row.data('id');
+        var data = traineeData[id];
+
+        // 更新选中行高亮
+        $('.trainee-row').removeClass('bg-primary/5');
+        $row.addClass('bg-primary/5');
+
+        // 填充详情面板
+        $('#detail-avatar').text(data.avatar);
+        $('#detail-name').text(data.name);
+        $('#detail-dept').text(data.dept + ' · ' + data.position);
+        $('#info-name').text(data.name);
+        $('#info-phone').text(data.phone);
+        $('#info-entry').text(data.entry);
+        $('#info-estimate').text(data.estimate);
+        $('#info-actual').text(data.actual);
+        $('#info-mentor').text(data.mentor);
+        $('#info-stage').text(data.stage);
+        $('#info-progress').text(data.progress);
+        $('#info-graduation').html(data.graduation);
+
+        // 显示详情面板
+        $('#detail-panel').removeClass('hidden');
+
+        // 滚动到详情面板
+        $('html, body').animate({
+          scrollTop: $('#detail-panel').offset().top - 80
+        }, 300);
+
+        // 刷新图标
+        lucide.createIcons();
+      });
+
+      // ========== 关闭详情面板 ==========
+      $('#btn-close-detail').on('click', function() {
+        $('#detail-panel').addClass('hidden');
+        $('.trainee-row').removeClass('bg-primary/5');
+      });
+
+      // ========== 事件类型筛选 ==========
+      $('#event-type-filter-group').on('click', 'button', function() {
+        var $btn = $(this);
+        var type = $btn.data('type');
+
+        // 更新激活态
+        $('#event-type-filter-group button').removeClass('bg-primary/10 text-primary')
+          .addClass('text-on-surface-variant bg-surface-container');
+        $btn.addClass('bg-primary/10 text-primary').removeClass('text-on-surface-variant bg-surface-container');
+
+        // 筛选时间线
+        if (type === 'all') {
+          $('.timeline-item').show();
+        } else {
+          $('.timeline-item').each(function() {
+            var $item = $(this);
+            if ($item.data('type') === type) {
+              $item.show();
+            } else {
+              $item.hide();
+            }
+          });
+        }
+
+        // 隐藏最后可见项的连接线
+        updateTimelineLines();
+      });
+
+      // ========== 时间范围切换 ==========
+      $('#time-range-group').on('click', 'button', function() {
+        var $btn = $(this);
+        var range = parseInt($btn.data('range'));
+
+        // 更新激活态
+        $('#time-range-group button').removeClass('bg-primary/10 text-primary')
+          .addClass('text-on-surface-variant bg-surface-container');
+        $btn.addClass('bg-primary/10 text-primary').removeClass('text-on-surface-variant bg-surface-container');
+
+        // 计算截止日期
+        var today = new Date('2025-07-10'); // 模拟当前日期
+        var cutoff = new Date(today);
+        cutoff.setDate(cutoff.getDate() - range);
+        var cutoffStr = cutoff.toISOString().split('T')[0];
+
+        // 筛选时间线
+        $('.timeline-item').each(function() {
+          var $item = $(this);
+          var itemDate = $item.data('date');
+          if (itemDate >= cutoffStr) {
+            $item.show();
+          } else {
+            $item.hide();
+          }
+        });
+
+        updateTimelineLines();
+      });
+
+      // 更新时间线连接线：隐藏最后一个可见项的连接线
+      function updateTimelineLines() {
+        var $visible = $('.timeline-item:visible');
+        $('.timeline-item .timeline-line').show();
+        if ($visible.length > 0) {
+          $visible.last().find('.timeline-line').hide();
+        }
+      }
+
+      // ========== 初始化图标 ==========
+      lucide.createIcons();
+    });
+  </script>
+</body>
+
+</html>

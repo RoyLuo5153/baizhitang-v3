@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import {
   Users, AlertTriangle, Plus, Loader2, Archive, GraduationCap, CheckCircle, XCircle,
+  Clock, Search, Filter, ChevronDown, ChevronUp, X, Activity, Zap, RotateCw, FileCheck,
 } from 'lucide-react';
 import { apiGet } from '@/lib/api-client';
 import { useAuth } from '@/lib/auth/context';
@@ -46,6 +47,17 @@ interface TraineeProfile {
   // 出师相关
   graduation_date?: string | null;
   graduation_confirmed_by?: string | null;
+  // 阶段和闯关
+  stage?: number;
+  total_levels?: number;
+}
+
+interface EventItem {
+  id: string;
+  event_type: string;
+  event_data: Record<string, unknown>;
+  happened_at: string;
+  actor_name?: string;
 }
 
 interface MentorOption {
@@ -95,6 +107,11 @@ export default function TraineeProfilesPage() {
   const [graduationChecks, setGraduationChecks] = useState<Record<string, { eligible: boolean; missingConditions: string[]; checking: boolean }>>({});
   const [graduating, setGraduating] = useState<string | null>(null);
   const [showGraduationModal, setShowGraduationModal] = useState<{ userId: string; name: string } | null>(null);
+  const [selectedProfile, setSelectedProfile] = useState<TraineeProfile | null>(null);
+  const [events, setEvents] = useState<EventItem[]>([]);
+  const [eventsLoading, setEventsLoading] = useState(false);
+  const [eventFilter, setEventFilter] = useState<string>('all');
+  const [eventDays, setEventDays] = useState<number>(30);
   const [activeTab, setActiveTab] = useState<'training' | 'graduated'>('training');
   const [newTrainee, setNewTrainee] = useState({
     username: '', real_name: '', password: 'bt2026',
@@ -191,6 +208,22 @@ export default function TraineeProfilesPage() {
         fetchProfiles();
       }
     } catch { /* ignore */ }
+  };
+
+  // Fetch events for selected profile
+  const fetchEvents = async (userId: string) => {
+    setEventsLoading(true);
+    try {
+      const res = await fetch(`/api/events?user_id=${userId}&days=${eventDays}`);
+      const data = await res.json();
+      setEvents(data.events || []);
+    } catch { setEvents([]); }
+    setEventsLoading(false);
+  };
+
+  const handleSelectProfile = (p: TraineeProfile) => {
+    setSelectedProfile(p);
+    fetchEvents(p.user_id);
   };
 
   // Check graduation eligibility
@@ -484,7 +517,7 @@ export default function TraineeProfilesPage() {
                 </tr>
               ) : (
                 filteredProfiles.map((p, idx) => (
-                  <tr key={p.user_id} className={idx % 2 === 0 ? 'bg-background' : 'bg-muted/30'}>
+                  <tr key={p.user_id} className={idx % 2 === 0 ? 'bg-background' : 'bg-muted/30'} onClick={() => handleSelectProfile(p)} style={{ cursor: 'pointer' }}>
                     <td className="px-2 py-1.5 border-b border-r border-border font-medium text-foreground">
                       <div className="flex flex-col gap-0.5">
                         <div className="flex items-center gap-1.5">
@@ -684,6 +717,126 @@ export default function TraineeProfilesPage() {
             <div className="flex justify-end gap-3 mt-6">
               <button onClick={() => setShowAddModal(false)} className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground">取消</button>
               <button onClick={addTrainee} className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90">确认添加</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Profile Detail Panel with Event Timeline */}
+      {selectedProfile && (
+        <div className="fixed inset-0 bg-black/40 flex items-start justify-center z-40 pt-16" onClick={() => setSelectedProfile(null)}>
+          <div className="bg-card rounded-xl shadow-2xl w-full max-w-4xl max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <div className="sticky top-0 bg-card border-b border-border px-6 py-4 flex items-center justify-between z-10">
+              <div>
+                <h2 className="text-lg font-bold text-foreground">{selectedProfile.real_name}</h2>
+                <p className="text-sm text-muted-foreground">{selectedProfile.department} · {selectedProfile.position}</p>
+              </div>
+              <button onClick={() => setSelectedProfile(null)} className="p-2 rounded-lg hover:bg-muted transition-colors">
+                <X className="w-5 h-5 text-muted-foreground" />
+              </button>
+            </div>
+            {/* Content */}
+            <div className="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Left: Basic Info */}
+              <div className="lg:col-span-1 space-y-4">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <Users className="w-4 h-4 text-muted-foreground" /> 基本信息
+                </h3>
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between"><span className="text-muted-foreground">手机</span><span className="text-foreground font-medium">{selectedProfile.phone || '-'}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">入职日期</span><span className="text-foreground font-medium">{selectedProfile.hire_date?.split('T')[0] || '-'}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">预计下组</span><span className="text-foreground font-medium">{selectedProfile.expected_group_date?.split('T')[0] || '-'}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">实际下组</span><span className="text-foreground font-medium">{selectedProfile.group_date?.split('T')[0] || '未下组'}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">带教老师</span><span className="text-foreground font-medium">{selectedProfile.mentor_name || '-'}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">当前阶段</span><span className="text-foreground font-medium">阶段 {selectedProfile.stage || '-'}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">闯关进度</span><span className="text-foreground font-medium">{selectedProfile.passed_levels || 0} / {selectedProfile.total_levels || 21} 关</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">出师状态</span>
+                    <span className={`font-medium ${selectedProfile.graduation_date ? 'text-emerald-600' : 'text-amber-600'}`}>
+                      {selectedProfile.graduation_date ? `已出师 ${selectedProfile.graduation_date.split('T')[0]}` : '未出师'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              {/* Right: Event Timeline */}
+              <div className="lg:col-span-2">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-muted-foreground" /> 事件时间线
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    {/* Event type filter */}
+                    <select
+                      value={eventFilter}
+                      onChange={(e) => setEventFilter(e.target.value)}
+                      className="text-xs px-2 py-1 rounded-md border border-border bg-muted text-foreground"
+                    >
+                      <option value="all">全部</option>
+                      <option value="qc">质检</option>
+                      <option value="task">任务</option>
+                      <option value="empower">赋能</option>
+                      <option value="stage_change">阶段变更</option>
+                    </select>
+                    {/* Days filter */}
+                    <div className="flex rounded-md border border-border overflow-hidden">
+                      {[7, 30, 90].map(d => (
+                        <button
+                          key={d}
+                          onClick={() => { setEventDays(d); fetchEvents(selectedProfile.user_id); }}
+                          className={`text-xs px-2 py-1 transition-colors ${eventDays === d ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}
+                        >
+                          {d}天
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                {eventsLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : events.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground text-sm">暂无事件记录</div>
+                ) : (
+                  <div className="relative pl-6 border-l-2 border-border space-y-4">
+                    {events
+                      .filter(e => eventFilter === 'all' || e.event_type === eventFilter)
+                      .map((e) => {
+                        const iconMap: Record<string, { icon: React.ReactNode; bg: string }> = {
+                          qc: { icon: <FileCheck className="w-3.5 h-3.5" />, bg: '#DBEAFE' },
+                          task: { icon: <CheckCircle className="w-3.5 h-3.5" />, bg: '#DCFCE7' },
+                          empower: { icon: <Zap className="w-3.5 h-3.5" />, bg: '#FEF3C7' },
+                          stage_change: { icon: <RotateCw className="w-3.5 h-3.5" />, bg: '#F3E8FF' },
+                        };
+                        const typeLabel: Record<string, string> = { qc: '质检', task: '任务', empower: '赋能', stage_change: '阶段变更' };
+                        const info = iconMap[e.event_type] || iconMap.task;
+                        return (
+                          <div key={e.id} className="relative">
+                            <div className="absolute -left-[29px] p-1 rounded-full border-2 border-card" style={{ background: info.bg }}>
+                              {info.icon}
+                            </div>
+                            <div className="bg-muted/50 rounded-lg px-4 py-3">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-[10px] px-1.5 py-0.5 rounded font-medium" style={{ background: info.bg, color: '#1D2733' }}>
+                                  {typeLabel[e.event_type] || e.event_type}
+                                </span>
+                                <span className="text-xs text-muted-foreground">
+                                  {new Date(e.happened_at).toLocaleString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                              </div>
+                              <p className="text-sm text-foreground">
+                                {typeof e.event_data === 'object' && e.event_data !== null
+                                  ? ((e.event_data as Record<string, unknown>).description as string) || (e.event_data as Record<string, unknown>).title as string || JSON.stringify(e.event_data).slice(0, 80)
+                                  : String(e.event_data || '')}
+                              </p>
+                              {e.actor_name && <p className="text-xs text-muted-foreground mt-1">操作人：{e.actor_name}</p>}
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

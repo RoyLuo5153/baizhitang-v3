@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/jquery/jquery-3.7.1.min.js"></script>
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/lucide/lucide-1.11.0.min.js"></script>
+  <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/tailwindcss/tailwindcss-browser-4.2.4.min.js"></script>
+
+  <link href="https://lf-code-agent.coze.cn/obj/x-ai-cn/fonts/google/google-all-fonts.css" rel="stylesheet"/>
+  <style type="text/tailwindcss">
+    @theme {
+      /* === 品牌色 === */
+      --color-primary:              #2978B5;
+      --color-primary-container:    #D6E8F7;
+      --color-on-primary:           #ffffff;
+      /* === 背景 / 表面 === */
+      --color-background:                 #F8F6F0;
+      --color-surface-container-lowest:   #FCFBF8;
+      --color-surface:                    #F8F6F0;
+      --color-surface-container:          #EFEDE5;
+      --color-surface-container-high:     #E8E5DC;
+      --color-surface-container-highest:  #E0DDD4;
+      /* === 文字 === */
+      --color-on-surface:           #1D2733;
+      --color-on-surface-variant:   #667085;
+      /* === 功能色 === */
+      --color-success:  #22c55e;
+      --color-error:    #ef4444;
+      --color-warning:  #f59e0b;
+      /* === 边框 === */
+      --color-outline:          #D1CFC8;
+      --color-outline-variant:  #E6E1D8;
+      /* === 圆角 === */
+      --radius-sm:   0.25rem;
+      --radius-md:   0.5rem;
+      --radius-lg:   0.75rem;
+      --radius-xl:   1rem;
+      --radius-2xl:  1.25rem;
+      --radius-full: 9999px;
+      /* === 阴影 === */
+      --shadow-card:   0 2px 8px rgba(0,0,0,0.08);
+      --shadow-float:  0 10px 25px rgba(0,0,0,0.10);
+      --shadow-dialog: 0 25px 50px rgba(0,0,0,0.15);
+      /* === 字体 === */
+      --font-sans: "Noto Sans SC", system-ui, sans-serif;
+    }
+  </style>
+
+  <script>
+    document.addEventListener('error', function (e) {
+      const img = e.target;
+      if (img.tagName !== 'IMG' || img.dataset.fallback) return;
+      img.dataset.fallback = '1';
+      const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const cat = img.getAttribute('data-category') || '其他';
+      const alt = img.getAttribute('alt') || '';
+      const label = esc(alt.length > 8 ? alt.slice(0, 8) + '…' : alt);
+      const icons = { '人物': '👤', '自然风景': '🏞', '动物': '🐾', '建筑城市': '🏙', '运动体育': '⚽', '交通工具': '🚗', '食物': '🍽', '服饰时尚': '👗', '商业科技': '💼', '游戏娱乐': '🎮', '艺术': '🎨', '其他': '🖼' };
+      const icon = icons[cat] || '🖼';
+      const w = img.width || 400, h = img.height || 300;
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="45%" text-anchor="middle" font-size="${Math.min(w, h) * 0.18}" dominant-baseline="central">${icon}</text><text x="50%" y="68%" text-anchor="middle" font-size="${Math.min(w, h) * 0.07}" fill="%239ca3af" font-family="system-ui,sans-serif" dominant-baseline="central">${label}</text></svg>`;
+      img.src = 'data:image/svg+xml,' + svg;
+    }, true);
+  </script>
+</head>
+
+<body class="bg-background text-on-surface font-sans">
+
+  <!-- @nav:start 导航组件 -->
+  <header class="bg-surface sticky top-0 z-40 h-14 flex items-center justify-between px-6 border-b border-outline-variant/30">
+    <div class="flex items-center gap-2.5">
+      <i data-lucide="heart-pulse" class="text-primary w-5 h-5"></i>
+      <span class="font-semibold text-sm text-on-surface">百芝堂赋能</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="text-xs text-on-surface-variant">小初</span>
+      <div class="w-7 h-7 rounded-full bg-primary/15 flex items-center justify-center text-xs font-medium text-primary">初</div>
+    </div>
+  </header>
+
+  <div class="flex" style="height: calc(100vh - 3.5rem)">
+    <aside class="w-56 shrink-0 bg-surface-container-lowest border-r border-outline-variant/20 overflow-y-auto">
+      <div class="p-3 space-y-0.5">
+        <div class="text-[10px] uppercase tracking-wider text-on-surface-variant/50 px-3 pt-2 pb-1">主菜单</div>
+        <a href="home.html" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="home" class="w-4 h-4"></i>首页
+        </a>
+        <a href="diagnosis.html" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="scan-search" class="w-4 h-4"></i>双轨诊断
+        </a>
+        <a href="trainee-profiles.html" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="users" class="w-4 h-4"></i>新人档案
+        </a>
+        <div class="text-[10px] uppercase tracking-wider text-on-surface-variant/50 px-3 pt-3 pb-1">设置</div>
+        <a href="settings-config.html" class="flex items-center gap-3 px-3 py-2.5 rounded-md bg-primary/10 text-primary font-medium text-sm" aria-current="page">
+          <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>配置中心
+        </a>
+        <a href="settings-stages.html" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="git-branch" class="w-4 h-4"></i>阶段规则
+        </a>
+      </div>
+    </aside>
+
+    <!-- @main-content:start -->
+    <main class="flex-1 min-w-0 overflow-y-auto bg-background p-6">
+
+      <!-- 页面标题区 -->
+      <div class="mb-8">
+        <h1 class="text-2xl font-bold text-on-surface">配置中心</h1>
+        <p class="text-sm text-on-surface-variant mt-1">管理系统全局配置参数</p>
+      </div>
+
+      <!-- 配置分组列表 -->
+      <div class="space-y-4 max-w-5xl">
+
+        <!-- 分组1：thresholds（阈值配置） -->
+        <div class="bg-surface rounded-lg shadow-card overflow-hidden" id="group-thresholds">
+          <div class="flex items-center justify-between px-5 py-4 cursor-pointer select-none" id="group-header-thresholds">
+            <div class="flex items-center gap-3">
+              <i data-lucide="gauge" class="w-5 h-5 text-warning"></i>
+              <div>
+                <h2 class="text-base font-semibold text-on-surface">阈值配置</h2>
+                <span class="text-xs text-on-surface-variant">thresholds · 5 项配置</span>
+              </div>
+            </div>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-on-surface-variant transition-transform duration-200" id="group-chevron-thresholds"></i>
+          </div>
+          <div class="border-t border-outline-variant/20" id="group-body-thresholds">
+            <!-- 表头 -->
+            <div class="grid grid-cols-[1fr_1fr_2fr_80px] px-5 py-2.5 bg-surface-container text-xs font-semibold text-on-surface-variant uppercase tracking-wide">
+              <span>配置键</span>
+              <span>当前值</span>
+              <span>说明</span>
+              <span>操作</span>
+            </div>
+            <div class="divide-y divide-outline-variant/20">
+              <!-- 列表-thresholds-1: passing_score -->
+              <div class="grid grid-cols-[1fr_1fr_2fr_80px] px-5 py-3 items-center hover:bg-surface-container/50 transition-colors">
+                <code class="text-xs font-mono text-primary bg-primary-container/50 px-1.5 py-0.5 rounded-sm w-fit">passing_score</code>
+                <span class="text-sm font-medium text-on-surface">60</span>
+                <span class="text-xs text-on-surface-variant">考核及格分数线</span>
+                <button class="text-primary text-xs font-medium hover:underline w-fit cursor-pointer" id="btn-edit-1" data-id="1" data-key="passing_score" data-value="60" data-type="number" data-desc="考核及格分数线" data-category="thresholds">编辑</button>
+              </div>
+              <!-- 列表-thresholds-2: qc_completeness -->
+              <div class="grid grid-cols-[1fr_1fr_2fr_80px] px-5 py-3 items-center hover:bg-surface-container/50 transition-colors">
+                <code class="text-xs font-mono text-primary bg-primary-container/50 px-1.5 py-0.5 rounded-sm w-fit">qc_completeness</code>
+                <span class="text-sm font-medium text-on-surface">70</span>
+                <span class="text-xs text-on-surface-variant">质检完整度最低阈值（%）</span>
+                <button class="text-primary text-xs font-medium hover:underline w-fit cursor-pointer" id="btn-edit-2" data-id="2" data-key="qc_completeness" data-value="70" data-type="number" data-desc="质检完整度最低阈值（%）" data-category="thresholds">编辑</button>
+              </div>
+              <!-- 列表-thresholds-3: qc_accuracy -->
+              <div class="grid grid-cols-[1fr_1fr_2fr_80px] px-5 py-3 items-center hover:bg-surface-container/50 transition-colors">
+                <code class="text-xs font-mono text-primary bg-primary-container/50 px-1.5 py-0.5 rounded-sm w-fit">qc_accuracy</code>
+                <span class="text-sm font-medium text-on-surface">80</span>
+                <span class="text-xs text-on-surface-variant">质检准确率最低阈值（%）</span>
+                <button class="text-primary text-xs font-medium hover:underline w-fit cursor-pointer" id="btn-edit-3" data-id="3" data-key="qc_accuracy" data-value="80" data-type="number" data-desc="质检准确率最低阈值（%）" data-category="thresholds">编辑</button>
+              </div>
+              <!-- 列表-thresholds-4: task_on_time_rate -->
+              <div class="grid grid-cols-[1fr_1fr_2fr_80px] px-5 py-3 items-center hover:bg-surface-container/50 transition-colors">
+                <code class="text-xs font-mono text-primary bg-primary-container/50 px-1.5 py-0.5 rounded-sm w-fit">task_on_time_rate</code>
+                <span class="text-sm font-medium text-on-surface">85</span>
+                <span class="text-xs text-on-surface-variant">任务按时完成率最低阈值（%）</span>
+                <button class="text-primary text-xs font-medium hover:underline w-fit cursor-pointer" id="btn-edit-4" data-id="4" data-key="task_on_time_rate" data-value="85" data-type="number" data-desc="任务按时完成率最低阈值（%）" data-category="thresholds">编辑</button>
+              </div>
+              <!-- 列表-thresholds-5: stage_exit_min_score -->
+              <div class="grid grid-cols-[1fr_1fr_2fr_80px] px-5 py-3 items-center hover:bg-surface-container/50 transition-colors">
+                <code class="text-xs font-mono text-primary bg-primary-container/50 px-1.5 py-0.5 rounded-sm w-fit">stage_exit_min_score</code>
+                <span class="text-sm font-medium text-on-surface">75</span>
+                <span class="text-xs text-on-surface-variant">阶段退出最低综合评分</span>
+                <button class="text-primary text-xs font-medium hover:underline w-fit cursor-pointer" id="btn-edit-5" data-id="5" data-key="stage_exit_min_score" data-value="75" data-type="number" data-desc="阶段退出最低综合评分" data-category="thresholds">编辑</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 分组2：weights（权重配置） -->
+        <div class="bg-surface rounded-lg shadow-card overflow-hidden" id="group-weights">
+          <div class="flex items-center justify-between px-5 py-4 cursor-pointer select-none" id="group-header-weights">
+            <div class="flex items-center gap-3">
+              <i data-lucide="scale" class="w-5 h-5 text-primary"></i>
+              <div>
+                <h2 class="text-base font-semibold text-on-surface">权重配置</h2>
+                <span class="text-xs text-on-surface-variant">weights · 4 项配置</span>
+              </div>
+            </div>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-on-surface-variant transition-transform duration-200" id="group-chevron-weights"></i>
+          </div>
+          <div class="border-t border-outline-variant/20" id="group-body-weights">
+            <div class="grid grid-cols-[1fr_1fr_2fr_80px] px-5 py-2.5 bg-surface-container text-xs font-semibold text-on-surface-variant uppercase tracking-wide">
+              <span>配置键</span>
+              <span>当前值</span>
+              <span>说明</span>
+              <span>操作</span>
+            </div>
+            <div class="divide-y divide-outline-variant/20">
+              <!-- 列表-weights-1: process_weight -->
+              <div class="grid grid-cols-[1fr_1fr_2fr_80px] px-5 py-3 items-center hover:bg-surface-container/50 transition-colors">
+                <code class="text-xs font-mono text-primary bg-primary-container/50 px-1.5 py-0.5 rounded-sm w-fit">process_weight</code>
+                <span class="text-sm font-medium text-on-surface">0.4</span>
+                <span class="text-xs text-on-surface-variant">过程考核权重系数</span>
+                <button class="text-primary text-xs font-medium hover:underline w-fit cursor-pointer" id="btn-edit-6" data-id="6" data-key="process_weight" data-value="0.4" data-type="number" data-desc="过程考核权重系数" data-category="weights">编辑</button>
+              </div>
+              <!-- 列表-weights-2: result_weight -->
+              <div class="grid grid-cols-[1fr_1fr_2fr_80px] px-5 py-3 items-center hover:bg-surface-container/50 transition-colors">
+                <code class="text-xs font-mono text-primary bg-primary-container/50 px-1.5 py-0.5 rounded-sm w-fit">result_weight</code>
+                <span class="text-sm font-medium text-on-surface">0.6</span>
+                <span class="text-xs text-on-surface-variant">结果考核权重系数</span>
+                <button class="text-primary text-xs font-medium hover:underline w-fit cursor-pointer" id="btn-edit-7" data-id="7" data-key="result_weight" data-value="0.6" data-type="number" data-desc="结果考核权重系数" data-category="weights">编辑</button>
+              </div>
+              <!-- 列表-weights-3: mentor_eval_weight -->
+              <div class="grid grid-cols-[1fr_1fr_2fr_80px] px-5 py-3 items-center hover:bg-surface-container/50 transition-colors">
+                <code class="text-xs font-mono text-primary bg-primary-container/50 px-1.5 py-0.5 rounded-sm w-fit">mentor_eval_weight</code>
+                <span class="text-sm font-medium text-on-surface">0.3</span>
+                <span class="text-xs text-on-surface-variant">导师评价权重系数</span>
+                <button class="text-primary text-xs font-medium hover:underline w-fit cursor-pointer" id="btn-edit-8" data-id="8" data-key="mentor_eval_weight" data-value="0.3" data-type="number" data-desc="导师评价权重系数" data-category="weights">编辑</button>
+              </div>
+              <!-- 列表-weights-4: peer_eval_weight -->
+              <div class="grid grid-cols-[1fr_1fr_2fr_80px] px-5 py-3 items-center hover:bg-surface-container/50 transition-colors">
+                <code class="text-xs font-mono text-primary bg-primary-container/50 px-1.5 py-0.5 rounded-sm w-fit">peer_eval_weight</code>
+                <span class="text-sm font-medium text-on-surface">0.1</span>
+                <span class="text-xs text-on-surface-variant">同事互评权重系数</span>
+                <button class="text-primary text-xs font-medium hover:underline w-fit cursor-pointer" id="btn-edit-9" data-id="9" data-key="peer_eval_weight" data-value="0.1" data-type="number" data-desc="同事互评权重系数" data-category="weights">编辑</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 分组3：stages（阶段配置） -->
+        <div class="bg-surface rounded-lg shadow-card overflow-hidden" id="group-stages">
+          <div class="flex items-center justify-between px-5 py-4 cursor-pointer select-none" id="group-header-stages">
+            <div class="flex items-center gap-3">
+              <i data-lucide="layers" class="w-5 h-5 text-success"></i>
+              <div>
+                <h2 class="text-base font-semibold text-on-surface">阶段配置</h2>
+                <span class="text-xs text-on-surface-variant">stages · 4 项配置</span>
+              </div>
+            </div>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-on-surface-variant transition-transform duration-200" id="group-chevron-stages"></i>
+          </div>
+          <div class="border-t border-outline-variant/20" id="group-body-stages">
+            <div class="grid grid-cols-[1fr_1fr_2fr_80px] px-5 py-2.5 bg-surface-container text-xs font-semibold text-on-surface-variant uppercase tracking-wide">
+              <span>配置键</span>
+              <span>当前值</span>
+              <span>说明</span>
+              <span>操作</span>
+            </div>
+            <div class="divide-y divide-outline-variant/20">
+              <!-- 列表-stages-1: stage1_days -->
+              <div class="grid grid-cols-[1fr_1fr_2fr_80px] px-5 py-3 items-center hover:bg-surface-container/50 transition-colors">
+                <code class="text-xs font-mono text-primary bg-primary-container/50 px-1.5 py-0.5 rounded-sm w-fit">stage1_days</code>
+                <span class="text-sm font-medium text-on-surface">7</span>
+                <span class="text-xs text-on-surface-variant">学习期持续天数</span>
+                <button class="text-primary text-xs font-medium hover:underline w-fit cursor-pointer" id="btn-edit-10" data-id="10" data-key="stage1_days" data-value="7" data-type="number" data-desc="学习期持续天数" data-category="stages">编辑</button>
+              </div>
+              <!-- 列表-stages-2: stage2_days -->
+              <div class="grid grid-cols-[1fr_1fr_2fr_80px] px-5 py-3 items-center hover:bg-surface-container/50 transition-colors">
+                <code class="text-xs font-mono text-primary bg-primary-container/50 px-1.5 py-0.5 rounded-sm w-fit">stage2_days</code>
+                <span class="text-sm font-medium text-on-surface">28</span>
+                <span class="text-xs text-on-surface-variant">练习期持续天数</span>
+                <button class="text-primary text-xs font-medium hover:underline w-fit cursor-pointer" id="btn-edit-11" data-id="11" data-key="stage2_days" data-value="28" data-type="number" data-desc="练习期持续天数" data-category="stages">编辑</button>
+              </div>
+              <!-- 列表-stages-3: stage3_days -->
+              <div class="grid grid-cols-[1fr_1fr_2fr_80px] px-5 py-3 items-center hover:bg-surface-container/50 transition-colors">
+                <code class="text-xs font-mono text-primary bg-primary-container/50 px-1.5 py-0.5 rounded-sm w-fit">stage3_days</code>
+                <span class="text-sm font-medium text-on-surface">60</span>
+                <span class="text-xs text-on-surface-variant">独立期持续天数</span>
+                <button class="text-primary text-xs font-medium hover:underline w-fit cursor-pointer" id="btn-edit-12" data-id="12" data-key="stage3_days" data-value="60" data-type="number" data-desc="独立期持续天数" data-category="stages">编辑</button>
+              </div>
+              <!-- 列表-stages-4: stage4_days -->
+              <div class="grid grid-cols-[1fr_1fr_2fr_80px] px-5 py-3 items-center hover:bg-surface-container/50 transition-colors">
+                <code class="text-xs font-mono text-primary bg-primary-container/50 px-1.5 py-0.5 rounded-sm w-fit">stage4_days</code>
+                <span class="text-sm font-medium text-on-surface">90</span>
+                <span class="text-xs text-on-surface-variant">熟练期持续天数</span>
+                <button class="text-primary text-xs font-medium hover:underline w-fit cursor-pointer" id="btn-edit-13" data-id="13" data-key="stage4_days" data-value="90" data-type="number" data-desc="熟练期持续天数" data-category="stages">编辑</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 分组4：system（系统配置） -->
+        <div class="bg-surface rounded-lg shadow-card overflow-hidden" id="group-system">
+          <div class="flex items-center justify-between px-5 py-4 cursor-pointer select-none" id="group-header-system">
+            <div class="flex items-center gap-3">
+              <i data-lucide="settings" class="w-5 h-5 text-on-surface-variant"></i>
+              <div>
+                <h2 class="text-base font-semibold text-on-surface">系统配置</h2>
+                <span class="text-xs text-on-surface-variant">system · 5 项配置</span>
+              </div>
+            </div>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-on-surface-variant transition-transform duration-200" id="group-chevron-system"></i>
+          </div>
+          <div class="border-t border-outline-variant/20" id="group-body-system">
+            <div class="grid grid-cols-[1fr_1fr_2fr_80px] px-5 py-2.5 bg-surface-container text-xs font-semibold text-on-surface-variant uppercase tracking-wide">
+              <span>配置键</span>
+              <span>当前值</span>
+              <span>说明</span>
+              <span>操作</span>
+            </div>
+            <div class="divide-y divide-outline-variant/20">
+              <!-- 列表-system-1: max_mentees -->
+              <div class="grid grid-cols-[1fr_1fr_2fr_80px] px-5 py-3 items-center hover:bg-surface-container/50 transition-colors">
+                <code class="text-xs font-mono text-primary bg-primary-container/50 px-1.5 py-0.5 rounded-sm w-fit">max_mentees</code>
+                <span class="text-sm font-medium text-on-surface">5</span>
+                <span class="text-xs text-on-surface-variant">每位导师最多带教学员数</span>
+                <button class="text-primary text-xs font-medium hover:underline w-fit cursor-pointer" id="btn-edit-14" data-id="14" data-key="max_mentees" data-value="5" data-type="number" data-desc="每位导师最多带教学员数" data-category="system">编辑</button>
+              </div>
+              <!-- 列表-system-2: auto_qc_enabled -->
+              <div class="grid grid-cols-[1fr_1fr_2fr_80px] px-5 py-3 items-center hover:bg-surface-container/50 transition-colors">
+                <code class="text-xs font-mono text-primary bg-primary-container/50 px-1.5 py-0.5 rounded-sm w-fit">auto_qc_enabled</code>
+                <span class="inline-flex items-center gap-1.5 text-sm font-medium text-on-surface">
+                  <span class="w-2 h-2 rounded-full bg-success"></span>开启
+                </span>
+                <span class="text-xs text-on-surface-variant">是否启用自动质检</span>
+                <button class="text-primary text-xs font-medium hover:underline w-fit cursor-pointer" id="btn-edit-15" data-id="15" data-key="auto_qc_enabled" data-value="true" data-type="boolean" data-desc="是否启用自动质检" data-category="system">编辑</button>
+              </div>
+              <!-- 列表-system-3: notification_channels -->
+              <div class="grid grid-cols-[1fr_1fr_2fr_80px] px-5 py-3 items-center hover:bg-surface-container/50 transition-colors">
+                <code class="text-xs font-mono text-primary bg-primary-container/50 px-1.5 py-0.5 rounded-sm w-fit">notification_channels</code>
+                <span class="text-sm font-medium text-on-surface truncate max-w-[180px]">["email","sms","in-app"]</span>
+                <span class="text-xs text-on-surface-variant">通知渠道配置（JSON）</span>
+                <button class="text-primary text-xs font-medium hover:underline w-fit cursor-pointer" id="btn-edit-16" data-id="16" data-key="notification_channels" data-value='["email","sms","in-app"]' data-type="json" data-desc="通知渠道配置（JSON）" data-category="system">编辑</button>
+              </div>
+              <!-- 列表-system-4: daily_report_time -->
+              <div class="grid grid-cols-[1fr_1fr_2fr_80px] px-5 py-3 items-center hover:bg-surface-container/50 transition-colors">
+                <code class="text-xs font-mono text-primary bg-primary-container/50 px-1.5 py-0.5 rounded-sm w-fit">daily_report_time</code>
+                <span class="text-sm font-medium text-on-surface">18:00</span>
+                <span class="text-xs text-on-surface-variant">日报自动发送时间</span>
+                <button class="text-primary text-xs font-medium hover:underline w-fit cursor-pointer" id="btn-edit-17" data-id="17" data-key="daily_report_time" data-value="18:00" data-type="string" data-desc="日报自动发送时间" data-category="system">编辑</button>
+              </div>
+              <!-- 列表-system-5: default_language -->
+              <div class="grid grid-cols-[1fr_1fr_2fr_80px] px-5 py-3 items-center hover:bg-surface-container/50 transition-colors">
+                <code class="text-xs font-mono text-primary bg-primary-container/50 px-1.5 py-0.5 rounded-sm w-fit">default_language</code>
+                <span class="text-sm font-medium text-on-surface">zh-CN</span>
+                <span class="text-xs text-on-surface-variant">系统默认语言</span>
+                <button class="text-primary text-xs font-medium hover:underline w-fit cursor-pointer" id="btn-edit-18" data-id="18" data-key="default_language" data-value="zh-CN" data-type="string" data-desc="系统默认语言" data-category="system">编辑</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 编辑配置模态框 -->
+      <div class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 hidden" id="modal-edit-config">
+        <div class="bg-surface rounded-xl shadow-dialog max-w-md w-full max-h-[90vh] overflow-y-auto p-6">
+          <div class="flex items-center justify-between mb-5">
+            <h3 class="text-lg font-semibold text-on-surface">编辑配置</h3>
+            <button class="w-8 h-8 flex items-center justify-center rounded-md hover:bg-surface-container transition-colors" id="btn-modal-close">
+              <i data-lucide="x" class="w-4 h-4 text-on-surface-variant"></i>
+            </button>
+          </div>
+
+          <!-- 配置键（只读） -->
+          <div class="mb-4">
+            <label class="block text-xs font-medium text-on-surface-variant mb-1.5">配置键</label>
+            <div class="w-full bg-surface-container rounded-md px-3 py-2 text-sm text-on-surface font-mono" id="modal-config-key">-</div>
+          </div>
+
+          <!-- 说明（只读） -->
+          <div class="mb-4">
+            <label class="block text-xs font-medium text-on-surface-variant mb-1.5">说明</label>
+            <div class="w-full bg-surface-container rounded-md px-3 py-2 text-sm text-on-surface-variant" id="modal-config-desc">-</div>
+          </div>
+
+          <!-- 当前值编辑区 -->
+          <div class="mb-6">
+            <label class="block text-xs font-medium text-on-surface-variant mb-1.5">当前值</label>
+            <!-- number 输入框 -->
+            <input type="number" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors hidden" id="modal-input-number" />
+            <!-- string 输入框 -->
+            <input type="text" class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors hidden" id="modal-input-string" />
+            <!-- boolean 开关 -->
+            <div class="flex items-center gap-3 hidden" id="modal-input-boolean-wrapper">
+              <button class="relative w-11 h-6 rounded-full transition-colors duration-200 bg-surface-container-high" id="modal-toggle-boolean" role="switch">
+                <span class="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform duration-200" id="modal-toggle-knob"></span>
+              </button>
+              <span class="text-sm text-on-surface-variant" id="modal-toggle-label">关闭</span>
+            </div>
+            <!-- json 多行文本框 -->
+            <textarea class="w-full bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors font-mono hidden" rows="6" id="modal-input-json"></textarea>
+          </div>
+
+          <!-- 操作按钮 -->
+          <div class="flex items-center justify-end gap-3">
+            <button class="bg-surface-container text-on-surface border-none px-4 py-2 rounded-md text-sm font-medium hover:bg-surface-container-high active:scale-[0.98] transition-all" id="btn-modal-cancel">取消</button>
+            <button class="bg-primary text-on-primary px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all inline-flex items-center gap-2" id="btn-modal-save">
+              <i data-lucide="check" class="w-3.5 h-3.5"></i>保存
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+    <!-- @main-content:end -->
+  </div>
+
+  <script>
+    $(function() {
+
+      // ===== 折叠面板交互 =====
+      $('[id^="group-header-"]').on('click', function() {
+        var category = this.id.replace('group-header-', '');
+        var $body = $('#group-body-' + category);
+        var $chevron = $('#group-chevron-' + category);
+
+        if ($body.is(':visible')) {
+          $body.slideUp(200);
+          $chevron.css('transform', 'rotate(0deg)');
+        } else {
+          $body.slideDown(200);
+          $chevron.css('transform', 'rotate(180deg)');
+        }
+      });
+
+      // ===== 编辑按钮 - 打开模态框 =====
+      $(document).on('click', '[id^="btn-edit-"]', function() {
+        var $btn = $(this);
+        var configId = $btn.data('id');
+        var configKey = $btn.data('key');
+        var configValue = $btn.data('value');
+        var valueType = $btn.data('type');
+        var configDesc = $btn.data('desc');
+
+        // 填充只读字段
+        $('#modal-config-key').text(configKey);
+        $('#modal-config-desc').text(configDesc);
+
+        // 隐藏所有输入控件
+        $('#modal-input-number').addClass('hidden');
+        $('#modal-input-string').addClass('hidden');
+        $('#modal-input-boolean-wrapper').addClass('hidden');
+        $('#modal-input-json').addClass('hidden');
+
+        // 根据 value_type 显示对应控件并填充值
+        if (valueType === 'number') {
+          $('#modal-input-number').removeClass('hidden').val(configValue);
+        } else if (valueType === 'string') {
+          $('#modal-input-string').removeClass('hidden').val(configValue);
+        } else if (valueType === 'boolean') {
+          $('#modal-input-boolean-wrapper').removeClass('hidden');
+          var isOn = configValue === 'true' || configValue === true;
+          updateToggleUI(isOn);
+        } else if (valueType === 'json') {
+          $('#modal-input-json').removeClass('hidden').val(
+            typeof configValue === 'string' ? configValue : JSON.stringify(configValue, null, 2)
+          );
+        }
+
+        // 存储当前编辑的配置信息
+        $('#modal-edit-config').data('edit-id', configId);
+        $('#modal-edit-config').data('edit-key', configKey);
+        $('#modal-edit-config').data('edit-type', valueType);
+
+        // 显示模态框
+        $('#modal-edit-config').removeClass('hidden');
+        lucide.createIcons();
+      });
+
+      // ===== Boolean 开关切换 =====
+      $('#modal-toggle-boolean').on('click', function() {
+        var currentState = $(this).data('state') === true;
+        updateToggleUI(!currentState);
+      });
+
+      function updateToggleUI(isOn) {
+        var $toggle = $('#modal-toggle-boolean');
+        var $knob = $('#modal-toggle-knob');
+        var $label = $('#modal-toggle-label');
+
+        $toggle.data('state', isOn);
+        if (isOn) {
+          $toggle.removeClass('bg-surface-container-high').addClass('bg-primary');
+          $knob.css('transform', 'translateX(1.25rem)');
+          $label.text('开启');
+        } else {
+          $toggle.removeClass('bg-primary').addClass('bg-surface-container-high');
+          $knob.css('transform', 'translateX(0)');
+          $label.text('关闭');
+        }
+      }
+
+      // ===== 关闭模态框 =====
+      $('#btn-modal-close, #btn-modal-cancel').on('click', function() {
+        $('#modal-edit-config').addClass('hidden');
+      });
+
+      // 点击遮罩关闭
+      $('#modal-edit-config').on('click', function(e) {
+        if (e.target === this) {
+          $(this).addClass('hidden');
+        }
+      });
+
+      // ===== 保存按钮 =====
+      // 保存后应实现以下完整行为：
+      // 1. 根据 value_type 读取对应输入控件的值（number/string/boolean/json）
+      // 2. 校验输入合法性：number 需为有效数字，json 需为合法 JSON 格式
+      // 3. 调用 PUT /api/config 接口，body: { config_key, config_value }
+      // 4. 成功后关闭模态框，更新对应表格行的显示值
+      // 5. 失败时显示错误提示（如 toast），不关闭模态框
+      $('#btn-modal-save').on('click', function() {
+        var editId = $('#modal-edit-config').data('edit-id');
+        var editKey = $('#modal-edit-config').data('edit-key');
+        var editType = $('#modal-edit-config').data('edit-type');
+        var newValue;
+
+        if (editType === 'number') {
+          newValue = $('#modal-input-number').val();
+        } else if (editType === 'string') {
+          newValue = $('#modal-input-string').val();
+        } else if (editType === 'boolean') {
+          newValue = $('#modal-toggle-boolean').data('state') === true ? 'true' : 'false';
+        } else if (editType === 'json') {
+          newValue = $('#modal-input-json').val();
+        }
+
+        console.log('保存配置 - 调用 PUT /api/config:', {
+          config_key: editKey,
+          config_value: newValue
+        });
+
+        // Demo: 直接关闭模态框（实际应等待接口返回）
+        $('#modal-edit-config').addClass('hidden');
+      });
+
+      // ===== 初始化图标 =====
+      lucide.createIcons();
+    });
+  </script>
+</body>
+
+</html>

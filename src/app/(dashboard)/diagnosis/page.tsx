@@ -5,8 +5,9 @@ import { apiGet } from '@/lib/api-client';
 import {
   ScanSearch, Users, AlertTriangle, CheckCircle2, TrendingDown,
   ChevronRight, Activity, Target, Route as RouteIcon, User,
-  X, ArrowRight, Zap, Clock, ListChecks, Send, BarChart3,
+  X, ArrowRight, Zap, Clock, ListChecks, Send, BarChart3, Loader2,
   TrendingUp, TrendingDown as TrendingDownIcon, CheckCircle, Eye, Pill, Compass, Search, Upload,
+  Radar,
 } from 'lucide-react';
 
 /* ------------------------------------------------------------------ */
@@ -316,6 +317,8 @@ export default function DiagnosisPage() {
   const [pushingKey, setPushingKey] = useState<string | null>(null);
   const [prescriptionPlan, setPrescriptionPlan] = useState<{ plan: EmpowerPlan; entry: AttributionEntry; memberId: string } | null>(null);
   const [weeklyTrend, setWeeklyTrend] = useState<WeeklyFunnel[]>([]);
+  const [capabilityScores, setCapabilityScores] = useState<Record<string, number> | null>(null);
+  const [capabilityLoading, setCapabilityLoading] = useState(false);
 
   useEffect(() => {
     fetchDiagnosis();
@@ -352,6 +355,31 @@ export default function DiagnosisPage() {
       setWeeklyTrend([]);
     }
   }
+
+  async function fetchCapability(userId: string) {
+    setCapabilityLoading(true);
+    setCapabilityScores(null);
+    try {
+      const res = await fetch(`/api/capability?user_id=${userId}`);
+      const data = await res.json();
+      if (data.radar) {
+        const scores: Record<string, number> = {};
+        data.radar.forEach((d: { dimension: string; score: number }) => { scores[d.dimension] = d.score; });
+        setCapabilityScores(scores);
+      }
+    } catch { setCapabilityScores(null); }
+    setCapabilityLoading(false);
+  }
+
+  const handleSelectMember = (m: Member) => {
+    if (selectedMember?.id === m.id) {
+      setSelectedMember(null);
+      setCapabilityScores(null);
+    } else {
+      setSelectedMember(m);
+      fetchCapability(m.id);
+    }
+  };
 
   async function handlePushPlan(planId: string, memberId: string, metricKey: string) {
     setPushingKey(metricKey);
@@ -470,7 +498,7 @@ export default function DiagnosisPage() {
                     qMembers.map(m => (
                       <button
                         key={m.id}
-                        onClick={() => setSelectedMember(selectedMember?.id === m.id ? null : m)}
+                        onClick={() => handleSelectMember(m)}
                         className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm hover:bg-muted transition-colors ${
                           selectedMember?.id === m.id ? 'bg-primary/10 text-primary ring-1 ring-primary/30' : 'text-foreground'
                         }`}
@@ -507,11 +535,27 @@ export default function DiagnosisPage() {
                 </div>
               </div>
               <button
-                onClick={() => setSelectedMember(null)}
+                onClick={() => { setSelectedMember(null); setCapabilityScores(null); }}
                 className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
+            </div>
+
+            {/* Capability Radar Chart */}
+            <div className="px-5 py-4 border-b border-border">
+              <h4 className="text-xs font-semibold text-foreground flex items-center gap-2 mb-3">
+                <Radar className="w-4 h-4 text-primary" /> 能力雷达
+              </h4>
+              {capabilityLoading ? (
+                <div className="flex items-center justify-center py-6">
+                  <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                </div>
+              ) : capabilityScores ? (
+                <RadarChart scores={capabilityScores} />
+              ) : (
+                <p className="text-xs text-muted-foreground text-center py-4">暂无能力评分数据</p>
+              )}
             </div>
 
             {/* Attribution Flow */}
@@ -952,6 +996,90 @@ function FunnelTrendSection({ members, weeklyTrend }: { members: Member[]; weekl
           </div>
           )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Radar Chart Component (SVG)                                        */
+/* ------------------------------------------------------------------ */
+
+const DIMENSIONS = ['沟通力', '专业力', '执行力', '数据力', '成长力'];
+const DIM_COLORS = ['#2978B5', '#16A34A', '#F59E0B', '#8B5CF6', '#EF4444'];
+
+function RadarChart({ scores }: { scores: Record<string, number> }) {
+  const size = 200;
+  const center = size / 2;
+  const radius = 80;
+  const levels = 5;
+
+  const angleSlice = (2 * Math.PI) / DIMENSIONS.length;
+
+  const getPoint = (i: number, r: number): [number, number] => {
+    const angle = angleSlice * i - Math.PI / 2;
+    return [center + r * Math.cos(angle), center + r * Math.sin(angle)];
+  };
+
+  // Background grid
+  const gridPolygons = Array.from({ length: levels }, (_, level) => {
+    const r = (radius / levels) * (level + 1);
+    return DIMENSIONS.map((_, i) => getPoint(i, r))
+      .map(([x, y]) => `${x},${y}`)
+      .join(' ');
+  });
+
+  // Data polygon
+  const dataPoints = DIMENSIONS.map((dim, i) => {
+    const score = scores[dim] || 0;
+    const r = (score / 100) * radius;
+    return getPoint(i, r);
+  });
+  const dataPolygon = dataPoints.map(([x, y]) => `${x},${y}`).join(' ');
+
+  return (
+    <div className="flex flex-col items-center gap-3">
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="overflow-visible">
+        {/* Grid */}
+        {gridPolygons.map((points, i) => (
+          <polygon
+            key={i}
+            points={points}
+            fill="none"
+            stroke="var(--border)"
+            strokeWidth="1"
+            opacity={i === levels - 1 ? 0.6 : 0.3}
+          />
+        ))}
+        {/* Axes */}
+        {DIMENSIONS.map((_, i) => {
+          const [x, y] = getPoint(i, radius);
+          return <line key={i} x1={center} y1={center} x2={x} y2={y} stroke="var(--border)" strokeWidth="0.5" opacity={0.5} />;
+        })}
+        {/* Data polygon */}
+        <polygon points={dataPolygon} fill="rgba(41,120,181,0.15)" stroke="#2978B5" strokeWidth="2" />
+        {/* Data points */}
+        {dataPoints.map(([x, y], i) => (
+          <circle key={i} cx={x} cy={y} r="4" fill={DIM_COLORS[i]} stroke="white" strokeWidth="1.5" />
+        ))}
+        {/* Labels */}
+        {DIMENSIONS.map((dim, i) => {
+          const [x, y] = getPoint(i, radius + 18);
+          return (
+            <text key={i} x={x} y={y} textAnchor="middle" dominantBaseline="middle" className="text-[10px] font-medium" fill="var(--foreground)" style={{ fontSize: '10px' }}>
+              {dim}
+            </text>
+          );
+        })}
+      </svg>
+      {/* Score list */}
+      <div className="grid grid-cols-5 gap-2 w-full">
+        {DIMENSIONS.map((dim, i) => (
+          <div key={dim} className="text-center">
+            <div className="text-lg font-bold" style={{ color: DIM_COLORS[i] }}>{scores[dim] || 0}</div>
+            <div className="text-[10px] text-muted-foreground">{dim}</div>
+          </div>
+        ))}
       </div>
     </div>
   );

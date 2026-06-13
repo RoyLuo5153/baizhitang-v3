@@ -6,7 +6,7 @@ import {
   CheckCircle2, AlertCircle, Shield, ArrowRight, AlertTriangle,
   ClipboardCheck, Clock, UserCheck, XCircle, Calendar,
   Plus, Trash2, Pencil, X, ChevronDown, ChevronRight,
-  KeyRound, UserX, UserCheck2, Lock,
+  KeyRound, UserX, UserCheck2, Lock, Settings, Layers, Cog, BookOpen,
 } from 'lucide-react';
 
 // === Types ===
@@ -49,7 +49,7 @@ interface StageRule {
   is_active: boolean;
 }
 
-type TabKey = 'thresholds' | 'users' | 'stages' | 'stage-applications';
+type TabKey = 'thresholds' | 'users' | 'stages' | 'stage-applications' | 'config-center' | 'stage-definitions';
 
 interface StageApplication {
   id: number;
@@ -943,6 +943,17 @@ export default function SettingsPage() {
   const [ruleDialog, setRuleDialog] = useState<Partial<StageRule> | null>(null);
   const [stageApplications, setStageApplications] = useState<StageApplication[]>([]);
 
+  // 配置中心
+  const [configDict, setConfigDict] = useState<Record<string, Record<string, { config_key: string; config_value: string; value_type: string; description: string }>>>({});
+  const [configLoading, setConfigLoading] = useState(true);
+  const [configEdit, setConfigEdit] = useState<{ category: string; key: string; value: string; valueType: string; description: string } | null>(null);
+  const [configSaving, setConfigSaving] = useState(false);
+
+  // 阶段定义
+  const [stageDefs, setStageDefs] = useState<{ id: number; stage_name: string; stage_order: number; duration_days: number; exit_criteria: Record<string, unknown> | null; auto_trigger_rules: Record<string, unknown> | null; daily_checklist: Record<string, unknown> | null; warning_thresholds: Record<string, unknown> | null; is_active: boolean }[]>([]);
+  const [stageDefsLoading, setStageDefsLoading] = useState(true);
+  const [stageDefEdit, setStageDefEdit] = useState<{ id: number; field: string; value: string } | null>(null);
+
   // --- Fetch thresholds ---
   useEffect(() => {
     async function load() {
@@ -1107,6 +1118,83 @@ export default function SettingsPage() {
     load();
   }, []);
 
+  // --- Fetch config dict ---
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await fetch('/api/config');
+        if (res.ok) {
+          const json = await res.json();
+          setConfigDict(json.data || {});
+        }
+      } catch {}
+      setConfigLoading(false);
+    }
+    load();
+  }, []);
+
+  // --- Fetch stage definitions ---
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await fetch('/api/stage-definitions');
+        if (res.ok) {
+          const json = await res.json();
+          setStageDefs(json.data || []);
+        }
+      } catch {}
+      setStageDefsLoading(false);
+    }
+    load();
+  }, []);
+
+  // --- Config handlers ---
+  const saveConfigItem = async () => {
+    if (!configEdit) return;
+    setConfigSaving(true);
+    try {
+      const res = await fetch('/api/config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          category: configEdit.category,
+          config_key: configEdit.key,
+          config_value: configEdit.value,
+        }),
+      });
+      if (res.ok) {
+        setConfigDict(prev => {
+          const updated = { ...prev };
+          if (updated[configEdit.category]?.[configEdit.key]) {
+            updated[configEdit.category][configEdit.key].config_value = configEdit.value;
+          }
+          return updated;
+        });
+        setConfigEdit(null);
+      }
+    } catch {}
+    setConfigSaving(false);
+  };
+
+  // --- Stage def handlers ---
+  const saveStageDef = async () => {
+    if (!stageDefEdit) return;
+    try {
+      const res = await fetch('/api/stage-definitions', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: stageDefEdit.id,
+          [stageDefEdit.field]: stageDefEdit.value,
+        }),
+      });
+      if (res.ok) {
+        setStageDefs(prev => prev.map(s => s.id === stageDefEdit.id ? { ...s, [stageDefEdit.field]: stageDefEdit.value } : s));
+        setStageDefEdit(null);
+      }
+    } catch {}
+  };
+
   // --- Threshold handlers ---
   const updateThreshold = useCallback((id: string, field: 'qualified_value' | 'good_value' | 'excellent_value', value: number) => {
     setThresholds(prev => prev.map(t => t.id === id ? { ...t, [field]: value } : t));
@@ -1228,6 +1316,8 @@ export default function SettingsPage() {
     { key: 'users', label: '用户管理', icon: Users },
     { key: 'stages', label: '阶段规则', icon: GitBranch },
     { key: 'stage-applications', label: '升级审批', icon: ClipboardCheck },
+    { key: 'config-center', label: '配置中心', icon: Cog },
+    { key: 'stage-definitions', label: '阶段定义', icon: BookOpen },
   ];
 
   // === Loading skeleton ===
@@ -2130,6 +2220,151 @@ export default function SettingsPage() {
               </div>
             </div>
           )}
+
+          {/* =========== Tab: 配置中心 =========== */}
+          {activeTab === 'config-center' && (
+            <div className="space-y-6">
+              {configLoading ? (
+                <div className="flex items-center justify-center py-20">
+                  <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : Object.keys(configDict).length === 0 ? (
+                <div className="bg-card rounded-lg shadow-card p-12 text-center">
+                  <Cog className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
+                  <p className="text-sm text-muted-foreground">暂无配置数据</p>
+                </div>
+              ) : (
+                Object.entries(configDict).map(([category, items]) => {
+                  const entries = Object.values(items);
+                  if (entries.length === 0) return null;
+                  const categoryLabels: Record<string, string> = {
+                    thresholds: '阈值参数',
+                    weights: '权重配置',
+                    stages: '阶段参数',
+                    system: '系统设置',
+                  };
+                  return (
+                    <details key={category} className="bg-card rounded-lg shadow-card overflow-hidden group" open>
+                      <summary className="px-5 py-4 cursor-pointer hover:bg-muted/30 transition flex items-center gap-3 list-none">
+                        <ChevronRight className="w-4 h-4 text-muted-foreground group-open:rotate-90 transition-transform" />
+                        <Cog className="w-4 h-4 text-primary" />
+                        <h2 className="text-base font-semibold text-foreground">{categoryLabels[category] || category}</h2>
+                        <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">{entries.length} 项</span>
+                      </summary>
+                      <div className="border-t border-border">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="bg-muted/30">
+                              <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">配置键</th>
+                              <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">当前值</th>
+                              <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">说明</th>
+                              <th className="text-right px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">操作</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-border/50">
+                            {entries.map((item) => (
+                              <tr key={item.config_key} className="hover:bg-muted/20 transition">
+                                <td className="px-5 py-3">
+                                  <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono text-foreground">{item.config_key}</code>
+                                </td>
+                                <td className="px-5 py-3">
+                                  {item.value_type === 'boolean' ? (
+                                    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${item.config_value === 'true' ? 'bg-[#22c55e]/10 text-[#22c55e]' : 'bg-muted text-muted-foreground'}`}>
+                                      <span className={`w-1.5 h-1.5 rounded-full ${item.config_value === 'true' ? 'bg-[#22c55e]' : 'bg-muted-foreground'}`} />
+                                      {item.config_value === 'true' ? '启用' : '禁用'}
+                                    </span>
+                                  ) : (
+                                    <span className="text-foreground font-medium">{item.config_value}</span>
+                                  )}
+                                </td>
+                                <td className="px-5 py-3 text-muted-foreground">{item.description || '-'}</td>
+                                <td className="px-5 py-3 text-right">
+                                  <button
+                                    onClick={() => setConfigEdit({ category, key: item.config_key, value: item.config_value, valueType: item.value_type, description: item.description || '' })}
+                                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium text-primary hover:bg-primary/10 transition"
+                                  >
+                                    <Pencil className="w-3 h-3" />
+                                    编辑
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </details>
+                  );
+                })
+              )}
+            </div>
+          )}
+
+          {/* =========== Tab: 阶段定义 =========== */}
+          {activeTab === 'stage-definitions' && (
+            <div className="space-y-6">
+              {stageDefsLoading ? (
+                <div className="flex items-center justify-center py-20">
+                  <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : stageDefs.length === 0 ? (
+                <div className="bg-card rounded-lg shadow-card p-12 text-center">
+                  <BookOpen className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
+                  <p className="text-sm text-muted-foreground">暂无阶段定义数据</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-4">
+                  {stageDefs.map((stage) => (
+                    <div key={stage.id} className="bg-card rounded-lg shadow-card p-5 border border-border/50 hover:shadow-card-hover transition">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-sm font-bold">
+                            {stage.stage_order}
+                          </div>
+                          <div>
+                            <h3 className="text-base font-semibold text-foreground">{stage.stage_name}</h3>
+                            <p className="text-xs text-muted-foreground">{stage.duration_days} 天</p>
+                          </div>
+                        </div>
+                        <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${stage.is_active ? 'bg-[#22c55e]/10 text-[#22c55e]' : 'bg-muted text-muted-foreground'}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${stage.is_active ? 'bg-[#22c55e]' : 'bg-muted-foreground'}`} />
+                          {stage.is_active ? '激活' : '停用'}
+                        </span>
+                      </div>
+                      <div className="space-y-2.5 text-sm">
+                        <div className="flex items-start gap-2">
+                          <span className="text-xs text-muted-foreground shrink-0 mt-0.5">退出条件：</span>
+                          <span className="text-foreground">
+                            {stage.exit_criteria ? JSON.stringify(stage.exit_criteria) : '未设置'}
+                          </span>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <span className="text-xs text-muted-foreground shrink-0 mt-0.5">预警阈值：</span>
+                          <span className="text-foreground">
+                            {stage.warning_thresholds ? JSON.stringify(stage.warning_thresholds) : '未设置'}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="mt-4 pt-3 border-t border-border/50 flex gap-2">
+                        <button
+                          onClick={() => setStageDefEdit({ id: stage.id, field: 'duration_days', value: String(stage.duration_days) })}
+                          className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition"
+                        >
+                          <Pencil className="w-3 h-3" />
+                          编辑天数
+                        </button>
+                        <button
+                          onClick={() => setStageDefEdit({ id: stage.id, field: 'is_active', value: String(!stage.is_active) })}
+                          className={`flex-1 inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium transition ${stage.is_active ? 'text-destructive hover:bg-destructive/10' : 'text-[#22c55e] hover:bg-[#22c55e]/10'}`}
+                        >
+                          {stage.is_active ? '停用' : '激活'}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -2160,6 +2395,95 @@ export default function SettingsPage() {
           onClose={() => setRuleDialog(null)}
           onSaved={() => { setRuleDialog(null); fetchStageRules(); }}
         />
+      )}
+
+      {/* === Config Edit Dialog === */}
+      {configEdit && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setConfigEdit(null)}>
+          <div className="bg-card rounded-xl shadow-card-hover w-full max-w-md mx-4" onClick={e => e.stopPropagation()}>
+            <div className="px-6 py-4 border-b border-border flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-foreground">编辑配置</h3>
+              <button onClick={() => setConfigEdit(null)} className="p-1 rounded-md hover:bg-muted transition"><X className="w-4 h-4" /></button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5">配置键</label>
+                <code className="block w-full px-4 py-2.5 rounded-md bg-muted text-sm font-mono text-foreground">{configEdit.key}</code>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5">配置值</label>
+                {configEdit.valueType === 'boolean' ? (
+                  <button
+                    onClick={() => setConfigEdit(prev => prev ? { ...prev, value: prev.value === 'true' ? 'false' : 'true' } : null)}
+                    className={`w-full px-4 py-2.5 rounded-md text-sm font-medium transition ${configEdit.value === 'true' ? 'bg-[#22c55e] text-white' : 'bg-muted text-muted-foreground'}`}
+                  >
+                    {configEdit.value === 'true' ? '✓ 已启用' : '✗ 已禁用'}
+                  </button>
+                ) : configEdit.valueType === 'json' || configEdit.valueType === 'number' ? (
+                  <textarea
+                    value={configEdit.value}
+                    onChange={e => setConfigEdit(prev => prev ? { ...prev, value: e.target.value } : null)}
+                    rows={configEdit.valueType === 'json' ? 4 : 1}
+                    className="w-full px-4 py-2.5 rounded-md border border-border bg-muted text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm font-mono"
+                  />
+                ) : (
+                  <input
+                    type="text"
+                    value={configEdit.value}
+                    onChange={e => setConfigEdit(prev => prev ? { ...prev, value: e.target.value } : null)}
+                    className="w-full px-4 py-2.5 rounded-md border border-border bg-muted text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm"
+                  />
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5">说明</label>
+                <p className="text-sm text-muted-foreground">{configEdit.description || '-'}</p>
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-border flex gap-3 justify-end">
+              <button onClick={() => setConfigEdit(null)} className="px-4 py-2 rounded-md border border-border text-sm text-muted-foreground hover:bg-muted transition">取消</button>
+              <button onClick={saveConfigItem} disabled={configSaving} className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition disabled:opacity-50">
+                {configSaving ? '保存中...' : '保存'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* === Stage Def Edit Dialog === */}
+      {stageDefEdit && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setStageDefEdit(null)}>
+          <div className="bg-card rounded-xl shadow-card-hover w-full max-w-md mx-4" onClick={e => e.stopPropagation()}>
+            <div className="px-6 py-4 border-b border-border flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-foreground">
+                {stageDefEdit.field === 'duration_days' ? '编辑持续天数' : '切换激活状态'}
+              </h3>
+              <button onClick={() => setStageDefEdit(null)} className="p-1 rounded-md hover:bg-muted transition"><X className="w-4 h-4" /></button>
+            </div>
+            <div className="p-6 space-y-4">
+              {stageDefEdit.field === 'duration_days' ? (
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1.5">持续天数</label>
+                  <input
+                    type="number"
+                    value={stageDefEdit.value}
+                    onChange={e => setStageDefEdit(prev => prev ? { ...prev, value: e.target.value } : null)}
+                    min={1}
+                    className="w-full px-4 py-2.5 rounded-md border border-border bg-muted text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm"
+                  />
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  确认{stageDefEdit.value === 'true' ? '激活' : '停用'}此阶段定义？
+                </p>
+              )}
+            </div>
+            <div className="px-6 py-4 border-t border-border flex gap-3 justify-end">
+              <button onClick={() => setStageDefEdit(null)} className="px-4 py-2 rounded-md border border-border text-sm text-muted-foreground hover:bg-muted transition">取消</button>
+              <button onClick={saveStageDef} className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition">确认</button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* 修改密码弹窗 */}

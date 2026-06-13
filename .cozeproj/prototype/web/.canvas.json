@@ -3,17 +3,33 @@
     {
       "type": "html",
       "options": {
-        "path": ".cozeproj/prototype/web/login.html"
+        "path": ".cozeproj/prototype/web/settings-config.html"
       },
-      "title": "登录页",
+      "title": "配置中心",
       "size": "web"
     },
     {
       "type": "html",
       "options": {
-        "path": ".cozeproj/prototype/web/settings.html"
+        "path": ".cozeproj/prototype/web/settings-stages.html"
       },
-      "title": "设置页-改密",
+      "title": "阶段规则",
+      "size": "web"
+    },
+    {
+      "type": "html",
+      "options": {
+        "path": ".cozeproj/prototype/web/diagnosis.html"
+      },
+      "title": "双轨诊断",
+      "size": "web"
+    },
+    {
+      "type": "html",
+      "options": {
+        "path": ".cozeproj/prototype/web/trainee-profiles.html"
+      },
+      "title": "新人档案",
       "size": "web"
     }
   ]

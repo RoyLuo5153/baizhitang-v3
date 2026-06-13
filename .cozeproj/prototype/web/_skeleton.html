@@ -5,46 +5,50 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <!-- 字体（按需，系统字体时省略；只能用 Google 字体，CSS 地址前缀：https://lf-code-agent.coze.cn/obj/x-ai-cn/fonts/google） -->
+  <!-- <link href="https://lf-code-agent.coze.cn/obj/x-ai-cn/fonts/google/google-all-fonts.css" rel="stylesheet"/> -->
+
   <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/jquery/jquery-3.7.1.min.js"></script>
   <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/lucide/lucide-1.11.0.min.js"></script>
   <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/tailwindcss/tailwindcss-browser-4.2.4.min.js"></script>
 
+  <link href="https://lf-code-agent.coze.cn/obj/x-ai-cn/fonts/google/google-all-fonts.css" rel="stylesheet"/>
   <style type="text/tailwindcss">
     @theme {
-      /* === 品牌色（数据风：深蓝主色 + 数据蓝容器色） === */
-      --color-primary:              #102A43;
-      --color-primary-container:    #2978B5;
+      /* === 品牌色 === */
+      --color-primary:              #2978B5;
+      --color-primary-container:    #D6E8F7;
       --color-on-primary:           #ffffff;
-      /* === 背景 / 表面（暖灰底色，中性层级） === */
+      /* === 背景 / 表面 === */
       --color-background:                 #F8F6F0;
-      --color-surface-container-lowest:   #FFFFFF;
-      --color-surface:                    #FFFFFF;
-      --color-surface-container:          #EFECE4;
-      --color-surface-container-high:     #E8E4DB;
-      --color-surface-container-highest:  #E0DCD2;
+      --color-surface-container-lowest:   #FCFBF8;
+      --color-surface:                    #F8F6F0;
+      --color-surface-container:          #EFEDE5;
+      --color-surface-container-high:     #E8E5DC;
+      --color-surface-container-highest:  #E0DDD4;
       /* === 文字 === */
       --color-on-surface:           #1D2733;
       --color-on-surface-variant:   #667085;
       /* === 功能色 === */
       --color-success:  #22c55e;
       --color-error:    #ef4444;
-      --color-warning:  #F59E0B;
+      --color-warning:  #f59e0b;
       /* === 边框 === */
-      --color-outline:          #D4D0C7;
+      --color-outline:          #D1CFC8;
       --color-outline-variant:  #E6E1D8;
       /* === 圆角 === */
       --radius-sm:   0.25rem;
-      --radius-md:   0.375rem;
-      --radius-lg:   0.5rem;
-      --radius-xl:   0.75rem;
-      --radius-2xl:  1rem;
+      --radius-md:   0.5rem;
+      --radius-lg:   0.75rem;
+      --radius-xl:   1rem;
+      --radius-2xl:  1.25rem;
       --radius-full: 9999px;
       /* === 阴影 === */
       --shadow-card:   0 2px 8px rgba(0,0,0,0.08);
-      --shadow-float:  0 10px 25px rgba(0,0,0,0.12);
-      --shadow-dialog: 0 25px 50px rgba(0,0,0,0.2);
+      --shadow-float:  0 10px 25px rgba(0,0,0,0.10);
+      --shadow-dialog: 0 25px 50px rgba(0,0,0,0.15);
       /* === 字体 === */
-      --font-sans: system-ui, -apple-system, sans-serif;
+      --font-sans: "Noto Sans SC", system-ui, sans-serif;
     }
   </style>
 
@@ -69,14 +73,46 @@
 
 <body class="bg-background text-on-surface font-sans">
 
-  <!-- @nav:start 导航组件，不需要的页面则不要复制此段（从 @nav:start 到 @nav:end） -->
-  <!-- 主 Agent 在此处生成实际的导航 HTML 代码（header / sidebar 等） -->
-  <!-- @nav:end 导航组件，不需要的页面则不要复制此段 -->
+  <!-- @nav:start 导航组件，不需要的页面则不要复制此段 -->
+  <header class="bg-surface sticky top-0 z-40 h-14 flex items-center justify-between px-6 border-b border-outline-variant/30">
+    <div class="flex items-center gap-2.5">
+      <i data-lucide="heart-pulse" class="text-primary w-5 h-5"></i>
+      <span class="font-semibold text-sm text-on-surface">百芝堂赋能</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="text-xs text-on-surface-variant">小初</span>
+      <div class="w-7 h-7 rounded-full bg-primary/15 flex items-center justify-center text-xs font-medium text-primary">初</div>
+    </div>
+  </header>
 
-  <main class="flex-1">
+  <div class="flex" style="height: calc(100vh - 3.5rem)">
+    <aside class="w-56 shrink-0 bg-surface-container-lowest border-r border-outline-variant/20 overflow-y-auto">
+      <div class="p-3 space-y-0.5">
+        <div class="text-[10px] uppercase tracking-wider text-on-surface-variant/50 px-3 pt-2 pb-1">主菜单</div>
+        <a href="home.html" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="home" class="w-4 h-4"></i>首页
+        </a>
+        <a href="diagnosis.html" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="scan-search" class="w-4 h-4"></i>双轨诊断
+        </a>
+        <a href="trainee-profiles.html" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="users" class="w-4 h-4"></i>新人档案
+        </a>
+        <div class="text-[10px] uppercase tracking-wider text-on-surface-variant/50 px-3 pt-3 pb-1">设置</div>
+        <a href="settings-config.html" class="flex items-center gap-3 px-3 py-2.5 rounded-md bg-primary/10 text-primary font-medium text-sm" aria-current="page">
+          <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>配置中心
+        </a>
+        <a href="settings-stages.html" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="git-branch" class="w-4 h-4"></i>阶段规则
+        </a>
+      </div>
+    </aside>
+
     <!-- @main-content:start -->
+    <main class="flex-1 min-w-0 overflow-y-auto bg-background p-6">
     <!-- @main-content:end -->
-  </main>
+    </main>
+  </div>
 
   <script>lucide.createIcons();</script>
 </body>

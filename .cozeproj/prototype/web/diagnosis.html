@@ -9,42 +9,43 @@
   <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/lucide/lucide-1.11.0.min.js"></script>
   <script src="https://lf-code-agent.coze.cn/obj/x-ai-cn/cdn/tailwindcss/tailwindcss-browser-4.2.4.min.js"></script>
 
+  <link href="https://lf-code-agent.coze.cn/obj/x-ai-cn/fonts/google/google-all-fonts.css" rel="stylesheet"/>
   <style type="text/tailwindcss">
     @theme {
       /* === 品牌色 === */
-      --color-primary:              #102A43;
-      --color-primary-container:    #2978B5;
+      --color-primary:              #2978B5;
+      --color-primary-container:    #D6E8F7;
       --color-on-primary:           #ffffff;
       /* === 背景 / 表面 === */
       --color-background:                 #F8F6F0;
-      --color-surface-container-lowest:   #FAFAF7;
-      --color-surface:                    #FFFFFF;
-      --color-surface-container:          #EFEDE6;
-      --color-surface-container-high:     #E6E3DC;
-      --color-surface-container-highest:  #DDD9D0;
+      --color-surface-container-lowest:   #FCFBF8;
+      --color-surface:                    #F8F6F0;
+      --color-surface-container:          #EFEDE5;
+      --color-surface-container-high:     #E8E5DC;
+      --color-surface-container-highest:  #E0DDD4;
       /* === 文字 === */
       --color-on-surface:           #1D2733;
       --color-on-surface-variant:   #667085;
       /* === 功能色 === */
       --color-success:  #22c55e;
       --color-error:    #ef4444;
-      --color-warning:  #F59E0B;
+      --color-warning:  #f59e0b;
       /* === 边框 === */
-      --color-outline:          #D4CFC4;
+      --color-outline:          #D1CFC8;
       --color-outline-variant:  #E6E1D8;
       /* === 圆角 === */
-      --radius-sm:   0.375rem;
+      --radius-sm:   0.25rem;
       --radius-md:   0.5rem;
       --radius-lg:   0.75rem;
       --radius-xl:   1rem;
-      --radius-2xl:  1.5rem;
+      --radius-2xl:  1.25rem;
       --radius-full: 9999px;
       /* === 阴影 === */
       --shadow-card:   0 2px 8px rgba(0,0,0,0.08);
-      --shadow-float:  0 10px 25px rgba(0,0,0,0.1);
+      --shadow-float:  0 10px 25px rgba(0,0,0,0.10);
       --shadow-dialog: 0 25px 50px rgba(0,0,0,0.15);
       /* === 字体 === */
-      --font-sans: system-ui, -apple-system, "Noto Sans SC", sans-serif;
+      --font-sans: "Noto Sans SC", system-ui, sans-serif;
     }
   </style>
 
@@ -71,31 +72,35 @@
 
   <!-- @nav:start 导航组件 -->
   <header class="bg-surface sticky top-0 z-40 h-14 flex items-center justify-between px-6 border-b border-outline-variant/30">
-    <div class="flex items-center gap-2">
-      <i data-lucide="activity" class="text-primary-container w-5 h-5"></i>
-      <span class="font-bold text-lg text-primary">百芝堂</span>
-      <span class="text-xs text-on-surface-variant ml-1">V3双轨驱动赋能系统</span>
+    <div class="flex items-center gap-2.5">
+      <i data-lucide="heart-pulse" class="text-primary w-5 h-5"></i>
+      <span class="font-semibold text-sm text-on-surface">百芝堂赋能</span>
     </div>
-    <div class="flex items-center gap-4">
-      <span class="text-sm text-on-surface-variant">郑管理</span>
-      <div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center text-sm font-medium">郑</div>
+    <div class="flex items-center gap-3">
+      <span class="text-xs text-on-surface-variant">小初</span>
+      <div class="w-7 h-7 rounded-full bg-primary/15 flex items-center justify-center text-xs font-medium text-primary">初</div>
     </div>
   </header>
 
   <div class="flex" style="height: calc(100vh - 3.5rem)">
-    <aside class="w-52 shrink-0 bg-surface-container-lowest overflow-y-auto border-r border-outline-variant/20">
+    <aside class="w-56 shrink-0 bg-surface-container-lowest border-r border-outline-variant/20 overflow-y-auto">
       <div class="p-3 space-y-0.5">
-        <a href="empowerment.html" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="zap" class="w-4 h-4"></i>赋能中心
+        <div class="text-[10px] uppercase tracking-wider text-on-surface-variant/50 px-3 pt-2 pb-1">主菜单</div>
+        <a href="home.html" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="home" class="w-4 h-4"></i>首页
         </a>
         <a href="diagnosis.html" class="flex items-center gap-3 px-3 py-2.5 rounded-md bg-primary/10 text-primary font-medium text-sm" aria-current="page">
-          <i data-lucide="git-branch" class="w-4 h-4"></i>双轨诊断
+          <i data-lucide="scan-search" class="w-4 h-4"></i>双轨诊断
         </a>
-        <a href="trainee-prescription.html" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="clipboard-list" class="w-4 h-4"></i>我的处方
+        <a href="trainee-profiles.html" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="users" class="w-4 h-4"></i>新人档案
         </a>
-        <a href="mentor-board.html" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
-          <i data-lucide="users" class="w-4 h-4"></i>带教看板
+        <div class="text-[10px] uppercase tracking-wider text-on-surface-variant/50 px-3 pt-3 pb-1">设置</div>
+        <a href="settings-config.html" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>配置中心
+        </a>
+        <a href="settings-stages.html" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface font-medium text-sm transition-colors">
+          <i data-lucide="git-branch" class="w-4 h-4"></i>阶段规则
         </a>
       </div>
     </aside>
@@ -103,299 +108,323 @@
     <!-- @main-content:start -->
     <main class="flex-1 min-w-0 overflow-y-auto bg-background p-6">
 
-      <!-- 筛选区 -->
-      <div class="bg-surface rounded-lg shadow-card p-4 mb-6">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-4">
-            <!-- 新人选择 -->
-            <div class="flex items-center gap-2">
-              <label class="text-sm font-medium text-on-surface-variant">新人</label>
-              <select id="select-trainee" class="bg-surface-container border-none rounded-md px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors min-w-[160px]">
-                <option value="zhangxiaohong" selected>张小红</option>
-                <option value="liuming">刘明</option>
-                <option value="wangfang">王芳</option>
-                <option value="zhaolei">赵磊</option>
-                <option value="chenyan">陈燕</option>
-              </select>
-            </div>
-            <!-- 诊断周期 -->
-            <div class="flex items-center gap-2">
-              <label class="text-sm font-medium text-on-surface-variant">诊断周期</label>
-              <div class="flex bg-surface-container rounded-md overflow-hidden">
-                <button id="btn-cycle-week" class="px-4 py-2 text-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors">周</button>
-                <button id="btn-cycle-month" class="px-4 py-2 text-sm font-medium bg-primary text-on-primary">月</button>
-              </div>
-            </div>
-          </div>
-          <!-- 四象限标签 -->
-          <div class="flex items-center gap-3">
-            <span class="text-xs text-on-surface-variant mr-1">四象限分类：</span>
-            <span class="inline-flex items-center px-2.5 py-1 rounded-sm text-xs font-medium bg-success/15 text-success">A类·全合格</span>
-            <span class="inline-flex items-center px-2.5 py-1 rounded-sm text-xs font-medium bg-warning/15 text-warning">B类·结果不合格</span>
-            <span class="inline-flex items-center px-2.5 py-1 rounded-sm text-xs font-medium bg-yellow-400/15 text-yellow-600">C类·过程不合格</span>
-            <span class="inline-flex items-center px-2.5 py-1 rounded-sm text-xs font-medium bg-error/15 text-error">D类·全不合格</span>
-          </div>
-        </div>
+      <!-- 页面标题区 -->
+      <div class="mb-8">
+        <h1 class="text-2xl font-bold text-on-surface">双轨诊断</h1>
+        <p class="text-sm text-on-surface-variant mt-1">逐项对标 · 四象限分类</p>
       </div>
 
-      <!-- 新人诊断概览卡片 -->
-      <div id="overview-card" class="bg-surface rounded-lg shadow-card p-5 mb-6">
-        <div class="flex items-center justify-between mb-4">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-bold">张</div>
+      <!-- 四象限概览卡片行 -->
+      <div class="grid grid-cols-4 gap-4 mb-8" id="quadrant-cards">
+        <!-- 象限A：全合格 -->
+        <div class="bg-surface rounded-lg shadow-card p-5 border-l-4 border-success">
+          <div class="flex items-center justify-between">
             <div>
-              <h2 class="text-base font-semibold text-on-surface">张小红</h2>
-              <p class="text-xs text-on-surface-variant">入职45天 · 中医科 · 带教：李老师</p>
+              <p class="text-xs text-on-surface-variant uppercase tracking-wide">A · 全合格</p>
+              <p class="text-3xl font-bold text-on-surface mt-1">12</p>
+              <p class="text-xs text-on-surface-variant mt-0.5">过程 & 结果均达标</p>
+            </div>
+            <div class="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center">
+              <i data-lucide="check-circle-2" class="w-5 h-5 text-success"></i>
             </div>
           </div>
-          <span id="quadrant-badge" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-semibold bg-warning/15 text-warning">
-            <i data-lucide="alert-triangle" class="w-4 h-4"></i>B类 · 结果不合格
-          </span>
         </div>
-        <div class="grid grid-cols-2 gap-6">
-          <!-- 过程线得分 -->
-          <div>
-            <div class="flex items-center justify-between mb-2">
-              <span class="text-sm font-medium text-on-surface">过程线得分</span>
-              <span class="text-2xl font-bold text-primary">72<span class="text-sm font-normal text-on-surface-variant ml-0.5">分</span></span>
+
+        <!-- 象限B：结果不合格 -->
+        <div class="bg-surface rounded-lg shadow-card p-5 border-l-4 border-warning">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-xs text-on-surface-variant uppercase tracking-wide">B · 结果不合格</p>
+              <p class="text-3xl font-bold text-on-surface mt-1">5</p>
+              <p class="text-xs text-on-surface-variant mt-0.5">过程达标 / 结果未达标</p>
             </div>
-            <div class="w-full h-2.5 bg-surface-container rounded-full overflow-hidden">
-              <div class="h-full bg-primary-container rounded-full transition-all" style="width: 72%"></div>
-            </div>
-            <div class="flex justify-between mt-1.5">
-              <span class="text-xs text-on-surface-variant">0</span>
-              <span class="text-xs text-success">合格线 60</span>
-              <span class="text-xs text-on-surface-variant">100</span>
+            <div class="w-10 h-10 rounded-full bg-warning/10 flex items-center justify-center">
+              <i data-lucide="alert-triangle" class="w-5 h-5 text-warning"></i>
             </div>
           </div>
-          <!-- 结果线得分 -->
-          <div>
-            <div class="flex items-center justify-between mb-2">
-              <span class="text-sm font-medium text-on-surface">结果线得分</span>
-              <span class="text-2xl font-bold text-error">58<span class="text-sm font-normal text-on-surface-variant ml-0.5">分</span></span>
+        </div>
+
+        <!-- 象限C：过程不合格 -->
+        <div class="bg-surface rounded-lg shadow-card p-5 border-l-4 border-error">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-xs text-on-surface-variant uppercase tracking-wide">C · 过程不合格</p>
+              <p class="text-3xl font-bold text-on-surface mt-1">3</p>
+              <p class="text-xs text-on-surface-variant mt-0.5">结果达标 / 过程未达标</p>
             </div>
-            <div class="w-full h-2.5 bg-surface-container rounded-full overflow-hidden">
-              <div class="h-full bg-error rounded-full transition-all" style="width: 58%"></div>
+            <div class="w-10 h-10 rounded-full bg-error/10 flex items-center justify-center">
+              <i data-lucide="x-circle" class="w-5 h-5 text-error"></i>
             </div>
-            <div class="flex justify-between mt-1.5">
-              <span class="text-xs text-on-surface-variant">0</span>
-              <span class="text-xs text-success">合格线 60</span>
-              <span class="text-xs text-on-surface-variant">100</span>
+          </div>
+        </div>
+
+        <!-- 象限D：全不合格 -->
+        <div class="bg-surface rounded-lg shadow-card p-5 border-l-4 border-on-surface-variant/40">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-xs text-on-surface-variant uppercase tracking-wide">D · 全不合格</p>
+              <p class="text-3xl font-bold text-on-surface mt-1">2</p>
+              <p class="text-xs text-on-surface-variant mt-0.5">过程 & 结果均未达标</p>
+            </div>
+            <div class="w-10 h-10 rounded-full bg-on-surface-variant/10 flex items-center justify-center">
+              <i data-lucide="circle-alert" class="w-5 h-5 text-on-surface-variant"></i>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- 过程线指标对标表 -->
-      <div class="bg-surface rounded-lg shadow-card overflow-hidden mb-6">
-        <div class="px-5 py-4 border-b border-outline-variant/20">
-          <h3 class="text-base font-semibold text-on-surface flex items-center gap-2">
-            <i data-lucide="route" class="w-4 h-4 text-primary-container"></i>过程线指标对标
-          </h3>
-        </div>
-        <!-- 表头 -->
-        <div class="grid grid-cols-7 px-5 py-3 bg-surface-container text-xs font-semibold text-on-surface-variant uppercase tracking-wide">
-          <span>指标名</span>
-          <span>当前值</span>
-          <span>合格阈值</span>
-          <span>良好阈值</span>
-          <span>优秀阈值</span>
-          <span>对标结果</span>
+      <!-- 学员列表表格 -->
+      <div class="bg-surface rounded-lg shadow-card overflow-hidden" id="trainee-table-section">
+        <div class="grid grid-cols-7 px-4 py-3 bg-surface-container text-xs font-semibold text-on-surface-variant uppercase tracking-wide">
+          <span>姓名</span>
+          <span>阶段</span>
+          <span>象限</span>
+          <span>过程线状态</span>
+          <span>结果线状态</span>
+          <span>更新时间</span>
           <span>操作</span>
         </div>
-        <div class="divide-y divide-outline-variant/30">
-          <!-- 过程线-闯关 -->
-          <div class="grid grid-cols-7 px-5 py-3.5 hover:bg-surface-container/50 transition-colors items-center">
-            <span class="text-sm font-medium text-on-surface">闯关</span>
-            <span class="text-sm text-on-surface">85分</span>
-            <span class="text-sm text-on-surface-variant">60分</span>
-            <span class="text-sm text-on-surface-variant">75分</span>
-            <span class="text-sm text-on-surface-variant">90分</span>
-            <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-blue-500/15 text-blue-600 w-fit">良好</span>
-            <span class="text-sm text-on-surface-variant">—</span>
+        <div class="divide-y divide-outline-variant/50" id="trainee-table-body">
+
+          <!-- 列表-学员1 -->
+          <div class="grid grid-cols-7 px-4 py-3 hover:bg-surface-container/50 transition-colors items-center cursor-pointer trainee-row" data-trainee-id="1">
+            <span class="text-sm font-medium text-on-surface">张明远</span>
+            <span class="text-sm text-on-surface-variant">学习期</span>
+            <span><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">A · 全合格</span></span>
+            <span class="text-sm text-success font-medium">合格</span>
+            <span class="text-sm text-success font-medium">合格</span>
+            <span class="text-sm text-on-surface-variant">2024-06-12</span>
+            <button class="text-primary text-sm font-medium hover:underline w-fit btn-view-detail" data-trainee-id="1">查看详情</button>
           </div>
-          <!-- 过程线-质检 -->
-          <div class="grid grid-cols-7 px-5 py-3.5 hover:bg-surface-container/50 transition-colors items-center">
-            <span class="text-sm font-medium text-on-surface">质检</span>
-            <span class="text-sm text-on-surface">92分</span>
-            <span class="text-sm text-on-surface-variant">60分</span>
-            <span class="text-sm text-on-surface-variant">75分</span>
-            <span class="text-sm text-on-surface-variant">90分</span>
-            <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-amber-500/15 text-amber-600 w-fit">优秀</span>
-            <span class="text-sm text-on-surface-variant">—</span>
+
+          <!-- 列表-学员2 -->
+          <div class="grid grid-cols-7 px-4 py-3 hover:bg-surface-container/50 transition-colors items-center cursor-pointer trainee-row" data-trainee-id="2">
+            <span class="text-sm font-medium text-on-surface">李思雨</span>
+            <span class="text-sm text-on-surface-variant">练习期</span>
+            <span><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-warning/15 text-warning">B · 结果不合格</span></span>
+            <span class="text-sm text-success font-medium">合格</span>
+            <span class="text-sm text-error font-medium">不合格</span>
+            <span class="text-sm text-on-surface-variant">2024-06-10</span>
+            <button class="text-primary text-sm font-medium hover:underline w-fit btn-view-detail" data-trainee-id="2">查看详情</button>
           </div>
-          <!-- 过程线-日常考核 -->
-          <div class="grid grid-cols-7 px-5 py-3.5 hover:bg-surface-container/50 transition-colors items-center">
-            <span class="text-sm font-medium text-on-surface">日常考核</span>
-            <span class="text-sm text-on-surface">68分</span>
-            <span class="text-sm text-on-surface-variant">60分</span>
-            <span class="text-sm text-on-surface-variant">75分</span>
-            <span class="text-sm text-on-surface-variant">90分</span>
-            <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success w-fit">合格</span>
-            <span class="text-sm text-on-surface-variant">—</span>
+
+          <!-- 列表-学员3 -->
+          <div class="grid grid-cols-7 px-4 py-3 hover:bg-surface-container/50 transition-colors items-center cursor-pointer trainee-row" data-trainee-id="3">
+            <span class="text-sm font-medium text-on-surface">王浩然</span>
+            <span class="text-sm text-on-surface-variant">独立期</span>
+            <span><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-error/15 text-error">C · 过程不合格</span></span>
+            <span class="text-sm text-error font-medium">不合格</span>
+            <span class="text-sm text-success font-medium">合格</span>
+            <span class="text-sm text-on-surface-variant">2024-06-08</span>
+            <button class="text-primary text-sm font-medium hover:underline w-fit btn-view-detail" data-trainee-id="3">查看详情</button>
           </div>
-          <!-- 过程线-演练 -->
-          <div class="grid grid-cols-7 px-5 py-3.5 hover:bg-surface-container/50 transition-colors items-center">
-            <span class="text-sm font-medium text-on-surface">演练</span>
-            <span class="text-sm text-on-surface">45分</span>
-            <span class="text-sm text-on-surface-variant">60分</span>
-            <span class="text-sm text-on-surface-variant">75分</span>
-            <span class="text-sm text-on-surface-variant">90分</span>
-            <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-error/15 text-error w-fit">不合格</span>
-            <button id="btn-recommend-yanlian" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium bg-primary-container/10 text-primary-container hover:bg-primary-container/20 transition-colors w-fit" data-indicator="yanlian" data-indicator-name="演练">
-              <i data-lucide="lightbulb" class="w-3.5 h-3.5"></i>推荐方案
-            </button>
+
+          <!-- 列表-学员4 -->
+          <div class="grid grid-cols-7 px-4 py-3 hover:bg-surface-container/50 transition-colors items-center cursor-pointer trainee-row" data-trainee-id="4">
+            <span class="text-sm font-medium text-on-surface">赵晓琳</span>
+            <span class="text-sm text-on-surface-variant">熟练期</span>
+            <span><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">A · 全合格</span></span>
+            <span class="text-sm text-success font-medium">合格</span>
+            <span class="text-sm text-success font-medium">合格</span>
+            <span class="text-sm text-on-surface-variant">2024-06-05</span>
+            <button class="text-primary text-sm font-medium hover:underline w-fit btn-view-detail" data-trainee-id="4">查看详情</button>
           </div>
+
+          <!-- 列表-学员5 -->
+          <div class="grid grid-cols-7 px-4 py-3 hover:bg-surface-container/50 transition-colors items-center cursor-pointer trainee-row" data-trainee-id="5">
+            <span class="text-sm font-medium text-on-surface">陈志强</span>
+            <span class="text-sm text-on-surface-variant">学习期</span>
+            <span><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-on-surface-variant/10 text-on-surface-variant">D · 全不合格</span></span>
+            <span class="text-sm text-error font-medium">不合格</span>
+            <span class="text-sm text-error font-medium">不合格</span>
+            <span class="text-sm text-on-surface-variant">2024-06-01</span>
+            <button class="text-primary text-sm font-medium hover:underline w-fit btn-view-detail" data-trainee-id="5">查看详情</button>
+          </div>
+
+          <!-- 列表-学员6 -->
+          <div class="grid grid-cols-7 px-4 py-3 hover:bg-surface-container/50 transition-colors items-center cursor-pointer trainee-row" data-trainee-id="6">
+            <span class="text-sm font-medium text-on-surface">刘雨桐</span>
+            <span class="text-sm text-on-surface-variant">练习期</span>
+            <span><span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-warning/15 text-warning">B · 结果不合格</span></span>
+            <span class="text-sm text-success font-medium">合格</span>
+            <span class="text-sm text-error font-medium">不合格</span>
+            <span class="text-sm text-on-surface-variant">2024-05-28</span>
+            <button class="text-primary text-sm font-medium hover:underline w-fit btn-view-detail" data-trainee-id="6">查看详情</button>
+          </div>
+
         </div>
       </div>
 
-      <!-- 结果线指标对标表 -->
-      <div class="bg-surface rounded-lg shadow-card overflow-hidden mb-6">
-        <div class="px-5 py-4 border-b border-outline-variant/20">
-          <h3 class="text-base font-semibold text-on-surface flex items-center gap-2">
-            <i data-lucide="target" class="w-4 h-4 text-primary-container"></i>结果线指标对标
-          </h3>
-        </div>
-        <!-- 表头 -->
-        <div class="grid grid-cols-7 px-5 py-3 bg-surface-container text-xs font-semibold text-on-surface-variant uppercase tracking-wide">
-          <span>指标名</span>
-          <span>当前值</span>
-          <span>合格阈值</span>
-          <span>良好阈值</span>
-          <span>优秀阈值</span>
-          <span>对标结果</span>
-          <span>操作</span>
-        </div>
-        <div class="divide-y divide-outline-variant/30">
-          <!-- 结果线-加V率 -->
-          <div class="grid grid-cols-7 px-5 py-3.5 hover:bg-surface-container/50 transition-colors items-center">
-            <span class="text-sm font-medium text-on-surface">加V率</span>
-            <span class="text-sm text-error font-semibold">58%</span>
-            <span class="text-sm text-on-surface-variant">60%</span>
-            <span class="text-sm text-on-surface-variant">70%</span>
-            <span class="text-sm text-on-surface-variant">80%</span>
-            <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-error/15 text-error w-fit">不合格</span>
-            <button id="btn-recommend-jiav" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium bg-primary-container/10 text-primary-container hover:bg-primary-container/20 transition-colors w-fit" data-indicator="jiav_rate" data-indicator-name="加V率">
-              <i data-lucide="lightbulb" class="w-3.5 h-3.5"></i>推荐方案
-            </button>
-          </div>
-          <!-- 结果线-面诊率 -->
-          <div class="grid grid-cols-7 px-5 py-3.5 hover:bg-surface-container/50 transition-colors items-center">
-            <span class="text-sm font-medium text-on-surface">面诊率</span>
-            <span class="text-sm text-error font-semibold">35%</span>
-            <span class="text-sm text-on-surface-variant">50%</span>
-            <span class="text-sm text-on-surface-variant">65%</span>
-            <span class="text-sm text-on-surface-variant">75%</span>
-            <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-error/15 text-error w-fit">不合格</span>
-            <button id="btn-recommend-mianzhen" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium bg-primary-container/10 text-primary-container hover:bg-primary-container/20 transition-colors w-fit" data-indicator="mianzhen_rate" data-indicator-name="面诊率">
-              <i data-lucide="lightbulb" class="w-3.5 h-3.5"></i>推荐方案
-            </button>
-          </div>
-          <!-- 结果线-接诊率 -->
-          <div class="grid grid-cols-7 px-5 py-3.5 hover:bg-surface-container/50 transition-colors items-center">
-            <span class="text-sm font-medium text-on-surface">接诊率</span>
-            <span class="text-sm text-on-surface">72%</span>
-            <span class="text-sm text-on-surface-variant">60%</span>
-            <span class="text-sm text-on-surface-variant">75%</span>
-            <span class="text-sm text-on-surface-variant">85%</span>
-            <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success w-fit">合格</span>
-            <span class="text-sm text-on-surface-variant">—</span>
-          </div>
-          <!-- 结果线-签收率 -->
-          <div class="grid grid-cols-7 px-5 py-3.5 hover:bg-surface-container/50 transition-colors items-center">
-            <span class="text-sm font-medium text-on-surface">签收率</span>
-            <span class="text-sm text-on-surface">78%</span>
-            <span class="text-sm text-on-surface-variant">60%</span>
-            <span class="text-sm text-on-surface-variant">75%</span>
-            <span class="text-sm text-on-surface-variant">85%</span>
-            <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-blue-500/15 text-blue-600 w-fit">良好</span>
-            <span class="text-sm text-on-surface-variant">—</span>
-          </div>
-          <!-- 结果线-用药率 -->
-          <div class="grid grid-cols-7 px-5 py-3.5 hover:bg-surface-container/50 transition-colors items-center">
-            <span class="text-sm font-medium text-on-surface">用药率</span>
-            <span class="text-sm text-on-surface">65%</span>
-            <span class="text-sm text-on-surface-variant">50%</span>
-            <span class="text-sm text-on-surface-variant">65%</span>
-            <span class="text-sm text-on-surface-variant">80%</span>
-            <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-blue-500/15 text-blue-600 w-fit">良好</span>
-            <span class="text-sm text-on-surface-variant">—</span>
-          </div>
-          <!-- 结果线-挂号率 -->
-          <div class="grid grid-cols-7 px-5 py-3.5 hover:bg-surface-container/50 transition-colors items-center">
-            <span class="text-sm font-medium text-on-surface">挂号率</span>
-            <span class="text-sm text-on-surface">82%</span>
-            <span class="text-sm text-on-surface-variant">60%</span>
-            <span class="text-sm text-on-surface-variant">75%</span>
-            <span class="text-sm text-on-surface-variant">85%</span>
-            <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-amber-500/15 text-amber-600 w-fit">优秀</span>
-            <span class="text-sm text-on-surface-variant">—</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- 方案推荐弹窗 -->
-      <div id="modal-recommend" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 hidden">
-        <div class="bg-surface rounded-xl shadow-dialog max-w-lg w-full max-h-[85vh] overflow-y-auto">
-          <!-- 弹窗头部 -->
-          <div class="px-6 py-4 border-b border-outline-variant/20 flex items-center justify-between">
-            <h3 id="modal-title" class="text-base font-semibold text-on-surface">为张小红推荐赋能方案</h3>
-            <button id="btn-modal-close" class="w-8 h-8 flex items-center justify-center rounded-md hover:bg-surface-container transition-colors">
-              <i data-lucide="x" class="w-4 h-4 text-on-surface-variant"></i>
-            </button>
-          </div>
-          <!-- 弹窗内容 -->
-          <div class="px-6 py-4 space-y-3">
-            <p class="text-sm text-on-surface-variant">系统已根据不合格指标自动匹配以下赋能方案，请勾选需要推送的方案：</p>
-
-            <!-- 方案1-加V率提升方案 -->
-            <div class="bg-surface-container/50 rounded-lg p-4">
-              <div class="flex items-start gap-3">
-                <input type="checkbox" id="chk-plan-jiav" class="mt-1 w-4 h-4 rounded border-outline-variant text-primary-container focus:ring-primary-container/30" checked />
-                <div class="flex-1">
-                  <div class="flex items-center gap-2 mb-1">
-                    <span class="text-sm font-semibold text-on-surface">加V率提升方案</span>
-                    <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-xs bg-error/10 text-error">关联：加V率</span>
-                  </div>
-                  <p class="text-xs text-on-surface-variant leading-relaxed">加V率低于60%，说明首通电话和回访环节未能有效传递价值，需强化首通电话价值传递能力，提升患者信任度...</p>
-                </div>
-              </div>
+      <!-- 学员详情面板（默认隐藏） -->
+      <div id="detail-panel" class="mt-6 bg-surface rounded-lg shadow-card overflow-hidden hidden">
+        <!-- 详情面板头部 -->
+        <div class="flex items-center justify-between px-5 py-4 border-b border-outline-variant/20 bg-surface-container-lowest">
+          <div class="flex items-center gap-3">
+            <i data-lucide="user-circle-2" class="w-5 h-5 text-primary"></i>
+            <div>
+              <h3 class="text-base font-semibold text-on-surface" id="detail-trainee-name">张明远</h3>
+              <p class="text-xs text-on-surface-variant" id="detail-trainee-stage">学习期 · A 全合格</p>
             </div>
+          </div>
+          <button id="btn-close-detail" class="w-8 h-8 rounded-md flex items-center justify-center hover:bg-surface-container transition-colors">
+            <i data-lucide="x" class="w-4 h-4 text-on-surface-variant"></i>
+          </button>
+        </div>
 
-            <!-- 方案2-面诊率提升方案 -->
-            <div class="bg-surface-container/50 rounded-lg p-4">
-              <div class="flex items-start gap-3">
-                <input type="checkbox" id="chk-plan-mianzhen" class="mt-1 w-4 h-4 rounded border-outline-variant text-primary-container focus:ring-primary-container/30" checked />
-                <div class="flex-1">
-                  <div class="flex items-center gap-2 mb-1">
-                    <span class="text-sm font-semibold text-on-surface">面诊率提升方案</span>
-                    <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-xs bg-error/10 text-error">关联：面诊率</span>
-                  </div>
-                  <p class="text-xs text-on-surface-variant leading-relaxed">面诊率仅35%，远低于50%合格线，患者从线上咨询到线下面诊的转化环节存在明显断层，需提升沟通引导和预约...</p>
-                </div>
-              </div>
+        <!-- 详情面板内容：两栏布局 -->
+        <div class="grid grid-cols-2 gap-6 p-5">
+
+          <!-- 左栏：能力雷达图 -->
+          <div>
+            <h4 class="text-sm font-semibold text-on-surface mb-4 flex items-center gap-2">
+              <i data-lucide="radar" class="w-4 h-4 text-primary"></i>能力雷达
+            </h4>
+            <div class="bg-surface-container rounded-lg p-4 flex items-center justify-center" id="radar-chart-container">
+              <!-- SVG 五边形雷达图 -->
+              <svg viewBox="0 0 300 300" width="280" height="280" id="radar-svg">
+                <!-- 背景网格：5层同心五边形 -->
+                <polygon points="150,40 254,115 214,240 86,240 46,115" fill="none" stroke="#E6E1D8" stroke-width="1" opacity="0.5"/>
+                <polygon points="150,68 235,129 203,218 97,218 65,129" fill="none" stroke="#E6E1D8" stroke-width="1" opacity="0.5"/>
+                <polygon points="150,96 216,143 192,196 108,196 84,143" fill="none" stroke="#E6E1D8" stroke-width="1" opacity="0.5"/>
+                <polygon points="150,124 197,157 181,174 119,174 103,157" fill="none" stroke="#E6E1D8" stroke-width="1" opacity="0.5"/>
+                <polygon points="150,152 178,171 170,152 130,152 122,171" fill="none" stroke="#E6E1D8" stroke-width="1" opacity="0.5"/>
+
+                <!-- 轴线 -->
+                <line x1="150" y1="150" x2="150" y2="40" stroke="#E6E1D8" stroke-width="1" opacity="0.4"/>
+                <line x1="150" y1="150" x2="254" y2="115" stroke="#E6E1D8" stroke-width="1" opacity="0.4"/>
+                <line x1="150" y1="150" x2="214" y2="240" stroke="#E6E1D8" stroke-width="1" opacity="0.4"/>
+                <line x1="150" y1="150" x2="86" y2="240" stroke="#E6E1D8" stroke-width="1" opacity="0.4"/>
+                <line x1="150" y1="150" x2="46" y2="115" stroke="#E6E1D8" stroke-width="1" opacity="0.4"/>
+
+                <!-- 数据多边形（填充） -->
+                <!-- 沟通力78 / 专业力85 / 执行力62 / 数据力90 / 成长力55 -->
+                <!-- 顶点计算：r=110, 中心(150,150), 角度从顶部顺时针：-90°, -18°, 54°, 126°, 198° -->
+                <!-- 沟通力78(顶部): x=150, y=150-110*0.78=64.2 -->
+                <!-- 专业力85(右上): x=150+110*0.85*cos(72°)=150+110*0.85*0.309=178.9, y=150-110*0.85*sin(72°)=150-110*0.85*0.951=61.1 -->
+                <!-- 执行力62(右下): x=150+110*0.62*cos(36°)=150+110*0.62*0.809=205.2, y=150+110*0.62*sin(36°)=150+110*0.62*0.588=190.1 -->
+                <!-- 数据力90(左下): x=150-110*0.90*cos(36°)=150-110*0.90*0.809=69.9, y=150+110*0.90*sin(36°)=150+110*0.90*0.588=208.2 -->
+                <!-- 成长力55(左上): x=150-110*0.55*cos(72°)=150-110*0.55*0.309=131.3, y=150-110*0.55*sin(72°)=150-110*0.55*0.951=92.5 -->
+                <polygon points="150,64.2 178.9,61.1 205.2,190.1 69.9,208.2 131.3,92.5"
+                         fill="rgba(41,120,181,0.2)" stroke="#2978B5" stroke-width="2" stroke-linejoin="round"/>
+
+                <!-- 数据点 -->
+                <circle cx="150" cy="64.2" r="4" fill="#2978B5"/>
+                <circle cx="178.9" cy="61.1" r="4" fill="#2978B5"/>
+                <circle cx="205.2" cy="190.1" r="4" fill="#2978B5"/>
+                <circle cx="69.9" cy="208.2" r="4" fill="#2978B5"/>
+                <circle cx="131.3" cy="92.5" r="4" fill="#2978B5"/>
+
+                <!-- 维度标签 -->
+                <text x="150" y="28" text-anchor="middle" class="text-xs fill-on-surface" font-size="11" fill="#1D2733" font-weight="500">沟通力</text>
+                <text x="268" y="118" text-anchor="start" class="text-xs fill-on-surface" font-size="11" fill="#1D2733" font-weight="500">专业力</text>
+                <text x="222" y="258" text-anchor="start" class="text-xs fill-on-surface" font-size="11" fill="#1D2733" font-weight="500">执行力</text>
+                <text x="78" y="258" text-anchor="end" class="text-xs fill-on-surface" font-size="11" fill="#1D2733" font-weight="500">数据力</text>
+                <text x="32" y="118" text-anchor="end" class="text-xs fill-on-surface" font-size="11" fill="#1D2733" font-weight="500">成长力</text>
+
+                <!-- 分数标签 -->
+                <text x="150" y="56" text-anchor="middle" font-size="10" fill="#2978B5" font-weight="600">78</text>
+                <text x="185" y="53" text-anchor="middle" font-size="10" fill="#2978B5" font-weight="600">85</text>
+                <text x="212" y="200" text-anchor="middle" font-size="10" fill="#2978B5" font-weight="600">62</text>
+                <text x="62" y="218" text-anchor="middle" font-size="10" fill="#2978B5" font-weight="600">90</text>
+                <text x="125" y="84" text-anchor="middle" font-size="10" fill="#2978B5" font-weight="600">55</text>
+              </svg>
             </div>
-
-            <!-- 方案3-综合提升方案(演练) -->
-            <div id="modal-plan-yanlian" class="bg-surface-container/50 rounded-lg p-4 hidden">
-              <div class="flex items-start gap-3">
-                <input type="checkbox" id="chk-plan-yanlian" class="mt-1 w-4 h-4 rounded border-outline-variant text-primary-container focus:ring-primary-container/30" checked />
-                <div class="flex-1">
-                  <div class="flex items-center gap-2 mb-1">
-                    <span class="text-sm font-semibold text-on-surface">演练能力提升方案</span>
-                    <span class="inline-flex items-center px-1.5 py-0.5 rounded-sm text-xs bg-error/10 text-error">关联：演练</span>
-                  </div>
-                  <p class="text-xs text-on-surface-variant leading-relaxed">演练得分45分，低于60分合格线，说明实战模拟能力不足，需增加场景化模拟训练频次，强化应对各类患者场景的...</p>
-                </div>
+            <!-- 维度分数列表 -->
+            <div class="grid grid-cols-5 gap-2 mt-3" id="radar-scores">
+              <div class="text-center">
+                <p class="text-xs text-on-surface-variant">沟通力</p>
+                <p class="text-sm font-semibold text-primary">78</p>
+              </div>
+              <div class="text-center">
+                <p class="text-xs text-on-surface-variant">专业力</p>
+                <p class="text-sm font-semibold text-primary">85</p>
+              </div>
+              <div class="text-center">
+                <p class="text-xs text-on-surface-variant">执行力</p>
+                <p class="text-sm font-semibold text-primary">62</p>
+              </div>
+              <div class="text-center">
+                <p class="text-xs text-on-surface-variant">数据力</p>
+                <p class="text-sm font-semibold text-primary">90</p>
+              </div>
+              <div class="text-center">
+                <p class="text-xs text-on-surface-variant">成长力</p>
+                <p class="text-sm font-semibold text-primary">55</p>
               </div>
             </div>
           </div>
-          <!-- 弹窗底部 -->
-          <div class="px-6 py-4 border-t border-outline-variant/20 flex items-center justify-end gap-3">
-            <button id="btn-modal-cancel" class="bg-surface-container text-on-surface px-4 py-2 rounded-md text-sm font-medium hover:bg-surface-container-high active:scale-[0.98] transition-all">取消</button>
-            <button id="btn-push-plans" class="bg-primary text-on-primary px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all inline-flex items-center gap-2">
-              <i data-lucide="send" class="w-3.5 h-3.5"></i>推送选中方案
-            </button>
+
+          <!-- 右栏：诊断详情 -->
+          <div>
+            <h4 class="text-sm font-semibold text-on-surface mb-4 flex items-center gap-2">
+              <i data-lucide="clipboard-check" class="w-4 h-4 text-primary"></i>诊断详情
+            </h4>
+            <div class="space-y-3" id="diagnosis-detail-list">
+
+              <!-- 指标-沟通表达 -->
+              <div class="bg-surface-container rounded-lg p-3 flex items-center justify-between">
+                <div>
+                  <p class="text-sm font-medium text-on-surface">沟通表达</p>
+                  <p class="text-xs text-on-surface-variant mt-0.5">语言组织 · 倾听反馈 · 跨部门协调</p>
+                </div>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">良好</span>
+              </div>
+
+              <!-- 指标-专业技能 -->
+              <div class="bg-surface-container rounded-lg p-3 flex items-center justify-between">
+                <div>
+                  <p class="text-sm font-medium text-on-surface">专业技能</p>
+                  <p class="text-xs text-on-surface-variant mt-0.5">业务知识 · 工具操作 · 问题解决</p>
+                </div>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">优秀</span>
+              </div>
+
+              <!-- 指标-执行效率（不合格） -->
+              <div class="bg-surface-container rounded-lg p-3 flex items-center justify-between border-l-4 border-error">
+                <div>
+                  <p class="text-sm font-medium text-on-surface">执行效率</p>
+                  <p class="text-xs text-on-surface-variant mt-0.5">任务完成率 · 时效达标 · 优先级管理</p>
+                </div>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-error/15 text-error">不合格</span>
+              </div>
+
+              <!-- 指标-数据敏感度 -->
+              <div class="bg-surface-container rounded-lg p-3 flex items-center justify-between">
+                <div>
+                  <p class="text-sm font-medium text-on-surface">数据敏感度</p>
+                  <p class="text-xs text-on-surface-variant mt-0.5">报表解读 · 趋势分析 · 数据决策</p>
+                </div>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">优秀</span>
+              </div>
+
+              <!-- 指标-成长潜力（不合格） -->
+              <div class="bg-surface-container rounded-lg p-3 flex items-center justify-between border-l-4 border-error">
+                <div>
+                  <p class="text-sm font-medium text-on-surface">成长潜力</p>
+                  <p class="text-xs text-on-surface-variant mt-0.5">学习意愿 · 自驱力 · 知识转化</p>
+                </div>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-error/15 text-error">不合格</span>
+              </div>
+
+              <!-- 指标-团队协作 -->
+              <div class="bg-surface-container rounded-lg p-3 flex items-center justify-between">
+                <div>
+                  <p class="text-sm font-medium text-on-surface">团队协作</p>
+                  <p class="text-xs text-on-surface-variant mt-0.5">配合度 · 知识分享 · 冲突处理</p>
+                </div>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">合格</span>
+              </div>
+
+              <!-- 指标-规范遵守 -->
+              <div class="bg-surface-container rounded-lg p-3 flex items-center justify-between">
+                <div>
+                  <p class="text-sm font-medium text-on-surface">规范遵守</p>
+                  <p class="text-xs text-on-surface-variant mt-0.5">流程合规 · 文档规范 · 安全操作</p>
+                </div>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium bg-success/15 text-success">良好</span>
+              </div>
+
+            </div>
           </div>
         </div>
       </div>
@@ -403,112 +432,226 @@
     </main>
     <!-- @main-content:end -->
   </div>
-  <!-- @nav:end 导航组件 -->
 
   <script>
-    $(function () {
+    $(function() {
 
-      // === 周期切换 ===
-      $('#btn-cycle-week').on('click', function () {
-        $(this).addClass('bg-primary text-on-primary').removeClass('text-on-surface-variant');
-        $('#btn-cycle-month').removeClass('bg-primary text-on-primary').addClass('text-on-surface-variant');
-        console.log('切换到周维度诊断');
-      });
-
-      $('#btn-cycle-month').on('click', function () {
-        $(this).addClass('bg-primary text-on-primary').removeClass('text-on-surface-variant');
-        $('#btn-cycle-week').removeClass('bg-primary text-on-primary').addClass('text-on-surface-variant');
-        console.log('切换到月维度诊断');
-      });
-
-      // === 新人切换 ===
-      $('#select-trainee').on('change', function () {
-        console.log('切换新人:', $(this).val());
-        // 后续应实现：根据选中新人ID重新加载诊断数据并更新页面内容
-      });
-
-      // === 推荐方案按钮 - 统一处理 ===
-      // 点击"推荐方案"按钮 → 打开方案推荐弹窗，根据指标类型显示对应方案
-      $('[id^="btn-recommend-"]').on('click', function () {
-        var indicator = $(this).data('indicator');
-        var indicatorName = $(this).data('indicator-name');
-
-        // 根据指标决定弹窗中显示哪些方案
-        // 默认隐藏演练方案
-        $('#modal-plan-yanlian').addClass('hidden');
-
-        if (indicator === 'yanlian') {
-          // 演练不合格 → 显示演练方案
-          $('#modal-plan-yanlian').removeClass('hidden');
-          // 隐藏其他方案
-          $('#chk-plan-jiav').closest('.bg-surface-container\\/50').addClass('hidden');
-          $('#chk-plan-mianzhen').closest('.bg-surface-container\\/50').addClass('hidden');
-        } else {
-          // 结果线指标（加V率、面诊率）→ 显示对应方案
-          $('#chk-plan-jiav').closest('.bg-surface-container\\/50').removeClass('hidden');
-          $('#chk-plan-mianzhen').closest('.bg-surface-container\\/50').removeClass('hidden');
-
-          if (indicator === 'jiav_rate') {
-            $('#chk-plan-jiav').prop('checked', true);
-            $('#chk-plan-mianzhen').prop('checked', false);
-          } else if (indicator === 'mianzhen_rate') {
-            $('#chk-plan-jiav').prop('checked', false);
-            $('#chk-plan-mianzhen').prop('checked', true);
-          }
+      // 学员 mock 数据（用于切换详情面板内容）
+      var traineeData = {
+        '1': {
+          name: '张明远',
+          stage: '学习期',
+          quadrant: 'A · 全合格',
+          radar: { communication: 78, professional: 85, execution: 62, data: 90, growth: 55 },
+          indicators: [
+            { name: '沟通表达', desc: '语言组织 · 倾听反馈 · 跨部门协调', level: '良好', cls: 'bg-success/15 text-success' },
+            { name: '专业技能', desc: '业务知识 · 工具操作 · 问题解决', level: '优秀', cls: 'bg-success/15 text-success' },
+            { name: '执行效率', desc: '任务完成率 · 时效达标 · 优先级管理', level: '不合格', cls: 'bg-error/15 text-error', failed: true },
+            { name: '数据敏感度', desc: '报表解读 · 趋势分析 · 数据决策', level: '优秀', cls: 'bg-success/15 text-success' },
+            { name: '成长潜力', desc: '学习意愿 · 自驱力 · 知识转化', level: '不合格', cls: 'bg-error/15 text-error', failed: true },
+            { name: '团队协作', desc: '配合度 · 知识分享 · 冲突处理', level: '合格', cls: 'bg-success/15 text-success' },
+            { name: '规范遵守', desc: '流程合规 · 文档规范 · 安全操作', level: '良好', cls: 'bg-success/15 text-success' }
+          ]
+        },
+        '2': {
+          name: '李思雨',
+          stage: '练习期',
+          quadrant: 'B · 结果不合格',
+          radar: { communication: 65, professional: 72, execution: 58, data: 45, growth: 68 },
+          indicators: [
+            { name: '沟通表达', desc: '语言组织 · 倾听反馈 · 跨部门协调', level: '合格', cls: 'bg-success/15 text-success' },
+            { name: '专业技能', desc: '业务知识 · 工具操作 · 问题解决', level: '良好', cls: 'bg-success/15 text-success' },
+            { name: '执行效率', desc: '任务完成率 · 时效达标 · 优先级管理', level: '不合格', cls: 'bg-error/15 text-error', failed: true },
+            { name: '数据敏感度', desc: '报表解读 · 趋势分析 · 数据决策', level: '不合格', cls: 'bg-error/15 text-error', failed: true },
+            { name: '成长潜力', desc: '学习意愿 · 自驱力 · 知识转化', level: '合格', cls: 'bg-success/15 text-success' },
+            { name: '团队协作', desc: '配合度 · 知识分享 · 冲突处理', level: '良好', cls: 'bg-success/15 text-success' },
+            { name: '规范遵守', desc: '流程合规 · 文档规范 · 安全操作', level: '合格', cls: 'bg-success/15 text-success' }
+          ]
+        },
+        '3': {
+          name: '王浩然',
+          stage: '独立期',
+          quadrant: 'C · 过程不合格',
+          radar: { communication: 82, professional: 70, execution: 48, data: 75, growth: 60 },
+          indicators: [
+            { name: '沟通表达', desc: '语言组织 · 倾听反馈 · 跨部门协调', level: '优秀', cls: 'bg-success/15 text-success' },
+            { name: '专业技能', desc: '业务知识 · 工具操作 · 问题解决', level: '良好', cls: 'bg-success/15 text-success' },
+            { name: '执行效率', desc: '任务完成率 · 时效达标 · 优先级管理', level: '不合格', cls: 'bg-error/15 text-error', failed: true },
+            { name: '数据敏感度', desc: '报表解读 · 趋势分析 · 数据决策', level: '良好', cls: 'bg-success/15 text-success' },
+            { name: '成长潜力', desc: '学习意愿 · 自驱力 · 知识转化', level: '合格', cls: 'bg-success/15 text-success' },
+            { name: '团队协作', desc: '配合度 · 知识分享 · 冲突处理', level: '不合格', cls: 'bg-error/15 text-error', failed: true },
+            { name: '规范遵守', desc: '流程合规 · 文档规范 · 安全操作', level: '合格', cls: 'bg-success/15 text-success' }
+          ]
+        },
+        '4': {
+          name: '赵晓琳',
+          stage: '熟练期',
+          quadrant: 'A · 全合格',
+          radar: { communication: 90, professional: 88, execution: 85, data: 92, growth: 80 },
+          indicators: [
+            { name: '沟通表达', desc: '语言组织 · 倾听反馈 · 跨部门协调', level: '优秀', cls: 'bg-success/15 text-success' },
+            { name: '专业技能', desc: '业务知识 · 工具操作 · 问题解决', level: '优秀', cls: 'bg-success/15 text-success' },
+            { name: '执行效率', desc: '任务完成率 · 时效达标 · 优先级管理', level: '良好', cls: 'bg-success/15 text-success' },
+            { name: '数据敏感度', desc: '报表解读 · 趋势分析 · 数据决策', level: '优秀', cls: 'bg-success/15 text-success' },
+            { name: '成长潜力', desc: '学习意愿 · 自驱力 · 知识转化', level: '良好', cls: 'bg-success/15 text-success' },
+            { name: '团队协作', desc: '配合度 · 知识分享 · 冲突处理', level: '优秀', cls: 'bg-success/15 text-success' },
+            { name: '规范遵守', desc: '流程合规 · 文档规范 · 安全操作', level: '优秀', cls: 'bg-success/15 text-success' }
+          ]
+        },
+        '5': {
+          name: '陈志强',
+          stage: '学习期',
+          quadrant: 'D · 全不合格',
+          radar: { communication: 35, professional: 42, execution: 28, data: 30, growth: 38 },
+          indicators: [
+            { name: '沟通表达', desc: '语言组织 · 倾听反馈 · 跨部门协调', level: '不合格', cls: 'bg-error/15 text-error', failed: true },
+            { name: '专业技能', desc: '业务知识 · 工具操作 · 问题解决', level: '不合格', cls: 'bg-error/15 text-error', failed: true },
+            { name: '执行效率', desc: '任务完成率 · 时效达标 · 优先级管理', level: '不合格', cls: 'bg-error/15 text-error', failed: true },
+            { name: '数据敏感度', desc: '报表解读 · 趋势分析 · 数据决策', level: '不合格', cls: 'bg-error/15 text-error', failed: true },
+            { name: '成长潜力', desc: '学习意愿 · 自驱力 · 知识转化', level: '不合格', cls: 'bg-error/15 text-error', failed: true },
+            { name: '团队协作', desc: '配合度 · 知识分享 · 冲突处理', level: '不合格', cls: 'bg-error/15 text-error', failed: true },
+            { name: '规范遵守', desc: '流程合规 · 文档规范 · 安全操作', level: '不合格', cls: 'bg-error/15 text-error', failed: true }
+          ]
+        },
+        '6': {
+          name: '刘雨桐',
+          stage: '练习期',
+          quadrant: 'B · 结果不合格',
+          radar: { communication: 70, professional: 68, execution: 55, data: 40, growth: 72 },
+          indicators: [
+            { name: '沟通表达', desc: '语言组织 · 倾听反馈 · 跨部门协调', level: '良好', cls: 'bg-success/15 text-success' },
+            { name: '专业技能', desc: '业务知识 · 工具操作 · 问题解决', level: '合格', cls: 'bg-success/15 text-success' },
+            { name: '执行效率', desc: '任务完成率 · 时效达标 · 优先级管理', level: '不合格', cls: 'bg-error/15 text-error', failed: true },
+            { name: '数据敏感度', desc: '报表解读 · 趋势分析 · 数据决策', level: '不合格', cls: 'bg-error/15 text-error', failed: true },
+            { name: '成长潜力', desc: '学习意愿 · 自驱力 · 知识转化', level: '良好', cls: 'bg-success/15 text-success' },
+            { name: '团队协作', desc: '配合度 · 知识分享 · 冲突处理', level: '合格', cls: 'bg-success/15 text-success' },
+            { name: '规范遵守', desc: '流程合规 · 文档规范 · 安全操作', level: '良好', cls: 'bg-success/15 text-success' }
+          ]
         }
+      };
 
-        $('#modal-recommend').removeClass('hidden');
+      // 雷达图顶点坐标计算辅助函数
+      // 五边形中心(150,150)，半径110，角度从顶部(-90°)顺时针
+      function calcRadarPoints(scores) {
+        var dims = ['communication', 'professional', 'execution', 'data', 'growth'];
+        var angles = [-90, -18, 54, 126, 198]; // 度数
+        var points = [];
+        for (var i = 0; i < dims.length; i++) {
+          var score = scores[dims[i]] / 100;
+          var rad = angles[i] * Math.PI / 180;
+          var x = 150 + 110 * score * Math.cos(rad);
+          var y = 150 + 110 * score * Math.sin(rad);
+          points.push({ x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10 });
+        }
+        return points;
+      }
+
+      // 生成雷达图 SVG
+      function buildRadarSvg(scores) {
+        var pts = calcRadarPoints(scores);
+        var polygonPoints = pts.map(function(p) { return p.x + ',' + p.y; }).join(' ');
+
+        return '' +
+          '<polygon points="150,40 254,115 214,240 86,240 46,115" fill="none" stroke="#E6E1D8" stroke-width="1" opacity="0.5"/>' +
+          '<polygon points="150,68 235,129 203,218 97,218 65,129" fill="none" stroke="#E6E1D8" stroke-width="1" opacity="0.5"/>' +
+          '<polygon points="150,96 216,143 192,196 108,196 84,143" fill="none" stroke="#E6E1D8" stroke-width="1" opacity="0.5"/>' +
+          '<polygon points="150,124 197,157 181,174 119,174 103,157" fill="none" stroke="#E6E1D8" stroke-width="1" opacity="0.5"/>' +
+          '<polygon points="150,152 178,171 170,152 130,152 122,171" fill="none" stroke="#E6E1D8" stroke-width="1" opacity="0.5"/>' +
+          '<line x1="150" y1="150" x2="150" y2="40" stroke="#E6E1D8" stroke-width="1" opacity="0.4"/>' +
+          '<line x1="150" y1="150" x2="254" y2="115" stroke="#E6E1D8" stroke-width="1" opacity="0.4"/>' +
+          '<line x1="150" y1="150" x2="214" y2="240" stroke="#E6E1D8" stroke-width="1" opacity="0.4"/>' +
+          '<line x1="150" y1="150" x2="86" y2="240" stroke="#E6E1D8" stroke-width="1" opacity="0.4"/>' +
+          '<line x1="150" y1="150" x2="46" y2="115" stroke="#E6E1D8" stroke-width="1" opacity="0.4"/>' +
+          '<polygon points="' + polygonPoints + '" fill="rgba(41,120,181,0.2)" stroke="#2978B5" stroke-width="2" stroke-linejoin="round"/>' +
+          '<circle cx="' + pts[0].x + '" cy="' + pts[0].y + '" r="4" fill="#2978B5"/>' +
+          '<circle cx="' + pts[1].x + '" cy="' + pts[1].y + '" r="4" fill="#2978B5"/>' +
+          '<circle cx="' + pts[2].x + '" cy="' + pts[2].y + '" r="4" fill="#2978B5"/>' +
+          '<circle cx="' + pts[3].x + '" cy="' + pts[3].y + '" r="4" fill="#2978B5"/>' +
+          '<circle cx="' + pts[4].x + '" cy="' + pts[4].y + '" r="4" fill="#2978B5"/>' +
+          '<text x="150" y="28" text-anchor="middle" font-size="11" fill="#1D2733" font-weight="500">沟通力</text>' +
+          '<text x="268" y="118" text-anchor="start" font-size="11" fill="#1D2733" font-weight="500">专业力</text>' +
+          '<text x="222" y="258" text-anchor="start" font-size="11" fill="#1D2733" font-weight="500">执行力</text>' +
+          '<text x="78" y="258" text-anchor="end" font-size="11" fill="#1D2733" font-weight="500">数据力</text>' +
+          '<text x="32" y="118" text-anchor="end" font-size="11" fill="#1D2733" font-weight="500">成长力</text>' +
+          '<text x="' + pts[0].x + '" y="' + (pts[0].y - 8) + '" text-anchor="middle" font-size="10" fill="#2978B5" font-weight="600">' + scores.communication + '</text>' +
+          '<text x="' + (pts[1].x + 6) + '" y="' + (pts[1].y - 8) + '" text-anchor="middle" font-size="10" fill="#2978B5" font-weight="600">' + scores.professional + '</text>' +
+          '<text x="' + (pts[2].x + 7) + '" y="' + (pts[2].y + 10) + '" text-anchor="middle" font-size="10" fill="#2978B5" font-weight="600">' + scores.execution + '</text>' +
+          '<text x="' + (pts[3].x - 7) + '" y="' + (pts[3].y + 10) + '" text-anchor="middle" font-size="10" fill="#2978B5" font-weight="600">' + scores.data + '</text>' +
+          '<text x="' + (pts[4].x - 6) + '" y="' + (pts[4].y - 8) + '" text-anchor="middle" font-size="10" fill="#2978B5" font-weight="600">' + scores.growth + '</text>';
+      }
+
+      // 生成诊断指标列表 HTML
+      function buildIndicatorHtml(indicators) {
+        var html = '';
+        for (var i = 0; i < indicators.length; i++) {
+          var ind = indicators[i];
+          var borderClass = ind.failed ? ' border-l-4 border-error' : '';
+          html += '<div class="bg-surface-container rounded-lg p-3 flex items-center justify-between' + borderClass + '">' +
+            '<div>' +
+              '<p class="text-sm font-medium text-on-surface">' + ind.name + '</p>' +
+              '<p class="text-xs text-on-surface-variant mt-0.5">' + ind.desc + '</p>' +
+            '</div>' +
+            '<span class="inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium ' + ind.cls + '">' + ind.level + '</span>' +
+          '</div>';
+        }
+        return html;
+      }
+
+      // 查看详情按钮点击
+      $('#trainee-table-body').on('click', '.btn-view-detail', function(e) {
+        e.stopPropagation();
+        var traineeId = $(this).data('trainee-id').toString();
+        showDetailPanel(traineeId);
       });
 
-      // === 弹窗关闭 ===
-      $('#btn-modal-close').on('click', function () {
-        $('#modal-recommend').addClass('hidden');
+      // 行点击也展开详情
+      $('#trainee-table-body').on('click', '.trainee-row', function() {
+        var traineeId = $(this).data('trainee-id').toString();
+        showDetailPanel(traineeId);
       });
 
-      $('#btn-modal-cancel').on('click', function () {
-        $('#modal-recommend').addClass('hidden');
-      });
+      // 展示详情面板
+      function showDetailPanel(traineeId) {
+        var data = traineeData[traineeId];
+        if (!data) return;
 
-      // 点击遮罩层关闭弹窗
-      $('#modal-recommend').on('click', function (e) {
-        if ($(e.target).is('#modal-recommend')) {
-          $('#modal-recommend').addClass('hidden');
-        }
-      });
+        // 更新头部信息
+        $('#detail-trainee-name').text(data.name);
+        $('#detail-trainee-stage').text(data.stage + ' · ' + data.quadrant);
 
-      // === 推送选中方案 ===
-      $('#btn-push-plans').on('click', function () {
-        var pushedIndicators = [];
+        // 更新雷达图
+        $('#radar-svg').html(buildRadarSvg(data.radar));
 
-        // 检查勾选的方案
-        if ($('#chk-plan-jiav').is(':visible') && $('#chk-plan-jiav').is(':checked')) {
-          pushedIndicators.push('jiav_rate');
-        }
-        if ($('#chk-plan-mianzhen').is(':visible') && $('#chk-plan-mianzhen').is(':checked')) {
-          pushedIndicators.push('mianzhen_rate');
-        }
-        if ($('#chk-plan-yanlian').is(':visible') && $('#chk-plan-yanlian').is(':checked')) {
-          pushedIndicators.push('yanlian');
-        }
+        // 更新分数列表
+        var scoreHtml = '' +
+          '<div class="text-center"><p class="text-xs text-on-surface-variant">沟通力</p><p class="text-sm font-semibold text-primary">' + data.radar.communication + '</p></div>' +
+          '<div class="text-center"><p class="text-xs text-on-surface-variant">专业力</p><p class="text-sm font-semibold text-primary">' + data.radar.professional + '</p></div>' +
+          '<div class="text-center"><p class="text-xs text-on-surface-variant">执行力</p><p class="text-sm font-semibold text-primary">' + data.radar.execution + '</p></div>' +
+          '<div class="text-center"><p class="text-xs text-on-surface-variant">数据力</p><p class="text-sm font-semibold text-primary">' + data.radar.data + '</p></div>' +
+          '<div class="text-center"><p class="text-xs text-on-surface-variant">成长力</p><p class="text-sm font-semibold text-primary">' + data.radar.growth + '</p></div>';
+        $('#radar-scores').html(scoreHtml);
 
-        // 将已推送指标对应的"推荐方案"按钮替换为"已推送"灰色标签
-        $.each(pushedIndicators, function (_, ind) {
-          var btn = $('[data-indicator="' + ind + '"]');
-          if (btn.length) {
-            btn.replaceWith(
-              '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium bg-surface-container text-on-surface-variant">' +
-              '<i data-lucide="check-circle" class="w-3.5 h-3.5"></i>已推送</span>'
-            );
-          }
-        });
+        // 更新诊断指标
+        $('#diagnosis-detail-list').html(buildIndicatorHtml(data.indicators));
+
+        // 高亮当前选中行
+        $('.trainee-row').css('background-color', '');
+        $('.trainee-row[data-trainee-id="' + traineeId + '"]').css('background-color', 'rgba(41,120,181,0.06)');
+
+        // 显示面板并滚动到面板位置
+        $('#detail-panel').removeClass('hidden');
+        $('html, body').animate({
+          scrollTop: $('#detail-panel').offset().top - 80
+        }, 300);
 
         // 重新渲染图标
         lucide.createIcons();
+      }
 
-        // 关闭弹窗
-        $('#modal-recommend').addClass('hidden');
-
-        console.log('已推送方案，关联指标:', pushedIndicators);
+      // 关闭详情面板
+      $('#btn-close-detail').on('click', function() {
+        $('#detail-panel').addClass('hidden');
+        $('.trainee-row').css('background-color', '');
       });
 
     });
