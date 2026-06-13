@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
 
     let query = supabase
       .from('users')
-      .select('id, username, real_name, role_id, is_active, is_super_admin, created_at, mentor_id, mentor_status')
+      .select('id, username, real_name, role_id, is_active, is_super_admin, created_at, mentor_id, mentor_status, join_date')
       .order('id');
 
     if (resolvedRoleId) {
@@ -86,7 +86,7 @@ export async function GET(req: NextRequest) {
 
     const stageNumberMap: Record<string, number> = { foundation: 1, practice: 2, independent: 3, proficient: 4 };
 
-    const users = (data || []).map((u: { id: string; username: string; real_name: string; role_id: number; is_active: boolean; is_super_admin: boolean; created_at: string }) => ({
+    const users = (data || []).map((u: { id: string; username: string; real_name: string; role_id: number; is_active: boolean; is_super_admin: boolean; created_at: string; join_date: string | null }) => ({
       id: u.id,
       username: u.username,
       realName: u.real_name,
@@ -100,6 +100,7 @@ export async function GET(req: NextRequest) {
       mentorName: mentorMap[u.id] || null,
       status: u.is_active !== false ? 'active' : 'inactive',
       createdAt: u.created_at,
+      joinDate: u.join_date || null,
     }));
 
     return NextResponse.json({ users });
@@ -118,7 +119,7 @@ export async function POST(req: NextRequest) {
     if (denied) return denied;
 
     const body = await req.json();
-    const { username, realName, password, roleId, stage, cohort, position, department } = body;
+    const { username, realName, password, roleId, stage, cohort, position, department, joinDate } = body;
 
     if (!username || !realName || !roleId) {
       return NextResponse.json({ error: '缺少必填字段: username, realName, roleId' }, { status: 400 });
@@ -160,6 +161,7 @@ export async function POST(req: NextRequest) {
         role_id: roleId,
         is_active: true,
         stage: stage || 1,
+        join_date: joinDate || null,
       })
       .select('id, username, real_name, role_id, is_active, created_at')
       .single();
@@ -227,7 +229,7 @@ export async function PUT(req: NextRequest) {
     if (denied) return denied;
 
     const body = await req.json();
-    const { userId, realName, roleId, stage, status, cohort, password, resetPassword, mentorId, position, department } = body;
+    const { userId, realName, roleId, stage, status, cohort, password, resetPassword, mentorId, position, department, joinDate } = body;
     if (!userId) return NextResponse.json({ error: '缺少userId' }, { status: 400 });
 
     // 禁止修改自己的角色（防止提权/降权）
@@ -265,6 +267,7 @@ export async function PUT(req: NextRequest) {
     if (realName !== undefined) updateData.real_name = realName;
     if (roleId !== undefined) updateData.role_id = roleId;
     if (status !== undefined) updateData.is_active = status === 'active';
+    if (joinDate !== undefined) updateData.join_date = joinDate || null;
     // 密码重置（管理员操作）：用bt:前缀标记，强制用户下次登录改密
     // 普通密码修改走 /api/auth/change-password（bcrypt格式）
     if (resetPassword && password) {

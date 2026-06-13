@@ -36,6 +36,7 @@ interface UserRecord {
   mentorName: string | null;
   status: string;
   createdAt: string;
+  joinDate: string | null;
 }
 
 interface StageRule {
@@ -181,6 +182,7 @@ function UserDialog({
     position: user?.position || '',
     department: user?.department || '',
     status: user?.status || 'active',
+    joinDate: user?.joinDate || '',
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -210,6 +212,7 @@ function UserDialog({
             cohort: form.roleId === 1 ? form.cohort : undefined,
             position: form.roleId === 1 ? form.position : undefined,
             department: form.roleId === 1 ? form.department : undefined,
+            joinDate: form.joinDate || undefined,
           }),
         });
         if (!res.ok) {
@@ -228,6 +231,7 @@ function UserDialog({
             cohort: form.roleId === 1 ? form.cohort : undefined,
             position: form.roleId === 1 ? form.position : undefined,
             department: form.roleId === 1 ? form.department : undefined,
+            joinDate: form.joinDate || undefined,
             status: form.status,
           }),
         });
@@ -363,6 +367,15 @@ function UserDialog({
               </select>
             </div>
           )}
+          <div>
+            <label className="text-xs font-medium text-muted-foreground mb-1.5 block">入职时间</label>
+            <input
+              type="date"
+              value={form.joinDate}
+              onChange={e => setForm(prev => ({ ...prev, joinDate: e.target.value }))}
+              className="w-full h-9 rounded-md border border-border bg-transparent px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+            />
+          </div>
           {mode === 'edit' && (
             <div>
               <label className="text-xs font-medium text-muted-foreground mb-1.5 block">状态</label>
@@ -1347,6 +1360,7 @@ export default function SettingsPage() {
                         <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">用户名</th>
                         <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">角色</th>
                         <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">阶段</th>
+                        <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">入职时间</th>
                         <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">期数</th>
                         <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">职位</th>
                         <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">部门</th>
@@ -1393,6 +1407,13 @@ export default function SettingsPage() {
                             <td className="px-5 py-4 text-center">
                               <span className="inline-flex items-center px-2.5 py-0.5 rounded-sm text-xs font-medium bg-muted text-muted-foreground">
                                 {getStageLabel(user.stage)}
+                              </span>
+                            </td>
+                            <td className="px-5 py-4 text-center">
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-sm text-xs font-medium ${
+                                user.joinDate ? 'bg-[#2978B5]/10 text-[#2978B5]' : 'bg-muted text-muted-foreground'
+                              }`}>
+                                {user.joinDate || '未设置'}
                               </span>
                             </td>
                             <td className="px-5 py-4 text-center">
@@ -1505,6 +1526,7 @@ export default function SettingsPage() {
                         <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">姓名</th>
                         <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">用户名</th>
                         <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">角色</th>
+                        <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">入职时间</th>
                         <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">状态</th>
                         <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide px-5 py-3">操作</th>
                       </tr>
@@ -1535,6 +1557,13 @@ export default function SettingsPage() {
                                   超管
                                 </span>
                               )}
+                            </td>
+                            <td className="px-5 py-4 text-center">
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-sm text-xs font-medium ${
+                                user.joinDate ? 'bg-[#2978B5]/10 text-[#2978B5]' : 'bg-muted text-muted-foreground'
+                              }`}>
+                                {user.joinDate || '未设置'}
+                              </span>
                             </td>
                             <td className="px-5 py-4 text-center">
                               <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${
