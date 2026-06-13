@@ -68,12 +68,13 @@ interface StageApplication {
 }
 
 // === 部门-职位级联映射 ===
-const DEPARTMENT_POSITIONS: Record<string, string[]> = {
-  '糖尿病管理一部': ['健康顾问', '高级顾问', '资深顾问'],
-  '糖尿病管理二部': ['见习顾问', '健康顾问', '高级顾问'],
-  '糖尿病管理三部': ['健康顾问', '高级顾问', '资深顾问', '首席顾问'],
-};
-const ALL_POSITIONS = ['健康顾问', '高级顾问', '资深顾问', '见习顾问', '首席顾问'];
+interface DepartmentRecord {
+  id: number;
+  name: string;
+  positions: string[];
+  created_at: string;
+  updated_at: string;
+}
 
 // === Default Threshold Configs ===
 
@@ -159,18 +160,199 @@ function ThresholdInput({
   );
 }
 
+// === Department Dialog Component ===
+
+function DepartmentDialog({
+  mode,
+  dept,
+  departments,
+  onClose,
+  onSaved,
+  onEdit,
+}: {
+  mode: 'add' | 'edit';
+  dept: Partial<DepartmentRecord> | null;
+  departments: DepartmentRecord[];
+  onClose: () => void;
+  onSaved: () => void;
+  onEdit: (d: DepartmentRecord) => void;
+}) {
+  const [name, setName] = useState(dept?.name || '');
+  const [positionsStr, setPositionsStr] = useState((dept?.positions || []).join('、'));
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!name.trim()) { setError('部门名称不能为空'); return; }
+    setSaving(true);
+    setError('');
+    try {
+      const positions = positionsStr.split(/[,，、]/).map(s => s.trim()).filter(Boolean);
+      if (mode === 'add') {
+        const res = await fetch('/api/departments', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: name.trim(), positions }),
+        });
+        if (!res.ok) { const json = await res.json(); throw new Error(json.error || '添加失败'); }
+      } else if (dept?.id) {
+        const res = await fetch('/api/departments', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: dept.id, name: name.trim(), positions }),
+        });
+        if (!res.ok) { const json = await res.json(); throw new Error(json.error || '更新失败'); }
+      }
+      onSaved();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : '操作失败');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!dept?.id) return;
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/departments?id=${dept.id}`, { method: 'DELETE' });
+      if (!res.ok) { const json = await res.json(); throw new Error(json.error || '删除失败'); }
+      onSaved();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : '删除失败');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
+      <div className="bg-card rounded-lg shadow-lg w-full max-w-lg p-6" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="text-base font-semibold text-foreground">
+            {mode === 'add' ? '添加部门' : '编辑部门'}
+          </h3>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label className="text-xs font-medium text-muted-foreground mb-1.5 block">部门名称</label>
+            <input
+              value={name}
+              onChange={e => setName(e.target.value)}
+              className="w-full h-9 rounded-md border border-border bg-transparent px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+              placeholder="如：糖尿病管理一部"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-muted-foreground mb-1.5 block">职位列表（用逗号、顿号或空格分隔）</label>
+            <input
+              value={positionsStr}
+              onChange={e => setPositionsStr(e.target.value)}
+              className="w-full h-9 rounded-md border border-border bg-transparent px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+              placeholder="如：健康顾问、高级顾问、资深顾问"
+            />
+          </div>
+
+          {/* 已有部门列表 */}
+          {mode === 'add' && departments.length > 0 && (
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1.5 block">已有部门</label>
+              <div className="space-y-1 max-h-40 overflow-y-auto">
+                {departments.map(d => (
+                  <div key={d.id} className="flex items-center justify-between px-3 py-1.5 rounded-md bg-muted/50 text-sm">
+                    <span className="text-foreground">{d.name}</span>
+                    <span className="text-muted-foreground text-xs">{d.positions?.join('、') || '无职位'}</span>
+                    <button
+                      onClick={() => onEdit(d)}
+                      className="text-[#2978B5] hover:text-[#2978B5]/80 text-xs"
+                    >
+                      编辑
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {error && (
+            <div className="flex items-center gap-1.5 text-sm text-destructive">
+              <AlertCircle className="w-3.5 h-3.5" />
+              {error}
+            </div>
+          )}
+        </div>
+
+        <div className="mt-6 flex items-center justify-between">
+          <div>
+            {mode === 'edit' && !deleteConfirm && (
+              <button
+                onClick={() => setDeleteConfirm(true)}
+                className="px-3 py-1.5 rounded-md text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors"
+              >
+                删除部门
+              </button>
+            )}
+            {deleteConfirm && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-destructive">确认删除？</span>
+                <button
+                  onClick={handleDelete}
+                  disabled={saving}
+                  className="px-3 py-1.5 rounded-md text-sm font-medium bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors disabled:opacity-50"
+                >
+                  确认
+                </button>
+                <button
+                  onClick={() => setDeleteConfirm(false)}
+                  className="px-3 py-1.5 rounded-md text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  取消
+                </button>
+              </div>
+            )}
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            >
+              取消
+            </button>
+            <button
+              onClick={handleSubmit}
+              disabled={saving}
+              className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+            >
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : mode === 'add' ? '添加' : '保存'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // === User Dialog Component ===
 
 function UserDialog({
   mode,
   user,
+  departments,
   onClose,
   onSaved,
+  onOpenDeptManager,
 }: {
   mode: 'add' | 'edit';
   user: Partial<UserRecord> | null;
+  departments: DepartmentRecord[];
   onClose: () => void;
   onSaved: () => void;
+  onOpenDeptManager: () => void;
 }) {
   const [form, setForm] = useState({
     username: user?.username || '',
@@ -318,21 +500,30 @@ function UserDialog({
           )}
           {form.roleId === 1 && (
             <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1.5 block">部门</label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-medium text-muted-foreground">部门</label>
+                <button
+                  type="button"
+                  onClick={onOpenDeptManager}
+                  className="text-xs text-[#2978B5] hover:text-[#2978B5]/80 transition-colors"
+                >
+                  管理
+                </button>
+              </div>
               <select
                 value={form.department}
                 onChange={e => {
                   const dept = e.target.value;
-                  // 切换部门时，如果当前职位不在新部门的职位列表中，清空职位
-                  const deptPositions = DEPARTMENT_POSITIONS[dept] || ALL_POSITIONS;
+                  const deptRecord = departments.find(d => d.name === dept);
+                  const deptPositions = deptRecord?.positions || [];
                   const newPosition = deptPositions.includes(form.position) ? form.position : '';
                   setForm(prev => ({ ...prev, department: dept, position: newPosition }));
                 }}
                 className="w-full h-9 rounded-md border border-border bg-transparent px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
               >
                 <option value="">请选择部门</option>
-                {Object.keys(DEPARTMENT_POSITIONS).map(dept => (
-                  <option key={dept} value={dept}>{dept}</option>
+                {departments.map(dept => (
+                  <option key={dept.id} value={dept.name}>{dept.name}</option>
                 ))}
               </select>
             </div>
@@ -347,9 +538,13 @@ function UserDialog({
                 disabled={!form.department}
               >
                 <option value="">{form.department ? '请选择职位' : '请先选择部门'}</option>
-                {(DEPARTMENT_POSITIONS[form.department] || (form.department ? ALL_POSITIONS : [])).map(pos => (
-                  <option key={pos} value={pos}>{pos}</option>
-                ))}
+                {(() => {
+                  const deptRecord = departments.find(d => d.name === form.department);
+                  const positions = deptRecord?.positions || [];
+                  return positions.map(pos => (
+                    <option key={pos} value={pos}>{pos}</option>
+                  ));
+                })()}
               </select>
             </div>
           )}
@@ -732,6 +927,11 @@ export default function SettingsPage() {
   const [batchProcessing, setBatchProcessing] = useState(false);
   const [userSubTab, setUserSubTab] = useState<'trainees' | 'staff'>('trainees');
 
+  // 部门管理
+  const [departments, setDepartments] = useState<DepartmentRecord[]>([]);
+  const [deptDialog, setDeptDialog] = useState<{ mode: 'add' | 'edit'; dept: Partial<DepartmentRecord> | null } | null>(null);
+  const [deptPositionsInput, setDeptPositionsInput] = useState('');
+
   // 修改密码弹窗
   const [showChangePwd, setShowChangePwd] = useState(false);
   const [changePwdForm, setChangePwdForm] = useState({ oldPassword: '', newPassword: '', confirmPassword: '' });
@@ -784,7 +984,18 @@ export default function SettingsPage() {
     setUsersLoading(false);
   }, []);
 
-  useEffect(() => { fetchUsers(); fetchMentorList(); }, [fetchUsers]);
+  useEffect(() => { fetchUsers(); fetchMentorList(); fetchDepartments(); }, [fetchUsers]);
+
+  // --- Fetch departments ---
+  const fetchDepartments = useCallback(async () => {
+    try {
+      const res = await fetch('/api/departments');
+      if (res.ok) {
+        const json = await res.json();
+        setDepartments(json.departments || []);
+      }
+    } catch { /* ignore */ }
+  }, []);
 
   // --- Fetch mentor list for assignment ---
   const fetchMentorList = useCallback(async () => {
@@ -1413,7 +1624,7 @@ export default function SettingsPage() {
                               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-sm text-xs font-medium ${
                                 user.joinDate ? 'bg-[#2978B5]/10 text-[#2978B5]' : 'bg-muted text-muted-foreground'
                               }`}>
-                                {user.joinDate || '未设置'}
+                                {user.joinDate ? user.joinDate.slice(0, 10) : '未设置'}
                               </span>
                             </td>
                             <td className="px-5 py-4 text-center">
@@ -1562,7 +1773,7 @@ export default function SettingsPage() {
                               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-sm text-xs font-medium ${
                                 user.joinDate ? 'bg-[#2978B5]/10 text-[#2978B5]' : 'bg-muted text-muted-foreground'
                               }`}>
-                                {user.joinDate || '未设置'}
+                                {user.joinDate ? user.joinDate.slice(0, 10) : '未设置'}
                               </span>
                             </td>
                             <td className="px-5 py-4 text-center">
@@ -1927,8 +2138,20 @@ export default function SettingsPage() {
         <UserDialog
           mode={userDialog.mode}
           user={userDialog.user}
+          departments={departments}
           onClose={() => setUserDialog(null)}
           onSaved={() => { setUserDialog(null); fetchUsers(); }}
+          onOpenDeptManager={() => setDeptDialog({ mode: 'add', dept: null })}
+        />
+      )}
+      {deptDialog !== null && (
+        <DepartmentDialog
+          mode={deptDialog.mode}
+          dept={deptDialog.dept}
+          departments={departments}
+          onClose={() => setDeptDialog(null)}
+          onSaved={() => { setDeptDialog(null); fetchDepartments(); }}
+          onEdit={(d) => setDeptDialog({ mode: 'edit', dept: d })}
         />
       )}
       {ruleDialog !== null && (
